@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ChartDirector">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Library/ChartDirector.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/chartdir_cpp_win.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

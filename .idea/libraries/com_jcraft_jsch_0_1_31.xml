@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="com.jcraft.jsch_0.1.31">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Library/com.jcraft.jsch_0.1.31.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

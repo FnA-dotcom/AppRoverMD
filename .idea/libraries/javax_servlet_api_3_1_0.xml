@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="javax.servlet-api-3.1.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Library/mail.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/mysql.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/gson-2.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/Parsehtm.zip!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/pdfbox-2.0.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/pdfbox-2.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/xmlworker-5.5.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../Library/xmlbeans-2.3.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

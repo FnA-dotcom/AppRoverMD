@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="hapi-base-2.1.jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Library/hapi-base-2.1.jar.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
