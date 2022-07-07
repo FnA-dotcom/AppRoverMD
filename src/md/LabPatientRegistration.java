@@ -1,13 +1,18 @@
 package md;
 
+import DAL.Payments;
 import Handheld.UtilityHelper;
 import Parsehtm.Parsehtm;
+import PaymentIntegrations.CardConnectPayment;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
+import sun.misc.BASE64Encoder;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -24,7 +29,9 @@ import java.awt.image.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.Key;
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
@@ -32,6 +39,14 @@ import java.util.*;
 @SuppressWarnings("Duplicates")
 @WebServlet(name = "people", urlPatterns = {"/people/*"})
 public class LabPatientRegistration extends HttpServlet {
+
+    private static final String ALGO = "AES";
+    private static final byte[] keyValue;
+
+    static {
+        keyValue = new byte[]{84, 35, 51, 66, 51, 36, 84, 36, 51, 67, 114, 51, 116, 75, 51, 81};
+    }
+
 
     public static int getAge(LocalDate dob) {
         LocalDate curDate = LocalDate.now();
@@ -145,170 +160,13 @@ public class LabPatientRegistration extends HttpServlet {
         return null;
     }
 
-    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String ActionID = "";
-        String rqtype = request.getParameter("rqtype");
-        String UCID = request.getParameter("UCID");
-        ServletContext context = getServletContext();
-        PrintWriter out = new PrintWriter(response.getOutputStream());
-        response.setContentType("text/html");
-        UtilityHelper helper = new UtilityHelper();
-        Services supp = new Services();
-        Connection conn = null;
-        HttpSession session = null;
-
-        response.setContentType("text/html");
-        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
-        response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
-        response.setHeader("Expires", "0"); // Proxies.
-        String getMRN = "";
-        int clientIdx = 0;
-
-        Parsehtm Parser;
-        if (rqtype != null) {
-            if (request.getHeader("origin") == null) {
-                out.println("InValid Request!");
-                return;
-            } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
-                session = Createsession(UCID, request, context);
-            } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
-                out.println("InValid Request!");
-                return;
-            }
-        } else {
-            session = request.getSession(false);
-            boolean validSession = helper.checkSession(request, context, session, out);
-            if (!validSession) {
-                out.flush();
-                out.close();
-                return;
-            }
-        }
-
-        String UserId = session.getAttribute("UserId").toString();
-        String DatabaseName = session.getAttribute("DatabaseName").toString();
-        int FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
-        String DirectoryName = session.getAttribute("DirectoryName").toString();
-
-        if (request.getRequestURI().contains("people")) {
-            getMRN = request.getRequestURI().substring("/md/people/".length());
-            clientIdx = Integer.parseInt(request.getRequestURI().substring("/md/people/".length()));
-            updatePatientReg(request, response, out, getMRN, DatabaseName);
-            out.flush();
-            out.close();
-            return;
-        }
-
-        if (UserId.equals("")) {
-            Parsehtm parsehtm = new Parsehtm(request);
-            parsehtm.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
-            out.flush();
-            out.close();
-            return;
-        }
-
-        if (request.getParameter("ActionID") == null) {
-            out.println("InValid Request");
-            return;
-        } else {
-            ActionID = request.getParameter("ActionID");
-        }
-
-
-        conn = Services.GetConnection(context, 1);
-
-        if (conn == null) {
-            Parsehtm parsehtm = new Parsehtm(request);
-            parsehtm.SetField("Error", "Unable to connect. Our team is looking into it!");
-            parsehtm.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
-            return;
-        }
-        try {
-            ActionID = request.getParameter("ActionID");
-            conn = Services.GetConnection(context, 1);
-
-            switch (ActionID) {
-                case "GetValues":
-                    GetValues(request, out, context, helper, conn, DatabaseName);
-                    break;
-                case "PatientsDocUpload_Save":
-                    PatientsDocUpload_Save(request, out, conn, context, response, FacilityIndex);
-                    break;
-                case "GETINPUTRoverLab":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "RoverLab Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                    BundlePrimescope(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
-                    break;
-                case "SignPdf":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Signing", "Download or View Admission Bundle", FacilityIndex);
-                    SignPdf(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
-                    break;
-                case "GetData":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Search Patients Visit Input", "Click on Search Old Patient Option", FacilityIndex);
-                    GetData(request, response, out, conn, context, UserId, DatabaseName, FacilityIndex, DirectoryName);
-                    break;
-                case "CheckPatient":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Check Duplicate Patients in Rover Lab", "Check if the Patient Exist ", FacilityIndex);
-                    CheckPatient(request, out, conn, context, DatabaseName, helper);
-                    break;
-                //CLOSED BY TABISH ***** 28-FEB-2022
-/*                    case "updatePatientReg":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Search Patients Visit Input", "Click on Search Old Patient Option", FacilityIndex);
-                    updatePatientReg(request, response, out, DatabaseName);
-                    break;*/
-                // CLOSED BY TABISH ***** 28-FEB-2022
-                case "EditValues":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Edit Values New from Lab Patient Reg", "Click on View Edit Option from View Patients Option ", FacilityIndex);
-                    EditValues(request, out, conn, context, DatabaseName, UserId, helper);
-                    break;
-                case "GetPatientsMainScreen":
-                    GetPatientsMainScreen(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "CheckRepeatPatient":
-                    CheckRepeatPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "DisplayExistingPatient":
-                    DisplayExistingPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "SaveExistingPatient":
-                    SaveExistingPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex, response);
-                    break;
-                case "EditSave":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Save Edit in Lab ", "Updating the new information from Page in Lab", FacilityIndex);
-                    SaveEditData(request, out, conn, context, DatabaseName, helper, DirectoryName, FacilityIndex, UserId, DatabaseName);
-                    break;
-                default: {
-                    helper.deleteUserSession(request, conn, session.getId());
-                    session.invalidate();
-                    Parser = new Parsehtm(request);
-                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            helper.SendEmailWithAttachment("Error in LabPatientRegistration ** (handleRequest)", context, e, "LabPatientRegistration", "handleRequest", conn);
-            Services.DumException("LabPatientRegistration", "Handle Request", request, e, getServletContext());
-            Parser = new Parsehtm(request);
-            Parser.SetField("FormName", "ManagementDashboard");
-            Parser.SetField("ActionID", "GetInput");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
-            out.flush();
-            out.close();
-        } finally {
-            try {
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                helper.SendEmailWithAttachment("Error in LabPatientRegistration ** (handleRequest -- SqlException)", context, e, "LabPatientRegistration", "handleRequest", conn);
-                Services.DumException("LabPatientRegistration", "Handle Request", request, e, getServletContext());
-                Parser = new Parsehtm(request);
-                Parser.SetField("FormName", "ManagementDashboard");
-                Parser.SetField("ActionID", "GetInput");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
-            }
-            out.flush();
-            out.close();
-        }
+    public static String encrypt(String Data) throws Exception {
+        Key key = generateKey();
+        Cipher c = Cipher.getInstance(ALGO);
+        c.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encVal = c.doFinal(Data.getBytes());
+        String encryptedValue = new BASE64Encoder().encode(encVal);
+        return encryptedValue;
     }
 
     private void updatePatientReg(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String mrn, String DatabaseName) {
@@ -519,7 +377,6 @@ public class LabPatientRegistration extends HttpServlet {
                 st = "0";
             } else {
                 st = request.getParameter("st");
-
             }
 
             String[] month = {
@@ -2662,155 +2519,9 @@ public class LabPatientRegistration extends HttpServlet {
 
     }
 
-    void GetData(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, String DirectoryName) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        SupportiveMethods suppMethods = new SupportiveMethods();
-        StringBuffer LeftSideBarMenu = new StringBuffer();
-        StringBuffer Header = new StringBuffer();
-        StringBuffer Footer = new StringBuffer();
-        String Message = "";
-        String imagedataURL = "";
-        String PatientRegId = "";
-        boolean FileFound = false;
-        byte[] Data = null;
-        String key = "";
-        String UID = "";
-        String MRN = "";
-        String pageCount = "";
-        String Order = "";
-        String outputFilePath = "";
-        String rqType = "";
-        String WEB = "";
-        try {
-            Dictionary d = doUpload(request, response, out);
-            Enumeration en = d.keys();
-            while (en.hasMoreElements()) {
-                key = (String) en.nextElement();
-                if (key.startsWith("PatientRegId")) {
-                    PatientRegId = (String) d.get(key);
-                } else if (key.startsWith("imagedataURLbtnIdHdn")) {
-                    imagedataURL = (String) d.get(key);
-                } else if (key.startsWith("UID")) {
-                    UID = (String) d.get(key);
-                } else if (key.startsWith("MRN")) {
-                    MRN = (String) d.get(key);
-                } else if (key.startsWith("pageCount")) {
-                    pageCount = (String) d.get(key);
-                } else if (key.startsWith("Order")) {
-                    Order = (String) d.get(key);
-                } else if (key.startsWith("outputFilePath")) {
-                    outputFilePath = (String) d.get(key);
-                } else if (key.startsWith("rqtype1")) {
-                    rqType = (String) d.get(key);
-                }
-            }
-            PatientRegId = PatientRegId.substring(4);
-            imagedataURL = imagedataURL.substring(4);
-            UID = UID.substring(4);
-            MRN = MRN.substring(4);
-            pageCount = pageCount.substring(4);
-            Order = Order.substring(4);
-            outputFilePath = outputFilePath.substring(4);
-
-            String[] imageURL = imagedataURL.split("\\~");
-            String[] Ordering = Order.split("\\~");
-
-            BufferedImage image = null;
-            byte[] imageByte;
-            for (int i = 0; i < imageURL.length; i++) {
-//                out.println(imageURL[i]);
-                try {
-                    byte[] imagedata = DatatypeConverter.parseBase64Binary(imageURL[i].substring(imageURL[i].indexOf(",") + 1));
-                    BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imagedata));
-                    //ImageIO.write(bufferedImage, "png", new File("/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png"));
-                    ImageIO.write(bufferedImage, "png", new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png"));
-
-//                    out.println("Result => "+ isValid(new File("/sftpdrive/AdmissionBundlePdf/SignImg/roverlab/img_" + i + "_" + PatientRegId + "_"+Ordering[i]+".png")));// isValid(in);
-//                    out.print("HEre ");
-                    //String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png");
-                    if (isValid(new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png"))) {
-                        String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png");
-                        if (ImageTransparent.trim().toUpperCase().equals("CONVERTED")) {
-                            Message = " and Transparency DONE";
-                        } else {
-                            Message = " and Image Created";
-                        }
-                    } else {
-                        Query = "DELETE FROM " + Database + ".SignRequest WHERE PatientRegId = '" + PatientRegId + "' ";
-                        stmt = conn.createStatement();
-                        stmt.executeUpdate(Query);
-                        stmt.close();
-
-                        Parsehtm Parser = new Parsehtm(request);
-                        Parser.SetField("Message", "Invalid Signature, Please Try Again!");
-                        Parser.SetField("MRN", "Invalid Signature");
-//                        Parser.SetField("FormName", "PatientReg");
-//                        Parser.SetField("ActionID", "GetValues&ClientIndex=36");
-                        Parser.SetField("pageCount", String.valueOf(pageCount));
-                        Parser.SetField("FileName", String.valueOf(outputFilePath));
-                        Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
-                        Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
-                        Parser.SetField("ClientIndex", "36");
-                        Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageRoverLab.html");
-                        return;
-                    }
-//                    out.print("\n After ");
-
-
-                } catch (IOException e) {
-                    out.println("Error in IO" + e.getStackTrace());
-                }
-            }
-
-            Query = "UPDATE " + Database + ".SignRequest SET isSign = 1 , SignBy = '" + UserId + "', SignTime = NOW() " +
-                    "WHERE PatientRegId = " + PatientRegId + " AND " +
-                    "MRN = " + MRN + " AND UID = '" + UID + "' ";
-            stmt = conn.createStatement();
-            stmt.executeUpdate(Query);
-            stmt.close();
-
-            PreparedStatement ps = conn.prepareStatement("SELECT website from oe.ClientsWebsite where clientID=?");
-            ps.setInt(1, ClientId);
-            rset = ps.executeQuery();
-            if (rset.next()) {
-                WEB = rset.getString(1);
-            }
-            ps.close();
-            rset.close();
-
-//                System.out.println("**** RQ TYPE **** " + rqType);
-//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
-//                Parser.SetField("FormName", "DownloadBundle");
-//                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_W.html");            if(
-//            System.out.println("Just before successs -->> rqType " + rqType);
-            if (rqType.equals("nullGetValues")) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("Message", "Thank You for Registration ");
-                Parser.SetField("WEB", WEB);
-                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_RoverLab.html");
-            } else {
-                Parsehtm Parser = new Parsehtm(request);
-//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
-                Parser.SetField("Message", "Document has been signed successfully! ");
-                Parser.SetField("FormName", "LabPatientRegistration");
-                Parser.SetField("ActionID", "GetValues");
-                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_ROVERLAB.html");
-            }
-
-
-        } catch (Exception var11) {
-
-            out.println(var11.getMessage());
-            String str = "";
-            for (int i = 0; i < var11.getStackTrace().length; ++i) {
-                str = str + var11.getStackTrace()[i] + "<br>";
-            }
-            out.println(str);
-            out.flush();
-            out.close();
-        }
+    private static Key generateKey() throws Exception {
+        final Key key = new SecretKeySpec(keyValue, "AES");
+        return key;
     }
 
     String MakeTransparent(PrintWriter out, String inputFileName, String outputFileName) {
@@ -6160,4 +5871,739 @@ public class LabPatientRegistration extends HttpServlet {
         }
 
     }
+
+    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String ActionID = "";
+        String rqtype = request.getParameter("rqtype");
+        String UCID = request.getParameter("UCID");
+        ServletContext context = getServletContext();
+        PrintWriter out = new PrintWriter(response.getOutputStream());
+        response.setContentType("text/html");
+        UtilityHelper helper = new UtilityHelper();
+        Services supp = new Services();
+        Connection conn = null;
+        HttpSession session = null;
+        Payments payments = new Payments();
+
+
+        response.setContentType("text/html");
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+        response.setHeader("Pragma", "no-cache"); // HTTP 1.0.
+        response.setHeader("Expires", "0"); // Proxies.
+        String getMRN = "";
+        int clientIdx = 0;
+
+        Parsehtm Parser;
+        if (rqtype != null) {
+            if (request.getHeader("origin") == null) {
+                out.println("InValid Request!");
+                return;
+            } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
+                session = Createsession(UCID, request, context);
+            } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
+                out.println("InValid Request!");
+                return;
+            }
+        } else {
+            session = request.getSession(false);
+            boolean validSession = helper.checkSession(request, context, session, out);
+            if (!validSession) {
+                out.flush();
+                out.close();
+                return;
+            }
+        }
+
+        String UserId = session.getAttribute("UserId").toString();
+        String DatabaseName = session.getAttribute("DatabaseName").toString();
+        int FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
+        String DirectoryName = session.getAttribute("DirectoryName").toString();
+
+        if (request.getRequestURI().contains("people")) {
+            getMRN = request.getRequestURI().substring("/md/people/".length());
+            clientIdx = Integer.parseInt(request.getRequestURI().substring("/md/people/".length()));
+            updatePatientReg(request, response, out, getMRN, DatabaseName);
+            out.flush();
+            out.close();
+            return;
+        }
+
+        if (UserId.equals("")) {
+            Parsehtm parsehtm = new Parsehtm(request);
+            parsehtm.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
+            out.flush();
+            out.close();
+            return;
+        }
+
+        if (request.getParameter("ActionID") == null) {
+            out.println("InValid Request");
+            return;
+        } else {
+            ActionID = request.getParameter("ActionID");
+        }
+
+
+        conn = Services.GetConnection(context, 1);
+
+        if (conn == null) {
+            Parsehtm parsehtm = new Parsehtm(request);
+            parsehtm.SetField("Error", "Unable to connect. Our team is looking into it!");
+            parsehtm.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
+            return;
+        }
+        try {
+            ActionID = request.getParameter("ActionID");
+            conn = Services.GetConnection(context, 1);
+
+            switch (ActionID) {
+                case "GetValues":
+                    GetValues(request, out, context, helper, conn, DatabaseName);
+                    break;
+                case "PatientsDocUpload_Save":
+                    PatientsDocUpload_Save(request, out, conn, context, response, FacilityIndex);
+                    break;
+                case "GETINPUTRoverLab":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "RoverLab Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
+                    BundlePrimescope(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
+                    break;
+                case "SignPdf":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Signing", "Download or View Admission Bundle", FacilityIndex);
+                    SignPdf(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
+                    break;
+                case "GetData":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Search Patients Visit Input", "Click on Search Old Patient Option", FacilityIndex);
+                    GetData(request, response, out, conn, context, UserId, DatabaseName, FacilityIndex, DirectoryName);
+                    break;
+                case "CheckPatient":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Check Duplicate Patients in Rover Lab", "Check if the Patient Exist ", FacilityIndex);
+                    CheckPatient(request, out, conn, context, DatabaseName, helper);
+                    break;
+                case "PayNow":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "PayNow in Rover Lab", "PayNow ", FacilityIndex);
+                    PayNow(request, response, out, conn, context, UserId, DatabaseName, FacilityIndex, helper, payments);
+                    break;
+                case "makeCardConnectPayment":
+                    cardConnectPaymentSave(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments);
+                    break;
+                //CLOSED BY TABISH ***** 28-FEB-2022
+/*                    case "updatePatientReg":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Search Patients Visit Input", "Click on Search Old Patient Option", FacilityIndex);
+                    updatePatientReg(request, response, out, DatabaseName);
+                    break;*/
+                // CLOSED BY TABISH ***** 28-FEB-2022
+                case "EditValues":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Edit Values New from Lab Patient Reg", "Click on View Edit Option from View Patients Option ", FacilityIndex);
+                    EditValues(request, out, conn, context, DatabaseName, UserId, helper);
+                    break;
+                case "GetPatientsMainScreen":
+                    GetPatientsMainScreen(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "CheckRepeatPatient":
+                    CheckRepeatPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "DisplayExistingPatient":
+                    DisplayExistingPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "SaveExistingPatient":
+                    SaveExistingPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex, response);
+                    break;
+                case "EditSave":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Save Edit in Lab ", "Updating the new information from Page in Lab", FacilityIndex);
+                    SaveEditData(request, out, conn, context, DatabaseName, helper, DirectoryName, FacilityIndex, UserId, DatabaseName);
+                    break;
+                default: {
+                    helper.deleteUserSession(request, conn, session.getId());
+                    session.invalidate();
+                    Parser = new Parsehtm(request);
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            helper.SendEmailWithAttachment("Error in LabPatientRegistration ** (handleRequest)", context, e, "LabPatientRegistration", "handleRequest", conn);
+            Services.DumException("LabPatientRegistration", "Handle Request", request, e, getServletContext());
+            Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "ManagementDashboard");
+            Parser.SetField("ActionID", "GetInput");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
+            out.flush();
+            out.close();
+        } finally {
+            try {
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                helper.SendEmailWithAttachment("Error in LabPatientRegistration ** (handleRequest -- SqlException)", context, e, "LabPatientRegistration", "handleRequest", conn);
+                Services.DumException("LabPatientRegistration", "Handle Request", request, e, getServletContext());
+                Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "ManagementDashboard");
+                Parser.SetField("ActionID", "GetInput");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
+            }
+            out.flush();
+            out.close();
+        }
+    }
+
+    void GetData(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, String DirectoryName) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        SupportiveMethods suppMethods = new SupportiveMethods();
+        StringBuffer LeftSideBarMenu = new StringBuffer();
+        StringBuffer Header = new StringBuffer();
+        StringBuffer Footer = new StringBuffer();
+        String Message = "";
+        String imagedataURL = "";
+        String PatientRegId = "";
+        boolean FileFound = false;
+        byte[] Data = null;
+        String key = "";
+        String UID = "";
+        String MRN = "";
+        String pageCount = "";
+        String Order = "";
+        String outputFilePath = "";
+        String rqType = "";
+        String WEB = "";
+        Boolean isSelfPay = false;
+        try {
+            Dictionary d = doUpload(request, response, out);
+            Enumeration en = d.keys();
+            while (en.hasMoreElements()) {
+                key = (String) en.nextElement();
+                if (key.startsWith("PatientRegId")) {
+                    PatientRegId = (String) d.get(key);
+                } else if (key.startsWith("imagedataURLbtnIdHdn")) {
+                    imagedataURL = (String) d.get(key);
+                } else if (key.startsWith("UID")) {
+                    UID = (String) d.get(key);
+                } else if (key.startsWith("MRN")) {
+                    MRN = (String) d.get(key);
+                } else if (key.startsWith("pageCount")) {
+                    pageCount = (String) d.get(key);
+                } else if (key.startsWith("Order")) {
+                    Order = (String) d.get(key);
+                } else if (key.startsWith("outputFilePath")) {
+                    outputFilePath = (String) d.get(key);
+                } else if (key.startsWith("rqtype1")) {
+                    rqType = (String) d.get(key);
+                }
+            }
+            PatientRegId = PatientRegId.substring(4);
+            imagedataURL = imagedataURL.substring(4);
+            UID = UID.substring(4);
+            MRN = MRN.substring(4);
+            pageCount = pageCount.substring(4);
+            Order = Order.substring(4);
+            outputFilePath = outputFilePath.substring(4);
+
+            String[] imageURL = imagedataURL.split("\\~");
+            String[] Ordering = Order.split("\\~");
+
+            BufferedImage image = null;
+            byte[] imageByte;
+            for (int i = 0; i < imageURL.length; i++) {
+//                out.println(imageURL[i]);
+                try {
+                    byte[] imagedata = DatatypeConverter.parseBase64Binary(imageURL[i].substring(imageURL[i].indexOf(",") + 1));
+                    BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imagedata));
+                    //ImageIO.write(bufferedImage, "png", new File("/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png"));
+                    ImageIO.write(bufferedImage, "png", new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png"));
+
+//                    out.println("Result => "+ isValid(new File("/sftpdrive/AdmissionBundlePdf/SignImg/roverlab/img_" + i + "_" + PatientRegId + "_"+Ordering[i]+".png")));// isValid(in);
+//                    out.print("HEre ");
+                    //String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png");
+                    if (isValid(new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png"))) {
+                        String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png");
+                        if (ImageTransparent.trim().toUpperCase().equals("CONVERTED")) {
+                            Message = " and Transparency DONE";
+                        } else {
+                            Message = " and Image Created";
+                        }
+                    } else {
+                        Query = "DELETE FROM " + Database + ".SignRequest WHERE PatientRegId = '" + PatientRegId + "' ";
+                        stmt = conn.createStatement();
+                        stmt.executeUpdate(Query);
+                        stmt.close();
+
+                        Parsehtm Parser = new Parsehtm(request);
+                        Parser.SetField("Message", "Invalid Signature, Please Try Again!");
+                        Parser.SetField("MRN", "Invalid Signature");
+//                        Parser.SetField("FormName", "PatientReg");
+//                        Parser.SetField("ActionID", "GetValues&ClientIndex=36");
+                        Parser.SetField("pageCount", String.valueOf(pageCount));
+                        Parser.SetField("FileName", String.valueOf(outputFilePath));
+                        Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                        Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
+                        Parser.SetField("ClientIndex", "36");
+                        Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageRoverLab.html");
+                        return;
+                    }
+//                    out.print("\n After ");
+
+
+                } catch (IOException e) {
+                    out.println("Error in IO" + e.getStackTrace());
+                }
+            }
+
+            Query = "UPDATE " + Database + ".SignRequest SET isSign = 1 , SignBy = '" + UserId + "', SignTime = NOW() " +
+                    "WHERE PatientRegId = " + PatientRegId + " AND " +
+                    "MRN = " + MRN + " AND UID = '" + UID + "' ";
+            stmt = conn.createStatement();
+            stmt.executeUpdate(Query);
+            stmt.close();
+
+            PreparedStatement ps = conn.prepareStatement("SELECT website from oe.ClientsWebsite where clientID=?");
+            ps.setInt(1, ClientId);
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                WEB = rset.getString(1);
+            }
+            ps.close();
+            rset.close();
+
+            ps = conn.prepareStatement("SELECT Insured FROM " + Database + ".PatientReg where ID=?");
+            ps.setString(1, PatientRegId);
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getString(1).toUpperCase().equals("NO"))
+                    isSelfPay = true;
+            }
+            rset.close();
+            ps.close();
+//
+            if (isSelfPay) {
+                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
+                Parser.SetField("Message", "Thank You for Registration");
+                Parser.SetField("FormName", "LabPatientRegistration");
+                Parser.SetField("ActionID", "PayNow&i=" + MRN + "&j=" + rqType);
+                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_ROVERLABPayment.html");
+                return;
+            }
+
+
+//                System.out.println("**** RQ TYPE **** " + rqType);
+//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
+//                Parser.SetField("FormName", "DownloadBundle");
+//                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_W.html");            if(
+//            System.out.println("Just before successs -->> rqType " + rqType);
+            if (rqType.equals("nullGetValues")) {
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("Message", "Thank You for Registration ");
+                Parser.SetField("WEB", WEB);
+                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_RoverLab.html");
+            } else {
+                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
+                Parser.SetField("Message", "Document has been signed successfully! ");
+                Parser.SetField("FormName", "LabPatientRegistration");
+                Parser.SetField("ActionID", "GetValues");
+                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_ROVERLAB.html");
+            }
+
+
+        } catch (Exception var11) {
+
+            out.println(var11.getMessage());
+            String str = "";
+            for (int i = 0; i < var11.getStackTrace().length; ++i) {
+                str = str + var11.getStackTrace()[i] + "<br>";
+            }
+            out.println(str);
+            out.flush();
+            out.close();
+        }
+    }
+
+    void PayNow(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper, Payments payments) throws FileNotFoundException {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String PatientMRN = request.getParameter("i").trim();
+        String rqtype = request.getParameter("j").trim();
+        String PatientName = "";
+        double TotalAmount = 0.0D;
+        double PaidAmount = 0.0D;
+        double BalAmount = 0.0D;
+        double AmountToPay = 0.0D;
+        String DOS = "";
+        String WEB = "";
+        SupportiveMethods suppMethods = new SupportiveMethods();
+        StringBuffer LeftSideBarMenu = new StringBuffer();
+        StringBuffer Header = new StringBuffer();
+        StringBuffer Footer = new StringBuffer();
+        StringBuffer CDRList = new StringBuffer();
+        StringBuilder DeviceList = new StringBuilder();
+        DecimalFormat numFormat = new DecimalFormat("#,###,###.00");
+        int SNo = 1;
+        int InstallmentPlanFound = 0;
+        StringBuilder installmentPlan = new StringBuilder();
+        try {
+
+
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("PatientMRN", String.valueOf(PatientMRN));
+            Parser.SetField("InvoiceNo", String.valueOf(PatientMRN));
+            Parser.SetField("UserId", String.valueOf(UserId));
+            Parser.SetField("CDRList", String.valueOf(CDRList));
+            Parser.SetField("ClientIndex", String.valueOf(ClientId));
+            Parser.SetField("DOS", DOS);
+            if (rqtype.equals("nullGetValues")) {
+
+                PreparedStatement ps = conn.prepareStatement("SELECT website from oe.ClientsWebsite where clientID=?");
+                ps.setInt(1, ClientId);
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    WEB = rset.getString(1);
+                }
+                ps.close();
+                rset.close();
+
+                Parser.SetField("WEB", WEB);
+            } else {
+                Parser.SetField("WEB", "/md/md.LabPatientRegistration?ActionID=GetValues");
+            }
+            //Parser.SetField("checkAmountDisplay", checkAmountDisplay.toString());
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/PayNow_ROVERLAB.html");
+        } catch (Exception ex) {
+            helper.SendEmailWithAttachment("Error in RegisteredPatients ** (PayNow -- 01)", servletContext, ex, "RegisteredPatients", "PayNow -- 01", conn);
+            Services.DumException("PayNow", "RegisteredPatients ", request, ex);
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "RegisteredPatients");
+            Parser.SetField("ActionID", "CollectPayment");
+            Parser.SetField("Message", "MES#021");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+/*            helper.SendEmailWithAttachment("Error in RegisteredPatients ** (PayNow)", servletContext, var11, "RegisteredPatients", "PayNow", conn);
+            Services.DumException("Registered Patients", "PayNow", request, var11, getServletContext());
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "RegisteredPatients");
+            Parser.SetField("ActionID", "CollectPayment");
+            try {
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }*/
+        }
+    }
+
+    private void cardConnectPaymentSave(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId, String database, UtilityHelper helper, int facilityIndex, Payments payments) {
+
+        double CCAmount = Double.parseDouble(request.getParameter("CCAmount").trim().replaceAll(",", ""));
+        String CCExpiry = request.getParameter("CCExpiry").trim();
+        String CCCVC = request.getParameter("CCCVC").trim();
+        String CCnameCard = request.getParameter("CCnameCard").trim();
+        String myToken = request.getParameter("mytoken").trim();
+        String InvoiceNo = request.getParameter("InvoiceNo").trim();
+        String PatientMRN = request.getParameter("x0Y61008").trim();
+        String Description = request.getParameter("Description").trim();
+//        int InstallmentPlanFound = Integer.parseInt(request.getParameter("InstallmentPlanFound").trim());
+
+        int Paid = 0;
+        int PayRecIdx = 0;
+        int InstallmentPlanId = 0;
+        double PaidAmount = 0.0D;
+        double TotalAmount = 0.0D;
+        double BalAmount = 0.0D;
+        String ResponseType = "";
+        String receipt = "";
+        String facilityName = helper.getFacilityName(request, conn, servletContext, facilityIndex);
+        try {
+            System.out.println("facilityIndex ->> " + facilityIndex);
+            int checkCredentials = payments.checkCCCredentials(request, conn, facilityIndex, servletContext);
+            if (checkCredentials == 0) {
+                out.println("11~No account found. Please contact System Administrator.");
+                return;
+            }
+
+/*            boolean addVerify = payments.addressVerification(request, conn, database, servletContext, Integer.parseInt(PatientMRN));
+            System.out.println("addVerify " + addVerify);
+            if (!addVerify) {
+                out.println("12~Please complete the address details!");
+                return;
+            }*/
+            System.out.println("HERE 4");
+
+            String[] PatientInfo = getPatientInfo(request, conn, servletContext, database, PatientMRN, helper);
+            System.out.println("HERE 3");
+
+            String FName = PatientInfo[0];
+            String LName = PatientInfo[1];
+            String Name = FName + " " + LName;
+
+            System.out.println("HERE 5");
+
+            CCExpiry = CCExpiry.replace("/", "");
+            String Values = PatientInfo[0] + "^" + PatientInfo[1] + "^" + PatientInfo[3] + "^" + PatientInfo[4] + "^" + PatientInfo[5] + "^" + PatientInfo[6] + "^" + PatientInfo[8] + "^" + CCAmount + "^" + myToken + "^" + CCExpiry + "^" + CCCVC;
+            System.out.println("HERE 6");
+
+            Values = encrypt(Values.trim());
+            System.out.println("HERE 7");
+
+            Values = Values.replace(" ", "");
+            System.out.println("HERE 2");
+
+//            Object[] invoiceMaster = payments.getInvoiceMasterDetails(request, conn, servletContext, database, InvoiceNo, PatientMRN);
+//            PaidAmount = (double) invoiceMaster[0];
+//            BalAmount = (double) invoiceMaster[1];
+//            TotalAmount = (double) invoiceMaster[3];
+
+/*            if (PaidAmount > TotalAmount) {
+                out.println("11~Paid Amount Cannot be greater than Total Amount!");
+                return;
+            }*/
+//            if (CCAmount > BalAmount) {
+//                out.println("11~Amount should not be greater than Balance Due!");
+//                return;
+//            }
+//            if (BalAmount == 0) {
+//                out.println("11~No Balance amount left to pay!");
+//                return;
+//            }
+            String receiptCounter = helper.getReceiptCounter(request, conn, servletContext, database);
+
+            //String dateTime = "20210411232226";
+            //dateTime = dateTime.substring(0, 4) + "-" + dateTime.substring(4, 6) + "-" + dateTime.substring(6, 8) + " " + dateTime.substring(8, 10) + ":" + dateTime.substring(10, 12) + ":00".replaceAll("\n", "");
+            String printDate = "";
+            String printTime = "";
+            printDate = helper.printDateTime(request, conn, servletContext)[0];
+            printTime = helper.printDateTime(request, conn, servletContext)[1];
+
+/*            String FullName = "";
+            String Address = "";
+            String Phone = "";
+            FullName = helper.receiptClientData(request, conn, servletContext, facilityIndex)[0];
+            Address = helper.receiptClientData(request, conn, servletContext, facilityIndex)[1];
+            Phone = helper.receiptClientData(request, conn, servletContext, facilityIndex)[2];*/
+
+            //out.println("1~"+printDate+"~~West Orange, TX~Golden Triangle Emergency Center~4099204470~60XXXXXXXXXX0896~1.00~AsjadAzam~091814764910");
+            // out.println("1~" + facilityName + "~" + InvoiceNo + "~Approval~" + BalAmount + "~" + CCAmount + "~Card~" + printDate + "~" + printTime + "~Asjad~" + receiptCounter + "~Frontline ER~Dallas, TX~2144999555~033234~106449012753~40XXXXXXXXXX0506~"+receiptCounter);
+
+            CardConnectPayment cardConnectPayment = new CardConnectPayment();
+            String[] Response = cardConnectPayment.InquireTransaction(Values, facilityIndex, conn);
+            System.out.println("ResponseText " + Response[0] + "<br> ");
+            System.out.println("cvvresp " + Response[1] + "<br> ");
+            System.out.println("respcode " + Response[2] + "<br> ");
+            System.out.println("entrymode " + Response[3] + "<br> ");
+            System.out.println("authcode " + Response[4] + "<br> ");
+            System.out.println("respproc " + Response[5] + "<br> ");
+            System.out.println("respstat " + Response[6] + "<br> ");
+            System.out.println("retref " + Response[7] + "<br> ");
+            System.out.println("expiry " + Response[8] + "<br> ");
+            System.out.println("AVS " + Response[9] + "<br> ");
+            System.out.println("Receipt " + Response[10] + "<br> ");
+            System.out.println("BinType " + Response[11] + "<br> ");
+            System.out.println("Amount " + Response[12] + "<br>");
+            System.out.println("AccountNo " + Response[13] + "<br>");
+            System.out.println("orderId " + Response[14] + "<br>");
+            System.out.println("commCard " + Response[15] + "<br>");
+
+/*            JSONParser parser = new JSONParser();
+            Object obj = parser.parse("[" + Response[10] + "]");
+            JSONArray array = (JSONArray) obj;
+            JSONObject obj2 = (JSONObject) array.get(0);
+            String dateTime = (String) obj2.get("dateTime");
+            String dba = (String) obj2.get("dba");
+            String address2 = (String) obj2.get("address2");
+            String phone = (String) obj2.get("phone");
+            String footer = (String) obj2.get("footer");
+            String nameOnCard = (String) obj2.get("nameOnCard");
+            String address1 = (String) obj2.get("address1");
+            String orderNote = (String) obj2.get("orderNote");
+            String header = (String) obj2.get("header");
+            String items = (String) obj2.get("items");*/
+            String FullName = "";
+            String Address = "";
+            String Phone = "";
+
+            System.out.println("HERE 1");
+
+            FullName = helper.receiptClientData(request, conn, servletContext, facilityIndex)[0];
+            Address = helper.receiptClientData(request, conn, servletContext, facilityIndex)[1];
+            Phone = helper.receiptClientData(request, conn, servletContext, facilityIndex)[2];
+
+
+            //out.println("1~"+dateTime+"~"+address1+"~"+address2+"~"+dba+"~"+phone+"~"+Response[13]+"~"+Response[12]+"~"+nameOnCard);
+            //out.println("1~20210402100916~~West Orange, TX~Golden Triangle Emergency Center~4099204470~60XXXXXXXXXX0896~1.00~AsjadAzam~091814764910");
+
+            String UserIP = helper.getClientIp(request);
+            String CurrDate = helper.getCurrDate(request, conn);
+            if (Response[0].equals("Approval") || Response[0].equals("APPROVAL") ||
+                    Response[0].equals("Success") || Response[0].equals("SUCCESS")) {
+
+                System.out.println("SUCCESSFULL");
+//                if (CCAmount == BalAmount) {
+                Paid = 1;
+//                }
+
+                TotalAmount = CCAmount;
+
+                InvoiceNo = SaveInvoice(out, conn, userId, database, PatientMRN, TotalAmount);
+
+                payments.insertInvoiceMasterHistory(request, conn, servletContext, database, PatientMRN, InvoiceNo, UserIP);
+
+                payments.updateInvoiceMaster(request, conn, servletContext, database, PaidAmount, CCAmount, BalAmount, Paid, PatientMRN, InvoiceNo);
+
+                receipt = "<div id='printThis'><div id='mystyle' style='width: 377.68px;border: 1px; border-style: solid; border-color: black;'><div class='reciept' style='margin-top:20px;text-align: center;'><p style='margin:0px;'>" + FullName + "</p><p style='margin:0px;'>" + Address + "</p><p style='margin:0px;'>" + Phone + "</p></div><div class='reciept' style='margin-left: 5px; text-align:left !important'><p style='margin:0px;'>Ref #: " + Response[7] + "</p><p style='margin:0px;'>Status: " + Response[0] + "</p><p style='margin:0px;'>Auth #: " + Response[4] + "</p><p style='margin:0px;'>MID: " + Response[13] + "</p><p style='margin:0px;'>Receipt#: " + receiptCounter + "</p></div><div class='reciept' style='text-align:left !important'><span style='margin-left: 5px'>" + printDate + "</span> <span style='margin-left: 166px'>" + printTime + "</span></div><div class='reciept' style='text-align:left !important'><span style='margin-left: 5px'>Amount</span> <span style='margin-left: 199px'>$" + CCAmount + "</span></div><div class='reciept' style='margin-left: 5px;text-align:left !important'><p style='margin:0px;'>Method: Card</p><p style='margin:0px;'>" + Name + "</p></div><div class='reciept' style='text-align: center;'>Approved</div><div class='reciept' style='margin-bottom: 15px; text-align: center;'>Thank you. Please come again</div> <div class='reciept' style='text-align: right;font-size:12px;'>Printed By Rover</div>  </div></div>";
+
+                payments.paymentReceiptInsertion(request, conn, servletContext, database, PatientMRN, InvoiceNo, TotalAmount, Paid, InvoiceNo, Description, "1", BalAmount, userId, UserIP, "cardConnectPaymentSave_ROVERLAB", CCAmount, receiptCounter, receipt);
+
+
+                PayRecIdx = payments.getPaymentReceiptIndex(request, conn, servletContext, database);
+                ResponseType = "SUCCESS";
+                payments.insertionCardConnectResponses(request, conn, servletContext, database, InvoiceNo, PatientMRN, Response[0], Response[1] == null ? "" : Response[1], Response[2] == null ? "" : Response[2], Response[3] == null ? "" : Response[3], Response[4] == null ? "" : Response[4], Response[5] == null ? "" : Response[5], Response[6] == null ? "" : Response[6], Response[7] == null ? "" : Response[7], Response[8] == null ? "" : Response[8], Response[9] == null ? "" : Response[9], CurrDate, 0, facilityIndex, myToken, CurrDate, CCCVC, Response[11] == null ? "" : Response[11], Response[10] == null ? "" : Response[10], ResponseType, Description, CCAmount, Response[13] == null ? "" : Response[13], Response[14] == null ? "" : Response[14], Response[15] == null ? "" : Response[15], UserIP, "cardConnectPaymentSave", CCnameCard, PayRecIdx, "2", "No Insurance", receipt, "No File", userId);
+
+                //out.println("1~" + dateTime + "~" + address1 + "~" + address2 + "~" + dba + "~" + phone + "~" + Response[13] + "~" + Response[12] + "~" + nameOnCard + "~" + Response[7]);
+                //out.println("1~" + facilityName + "~" + InvoiceNo + "~" + Response[0] + "~" + BalAmount + "~" + CCAmount + "~Card~" + printDate + "~" + printTime + "~" + Name + "~" + receiptCounter + "~" + FullName + "~" + Address + "~" + Phone + "~" + Response[4] + "~" + Response[7] + "~" + Response[13] + "~" + receiptCounter);
+
+                out.println("1~" + receipt);
+            } else {
+                System.out.println("UNSUCCESSFULL");
+
+                ResponseType = "ERROR";
+                payments.insertionCardConnectResponses(request, conn, servletContext, database, InvoiceNo, PatientMRN, Response[0], Response[1] == null ? "" : Response[1], Response[2] == null ? "" : Response[2], Response[3] == null ? "" : Response[3], Response[4] == null ? "" : Response[4], Response[5] == null ? "" : Response[5], Response[6] == null ? "" : Response[6], Response[7] == null ? "" : Response[7], Response[8] == null ? "" : Response[8], Response[9] == null ? "" : Response[9], CurrDate, 0, facilityIndex, myToken, CurrDate, CCCVC, Response[11] == null ? "" : Response[11], Response[10] == null ? "" : Response[10], ResponseType, Description, CCAmount, Response[13] == null ? "" : Response[13], Response[14] == null ? "" : Response[14], Response[15] == null ? "" : Response[15], UserIP, "cardConnectPaymentSave", CCnameCard, PayRecIdx, "2", "No Insurance", "No Slip", "No File", userId);
+                //payments.insertionCardConnectResponses(request, conn, servletContext, database, InvoiceNo, PatientMRN, Response[0], "", "", "", "", "", "", Response[7], Response[8], Response[9], CurrDate, 0, facilityIndex, myToken, CurrDate, CCCVC, Response[11], Response[10], ResponseType, Description, CCAmount, Response[13], Response[14], Response[15], UserIP, "cardConnectPaymentSave", CCnameCard, PayRecIdx, "2", "No Insurance", "No Slip", "No File");
+                out.println("0~" + Response[0]);
+            }
+        } catch (Exception Ex) {
+            out.println("0~Error while making payment.");
+            helper.SendEmailWithAttachment("Error in LabPatientRegistration_Test ^^ (Occurred At : " + facilityName + ") ** (LabPatientRegistration_Test)", servletContext, Ex, "LabPatientRegistration_Test", "cardConnectPaymentSave_ROVERLAB", conn);
+            Services.DumException("LabPatientRegistration_Test", "cardConnectPaymentSave_ROVERLAB", request, Ex, getServletContext());
+
+/*            String Message = Ex.getMessage() + " <br> ";
+            for (int i = 0; i < Ex.getStackTrace().length; ++i) {
+                Message = Message + Ex.getStackTrace()[i] + " ******* <br>";
+            }
+            out.println(Message);*/
+            /*            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "RegisteredPatients");
+            Parser.SetField("ActionID", "PayNow&InvoiceNo='" + InvoiceNo + "'");
+            try {
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }*/
+        }
+
+    }
+
+    String SaveInvoice(PrintWriter out, Connection conn, String UserId, String Database, String _MRN, double _Total) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        double TotalAmount = _Total;
+        int i = 0;
+        int j = 0;
+        int k = 0;
+        String InvoiceNo = "";
+        int InvoiceMasterId = 0;
+        String PatientMRN = _MRN;
+
+        try {
+
+            try {
+                Query = "SELECT IFNULL(MAX(Id),0) + 1, DATE_FORMAT(now(),'%y-%m-%d') FROM " + Database + ".InvoiceMaster";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next())
+                    InvoiceNo = "Inv_" + rset.getString(2) + "_" + rset.getInt(1);
+                rset.close();
+                stmt.close();
+            } catch (Exception e) {
+                System.out.println("Error 1-  in Getting Invoice No: " + e.getMessage());
+            }
+            try {
+                PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".InvoiceMaster " +
+                        " (PatientMRN,InvoiceNo,TotalAmount ,PaidAmount,Paid,PaymentDateTime,InvoiceCreatedBy " +
+                        " ,CreatedDate, Status, BalAmount,InstallmentApplied) " +
+                        " VALUES (?,?,?,?,?,?,?,now(),0,?,0) ");
+                MainReceipt.setString(1, PatientMRN);
+                MainReceipt.setString(2, InvoiceNo);
+                MainReceipt.setDouble(3, TotalAmount);
+                MainReceipt.setDouble(4, 0.0D);
+                MainReceipt.setInt(5, 0);
+                MainReceipt.setString(6, "0000-00-00");
+                MainReceipt.setString(7, UserId);
+                MainReceipt.setDouble(8, TotalAmount);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+            } catch (Exception e) {
+                System.out.println("Error 2- Insertion InvoiceMaster Table :" + e.getMessage());
+            }
+
+            return InvoiceNo;
+        } catch (Exception var11) {
+            out.println("Error: " + var11.getMessage());
+            String str = "";
+            for (i = 0; i < (var11.getStackTrace()).length; i++)
+                str = str + var11.getStackTrace()[i] + "<br>";
+            out.println(str);
+            out.flush();
+            out.close();
+        }
+        return null;
+    }
+
+    public String[] getPatientInfo(HttpServletRequest request, Connection conn, ServletContext servletContext, String database, String PatientMRN, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+
+        String FirstName = "";
+        String LastName = "";
+        String Address = "";
+        String City = "";
+        String State = "";
+        String ZipCode = "";
+        String Country = "";
+        String PhNumber = "";
+        String Email = "";
+        String Title = "";
+        String MiddleInitial = "";
+        String MaritalStatus = "";
+        String MRN = "";
+        String DOB = "";
+        String Age = "";
+        String Gender = "";
+        String SSN = "";
+        String Occupation = "";
+        String Employer = "";
+        String EmpContact = "";
+        String PriCarePhy = "";
+        String ReasonVisit = "";
+        String SelfPayChk = "";
+        String CreatedDate = "";
+        String Address2 = "";
+
+        try {
+            Query = "SELECT FirstName, LastName, IFNULL(Email,''), IFNULL(City,'N/A'), IFNULL(State,'N/A'), IFNULL(ZipCode,'N/A'), " + //6
+                    "IFNULL(Country,'N/A'), IFNULL(PhNumber,'N/A'), IFNULL(Address,'N/A') " + //9
+                    "FROM " + database + ".PatientReg  " +
+                    "WHERE MRN = '" + PatientMRN + "'";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                FirstName = rset.getString(1);
+                LastName = rset.getString(2);
+                Email = rset.getString(3);
+                City = rset.getString(4);
+                State = rset.getString(5);
+                ZipCode = rset.getString(6);
+                Country = rset.getString(7);
+                PhNumber = rset.getString(8);
+                Address = rset.getString(9);
+            }
+            rset.close();
+            stmt.close();
+        } catch (Exception Ex) {
+            helper.SendEmailWithAttachment("Error in getPatientInfo_ROVERLAB ", servletContext, Ex, "MD - LabPatientRegistration", "getPatientInfo_ROVERLAB", conn);
+            Services.DumException("LabPatientRegistration - getPatientInfo_ROVERLAB", "getPatientInfo_ROVERLAB", request, Ex, getServletContext());
+        }
+        return new String[]{FirstName, LastName, Email, City, State, ZipCode, Country, PhNumber, Address};
+    }
+
 }

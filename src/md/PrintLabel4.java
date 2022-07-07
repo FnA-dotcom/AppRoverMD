@@ -144,6 +144,7 @@ public class PrintLabel4 extends HttpServlet {
         String VisitNumber = "";
         String ReasonVisit = "";
         int SelfPayChk = 0;
+        String InsuranceName = "";
         String insuranceStatus = "";
         try {
             if (ClientId == 8) {
@@ -158,11 +159,16 @@ public class PrintLabel4 extends HttpServlet {
                 DirectoryName = "Sublime";
             }
 
-            Query = "SELECT ID, ClientIndex, FirstName, LastName, MiddleInitial, " +
-                    "IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'),''), IFNULL(Age,''), Gender, MRN, " +
-                    "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y'),DATE_FORMAT(CreatedDate,'%m/%d/%Y'))," +
-                    "date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') ,IFNULL(ReasonVisit,''),IFNULL(SelfPayChk,9) " +
-                    "FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
+            Query = "SELECT a.ID, a.ClientIndex, a.FirstName, a.LastName, a.MiddleInitial, " +
+                    "IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Age,''), a.Gender, a.MRN, " +
+                    "IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'),DATE_FORMAT(a.CreatedDate,'%m/%d/%Y'))," +
+                    "date_format(now(),'%Y%m%d%H%i%s'), IFNULL(a.DoctorsName, '-'),IFNULL(DATE_FORMAT(a.DOB,'%Y-%m-%d'),'') ," +
+                    "IFNULL(a.ReasonVisit,''),IFNULL(a.SelfPayChk,9)," +
+                    "IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'-') " +
+                    " FROM   " + Database + ".PatientReg a " +
+                    " LEFT JOIN " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId " +
+                    " LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.id  " +
+                    " WHERE a.ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -178,9 +184,13 @@ public class PrintLabel4 extends HttpServlet {
                 DateTime = rset.getString(11);
                 DoctorsId = rset.getString(12);
                 DOBForAge = rset.getString(13);
+
                 if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                     ReasonVisit = rset.getString(14);
                     SelfPayChk = rset.getInt(15);
+                    InsuranceName = rset.getString(16);
+                } else {
+                    InsuranceName = rset.getString(14);
                 }
             }
             rset.close();
@@ -277,380 +287,1344 @@ public class PrintLabel4 extends HttpServlet {
                         } else if (r == 3) {
                             x = 420;
                         }
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 740.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 730.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 720.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 710.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 700.0f);
 
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "  " + ReasonVisit);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 690.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 665.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 655.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 645.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 635.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 625);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 615.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                        if (InsuranceName.equals("-") == false) {
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 595.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 585.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 575.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 565.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 555.0f);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 545.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                            if (InsuranceName.length() > 30)
+                                InsuranceName = InsuranceName.substring(0, 30);
+                            else if (InsuranceName.length() > 20)
+                                InsuranceName = InsuranceName.substring(0, 20);
+                            else
+                                InsuranceName = InsuranceName.substring(0, InsuranceName.length());
+                        }
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 525.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 515.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 505.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 495.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 485.0f);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
 
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 475);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                        if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 450.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 440.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 430.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 420.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setTextMatrix((float) x, 410.0f);
-                        pdfContentByte.showText("ACT#: " + VisitNumber);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setTextMatrix((float) x, 400.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 740.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 380.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 370.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 360.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 350.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 340.0f);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 730.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
 
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 330.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 720.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 305.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 295.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 285.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 275.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 265.0f);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 710.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
 
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 255.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 700.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+                            pdfContentByte.endText();
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 235.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 225.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 215.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 205.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 195.0f);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 690.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
 
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 185.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 160.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 150.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 140.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 130.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 120.0f);
-                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
 
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 110.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+                            }
+                            pdfContentByte.endText();
 
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 90.0f);
-                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 80.0f);
-                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 70.0f);
-                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 60.0f);
-                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 50.0f);
-                        pdfContentByte.showText("ACT#: " + VisitNumber);
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
-                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix((float) x, 40.0f);
-                        pdfContentByte.showText("Dr. " + DoctorsName);
-                        pdfContentByte.endText();
+
+//                        2nd block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 665.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 655.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 645.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 635.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 625);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 615.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+
+//                        3rd block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 595.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 585.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 575.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 565.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 555.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 545.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+
+//                        4rth block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 525.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 515.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 505.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 495.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 485.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 475);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+//                        5th block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 450.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 440.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 430.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 420.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setTextMatrix((float) x, 410.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setTextMatrix((float) x, 400.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+//                        6th block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 380.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 370.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 360.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 350.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 340.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 330.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+//                        7th block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 305.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 295.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 285.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 275.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 265.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 255.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+//                        8th block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 235.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 225.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 215.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 205.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 195.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 185.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+//                        9th block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 160.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 150.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 140.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 130.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 120.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 110.0f);
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+//                        10th block
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 90.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 80.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 70.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 60.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 50.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   DOB:" + DOB);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 40.0f);
+                            pdfContentByte.showText("INS:(" + InsuranceName + ")");
+                            if (InsuranceName.equals("-")) {
+                                pdfContentByte.showText("Self Pay");
+                            } else {
+                                if (InsuranceName.length() < 20) {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "");
+                                } else {
+                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                }
+
+                            }
+                            pdfContentByte.endText();
+
+
+                        } else {
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 740.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 730.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 720.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 710.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 700.0f);
+
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "  " + ReasonVisit);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 690.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 665.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 655.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 645.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 635.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 625);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 615.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 595.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 585.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 575.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 565.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 555.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 545.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 525.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 515.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 505.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 495.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 485.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 475);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 450.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 440.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 430.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 420.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setTextMatrix((float) x, 410.0f);
+                            pdfContentByte.showText("ACT#: " + VisitNumber);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setTextMatrix((float) x, 400.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 380.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 370.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 360.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 350.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 340.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 330.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 305.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 295.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 285.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 275.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 265.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 255.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 235.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 225.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 215.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 205.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 195.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 185.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 160.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 150.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 140.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 130.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 120.0f);
+                            pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 110.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 90.0f);
+                            pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 80.0f);
+                            pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 70.0f);
+                            pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 60.0f);
+                            pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 50.0f);
+                            pdfContentByte.showText("ACT#: " + VisitNumber);
+                            pdfContentByte.endText();
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+                            pdfContentByte.setColorFill(BaseColor.BLACK);
+                            pdfContentByte.setTextMatrix((float) x, 40.0f);
+                            pdfContentByte.showText("Dr. " + DoctorsName);
+                            pdfContentByte.endText();
+
+
+                        }
+
+
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 740.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 730.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 720.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 710.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 700.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "  " + ReasonVisit);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 690.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 665.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 655.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 645.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 635.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 625);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 615.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 595.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 585.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 575.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 565.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 555.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 545.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 525.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 515.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 505.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 495.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 485.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//
+//                        pdfContentByte.endText();
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 475);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 450.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 440.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 430.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 420.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setTextMatrix((float) x, 410.0f);
+//                        pdfContentByte.showText("ACT#: " + VisitNumber);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setTextMatrix((float) x, 400.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 380.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 370.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 360.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 350.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 340.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//
+//                        pdfContentByte.endText();
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 330.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 305.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 295.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 285.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 275.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 265.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//
+//                        pdfContentByte.endText();
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 255.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 235.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 225.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 215.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 205.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 195.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//
+//                        pdfContentByte.endText();
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 185.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 160.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 150.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 140.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 130.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 120.0f);
+//                        pdfContentByte.showText("ACT#:" + VisitNumber + "   " + ReasonVisit);
+//
+//                        pdfContentByte.endText();
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 110.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 90.0f);
+//                        pdfContentByte.showText(String.valueOf(LastName) + ", " + FirstName);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 80.0f);
+//                        pdfContentByte.showText(ClientName + "  Sex: " + Gender);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 70.0f);
+//                        pdfContentByte.showText("DOB:" + DOB + "  Age:(" + Age + ")");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 60.0f);
+//                        pdfContentByte.showText("MRN:" + MRN + "  DOS:" + CreatedDate + "");
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 50.0f);
+//                        pdfContentByte.showText("ACT#: " + VisitNumber);
+//                        pdfContentByte.endText();
+//
+//                        pdfContentByte.beginText();
+//                        pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
+//                        pdfContentByte.setColorFill(BaseColor.BLACK);
+//                        pdfContentByte.setTextMatrix((float) x, 40.0f);
+//                        pdfContentByte.showText("Dr. " + DoctorsName);
+//                        pdfContentByte.endText();
                     }
                 }
             }
@@ -667,24 +1641,34 @@ public class PrintLabel4 extends HttpServlet {
                 responseOutputStream.write(bytes);
             }
 
-        } catch (Exception ex2) {
-            try {
-                System.out.println(ex2.getMessage());
-                Services.DumException("GETINPUT", "Printlabel4 ", request, ex2);
-                helper.SendEmailWithAttachment("Error in PatientVisit ** (SaveVisit^^ MES#006)", servletContext, ex2, "PatientVisit", "SaveVisit", conn);
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("FormName", "PatientUpdateInfo");
-                Parser.SetField("ActionID", "GetInput&ID=" + ID);
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-            } catch (Exception e) {
+        } catch (Exception e) {
+            System.out.println("in the catch exception of GetReport Function ");
+            System.out.println(e.getMessage());
+            String str = "";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
             }
-//            String str = "";
-//            out.println(ex2.getMessage());
-//            for (int j = 0; j < ex2.getStackTrace().length; ++j) {
-//                str = str + ex2.getStackTrace()[j] + "<br>";
-//            }
-//            out.println(str);
+            System.out.println(str);
         }
+
+//        catch (Exception ex2) {
+//            try {
+//                System.out.println(ex2.getMessage());
+//                Services.DumException("GETINPUT", "Printlabel4 ", request, ex2);
+//
+//                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("FormName", "PatientUpdateInfo");
+//                Parser.SetField("ActionID", "GetInput&ID=" + ID);
+//                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+//            } catch (Exception e) {
+//            }
+////            String str = "";
+////            out.println(ex2.getMessage());
+////            for (int j = 0; j < ex2.getStackTrace().length; ++j) {
+////                str = str + ex2.getStackTrace()[j] + "<br>";
+////            }
+////            out.println(str);
+//        }
     }
 
     private void GETINPUTVictoria(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final String Database, final ServletContext servletContext, final String UserId, final int ClientId) {

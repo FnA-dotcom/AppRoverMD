@@ -69,7 +69,6 @@ public class labdispatcher {
                     + "b.status=0 "
                     + "and a.TestStatus is null "
                     + "and a.testidx !=4 limit 30";
-//            System.out.println(Query);
             hstmt = conn.createStatement();
             hrset = hstmt.executeQuery(Query);
             while (hrset.next()) {

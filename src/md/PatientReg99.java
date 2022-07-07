@@ -90,13 +90,13 @@ public class PatientReg99 extends HttpServlet {
                     System.out.println("1");
                     out.println("InValid Request!");
                     return;
-                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") == 0) {
-//                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
+//                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") == 0) {
+                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
                     System.out.println("2");
 
                     session = Createsession(UCID, request, context);
-                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") != 0) {
-//                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
+//                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") != 0) {
+                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
                     System.out.println("3");
 
                     out.println("InValid Request!");
@@ -173,6 +173,12 @@ public class PatientReg99 extends HttpServlet {
                         break;
                     case "PatientsDocUpload_Save":
                         PatientsDocUpload_Save(request, out, conn, context, response, FacilityIndex);
+                        break;
+                    case "CheckRepeatPatient":
+                        CheckRepeatPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                        break;
+                    case "DisplayExistingPatient":
+                        DisplayExistingPatient(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
                         break;
                     default:
                         helper.deleteUserSession(request, conn, session.getId());
@@ -17303,6 +17309,102 @@ public class PatientReg99 extends HttpServlet {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private void CheckRepeatPatient(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
+        try {
+            Statement stmt = null;
+            ResultSet rset = null;
+            String Query = "";
+            String FirstNameR = request.getParameter("FirstNameR").trim();
+            String LastNameR = request.getParameter("LastNameR").trim();
+            String DOBR = request.getParameter("DOBR").trim();
+            String genderR = request.getParameter("genderR").trim();
+            int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
+
+
+            Query = "Select dbname from oe.clients where Id = " + ClientIndex;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next())
+                Database = rset.getString(1);
+            rset.close();
+            stmt.close();
+
+            int PatientFound = 0;
+            int PatRegIdx = 0;
+            String FoundMRN = "";
+            String FullName = "";
+            Query = " Select COUNT(*), IFNULL(MRN,0),CONCAT(FirstName,' ',LastName),Id AS PatRegIdx " +
+                    " from " + Database + ".PatientReg  " +
+                    "where Status = 0 and " +
+                    "ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstNameR.trim() + "')))  and " +
+                    "ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastNameR.trim() + "'))) and " +
+                    "ltrim(rtrim((DOB))) = '" + DOBR + "' AND " +
+                    "ltrim(rtrim((Gender))) = '" + genderR + "' ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientFound = rset.getInt(1);
+                FoundMRN = rset.getString(2);
+                FullName = rset.getString(3);
+                PatRegIdx = rset.getInt(4);
+            }
+            rset.close();
+            stmt.close();
+
+            //out.println(PatientFound + "|" +FullName);
+            Parsehtm Parser = new Parsehtm(request);
+            if (PatientFound > 0) {
+                Parser.SetField("FullName", FullName);
+                Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
+                Parser.SetField("PatRegIdx", String.valueOf(PatRegIdx));
+                Parser.SetField("FoundMRN", FoundMRN);
+                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "MasterDef/ExistingPatient.html");
+            } else {
+                Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
+                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "MasterDef/ExistingNotFoundPatient.html");
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    private void DisplayExistingPatient(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
+        try {
+            Statement stmt = null;
+            ResultSet rset = null;
+            String Query = "";
+            int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
+            int PatRegIdx = Integer.parseInt(request.getParameter("PatRegIdx").trim());
+            int FoundMRN = Integer.parseInt(request.getParameter("FoundMRN").trim());
+            String FullName = request.getParameter("FullName").trim();
+
+            StringBuilder TestList = new StringBuilder();
+            StringBuilder LocationList = new StringBuilder();
+
+            Query = "Select dbname from oe.clients where Id = " + ClientIndex;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next())
+                Database = rset.getString(1);
+            rset.close();
+            stmt.close();
+
+
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FullName", FullName);
+            Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
+            Parser.SetField("PatRegIdx", String.valueOf(PatRegIdx));
+            Parser.SetField("FoundMRN", String.valueOf(FoundMRN));
+            Parser.SetField("TestList", TestList.toString());
+            Parser.SetField("LocationList", LocationList.toString());
+            Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PRF_files/CovidRegExisting.html");
+            out.close();
+            out.flush();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
 

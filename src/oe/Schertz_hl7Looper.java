@@ -101,9 +101,8 @@ public class Schertz_hl7Looper implements Runnable {
                     mrn = "";
                     stmt = conn.createStatement();
 //                    hstmt2 = conn.createStatement();
-                    Query = " SELECT id,msg,mrn,flag FROM request WHERE status=0 and ClientIndex = " + clientid + " and " +
-                            "flag <= 3 limit 2";
-                    //System.out.println("Query request Tb: "+Query);
+                    Query = " SELECT id,msg,mrn,flag FROM request WHERE status=0 and " +
+                            " ClientIndex = " + clientid + " and flag <= 3 limit 2";
                     rset = stmt.executeQuery(Query);
                     while (rset.next()) {
                         Id = rset.getString(1);
@@ -279,7 +278,8 @@ public class Schertz_hl7Looper implements Runnable {
                 stmt.close();
                 System.out.println("PRI INS " + PriInsuranceName);
                 if (!PriInsuranceName.equals("-") && !PriInsuranceName.equals("")) {
-                    Query = "SELECT LTRIM(RTRIM(PayerName)) FROM oe_2.ProfessionalPayers WHERE id=" + PriInsuranceName;
+                    Query = "SELECT REPLACE(REPLACE(LTRIM(RTRIM(PayerName)), '\r', ''), '\n', '') " +
+                            "FROM oe_2.ProfessionalPayers WHERE id=" + PriInsuranceName;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -289,7 +289,7 @@ public class Schertz_hl7Looper implements Runnable {
                     stmt.close();
                     PriInsuranceName = PriInsuranceName.replaceAll("(\r\n)", "");
                     PriInsuranceName = PriInsuranceName.replaceAll(":", " ");
-                    //System.out.println("PRI INS " + PriInsuranceName);
+                    System.out.println("PRI INS BEFORE " + PriInsuranceName);
                 }
                 IN1 = "IN1|1|||" + PriInsuranceName + "|^^^^|||" + GrpNumber + "|||||||G|||||Y||||||||||||||||" + MemId + "|||||||F||||M\r\n";
             }

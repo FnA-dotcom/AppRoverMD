@@ -279,7 +279,8 @@ public class Floresville_hl7Looper implements Runnable {
                 stmt.close();
 
                 if (!PriInsuranceName.equals("-") && !PriInsuranceName.equals("")) {
-                    Query = " Select PayerName from oe_2.ProfessionalPayers where Id =  " + PriInsuranceName;
+                    Query = " Select REPLACE(REPLACE(LTRIM(RTRIM(PayerName)), '\r', ''), '\n', '') " +
+                            "from oe_2.ProfessionalPayers where Id =  " + PriInsuranceName;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {

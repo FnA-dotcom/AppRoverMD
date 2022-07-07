@@ -2002,6 +2002,7 @@ public class RegisteredPatients2 extends HttpServlet {
                 PaymentFound = rset.getInt(1);
             rset.close();
             stmt.close();
+
             if (PaymentFound > 0) {
                 out.println("<!DOCTYPE html><html><body><p style=\"color:gray;\">Invoice Cannot DeActivate Becase it is Paid or Partially Paid</p></body></html>");
                 out.println("<input class=\"btn btn-primary\" type=button name=Back Value=\"  Back  \" onclick=history.back()>");

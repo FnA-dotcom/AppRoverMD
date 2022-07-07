@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -53,7 +52,7 @@ public class MarketingReport extends HttpServlet {
         String UserId;
         int FacilityIndex;
         String DatabaseName;
-        PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        PrintWriter out = new PrintWriter(response.getOutputStream());
         Services supp = new Services();
         Connection conn = null;
 
@@ -704,7 +703,7 @@ public class MarketingReport extends HttpServlet {
                 long TotalEmployerSentMe = 0;
                 long TotalMFPhysicianRefChk = 0;
 
-                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " +
+                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " + //2
                         " IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Address,''), IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''), " +
                         " IFNULL(a.PhNumber,''), IFNULL(a.Email,''), IFNULL(a.ReasonVisit,''), " +
                         " CASE WHEN b.MFFirstVisit = 1 THEN 'Yes' WHEN b.MFFirstVisit = 0 THEN 'No' ELSE '' END,\n" +
@@ -744,8 +743,12 @@ public class MarketingReport extends HttpServlet {
                         " CASE WHEN b.OnlineAdvertisements = 1 THEN 'Yes' WHEN b.OnlineAdvertisements = 0 THEN 'No' ELSE '' END,\n" +
                         " CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,'')) " +
                         " from " + Database + ".PatientReg a " +
-                        " LEFT JOIN " + Database + ".MarketingInfo b on a.ID = b.PatientRegId LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id where" +
-                        " a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' ";
+                        " STRAIGHT_JOIN " + Database + ".PatientVisit d on d.PatientRegId = a.ID " +
+                        " LEFT JOIN " + Database + ".MarketingInfo b on a.ID = b.PatientRegId " +
+                        " LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id " +
+                        " WHERE " +
+                        " DATE_FORMAT(d.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
+                        " AND a.Status = 0 GROUP BY a.MRN ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -891,17 +894,18 @@ public class MarketingReport extends HttpServlet {
                         " CASE WHEN b.FrTV = 1 THEN 'Yes' WHEN b.FrTV = 0 THEN 'No' ELSE '' END,\n" +
                         " CASE WHEN b.FrMapSearch = 1 THEN 'Yes' WHEN b.FrMapSearch = 0 THEN 'No' ELSE '' END,\n" +
                         " CASE WHEN b.FrEvent = 1 THEN 'Yes' WHEN b.FrEvent = 0 THEN 'No' ELSE '' END,\n" +
-
                         " IFNULL(b.FrPhysicianReferral,''),\n" +
                         " IFNULL(b.FrNeurologyReferral,''),\n " +
                         " IFNULL(b.FrUrgentCareReferral,''), \n " +
                         " IFNULL(b.FrOrganizationReferral,''), \n " +
                         " IFNULL(b.FrFriendFamily,''), \n " +
-
-                        " IFNULL(DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T'),DATE_FORMAT(a.DateofService,'%m/%d/%Y %T')),CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" +
-                        " from " + Database + ".PatientReg a " +
-                        " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId INNER JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id where" +
-                        " a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' ";
+                        " DATE_FORMAT(a.DateofService,'%m/%d/%Y %T'),CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" +
+                        " FROM " + Database + ".PatientReg a " +
+                        " STRAIGHT_JOIN " + Database + ".PatientVisit d on d.PatientRegId = a.ID " +
+                        " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId " +
+                        " LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id where" +
+                        " DATE_FORMAT(d.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
+                        " AND a.Status = 0 GROUP BY a.MRN ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1038,37 +1042,35 @@ public class MarketingReport extends HttpServlet {
                 }
 
 
-                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " +
-                        " IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Address,''), IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''), " +
-                        " IFNULL(a.PhNumber,''), IFNULL(a.Email,''), IFNULL(a.ReasonVisit,''), " +
-                        " CASE WHEN b.ReturnPatient = 1 THEN 'Yes' WHEN b.ReturnPatient = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.Google = 1 THEN 'Yes' WHEN b.Google = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.MapSearch = 1 THEN 'Yes' WHEN b.MapSearch = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.Billboard = 1 THEN 'Yes' WHEN b.Billboard = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.OnlineReview = 1 THEN 'Yes' WHEN b.OnlineReview = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.TV = 1 THEN 'Yes' WHEN b.TV = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.Website = 1 THEN 'Yes' WHEN b.Website = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.BuildingSignDriveBy = 1 THEN 'Yes' WHEN b.BuildingSignDriveBy = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.Facebook = 1 THEN 'Yes' WHEN b.Facebook = 0 THEN 'No' ELSE '' END,\n" +
-
-                        " CASE WHEN b.School = 1 THEN IFNULL(b.School_text,'') WHEN b.School = 0 THEN 'No' ELSE '' END,\n" +
-
-                        " CASE WHEN b.Twitter = 1 THEN 'Yes' WHEN b.Twitter = 0 THEN 'No' ELSE '' END,\n" +
-
-                        " CASE WHEN b.Magazine = 1 THEN IFNULL(b.Magazine_text,'') WHEN b.Magazine = 0 THEN 'No' ELSE '' END, " +
-                        " CASE WHEN b.Newspaper = 1 THEN IFNULL(b.Newspaper_text,'') WHEN b.Newspaper = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.FamilyFriend = 1 THEN IFNULL(b.FamilyFriend_text,'') WHEN b.FamilyFriend = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.UrgentCare = 1 THEN IFNULL(b.UrgentCare_text,'') WHEN b.UrgentCare = 0 THEN 'No' ELSE '' END,\n" +
-                        " CASE WHEN b.CommunityEvent = 1 THEN IFNULL(b.CommunityEvent_text,'') WHEN b.CommunityEvent = 0 THEN 'No' ELSE '' END, \n" +
-                        " IFNULL(b.Work_text,''),\n" +
-                        " IFNULL(b.Physician_text,''),\n " +
-                        " IFNULL(b.Other_text,''), \n " +
-
-                        " IFNULL(DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T'),DATE_FORMAT(a.DateofService,'%m/%d/%Y %T')),CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" + Attorney + "" +
+                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " + //2
+                        " IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Address,''), IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''), " + //8
+                        " IFNULL(a.PhNumber,''), IFNULL(a.Email,''), IFNULL(a.ReasonVisit,''), " + //11
+                        " CASE WHEN b.ReturnPatient = 1 THEN 'Yes' WHEN b.ReturnPatient = 0 THEN 'No' ELSE '' END,\n" + //12
+                        " CASE WHEN b.Google = 1 THEN 'Yes' WHEN b.Google = 0 THEN 'No' ELSE '' END,\n" +//13
+                        " CASE WHEN b.MapSearch = 1 THEN 'Yes' WHEN b.MapSearch = 0 THEN 'No' ELSE '' END,\n" +//14
+                        " CASE WHEN b.Billboard = 1 THEN 'Yes' WHEN b.Billboard = 0 THEN 'No' ELSE '' END,\n" +//15
+                        " CASE WHEN b.OnlineReview = 1 THEN 'Yes' WHEN b.OnlineReview = 0 THEN 'No' ELSE '' END,\n" +//16
+                        " CASE WHEN b.TV = 1 THEN 'Yes' WHEN b.TV = 0 THEN 'No' ELSE '' END,\n" +//17
+                        " CASE WHEN b.Website = 1 THEN 'Yes' WHEN b.Website = 0 THEN 'No' ELSE '' END,\n" +//18
+                        " CASE WHEN b.BuildingSignDriveBy = 1 THEN 'Yes' WHEN b.BuildingSignDriveBy = 0 THEN 'No' ELSE '' END,\n" + //19
+                        " CASE WHEN b.Facebook = 1 THEN 'Yes' WHEN b.Facebook = 0 THEN 'No' ELSE '' END,\n" +//20
+                        " CASE WHEN b.School = 1 THEN IFNULL(b.School_text,'') WHEN b.School = 0 THEN 'No' ELSE '' END,\n" +//21
+                        " CASE WHEN b.Twitter = 1 THEN 'Yes' WHEN b.Twitter = 0 THEN 'No' ELSE '' END,\n" +//22
+                        " CASE WHEN b.Magazine = 1 THEN IFNULL(b.Magazine_text,'') WHEN b.Magazine = 0 THEN 'No' ELSE '' END, " +//23
+                        " CASE WHEN b.Newspaper = 1 THEN IFNULL(b.Newspaper_text,'') WHEN b.Newspaper = 0 THEN 'No' ELSE '' END,\n" +//24
+                        " CASE WHEN b.FamilyFriend = 1 THEN IFNULL(b.FamilyFriend_text,'') WHEN b.FamilyFriend = 0 THEN 'No' ELSE '' END,\n" +//25
+                        " CASE WHEN b.UrgentCare = 1 THEN IFNULL(b.UrgentCare_text,'') WHEN b.UrgentCare = 0 THEN 'No' ELSE '' END,\n" + //26
+                        " CASE WHEN b.CommunityEvent = 1 THEN IFNULL(b.CommunityEvent_text,'') WHEN b.CommunityEvent = 0 THEN 'No' ELSE '' END, \n" +//27
+                        " IFNULL(b.Work_text,''), IFNULL(b.Physician_text,''), IFNULL(b.Other_text,''), \n " + //30
+                        " DATE_FORMAT(a.DateofService,'%m/%d/%Y %T')," + //31
+                        " CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" + Attorney + "" + //32
                         " FROM " + Database + ".PatientReg a " +
+                        " STRAIGHT_JOIN " + Database + ".PatientVisit d on d.PatientRegId = a.ID " +
                         " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId " +
-                        " INNER JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id " +
-                        " WHERE a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' ";
+                        " LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id " +
+                        " WHERE " +
+                        " DATE_FORMAT(d.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
+                        " AND a.Status = 0 GROUP BY a.MRN ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {

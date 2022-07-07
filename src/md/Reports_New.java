@@ -402,13 +402,40 @@ public class Reports_New extends HttpServlet {
         String FromDate = request.getParameter("FromDate").trim();
         String ToDate = request.getParameter("ToDate").trim();
         try {
-            Query = " Select CASE WHEN a.DateofService = 'now()' THEN DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T') \n WHEN a.DateofService = NULL THEN DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T')\n ELSE DATE_FORMAT(a.DateofService,'%m/%d/%Y %T') END, IFNULL(b.LastName,''), IFNULL(b.FirstName,''), \n IFNULL(b.PhNumber,''), IFNULL(DATE_FORMAT(b.DOB,'%m/%d/%Y'),''),  CASE WHEN d.Race = 1 THEN 'Black or African American' WHEN d.Race = 2 THEN 'American Indian' WHEN d.Race = 3 THEN 'Asian' WHEN d.Race = 4 THEN 'Native Hawaiian or Other Specific Islander' WHEN d.Race = 5 THEN 'White' WHEN d.Race = 6 THEN 'Others' ELSE 'Others' END,\n IFNULL(b.Gender,''), IFNULL(b.ZipCode,''), IFNULL(b.County,''),IFNULL(a.ReasonVisit,''), \n CASE WHEN b.SelfPayChk = 1 THEN 'Insured' WHEN b.SelfPayChk = 0 THEN 'SelfPay' ELSE 'SelfPay' END, b.ID, b.COVIDStatus, a.Id,  CASE WHEN b.Ethnicity = 1 THEN 'Hispanic or Latino' WHEN b.Ethnicity = 2 THEN 'Non Hispanic or Latino'  WHEN b.Ethnicity = 3 THEN 'Others' ELSE 'Others' END, b.MRN, IFNULL(b.DOB,'') \n from " + Database + ".PatientReg b\n STRAIGHT_JOIN " + Database + ".PatientVisit a on a.PatientRegId = b.ID \n STRAIGHT_JOIN " + Database + ".PatientReg_Details d on a.PatientRegId = d.PatientRegId  where b.Status = 0 and  DATE_FORMAT(a.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59'";
+            Query = " Select " +
+                    "CASE " +
+                    " WHEN a.DateofService = 'now()' THEN DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T') " +
+                    " WHEN a.DateofService = NULL THEN DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T') " +
+                    " ELSE DATE_FORMAT(a.DateofService,'%m/%d/%Y %T') END, IFNULL(b.LastName,''), " +
+                    " IFNULL(b.FirstName,''), IFNULL(b.PhNumber,''), IFNULL(DATE_FORMAT(b.DOB,'%m/%d/%Y'),''),  " +
+                    " CASE " +
+                    " WHEN d.Race = 1 THEN 'Black or African American' " +
+                    " WHEN d.Race = 2 THEN 'American Indian' " +
+                    " WHEN d.Race = 3 THEN 'Asian' " +
+                    " WHEN d.Race = 4 THEN 'Native Hawaiian or Other Specific Islander' " +
+                    " WHEN d.Race = 5 THEN 'White' " +
+                    " WHEN d.Race = 6 THEN 'Others' ELSE 'Others' END, " +
+                    " IFNULL(b.Gender,''), IFNULL(b.ZipCode,''), IFNULL(b.County,''),IFNULL(a.ReasonVisit,''), " +
+                    " CASE " +
+                    " WHEN b.SelfPayChk = 1 THEN 'Insured' " +
+                    " WHEN b.SelfPayChk = 0 THEN 'SelfPay' ELSE 'SelfPay' END," +
+                    "  b.ID, b.COVIDStatus, a.Id,  " +
+                    " CASE WHEN b.Ethnicity = 1 THEN 'Hispanic or Latino' " +
+                    " WHEN b.Ethnicity = 2 THEN 'Non Hispanic or Latino'  " +
+                    " WHEN b.Ethnicity = 3 THEN 'Others' ELSE 'Others' END, b.MRN, IFNULL(b.DOB,'') " +
+                    " from " + Database + ".PatientReg b " +
+                    " STRAIGHT_JOIN " + Database + ".PatientVisit a on a.PatientRegId = b.ID  " +
+                    " STRAIGHT_JOIN " + Database + ".PatientReg_Details d on a.PatientRegId = d.PatientRegId  " +
+                    " WHERE b.Status = 0 and " +
+                    " DATE_FORMAT(a.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
                 String PriInsuranceName = "";
                 if (rset.getString(11).equals("Insured")) {
-                    Query2 = "Select IFNULL(b.PayerName,'')  from " + Database + ".InsuranceInfo a  LEFT JOIN oe_2.ProfessionalPayers b on a.PriInsuranceName = b.Id where a.PatientRegId = " + rset.getInt(12);
+                    Query2 = "Select IFNULL(b.PayerName,'')  from " + Database + ".InsuranceInfo a  " +
+                            " LEFT JOIN oe_2.ProfessionalPayers b on a.PriInsuranceName = b.Id " +
+                            " where a.PatientRegId = " + rset.getInt(12);
                     stmt2 = conn.createStatement();
                     rset2 = stmt2.executeQuery(Query2);
                     if (rset2.next())
@@ -418,7 +445,9 @@ public class Reports_New extends HttpServlet {
                 } else {
                     PriInsuranceName = "Self Pay";
                 }
-                Query2 = "Select COUNT(*)  from " + Database + ".Patient_AdditionalInfo  where PatientRegId = " + rset.getInt(12) + " and VisitId='" + rset.getInt(14) + "'";
+                Query2 = "Select COUNT(*)  from " + Database + ".Patient_AdditionalInfo  " +
+                        "where PatientRegId = " + rset.getInt(12) + " and " +
+                        " VisitId='" + rset.getInt(14) + "'";
                 stmt2 = conn.createStatement();
                 rset2 = stmt2.executeQuery(Query2);
                 if (rset2.next())

@@ -14,21 +14,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 @SuppressWarnings("Duplicates")
 public class EligibilityInquiry_3 extends HttpServlet {
-    private Statement stmt = null;
-    private ResultSet rset = null;
-    private String Query = "";
-    private Connection conn = null;
 
     private static void pushLogs(String Message, Exception exp) {
         try {
@@ -84,6 +80,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
         String DatabaseName;
         PrintWriter out = new PrintWriter(response.getOutputStream());
         Services supp = new Services();
+        Connection conn = null;
 
         String ActionID;
         ServletContext context = null;
@@ -137,15 +134,15 @@ public class EligibilityInquiry_3 extends HttpServlet {
             switch (ActionID) {
                 case "EligibilityGetInput":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2", "Input Fields Details", FacilityIndex);
-                    this.EligibilityGetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    EligibilityGetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
                     break;
                 case "GetDetails":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Patient Details", "Get Patient Details and Auto Fill the Input Fields", FacilityIndex);
-                    this.GetDetails(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    GetDetails(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
                     break;
                 case "GetResponse":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Get Insurance Information", "Get Insurance Info, Response from finaltrizetto And eireponse Class", FacilityIndex);
-                    this.GetResponse(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    GetResponse(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
                     break;
                 default:
                     helper.deleteUserSession(request, conn, session.getId());
@@ -176,7 +173,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
         }
     }
 
-    private void EligibilityGetInput(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
+    private void EligibilityGetInput(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper) throws FileNotFoundException {
         ResultSet rset = null;
         Statement stmt = null;
         String Query = "";
@@ -202,20 +199,23 @@ public class EligibilityInquiry_3 extends HttpServlet {
         StringBuffer AvailityPayersList = new StringBuffer();
         String PatientId = request.getParameter("PatientId");
         ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
-
+        String patName = "";
+        int profPayerIdx = 0;
+        String payerName = "";
+        String PayerId = "";
         try {
 
-            Query = "Select MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) " +
+/*            Query = "Select MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) " +
                     "from " + Database + ".PatientReg where status = 0 and ID = " + PatientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             //PatientList.append("<option class=Inner value='0'>Please Select Patient</option>");
-            while (rset.next()) {
+            if (rset.next()) {
                 PatientMRN = rset.getString(1);
                 PatientList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + " (" + rset.getString(1) + ")</option>");
             }
             rset.close();
-            stmt.close();
+            stmt.close();*/
 
             Query = "Select NPI,proname from oe.clients where Id = " + ClientId;
             stmt = conn.createStatement();
@@ -226,10 +226,14 @@ public class EligibilityInquiry_3 extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ID, IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(DATE_FORMAT(DOB, '%Y%m%d'),''),IFNULL(DATE_FORMAT(DateofService,'%d-%m-%Y %T')," +
-                    "DATE_FORMAT(CreatedDate,'%d-%m-%Y %T')), gender, " +
-                    " IFNULL(DATE_FORMAT(DOB, '%Y-%m-%d'),''), IFNULL(DATE_FORMAT(DateofService,'%Y-%m-%d'),DATE_FORMAT(CreatedDate,'%Y-%m-%d')) " +
-                    "from " + Database + ".PatientReg " + " where ID = '" + PatientId + "'";
+
+            Query = " Select ID, IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(DATE_FORMAT(DOB, '%Y%m%d'),'')," +
+                    " IFNULL(DATE_FORMAT(DateofService,'%d-%m-%Y %T'), DATE_FORMAT(CreatedDate,'%d-%m-%Y %T')), " +
+                    " gender, IFNULL(DATE_FORMAT(DOB, '%Y-%m-%d'),''), IFNULL(DATE_FORMAT(DateofService,'%Y-%m-%d'), " +
+                    " DATE_FORMAT(CreatedDate,'%Y-%m-%d'))," +
+                    " MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) " +
+                    " FROM " + Database + ".PatientReg " +
+                    " WHERE ID = '" + PatientId + "' AND status = 0";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -241,6 +245,8 @@ public class EligibilityInquiry_3 extends HttpServlet {
                 Gender = rset.getString(6).toUpperCase();
                 DOBAvaility = rset.getString(7);
                 DOSAvaility = rset.getString(8);
+                PatientMRN = rset.getString(9);
+                patName = rset.getString(10);
             }
             rset.close();
             stmt.close();
@@ -268,19 +274,32 @@ public class EligibilityInquiry_3 extends HttpServlet {
             stmt.close();
 
             if (InsuranceFound > 0) {
-                Query = "Select GrpNumber, MemId from " + Database + ".InsuranceInfo where PatientRegId = " + PatientRegId;
+                Query = "Select GrpNumber, MemId,PriInsuranceName from " + Database + ".InsuranceInfo " +
+                        " where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
                     GroupNo = rset.getString(1);
                     SubscriberID = rset.getString(2);
+                    profPayerIdx = rset.getInt(3);
+                }
+                rset.close();
+                stmt.close();
+
+                Query = "SELECT PayerName,PayerId FROM oe_2.ProfessionalPayers WHERE id = " + profPayerIdx;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    payerName = rset.getString(1).trim();
+                    PayerId = rset.getString(2).trim();
                 }
                 rset.close();
                 stmt.close();
             }
 
             if (ClientId == 9 || ClientId == 28) {
-                Query = "Select COUNT(*) from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = " + PatientRegId;
+                Query = "Select COUNT(*) from " + Database + ".Patient_HealthInsuranceInfo " +
+                        " where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -290,12 +309,16 @@ public class EligibilityInquiry_3 extends HttpServlet {
                 stmt.close();
 
                 if (InsuranceFound > 0) {
-                    Query = "Select HISubscriberGroupNo,HISubscriberPolicyNo from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = " + PatientRegId;
+                    Query = "Select HISubscriberGroupNo,HISubscriberPolicyNo,HIPrimaryInsurance " +
+                            " from " + Database + ".Patient_HealthInsuranceInfo " +
+                            " where PatientRegId = " + PatientRegId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
                         GroupNo = rset.getString(1);
                         SubscriberID = rset.getString(2);
+                        payerName = rset.getString(3).trim();
+                        PayerId = rset.getString(3).trim();
                     }
                     rset.close();
                     stmt.close();
@@ -304,7 +327,8 @@ public class EligibilityInquiry_3 extends HttpServlet {
 
             SubscriberID = SubscriberID.replace("-", "");
             Query = "Select IFNULL(PatientMRN,''), IFNULL(Name,''), IFNULL(DateofBirth,''),IFNULL(DateofService,''), IFNULL(PolicyStatus,''), IFNULL(strmsg,''), " +
-                    " IFNULL(InsuranceNum,''), Id from oe.EligibilityInquiry where ltrim(rtrim(UPPER(CreatedBy))) = ltrim(rtrim(UPPER('" + UserId + "'))) " +
+                    " IFNULL(InsuranceNum,''), Id from oe.EligibilityInquiry " +
+                    " where ltrim(rtrim(UPPER(CreatedBy))) = ltrim(rtrim(UPPER('" + UserId + "'))) " +
                     " and PatientMRN = '" + PatientMRN + "' Group by DateofService";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -350,11 +374,20 @@ public class EligibilityInquiry_3 extends HttpServlet {
             Parser.SetField("CDRList", String.valueOf(CDRList));
             Parser.SetField("PatientId", String.valueOf(PatientId));
             Parser.SetField("PatientRegId", String.valueOf(PatientId));
+            Parser.SetField("profPayerIdx", String.valueOf(profPayerIdx));
+            Parser.SetField("patName", patName);
+            Parser.SetField("payerName", payerName);
+            Parser.SetField("PayerId", PayerId);
             Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(servletContext)) + "Forms/EligibilityGetInput2_Copy.html");
         } catch (Exception ex) {
             pushLogs("Error in EligibilityGetInput in main : ", ex);
-            out.println("Error:-" + ex.getMessage());
-            out.println(Arrays.toString(ex.getStackTrace()));
+            helper.SendEmailWithAttachment("Error in EligibilityInquiry_3 ** (EligibilityGetInput )", servletContext, ex, "EligibilityInquiry_3", "EligibilityGetInput", conn);
+            Services.DumException("EligibilityInquiry_3", "Eligibility Get Input", request, ex, getServletContext());
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "PatientUpdateInfo");
+            Parser.SetField("ActionID", "GetInput&ID=" + PatientId);
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+
         }
     }
 

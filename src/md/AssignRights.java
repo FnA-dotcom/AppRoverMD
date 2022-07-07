@@ -94,13 +94,13 @@ public class AssignRights extends HttpServlet {
                     GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper, UserType);
                     break;
                 case "AssignRights":
-                    GetInputAfterUserCreation(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
+                    GetInputAfterUserCreation(request, out, conn, context, UserType, FacilityIndex, UserId);
                     break;
                 case "SaveRights":
                     SaveRights(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
                     break;
                 case "GetRights":
-                    GetRights(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
+                    GetRights(request, out, conn, context, UserId, UserType);
                     break;
                 case "GetRightsForScreen":
                     GetRightsForScreen(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
@@ -174,7 +174,7 @@ public class AssignRights extends HttpServlet {
             for (Integer aOrdering : Ordering) {
                 if (userType == 4)
                     Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
-                            " where Status=0 AND Id NOT IN (41,42,43,44,45,35,34,60) AND Ordering = " + aOrdering;
+                            " where Status=0 AND Id NOT IN (43,44,45,35,34,60) AND Ordering = " + aOrdering;
                 else
                     Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
                             " where Status=0 AND Ordering = " + aOrdering;
@@ -221,7 +221,7 @@ public class AssignRights extends HttpServlet {
     }
 
 
-    void GetInputAfterUserCreation(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId, UtilityHelper helper) throws ServletException, IOException {
+    private void GetInputAfterUserCreation(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, int userType, int ClientId, String UserId) throws ServletException, IOException {
 
         Statement stmt = null;
         ResultSet rset = null;
@@ -235,7 +235,14 @@ public class AssignRights extends HttpServlet {
         try {
 
 //            Query = "SELECT  username,userid FROM oe.sysusers where indexptr=" + Employee_id + " and (usertype = 4 or usertype=7 or usertype=10)";
-            Query = "SELECT  username,userid FROM oe.sysusers where indexptr=" + Employee_id + " and usertype IN (7,10,9,12,2,3)";
+//            Query = "SELECT  username,userid FROM oe.sysusers where indexptr=" + Employee_id + " and usertype IN (7,10,9,12,2,3)";
+            if (userType == 4)
+                Query = "SELECT indexptr , username FROM oe.sysusers where clientid = " + ClientId + " AND status = 0";
+            else if (UserId.equals("monica"))
+                Query = "SELECT indexptr , username FROM oe.sysusers WHERE status = 0 ORDER BY username ";
+            else
+                Query = "SELECT indexptr , username FROM oe.sysusers where usertype IN (7,10,9,12,2,3) AND status = 0";
+
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -246,7 +253,12 @@ public class AssignRights extends HttpServlet {
             stmt.close();
 
 
-            Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames";
+//            Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames";
+            if (userType == 4)
+                Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames " +
+                        " WHERE Ordering NOT IN (8,9,11,12,13)";
+            else
+                Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next())
@@ -255,8 +267,14 @@ public class AssignRights extends HttpServlet {
             stmt.close();
 
 
-            for (int i = 0; i < Ordering.size(); i++) {
-                Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + Ordering.get(i);
+            for (Integer aOrdering : Ordering) {
+//                Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + aOrdering;
+                if (userType == 4)
+                    Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                            " where Status=0 AND Id NOT IN (43,44,45,35,34,60) AND Ordering = " + aOrdering;
+                else
+                    Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                            " where Status=0 AND Ordering = " + aOrdering;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -375,7 +393,7 @@ public class AssignRights extends HttpServlet {
         }
     }
 
-    void GetRights(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId, UtilityHelper helper) throws ServletException, IOException {
+    void GetRights(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, int userType) throws ServletException, IOException {
 
         Statement stmt = null;
         ResultSet rset = null;
@@ -389,7 +407,12 @@ public class AssignRights extends HttpServlet {
         try {
             int IsAdmin = 0;
             int null_data_found = 0;
-            Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames";
+//            Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames";
+            if (userType == 4)
+                Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames " +
+                        " WHERE Ordering NOT IN (8,9,11,12,13)";
+            else
+                Query = "SELECT DISTINCT(Ordering) FROM oe.ScreenNames";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next())
@@ -410,8 +433,14 @@ public class AssignRights extends HttpServlet {
 
             if (null_data_found > 0) {
                 if (IsAdmin == 1) {
-                    for (int i = 0; i < Ordering.size(); i++) {
-                        Query = "SELECT id,ScreenLevel , ScreenName,ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + Ordering.get(i);
+                    for (Integer aOrdering : Ordering) {
+//                        Query = "SELECT id,ScreenLevel , ScreenName,ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + aOrdering;
+                        if (userType == 4)
+                            Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                                    " where Status=0 AND Id NOT IN (43,44,45,35,34,60) AND Ordering = " + aOrdering;
+                        else
+                            Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                                    " where Status=0 AND Ordering = " + aOrdering;
                         stmt = conn.createStatement();
                         rset = stmt.executeQuery(Query);
                         while (rset.next()) {
@@ -446,8 +475,14 @@ public class AssignRights extends HttpServlet {
                     rset.close();
                     stmt.close();
 
-                    for (int i = 0; i < Ordering.size(); i++) {
-                        Query = "SELECT id,ScreenLevel , ScreenName,ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + Ordering.get(i);
+                    for (Integer aOrdering : Ordering) {
+//                        Query = "SELECT id,ScreenLevel , ScreenName,ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + aOrdering;
+                        if (userType == 4)
+                            Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                                    " where Status=0 AND Id NOT IN (43,44,45,35,34,60) AND Ordering = " + aOrdering;
+                        else
+                            Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                                    " where Status=0 AND Ordering = " + aOrdering;
                         stmt = conn.createStatement();
                         rset = stmt.executeQuery(Query);
                         while (rset.next()) {
@@ -483,8 +518,14 @@ public class AssignRights extends HttpServlet {
                     out.println("999~" + checkboxes);
                 }
             } else {
-                for (int i = 0; i < Ordering.size(); i++) {
-                    Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + Ordering.get(i);
+                for (Integer aOrdering : Ordering) {
+//                    Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames where Status=0 and Ordering = " + aOrdering;
+                    if (userType == 4)
+                        Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                                " where Status=0 AND Id NOT IN (43,44,45,35,34,60) AND Ordering = " + aOrdering;
+                    else
+                        Query = "SELECT id,ScreenLevel , ScreenName, ScreenLink FROM oe.ScreenNames " +
+                                " where Status=0 AND Ordering = " + aOrdering;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     while (rset.next()) {
