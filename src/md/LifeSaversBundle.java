@@ -308,7 +308,7 @@ public class LifeSaversBundle extends HttpServlet {
                             "from " + Database + ".DoctorsList where Id = " + DoctorId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
+                    if (rset.next()) {
                         DoctorName = rset.getString(1);
                     }
                     rset.close();
@@ -333,7 +333,7 @@ public class LifeSaversBundle extends HttpServlet {
                     " FROM " + Database + ".InsuranceInfo  WHERE PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 WorkersCompPolicy = rset.getInt(1);
                 MotorVehAccident = rset.getInt(2);
                 if (WorkersCompPolicy == 0) {

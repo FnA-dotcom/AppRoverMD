@@ -516,6 +516,7 @@ public class PatientVisit extends HttpServlet {
         String NewDateofService = "";
         int NewDoctorId = 0;
         String NewReasonVisit = "";
+        String WEB = "";
         int VisitId = 0;
         try {
             MRN = request.getParameter("MRN").trim();
@@ -524,6 +525,7 @@ public class PatientVisit extends HttpServlet {
 //            System.out.println("Patient DOS : " + NewDateofService);
             NewDoctorId = Integer.parseInt(request.getParameter("NewDoctorId").trim());
             NewReasonVisit = request.getParameter("ReasonVisit").trim();
+            String RequestType = request.getParameter("RequestType").trim();
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm", Locale.US);
             LocalDateTime NDOS = LocalDateTime.parse(NewDateofService, formatter);
@@ -696,6 +698,25 @@ public class PatientVisit extends HttpServlet {
                 Parser.SetField("ClientIndex", String.valueOf(ClientId));
                 Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageVictoria.html");
             } else {
+                if(RequestType.equals("GetValues")){
+                    //redirection in case of external patient
+                    Parsehtm Parser = new Parsehtm(request);
+                    PreparedStatement ps = conn.prepareStatement("SELECT website from oe.ClientsWebsite where clientID=?");
+                    ps.setInt(1, ClientId);
+
+                    rset = ps.executeQuery();
+                    if (rset.next()) {
+                        WEB = rset.getString(1);
+                    }
+                    ps.close();
+                    rset.close();
+
+                    Parser.SetField("Message", "New Visit has been Created For the MRN : " + MRN );
+                    Parser.SetField("WEB", WEB);
+                    Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_SumWill.html");
+                    return;
+                }
+
                 final Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("UserId", String.valueOf(UserId));
                 Parser.SetField("Message", "New Visit has been Created For the MRN : " + MRN + Message);

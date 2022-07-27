@@ -19,7 +19,7 @@
       <case-sensitivity plain-identifiers="exact" quoted-identifiers="exact" />
       <secret-storage>master_key</secret-storage>
       <user-name>rovermdadmin</user-name>
-      <introspection-schemas>*:ER_Dallas,floresville,frontlin_er,hieghts,oe,oe_2,richmond,roverlab,sanmarcos,schertz,victoria,willowbrook</introspection-schemas>
+      <introspection-schemas>*:ER_Dallas,floresville,frontlin_er,hieghts,oe,oe_2,richmond,roverlab,sanmarcos,schertz,summerwood,victoria,willowbrook</introspection-schemas>
     </data-source>
   </component>
 </project>

@@ -27,11 +27,6 @@ import java.time.Period;
 @SuppressWarnings("Duplicates")
 public class PrintLabel4 extends HttpServlet {
 
-    public static int getAge(LocalDate dob) {
-        LocalDate curDate = LocalDate.now();
-        return Period.between(dob, curDate).getYears();
-    }
-
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -42,6 +37,11 @@ public class PrintLabel4 extends HttpServlet {
 
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         this.HandleRequest(request, response);
+    }
+
+    public static int getAge(LocalDate dob) {
+        LocalDate curDate = LocalDate.now();
+        return Period.between(dob, curDate).getYears();
     }
 
     public void HandleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
@@ -145,6 +145,8 @@ public class PrintLabel4 extends HttpServlet {
         String ReasonVisit = "";
         int SelfPayChk = 0;
         String InsuranceName = "";
+        String OtherInsuranceName = "";
+        String PriInsuranceName = "";
         String insuranceStatus = "";
         try {
             if (ClientId == 8) {
@@ -189,6 +191,9 @@ public class PrintLabel4 extends HttpServlet {
                     ReasonVisit = rset.getString(14);
                     SelfPayChk = rset.getInt(15);
                     InsuranceName = rset.getString(16);
+                    OtherInsuranceName = rset.getString(17);
+                    PriInsuranceName = rset.getString(18);
+
                 } else {
                     InsuranceName = rset.getString(14);
                 }
@@ -257,6 +262,25 @@ public class PrintLabel4 extends HttpServlet {
 
                 } else {
                     ReasonVisit = ReasonVisit + "-" + insuranceStatus;
+                }
+
+                if (OtherInsuranceName.equals("-") == false) {
+
+                    if (OtherInsuranceName.length() > 30)
+                        OtherInsuranceName = OtherInsuranceName.substring(0, 30);
+                    else if (OtherInsuranceName.length() > 20)
+                        OtherInsuranceName = OtherInsuranceName.substring(0, 20);
+                    else
+                        OtherInsuranceName = OtherInsuranceName.substring(0, OtherInsuranceName.length());
+                }
+                if (InsuranceName.equals("-") == false) {
+
+                    if (InsuranceName.length() > 30)
+                        InsuranceName = InsuranceName.substring(0, 30);
+                    else if (InsuranceName.length() > 20)
+                        InsuranceName = InsuranceName.substring(0, 20);
+                    else
+                        InsuranceName = InsuranceName.substring(0, InsuranceName.length());
                 }
             }
         } catch (Exception ex3) {
@@ -341,17 +365,30 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 690.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
 
 
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
+
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                        System.out.println("\n\nINS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                        System.out.println("\n\nINS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -396,15 +433,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 615.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -449,15 +497,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 545.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -502,15 +561,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 475);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -553,15 +623,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setTextMatrix((float) x, 400.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -605,15 +686,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 330.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -657,15 +749,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 255.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -709,15 +812,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 185.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -761,15 +875,26 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 110.0f);
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
 
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 
@@ -813,16 +938,27 @@ public class PrintLabel4 extends HttpServlet {
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
                             pdfContentByte.setTextMatrix((float) x, 40.0f);
-                            pdfContentByte.showText("INS:(" + InsuranceName + ")");
-                            if (InsuranceName.equals("-")) {
-                                pdfContentByte.showText("Self Pay");
-                            } else {
-                                if (InsuranceName.length() < 20) {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "");
-                                } else {
-                                    pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                }
 
+                            switch (InsuranceName) {
+                                case "-":
+                                    pdfContentByte.showText("Self Pay");
+                                    break;
+
+                                case "Others":
+                                    if (OtherInsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                    }
+                                    break;
+
+                                default:
+                                    if (InsuranceName.length() < 20) {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "");
+                                    } else {
+                                        pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                    }
+                                    break;
                             }
                             pdfContentByte.endText();
 

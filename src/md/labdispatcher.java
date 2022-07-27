@@ -184,15 +184,21 @@ public class labdispatcher {
 	   /* H	Hispanic or Latino
 	    N	Not Hispanic or Latino
 	    U	Unknown*/
-
+        String Address1 = "";
         try {
-            Query = "select id,MRN,FirstName,LastName ,MiddleInitial,DOB,Age,substr(Gender,1,1),Email,PhNumber ,Address,City ,State,County,ZipCode,Ethnicity,Race,TestingLocation from " + Database + ".PatientReg where id=" + PatRegidx;
+            Query = "select id,MRN,FirstName,LastName ,MiddleInitial,DOB,Age,substr(Gender,1,1),Email," + //9
+                    "PhNumber ,IFNULL(Address,'-'),City ,State,County,ZipCode,Ethnicity,Race,TestingLocation " + //18
+                    "from " + Database + ".PatientReg where id=" + PatRegidx;
             hstmt = Conn.createStatement();
             for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                Address1 = hrset.getString(11);
+                if (!Address1.equals("-")) {
+                    if (Address1.length() > 51)
+                        Address1 = Address1.substring(0, 50);
+                }
                 //  PID|1|457841|354789||Mehmood^Mouhid||20001025|M||A|17154 butte creek^^Houston^TX^74986||4694980033||||||||H|
-                _PID = "PID|1|" + hrset.getString(2) + "|||" + hrset.getString(4) + "^" + hrset.getString(3) + "||" + hrset.getString(6).replace("-", "") + "|" +
-                        hrset.getString(8).toUpperCase() + "||" + getRace(hrset.getString(17)) + "|" + hrset.getString(11) + "^^" + hrset.getString(12) + "^" + hrset.getString(13) + "^" + hrset.getString(15) + "||" + hrset.getString(10).replace("-", "") +
-                        "||" + hrset.getString(9).trim() + "||||||" + getEthnicity(hrset.getString(16)) + "|";
+//                _PID = "PID|1|" + hrset.getString(2) + "|||" + hrset.getString(4) + "^" + hrset.getString(3) + "||" + hrset.getString(6).replace("-", "") + "|" + hrset.getString(8).toUpperCase() + "||" + getRace(hrset.getString(17)) + "|" + hrset.getString(11) + "^^" + hrset.getString(12) + "^" + hrset.getString(13) + "^" + hrset.getString(15) + "||" + hrset.getString(10).replace("-", "") + "||" + hrset.getString(9).trim() + "||||||" + getEthnicity(hrset.getString(16)) + "|";
+                _PID = "PID|1|" + hrset.getString(2) + "|||" + hrset.getString(4) + "^" + hrset.getString(3) + "||" + hrset.getString(6).replace("-", "") + "|" + hrset.getString(8).toUpperCase() + "||" + getRace(hrset.getString(17)) + "|" + Address1 + "^^" + hrset.getString(12) + "^" + hrset.getString(13) + "^" + hrset.getString(15) + "||" + hrset.getString(10).replace("-", "") + "||" + hrset.getString(9).trim() + "||||||" + getEthnicity(hrset.getString(16)) + "|";
                 locationindex = hrset.getString(18);
             }
             hrset.close();
