@@ -2018,6 +2018,11 @@ public class DownloadBundle extends HttpServlet {
                 }
                 rset.close();
                 ps.close();
+                System.out.println("AGE BEFORE " + DOBForAge);
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+                }
+                System.out.println("AGE AFTER " + Age);
                 ps = conn.prepareStatement("Select name from oe.clients where Id = ?");
                 ps.setInt(1, ClientId);
                 rset = ps.executeQuery();
@@ -2030,7 +2035,12 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error In PateintReg:--" + e.getMessage());
                 out.println(ps.toString());
             }
-            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation,EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState,PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber,GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode,CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk from " + Database + ".PatientReg_Details where PatientRegId = ?");
+            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation," +
+                    "EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState," +
+                    "PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber," +
+                    "GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode," +
+                    "CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk " +
+                    "from " + Database + ".PatientReg_Details where PatientRegId = ?");
             ps.setInt(1, ID);
             rset = ps.executeQuery();
             while (rset.next()) {
@@ -2065,7 +2075,19 @@ public class DownloadBundle extends HttpServlet {
             ps.close();
             if (WorkersCompPolicyChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), " +
+                            "IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), " +
+                            "IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), " +
+                            "IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), " +
+                            "IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), " +
+                            "IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), " +
+                            "IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), " +
+                            "IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), " +
+                            "IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), " +
+                            "IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), " +
+                            "IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), " +
+                            "IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') " +
+                            "from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -2110,7 +2132,26 @@ public class DownloadBundle extends HttpServlet {
             }
             if (MotorVehicleAccidentChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,''),IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'') from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), " +
+                            "IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), " +
+                            "IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), " +
+                            "IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), " +
+                            "IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), " +
+                            "IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), " +
+                            "IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), " +
+                            "IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), " +
+                            "IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), " +
+                            "IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), " +
+                            "IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), " +
+                            "IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), " +
+                            "IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,'')," +
+                            "IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), " +
+                            "IFNULL(AIIYourCarMakeModelYear,'') " +
+                            "from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -2207,34 +2248,39 @@ public class DownloadBundle extends HttpServlet {
                     break;
             }
 
-            if (GuarantorChk.equals("1")) {
-                Guarantor = "The Patient";
-                GuarantorDOB = DOB;
-                GuarantorSEX = gender;
-                GuarantorSSN = SSN;
-                GuarantorAddress = Address + "";
-                GuarantorPhoneNumber = "" + PhNumber;
-            } else if (GuarantorChk.equals("2")) {
-                Guarantor = "Legal Guardian";
-                GuarantorDOB = "-";
-                GuarantorSEX = "-";
-                GuarantorSSN = "-";
-                GuarantorAddress = "-";
-                GuarantorPhoneNumber = "-";
-            } else if (GuarantorChk.equals("3")) {
-                Guarantor = "Patient Parent";
-                GuarantorDOB = "-";
-                GuarantorSEX = "-";
-                GuarantorSSN = "-";
-                GuarantorAddress = "-";
-                GuarantorPhoneNumber = "-";
-            } else if (GuarantorChk.equals("2")) {
-                Guarantor = "Spouse/Partner";
-                GuarantorDOB = "-";
-                GuarantorSEX = "-";
-                GuarantorSSN = "-";
-                GuarantorAddress = "-";
-                GuarantorPhoneNumber = "-";
+            switch (GuarantorChk) {
+                case "1":
+                    Guarantor = "The Patient";
+                    GuarantorDOB = DOB;
+                    GuarantorSEX = gender;
+                    GuarantorSSN = SSN;
+                    GuarantorAddress = Address + "";
+                    GuarantorPhoneNumber = "" + PhNumber;
+                    break;
+                case "2":
+                    Guarantor = "Legal Guardian";
+                    GuarantorDOB = "-";
+                    GuarantorSEX = "-";
+                    GuarantorSSN = "-";
+                    GuarantorAddress = "-";
+                    GuarantorPhoneNumber = "-";
+                    break;
+                case "3":
+                    Guarantor = "Patient Parent";
+                    GuarantorDOB = "-";
+                    GuarantorSEX = "-";
+                    GuarantorSSN = "-";
+                    GuarantorAddress = "-";
+                    GuarantorPhoneNumber = "-";
+                    break;
+                case "4":
+                    Guarantor = "Spouse/Partner";
+                    GuarantorDOB = "-";
+                    GuarantorSEX = "-";
+                    GuarantorSSN = "-";
+                    GuarantorAddress = "-";
+                    GuarantorPhoneNumber = "-";
+                    break;
             }
             if (WorkersCompPolicyChk == 1) {
                 WorkCompPolicyStr = "Yes";
@@ -2255,7 +2301,33 @@ public class DownloadBundle extends HttpServlet {
             if (AIIDateofAccident.equals("00/00/0000")) {
                 AIIDateofAccident = "";
             }
-            ps = conn.prepareStatement(" Select CASE WHEN MFFirstVisit = 1 THEN 'YES' ELSE '' END,  CASE WHEN MFReturnPat = 1 THEN 'YES' ELSE '' END,  CASE WHEN MFInternetFind = 1 THEN 'YES' ELSE '' END,  CASE WHEN Facebook = 1 THEN 'YES' ELSE '' END,  CASE WHEN MapSearch = 1 THEN 'YES' ELSE '' END,  CASE WHEN GoogleSearch = 1 THEN 'YES' ELSE '' END,  CASE WHEN VERWebsite = 1 THEN 'YES' ELSE '' END,  CASE WHEN WebsiteAds = 1 THEN 'YES' ELSE '' END, CASE WHEN OnlineReviews = 1 THEN 'YES' ELSE '' END, CASE WHEN Twitter = 1 THEN 'YES' ELSE '' END, CASE WHEN LinkedIn = 1 THEN 'YES' ELSE '' END, CASE WHEN EmailBlast = 1 THEN 'YES' ELSE '' END, CASE WHEN YouTube = 1 THEN 'YES' ELSE '' END, CASE WHEN TV = 1 THEN 'YES' ELSE '' END, CASE WHEN Billboard = 1 THEN 'YES' ELSE '' END, CASE WHEN Radio = 1 THEN 'YES' ELSE '' END, CASE WHEN Brochure = 1 THEN 'YES' ELSE '' END, CASE WHEN DirectMail = 1 THEN 'YES' ELSE '' END, CASE WHEN CitizensDeTar = 1 THEN 'YES' ELSE '' END, CASE WHEN LiveWorkNearby = 1 THEN 'YES' ELSE '' END, CASE WHEN FamilyFriend = 1 THEN 'YES' ELSE '' END, IFNULL(FamilyFriend_text,''),  CASE WHEN UrgentCare = 1 THEN 'YES' ELSE '' END, IFNULL(UrgentCare_text,''),  CASE WHEN NewspaperMagazine = 1 THEN 'YES' ELSE '' END, IFNULL(NewspaperMagazine_text,''),  CASE WHEN School = 1 THEN 'YES' ELSE '' END, IFNULL(School_text,''),  CASE WHEN Hotel = 1 THEN 'YES' ELSE '' END, IFNULL(Hotel_text,''), IFNULL(MFPhysician,'')  FROM " + Database + ".MarketingInfo WHERE PatientRegId = ?");
+            ps = conn.prepareStatement(" Select " +
+                    "CASE WHEN MFFirstVisit = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN MFReturnPat = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN MFInternetFind = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN Facebook = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN MapSearch = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN GoogleSearch = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN VERWebsite = 1 THEN 'YES' ELSE '' END,  " +
+                    "CASE WHEN WebsiteAds = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN OnlineReviews = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN Twitter = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN LinkedIn = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN EmailBlast = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN YouTube = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN TV = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN Billboard = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN Radio = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN Brochure = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN DirectMail = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN CitizensDeTar = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN LiveWorkNearby = 1 THEN 'YES' ELSE '' END, " +
+                    "CASE WHEN FamilyFriend = 1 THEN 'YES' ELSE '' END, " +
+                    "IFNULL(FamilyFriend_text,''),  CASE WHEN UrgentCare = 1 THEN 'YES' ELSE '' END, IFNULL(UrgentCare_text,''),  " +
+                    "CASE WHEN NewspaperMagazine = 1 THEN 'YES' ELSE '' END, IFNULL(NewspaperMagazine_text,''),  " +
+                    "CASE WHEN School = 1 THEN 'YES' ELSE '' END, IFNULL(School_text,''),  " +
+                    "CASE WHEN Hotel = 1 THEN 'YES' ELSE '' END, IFNULL(Hotel_text,''), IFNULL(MFPhysician,'')  " +
+                    "FROM " + Database + ".MarketingInfo WHERE PatientRegId = ?");
             ps.setInt(1, ID);
             rset = ps.executeQuery();
             if (rset.next()) {
@@ -2314,12 +2386,7 @@ public class DownloadBundle extends HttpServlet {
             } else {
                 SignImages = null;
             }
-
-
-            if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
-            }
-
+            System.out.println("AGE AFTER 2  -->" + Age);
             String inputFilePathTmp = "";
             String outputFilePathTmp = "";
             inputFilePathTmp = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/ABNformEnglish.pdf";

@@ -5440,9 +5440,6 @@ public class PatientRegRoverLab extends HttpServlet {
                         }
                     });
 
-
-            //session.setDebug(true);
-
             MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress("PrimeScope Diagnostic <no-reply@rovermd.com>"));
             // Set To: header field of the header.
