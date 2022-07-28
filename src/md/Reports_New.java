@@ -25,13 +25,6 @@ import java.time.LocalDate;
 import java.time.Period;
 
 public class Reports_New extends HttpServlet {
-    static String DOS = "";
-
-    static String Acct = "";
-
-    static String printabledate = "";
-
-    private Connection conn = null;
 
     public static int getAge(LocalDate dob) {
         LocalDate curDate = LocalDate.now();
@@ -55,6 +48,7 @@ public class Reports_New extends HttpServlet {
         Services supp = new Services();
         ServletContext context = null;
         context = getServletContext();
+        Connection conn = null;
         try {
             HttpSession session = request.getSession(false);
             UtilityHelper helper = new UtilityHelper();
@@ -76,52 +70,64 @@ public class Reports_New extends HttpServlet {
                     return;
                 }
             } catch (Exception excp) {
-                this.conn = null;
+                conn = null;
                 out.println("Exception excp conn: " + excp.getMessage());
             }
             String ActionID = request.getParameter("ActionID").trim();
-            this.conn = Services.getMysqlConn(context);
-            if (this.conn == null) {
+            conn = Services.getMysqlConn(context);
+            if (conn == null) {
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Error", "Unable to connect. Our team is looking into it!");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            if (ActionID.equals("GetInput_VIPSVIP")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetInput_VIPSVIP(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetReport_VIPSVIP")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetReport_VIPSVIP(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetInput_ReasonLeaving")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetInput_ReasonLeaving(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetReport_ReasonLeaving")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetReport_ReasonLeaving(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetInput_CovidReport")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetInput_CovidReport(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetReport_CovidReport")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetReport_CovidReport(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetInput_PatientLog")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetInput_PatientLog(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetReport_PatientLog")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetReport_PatientLog(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetInput_PatientStatus")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetInput_PatientStatus(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else if (ActionID.equals("GetReport_PatientStatus")) {
-                supp.Dologing(UserId, this.conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
-                GetReport_PatientStatus(request, out, this.conn, context, UserId, DatabaseName, FacilityIndex);
-            } else {
-                helper.deleteUserSession(request, this.conn, session.getId());
-                session.invalidate();
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
+            switch (ActionID) {
+                case "GetInput_VIPSVIP":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetInput_VIPSVIP(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetReport_VIPSVIP":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetReport_VIPSVIP(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetInput_ReasonLeaving":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetInput_ReasonLeaving(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetReport_ReasonLeaving":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetReport_ReasonLeaving(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetInput_CovidReport":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetInput_CovidReport(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetReport_CovidReport":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetReport_CovidReport(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetInput_PatientLog":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetInput_PatientLog(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetReport_PatientLog":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetReport_PatientLog(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetInput_PatientStatus":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetInput_PatientStatus(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetReport_PatientStatus":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Eligibility Inquiry Report Input", "Open Eligibility Inquiry Report Screen", FacilityIndex);
+                    GetReport_PatientStatus(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                default:
+                    helper.deleteUserSession(request, conn, session.getId());
+                    session.invalidate();
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
+                    break;
             }
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
@@ -129,8 +135,8 @@ public class Reports_New extends HttpServlet {
             out.close();
         } finally {
             try {
-                if (this.conn != null)
-                    this.conn.close();
+                if (conn != null)
+                    conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -144,7 +150,6 @@ public class Reports_New extends HttpServlet {
         StringBuffer LeftSideBarMenu = new StringBuffer();
         StringBuffer Header = new StringBuffer();
         StringBuffer Footer = new StringBuffer();
-        StringBuffer CDRList = new StringBuffer();
         try {
             Header = suppMethods.Header(request, out, conn, servletContext, UserId, Database, ClientId);
             LeftSideBarMenu = suppMethods.LeftSideBarMenu(request, out, conn, servletContext, UserId, Database, ClientId);
@@ -162,10 +167,10 @@ public class Reports_New extends HttpServlet {
 
     void GetReport_VIPSVIP(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
         SupportiveMethods suppMethods = new SupportiveMethods();
-        StringBuffer LeftSideBarMenu = new StringBuffer();
-        StringBuffer Header = new StringBuffer();
-        StringBuffer Footer = new StringBuffer();
-        StringBuffer CDRList = new StringBuffer();
+        StringBuffer LeftSideBarMenu;
+        StringBuffer Header;
+        StringBuffer Footer;
+        StringBuilder CDRList = new StringBuilder();
         int SNo = 1;
         Statement stmt = null;
         ResultSet rset = null;
@@ -422,7 +427,7 @@ public class Reports_New extends HttpServlet {
                     "  b.ID, b.COVIDStatus, a.Id,  " +
                     " CASE WHEN b.Ethnicity = 1 THEN 'Hispanic or Latino' " +
                     " WHEN b.Ethnicity = 2 THEN 'Non Hispanic or Latino'  " +
-                    " WHEN b.Ethnicity = 3 THEN 'Others' ELSE 'Others' END, b.MRN, IFNULL(b.DOB,'') " +
+                    " WHEN b.Ethnicity = 3 THEN 'Others' ELSE 'Others' END, b.MRN, IFNULL(b.DOB,''),IFNULL(b.Email,'') " +
                     " from " + Database + ".PatientReg b " +
                     " STRAIGHT_JOIN " + Database + ".PatientVisit a on a.PatientRegId = b.ID  " +
                     " STRAIGHT_JOIN " + Database + ".PatientReg_Details d on a.PatientRegId = d.PatientRegId  " +
@@ -465,29 +470,30 @@ public class Reports_New extends HttpServlet {
                         rset1 = stmt1.executeQuery(Query1);
                         while (rset1.next()) {
                             CDRList.append("<tr>");
-                            CDRList.append("<td align=left>" + rset.getString(16) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset1.getString(1) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset1.getString(2) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(15) + "</td>\n");
+                            CDRList.append("<td align=left>" + rset.getString(16) + "</td>\n"); //MRN
+                            CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");  //DOS
+                            CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n"); //LastName
+                            CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n"); //FirstName
+                            CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");  //Phone
+                            CDRList.append("<td align=left>" + rset.getString(18) + "</td>\n");  //email
+                            CDRList.append("<td align=left>" + rset1.getString(1) + "</td>\n"); // Test
+                            CDRList.append("<td align=left>" + rset1.getString(2) + "</td>\n"); // Result
+                            CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");  // DOB
+                            CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");  //race
+                            CDRList.append("<td align=left>" + rset.getString(15) + "</td>\n");  // ethnicity
                             if (rset.getString(5).equals("")) {
-                                CDRList.append("<td align=left></td>\n");
+                                CDRList.append("<td align=left></td>\n");          //Age
                             } else {
                                 CDRList.append("<td align=left>" + getAge(LocalDate.parse(rset.getString(17))) + "</td>\n");
                             }
-                            CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(8) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(9) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");
-                            CDRList.append("<td align=left>" + PriInsuranceName + "</td>\n");
-                            CDRList.append("<td align=left>" + rset1.getString(3) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset1.getString(4) + "</td>\n");
-                            CDRList.append("<td align=left>" + rset1.getString(5) + "</td>\n");
+                            CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n"); // Gender
+                            CDRList.append("<td align=left>" + rset.getString(8) + "</td>\n"); // Zip
+                            CDRList.append("<td align=left>" + rset.getString(9) + "</td>\n"); // Cunty
+                            CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n"); //Complain
+                            CDRList.append("<td align=left>" + PriInsuranceName + "</td>\n"); // Insurance
+                            CDRList.append("<td align=left>" + rset1.getString(3) + "</td>\n");  //catagory
+                            CDRList.append("<td align=left>" + rset1.getString(4) + "</td>\n"); //status
+                            CDRList.append("<td align=left>" + rset1.getString(5) + "</td>\n");    //transaction Type
                             CDRList.append("</tr>");
                         }
                         rset1.close();
@@ -499,6 +505,7 @@ public class Reports_New extends HttpServlet {
                         CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
                         CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");
                         CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
+                        CDRList.append("<td align=left>" + rset.getString(18) + "</td>\n");  //email
                         CDRList.append("<td align=left> N/A </td>\n");
                         CDRList.append("<td align=left> N/A </td>\n");
                         CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");

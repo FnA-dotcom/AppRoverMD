@@ -214,6 +214,7 @@ public class PatientUpdateInfo extends HttpServlet {
         StringBuffer DoctorsBuffer = new StringBuffer();
         StringBuffer AdditionalInfoSelectBuffer = new StringBuffer();
         StringBuffer PatientCatagoryBuffer = new StringBuffer();
+        StringBuffer TestType = new StringBuffer();
         StringBuffer ReasonLeavingBuffer = new StringBuffer();
         StringBuffer PatientStatusBuffer = new StringBuffer();
         StringBuffer RefPhysicianNameBuffer = new StringBuffer();
@@ -348,7 +349,6 @@ public class PatientUpdateInfo extends HttpServlet {
                     rset.close();
                     stmt.close();
 
-
                     Query = "SELECT CONCAT(PayerId,' - ',LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') ))) AS InsName " +
                             " FROM " + Database + ".ProfessionalPayers WHERE id = " + PriInsCode;
                     stmt = conn.createStatement();
@@ -377,7 +377,7 @@ public class PatientUpdateInfo extends HttpServlet {
 //                        System.out.println("in sQuery of Priinsurence name " + Query);
                     }
 //                    }
-                    // for corporate insiurances 
+                    // for corporate insiurances
                     if (PriInsCode == -999) {
 //                        System.out.println("in sanmarcos if ");
                         Query = "SELECT IFNULL(Name,0) " +
@@ -1018,6 +1018,18 @@ public class PatientUpdateInfo extends HttpServlet {
                     "<option value=\"2\" >SVIP </option>\n" +
                     "</select>\n");
 
+            if (ClientId == 39 || ClientId == 40) { // for Floresville and Schertz
+                Query = "Select Id, TestType from " + Database + ".CovidTestType";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                TestType.append("<option value=\"\" selected>Select Any </option>");
+                while (rset.next()) {
+                    TestType.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
+                }
+                rset.close();
+                stmt.close();
+            }
+
 /*            if (ReasonLeaving == 1) {
                 ReasonLeavingBuffer.append("<select class=\"form-control\" id=\"ReasonLeaving\" name=\"ReasonLeaving\" >\n" +
                         "<option value=\"\">Select Any</option> \n" +
@@ -1166,6 +1178,7 @@ public class PatientUpdateInfo extends HttpServlet {
             Parser.SetField("RefPhysicianNameBuffer", String.valueOf(RefPhysicianNameBuffer));
             Parser.SetField("PatientStatusBuffer", String.valueOf(PatientStatusBuffer));
             Parser.SetField("PatientCatagoryBuffer", String.valueOf(PatientCatagoryBuffer));
+            Parser.SetField("TestType", String.valueOf(TestType));
             Parser.SetField("ReasonLeavingBuffer", String.valueOf(ReasonLeavingBuffer));
             //zzzz
             Parser.SetField("visitDropDown", String.valueOf(visitDropDown));
@@ -1563,6 +1576,17 @@ public class PatientUpdateInfo extends HttpServlet {
         String PatientRegId = request.getParameter("PatientRegId").trim();
         String COVIDStatus = request.getParameter("COVIDStatus").trim();
         String VisitId = request.getParameter("VisitId").trim();
+        String TestType = "";
+        String Q_Filler = "";
+        String S_Filler = "";
+        String U_Filler = "";
+
+        if (ClientId == 39 || ClientId == 40) {
+            TestType = request.getParameter("TestType").trim();
+            Q_Filler = ",TestType";
+            S_Filler = ",?";
+            U_Filler = ", TestType = '" + TestType + "' ";
+        }
 
         try {
 
@@ -1610,7 +1634,7 @@ public class PatientUpdateInfo extends HttpServlet {
 
                 Query = "SELECT PatientRegId,AdditionalInfoSelect,CovidTestDate,PatientCatagory,RefName," +
                         "ReasonLeaving,RefPhysician,RefSourceName,PatientStatus,CreatedDate,CreatedBy, " +
-                        "CovidTestNo, CovidStatus, VisitId,Id " +
+                        "CovidTestNo, CovidStatus, VisitId,Id" + Q_Filler + " " +
                         " FROM " + Database + ".Patient_AdditionalInfo" +
                         " WHERE PatientRegId = " + PatientRegId + " and VisitId = '" + VisitId + "'";
                 stmt = conn.createStatement();
@@ -1619,8 +1643,8 @@ public class PatientUpdateInfo extends HttpServlet {
                     PreparedStatement MainReceipt = conn.prepareStatement(
                             " INSERT INTO " + Database + ".Patient_AdditionalInfoHistory (PatientRegId," +
                                     "AdditionalInfoSelect,CovidTestDate,PatientCatagory,RefName,ReasonLeaving,RefPhysician," +
-                                    "RefSourceName,PatientStatus,CreatedDate,CreatedBy, CovidTestNo, CovidStatus, VisitId,MainIdx) \n" +
-                                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                    "RefSourceName,PatientStatus,CreatedDate,CreatedBy, CovidTestNo, CovidStatus, VisitId,MainIdx" + Q_Filler + ") \n" +
+                                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?" + S_Filler + ") ");
                     MainReceipt.setString(1, rset.getString("PatientRegId"));
                     MainReceipt.setString(2, rset.getString("AdditionalInfoSelect"));
                     MainReceipt.setString(3, rset.getString("CovidTestDate"));
@@ -1636,6 +1660,8 @@ public class PatientUpdateInfo extends HttpServlet {
                     MainReceipt.setString(13, rset.getString("CovidStatus"));
                     MainReceipt.setString(14, rset.getString("VisitId"));
                     MainReceipt.setInt(15, patientAdditionalIdx);
+                    if (ClientId == 39 || ClientId == 40)
+                        MainReceipt.setString(16, rset.getString("TestType"));
                     MainReceipt.executeUpdate();
 //                    System.out.println("AAA --> " + MainReceipt.toString());
                     MainReceipt.close();
@@ -1646,8 +1672,8 @@ public class PatientUpdateInfo extends HttpServlet {
 
                 Query = "Update " + Database + ".Patient_AdditionalInfo Set AdditionalInfoSelect = '" + AdditionalInfoSelect + "', CovidTestDate = '" + CovidTestDate + "', " +
                         "PatientCatagory = '" + PatientCatagory + "', RefName = '" + RefName + "', ReasonLeaving = '" + ReasonLeaving + "', RefPhysician = '" + RefPhysician + "', " +
-                        " RefSourceName = '" + RefSourceName + "', PatientStatus = '" + PatientStatus + "', CovidTestNo = '" + CovidTestNo + "', CovidStatus = '" + COVIDStatus + "' " +
-                        " where PatientRegId = " + PatientRegId + " and VisitId = '" + VisitId + "'";
+                        " RefSourceName = '" + RefSourceName + "', PatientStatus = '" + PatientStatus + "', CovidTestNo = '" + CovidTestNo + "', CovidStatus = '" + COVIDStatus + "' " + U_Filler +
+                        "where PatientRegId = " + PatientRegId + " and VisitId = '" + VisitId + "'";
 //                System.out.println("UPDATE Patient_AdditionalInfo --- " + Query);
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
@@ -1658,8 +1684,8 @@ public class PatientUpdateInfo extends HttpServlet {
                 PreparedStatement MainReceipt = conn.prepareStatement(
                         " INSERT INTO " + Database + ".Patient_AdditionalInfo (PatientRegId," +
                                 "AdditionalInfoSelect,CovidTestDate,PatientCatagory,RefName,ReasonLeaving,RefPhysician," +
-                                "RefSourceName,PatientStatus,CreatedDate,CreatedBy, CovidTestNo, CovidStatus, VisitId) \n" +
-                                " VALUES (?,?,?,?,?,?,?,?,?,now(),?,?,?,?) ");
+                                "RefSourceName,PatientStatus,CreatedDate,CreatedBy, CovidTestNo, CovidStatus, VisitId" + Q_Filler + ") \n" +
+                                " VALUES (?,?,?,?,?,?,?,?,?,now(),?,?,?,?" + S_Filler + ") ");
                 MainReceipt.setString(1, PatientRegId);
                 MainReceipt.setString(2, AdditionalInfoSelect);
                 MainReceipt.setString(3, CovidTestDate);
@@ -1673,6 +1699,8 @@ public class PatientUpdateInfo extends HttpServlet {
                 MainReceipt.setString(11, CovidTestNo);
                 MainReceipt.setString(12, COVIDStatus);
                 MainReceipt.setString(13, VisitId);
+                if (ClientId == 39 || ClientId == 40)
+                    MainReceipt.setString(14, TestType);
                 MainReceipt.executeUpdate();
 //                System.out.println("INSERTION  --- " + MainReceipt.toString());
                 MainReceipt.close();

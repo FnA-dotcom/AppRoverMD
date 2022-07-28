@@ -377,7 +377,7 @@ public class PrintLabel4 extends HttpServlet {
                                         pdfContentByte.showText("INS: " + OtherInsuranceName + "");
                                     } else {
                                         pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
-                                        System.out.println("\n\nINS: " + OtherInsuranceName + "...");
+//                                        System.out.println("\n\nINS: " + OtherInsuranceName + "...");
                                     }
                                     break;
 
@@ -386,7 +386,7 @@ public class PrintLabel4 extends HttpServlet {
                                         pdfContentByte.showText("INS: " + InsuranceName + "");
                                     } else {
                                         pdfContentByte.showText("INS: " + InsuranceName + "...");
-                                        System.out.println("\n\nINS: " + InsuranceName + "...");
+//                                        System.out.println("\n\nINS: " + InsuranceName + "...");
                                     }
                                     break;
                             }
@@ -1825,6 +1825,7 @@ public class PrintLabel4 extends HttpServlet {
         String MRN = null;
         String CreatedDate = null;
         String DirectoryName = "";
+        String DOBForAge = "";
         try {
             if (ClientId == 8) {
                 DirectoryName = "Orange";
@@ -1839,7 +1840,8 @@ public class PrintLabel4 extends HttpServlet {
             }
             Query = "SELECT ID, ClientIndex, FirstName, LastName, MiddleInitial, " +
                     "DATE_FORMAT(DOB,'%m/%d/%Y'), Age, Gender, MRN, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
-                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-') " +
+                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-')," +
+                    "IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
                     "FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1855,6 +1857,7 @@ public class PrintLabel4 extends HttpServlet {
                 CreatedDate = rset.getString(10);
                 DateTime = rset.getString(11);
                 DoctorsId = rset.getString(12);
+                DOBForAge = rset.getString(13);
             }
             rset.close();
             stmt.close();
@@ -1880,6 +1883,10 @@ public class PrintLabel4 extends HttpServlet {
         } catch (Exception ex3) {
         }
         try {
+            if (!DOB.equals("")) {
+                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+            }
+
             //final String inputFilePath = "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/oe/TemplatePdf/label01_Victoria.pdf";
             final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/Labels/" + DirectoryName + "/" + MRN + LastName + ID + "_" + DateTime + ".pdf";
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
@@ -2299,6 +2306,7 @@ public class PrintLabel4 extends HttpServlet {
         String MRN = null;
         String CreatedDate = null;
         String DirectoryName = "";
+        String DOBForAge = "";
         try {
             if (ClientId == 8) {
                 DirectoryName = "Orange";
@@ -2311,7 +2319,11 @@ public class PrintLabel4 extends HttpServlet {
             } else if (ClientId == 15) {
                 DirectoryName = "Sublime";
             }
-            Query = "SELECT ID, ClientIndex, FirstName, LastName, MiddleInitial, IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'),''), IFNULL(Age,''), Gender, MRN, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
+            Query = "SELECT ID, ClientIndex, FirstName, LastName, MiddleInitial, IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'),''), " +
+                    "IFNULL(Age,''), Gender, MRN, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), " +
+                    "IFNULL(DoctorsName, '-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') " +
+                    "FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -2326,6 +2338,7 @@ public class PrintLabel4 extends HttpServlet {
                 CreatedDate = rset.getString(10);
                 DateTime = rset.getString(11);
                 DoctorsId = rset.getString(12);
+                DOBForAge = rset.getString(13);
             }
             rset.close();
             stmt.close();
@@ -2348,6 +2361,10 @@ public class PrintLabel4 extends HttpServlet {
         } catch (Exception ex3) {
         }
         try {
+            if (!DOB.equals("")) {
+                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+            }
+
             //String inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/label01.pdf";
             String outputFilePath = "/sftpdrive/AdmissionBundlePdf/Labels/" + DirectoryName + "/" + MRN + LastName + ID + "_" + DateTime + ".pdf";
             OutputStream fos = new FileOutputStream(new File(outputFilePath));
@@ -2893,6 +2910,7 @@ public class PrintLabel4 extends HttpServlet {
         String ReasonVisit = "";
         String InsuranceName = "";
         String VisitNumber = "";
+        String DOBForAge = "";
         try {
 //            if (ClientId == 8) {
 //                DirectoryName = "Orange";
@@ -2913,17 +2931,19 @@ public class PrintLabel4 extends HttpServlet {
 //            		+ " IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'') FROM   " + Database + ".PatientReg a "
 //            		+ "INNER JOIN \"+Database + \".InsuranceInfo b ON a.ID = b.PatientRegId INNER JOIN \"+Database + \".ProfessionalPayers c "
 //            		+ "ON b.PriInsuranceName = c.Id where a.ID= '" + ID + "'";
-            Query = "SELECT IFNULL(a.ID,''),IFNULL(a.ClientIndex,''),IFNULL(a.FirstName,''),IFNULL(a.LastName,'') ,IFNULL(a.MiddleInitial,'') , DATE_FORMAT(a.DOB,'%m/%d/%Y'),IFNULL( a.Age,'') ,\r\n"
-                    + "         IFNULL(  a.Gender,'')   ,IFNULL( a.MRN,''), IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'), \r\n"
-                    + "            		DATE_FORMAT(a.CreatedDate,'%m/%d/%Y')),date_format(now(),'%Y%m%d%H%i%s'),\r\n"
-                    + "            		 IFNULL(a.DoctorsName, ' '),IFNULL(a.SelfPayChk,9),IFNULL(a.ReasonVisit,''),\r\n"
-                    + "            	IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'') FROM   " + Database + ".PatientReg a \r\n"
-                    + "            		LEFT JOIN  " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId LEFT JOIN " + Database + ".ProfessionalPayers c \r\n"
-                    + "            		ON b.PriInsuranceName = c.Id where a.ID= '" + ID + "'";
-
+            Query = "SELECT IFNULL(a.ID,''),IFNULL(a.ClientIndex,''),IFNULL(a.FirstName,''),IFNULL(a.LastName,'') ," +
+                    "IFNULL(a.MiddleInitial,'') , DATE_FORMAT(a.DOB,'%m/%d/%Y'),IFNULL( a.Age,'') ,\r\n" +
+                    "IFNULL(  a.Gender,'')   ,IFNULL( a.MRN,''), IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'), \r\n" +
+                    "DATE_FORMAT(a.CreatedDate,'%m/%d/%Y')),date_format(now(),'%Y%m%d%H%i%s'),\r\n" +
+                    "IFNULL(a.DoctorsName, ' '),IFNULL(a.SelfPayChk,9),IFNULL(a.ReasonVisit,''),\r\n" +
+                    "IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),''),IFNULL(DATE_FORMAT(a.DOB,'%Y-%m-%d'),'') " +
+                    " FROM " + Database + ".PatientReg a \r\n" +
+                    " LEFT JOIN  " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId " +
+                    " LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.Id " +
+                    " where a.ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 ClientIndex = rset.getString(2);
                 FirstName = rset.getString(3);
                 LastName = rset.getString(4);
@@ -2938,21 +2958,25 @@ public class PrintLabel4 extends HttpServlet {
                 SelfPayChk = rset.getInt(13);
                 ReasonVisit = rset.getString(14);
                 InsuranceName = rset.getString(15);
+                DOBForAge = rset.getString(16);
             }
             rset.close();
             stmt.close();
-            Query = "Select name from oe.clients where Id = " + ClientIndex;
+
+/*            Query = "Select name from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 ClientName = rset.getString(1);
             }
             rset.close();
-            stmt.close();
-            Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorsId;
+            stmt.close();*/
+
+            Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) " +
+                    "from " + Database + ".DoctorsList where Id = " + DoctorsId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 DoctorsName = rset.getString(1);
             }
             rset.close();
@@ -2996,6 +3020,9 @@ public class PrintLabel4 extends HttpServlet {
         } catch (Exception ex3) {
         }
         try {
+            if (!DOB.equals("")) {
+                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+            }
 
             final String inputFilePath = "/sftpdrive/AdmissionBundlePdf/Labels/" + DirectoryName + "/" + MRN + LastName + ID + "_" + ".pdf";
 

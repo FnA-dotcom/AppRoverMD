@@ -20,8 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 public class EligibilityInquiry4 extends HttpServlet {
 
 
+    private static String userMessage = "";
     public static String access_token = "";
     public static String bodyinc = "";
-    private static String userMessage = "";
     private static String statusCodeN = "";
     private static String ParameterName = "";
     private static String errorMessage = "";
@@ -526,6 +526,7 @@ public class EligibilityInquiry4 extends HttpServlet {
         String GPN = "";
         String DOS = "";
         String PatientId = "";
+        String PatientMRN = "";
         String proname = "";
         int PatientRegId = 0;
         try {
@@ -565,9 +566,19 @@ public class EligibilityInquiry4 extends HttpServlet {
                 Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
             } else {
                 out.println(strMsg);
+                Query = "Select MRN " +
+                        "from " + Database + ".PatientReg where status = 0 and ID = " + PatientRegId;
+                stmt = conn.createStatement();
+//                out.println(Query);
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    PatientMRN = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
                 try {
                     PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO oe.EligibilityInquiry (PatientMRN,DateofService,TraceId ,PolicyStatus,strmsg, Name, DateofBirth, Gender, InsuranceNum, GediPayerId, CreatedBy, CreatedDate,ResponseType,FacilityIndex,EProvider) VALUES (?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?) ");
-                    MainReceipt.setString(1, PatientId);
+                    MainReceipt.setString(1, PatientMRN);
                     MainReceipt.setString(2, DOS);
                     MainReceipt.setString(3, avail_res1.SubmemberId);
                     MainReceipt.setString(4, avail_res1.PLANStatus);
@@ -595,7 +606,7 @@ public class EligibilityInquiry4 extends HttpServlet {
             String str = "";
             for (int i = 0; i < (ex.getStackTrace()).length; i++)
                 str = str + ex.getStackTrace()[i] + "<br>";
-            System.out.println("EligibilityInquiry4 -->" + str);
+            out.println("EligibilityInquiry4 -->" + str);
             out.println("EligibilityInquiry2 --> Exception in GetResponse:- " + ex.getMessage());
             out.close();
             out.flush();

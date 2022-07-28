@@ -9,6 +9,9 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
 
 import javax.imageio.ImageIO;
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -26,8 +29,8 @@ import java.net.UnknownHostException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 @SuppressWarnings("Duplicates")
 public class PatientRegRoverLab extends HttpServlet {
@@ -191,7 +194,10 @@ public class PatientRegRoverLab extends HttpServlet {
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Update Patient Information", "Open Patient Screen Update Info", FacilityIndex);
                     sendResultReport(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
                     break;
-
+                case "SendEmailWithReciept_ROVERLAB":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Send Reciept To Patient Email Address", "Send Reciept To Patient Email Address", FacilityIndex);
+                    SendEmailWithReciept_ROVERLAB(request, context, conn, DatabaseName, out);
+                    break;
                 case "PrintLabel":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Print Labels Option ", "Click on Print Lable Option from View Patients Tab for Orange and Odessa", FacilityIndex);
                     this.PrintLabel(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex);
@@ -2113,6 +2119,7 @@ public class PatientRegRoverLab extends HttpServlet {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
+        String paid = "";
         Statement stmt2 = null;
         ResultSet rset2 = null;
         ResultSet rset3 = null;
@@ -3385,6 +3392,19 @@ public class PatientRegRoverLab extends HttpServlet {
             rset.close();
             stmt.close();
 
+
+            PreparedStatement ps = conn.prepareStatement("Select Paid FROM " + Database + ".InvoiceMaster WHERE OrderID=?");
+            ps.setString(1, OrderId);
+            System.out.println("Query ->> " + ps.toString());
+            rset = ps.executeQuery();
+            while (rset.next()) {
+                if (rset.getInt(1) == 1) {
+                    paid = "( PAID )";
+                }
+            }
+            rset.close();
+            ps.close();
+
             String[] month = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
             int year = Calendar.getInstance().get(Calendar.YEAR);
             for (int i = 1; i <= month.length; i++) {
@@ -3433,7 +3453,13 @@ public class PatientRegRoverLab extends HttpServlet {
             Parser.SetField("COVIDStatus", String.valueOf(COVIDStatus));
             Parser.SetField("WorkerCompPolicyChk", String.valueOf(WorkerCompPolicyChk));
             Parser.SetField("MotorVehicleAccidentChk", String.valueOf(MotorVehicleAccidentChk));
-            Parser.SetField("InsuredStatus", String.valueOf(InsuredStatus));
+            if (InsuredStatus.equals("Self Pay")) {
+                if (paid.equals(""))
+                    Parser.SetField("selfPaymentBtn", "<button class=\"btn btn-md btn-success bold pull-right\" id=\"selfPayment\" onclick=\"window.open('/md/md.LabPatientRegistration?ActionID=PayNow&i=" + MRN + "&j=i&k=" + OrderId + "','NewFrame')\"><span><i class=\"fa fa-money fa-lg\"></i></span> Make a Payment </button>");
+                else
+                    Parser.SetField("selfPaymentBtn", "<button class=\"btn btn-md btn-success bold pull-right\" id=\"selfPayment\"  disable><span><i class=\"fa fa-money fa-lg\"></i></span> Make a Payment " + paid + "</button>");
+
+            }
             Parser.SetField("Address", String.valueOf(Address));
             Parser.SetField("City", String.valueOf(City));
             Parser.SetField("State", String.valueOf(State));
@@ -5331,6 +5357,117 @@ public class PatientRegRoverLab extends HttpServlet {
             e.getMessage();
             out.println("0");
         }
+    }
+
+    public int SendEmailWithReciept_ROVERLAB(final HttpServletRequest request, ServletContext servletContext, Connection conn, String databaseName, PrintWriter out) {
+        CallableStatement cStmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        //String Email1 = "tabish.hafeez@fam-llc.com";//change accordingly
+        String FilePath = Services.GetEmailLogsPath(servletContext);
+        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
+        String EmailTo = "";
+        String MRN = request.getParameter("MRN");
+        String Reciept = request.getParameter("Reciept");
+
+        try {
+            PreparedStatement ps = conn.prepareStatement("SELECT Email from " + databaseName + ".PatientReg WHERE MRN=?");
+            ps.setString(1, MRN);
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                EmailTo = rset.getString(1);
+            }
+            rset.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            String HostName = "";
+            String EmailUserId = "";
+            String EmailPassword = "";
+            String SMTP = "";
+            String Port = "";
+            String Authentication = "";
+            try {
+                if (conn == null) {
+                    conn = Services.getMysqlConn(servletContext);
+                }
+                Query = "{CALL SP_GET_CredentialsEmail()}";
+                cStmt = conn != null ? conn.prepareCall(Query) : (CallableStatement) Services.getMysqlConn(servletContext);
+                rset = cStmt != null ? cStmt.executeQuery() : null;
+                if (rset != null && rset.next()) {
+                    HostName = rset.getString(1);
+                    EmailUserId = rset.getString(2);
+                    EmailPassword = rset.getString(3);
+                    SMTP = rset.getString(4);
+                    Port = rset.getString(5);
+                    Authentication = rset.getString(6);
+                }
+                if (rset != null) {
+                    rset.close();
+                }
+                if (cStmt != null) {
+                    cStmt.close();
+                }
+            } catch (Exception Ex) {
+                Ex.printStackTrace();
+            }
+            System.out.println("*****************************************");
+            System.out.println("HostName " + HostName);
+            System.out.println("EmailUserId " + EmailUserId);
+            System.out.println("EmailPassword " + EmailPassword);
+            System.out.println("SMTP " + SMTP);
+            System.out.println("Port " + Port);
+            System.out.println("Authentication " + Authentication);
+
+
+            System.out.println("*****************************************");
+            //1) get the session object
+
+            Properties props = new Properties();
+            props.put("mail.transport.protocol", SMTP);
+            props.put("mail.smtp.host", HostName);
+            props.put("mail.smtp.port", Port);
+            props.put("mail.smtp.auth", Authentication);
+            final String user = EmailUserId;//change accordingly
+            final String password = EmailPassword;//change accordingly
+            Session session = Session.getDefaultInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(user, password);
+                        }
+                    });
+
+
+            //session.setDebug(true);
+
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("PrimeScope Diagnostic <no-reply@rovermd.com>"));
+            // Set To: header field of the header.
+            //message.addRecipient(Message.RecipientType.TO, new InternetAddress((EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo)));
+            EmailTo = (EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo);
+            System.out.println("EMAIL ADDRESS FROM UH --> " + EmailTo);
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(EmailTo));
+            // Set Subject: header field
+            message.setSubject("PrimeScope Diagnostics Invoice");
+            //Setting the email priority high
+            message.addHeader("X-Priority", "1");
+            message.setContent(Reciept, "text/html");
+
+            Transport t = session.getTransport("smtp");
+            t.connect();
+
+
+            Transport.send(message);
+
+            System.out.println("Email Sent..");
+            out.println("1");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 1;
     }
 
 

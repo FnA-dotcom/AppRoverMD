@@ -8,17 +8,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a1946788-d5e3-4122-bf11-60e370e5d629" name="Default Changelist" comment="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/7a70c967-9dad-4af1-949c-52a5bd4f841b.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/7a70c967-9dad-4af1-949c-52a5bd4f841b.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/AppRoverMD/META-INF/AppRoverMD.kotlin_module" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Handheld/EncryptionDecryption.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Handheld/EncryptionDecryption.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/LabPatientRegistration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/LabPatientRegistration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/LifeSaversBundle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/LifeSaversBundle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/ManagementDashboard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/ManagementDashboard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/PatientVisit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientVisit.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/DownloadBundle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/DownloadBundle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/EligibilityInquiry4.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/EligibilityInquiry4.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/EligibilityInquiry_3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/EligibilityInquiry_3.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/LabReportsManagement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/LabReportsManagement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientReg2.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientRegRoverLab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientRegRoverLab.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientUpdateInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientUpdateInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PrintFaceSheet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PrintFaceSheet.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/md/PrintLabel4.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PrintLabel4.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/labdispatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/labdispatcher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/schedulers/sendresultauto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/schedulers/sendresultauto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/Reports_New.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/Reports_New.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/ajaxQueries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/ajaxQueries.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -237,7 +240,10 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "last_opened_file_path": "D:/IdeaProjects/AppRoverMD",
-    "settings.editor.selected.configurable": "reference.settings.ide.settings.web.browsers"
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "configurable.group.language"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -504,13 +510,6 @@
       <workItem from="1657831424727" duration="388000" />
       <workItem from="1658152247054" duration="3758000" />
       <workItem from="1658410060580" duration="7991000" />
-    </task>
-    <task id="LOCAL-00013" summary="New File Added on 8 July 2021 Second Upload">
-      <created>1625772358539</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1625772358539</updated>
     </task>
     <task id="LOCAL-00014" summary="New File Added on 8 July 2021 Second Upload">
       <created>1626720916213</created>
@@ -848,7 +847,14 @@
       <option name="project" value="LOCAL" />
       <updated>1658946422478</updated>
     </task>
-    <option name="localTasksCounter" value="62" />
+    <task id="LOCAL-00062" summary="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
+      <created>1658946564203</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1658946564203</updated>
+    </task>
+    <option name="localTasksCounter" value="63" />
     <servers />
   </component>
   <component name="TimeTrackingManager">

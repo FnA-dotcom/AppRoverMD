@@ -27,6 +27,8 @@ import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.InetAddress;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,6 +48,11 @@ public class DownloadBundle extends HttpServlet {
         this.Query = "";
         this.stmt = null;
     }*/
+
+    public static int getAge(LocalDate dob) {
+        LocalDate curDate = LocalDate.now();
+        return Period.between(dob, curDate).getYears();
+    }
 
     private static boolean ReadPdfGetData(final String FileName, final String Path) {
         try (final PDDocument document = PDDocument.load(new File(Path + "/" + FileName))) {
@@ -67,7 +74,7 @@ public class DownloadBundle extends HttpServlet {
                 }
             }
         } catch (Exception ee) {
-            System.out.println(ee.getLocalizedMessage());
+//            System.out.println(ee.getLocalizedMessage());
             return false;
         }
         return true;
@@ -429,7 +436,7 @@ public class DownloadBundle extends HttpServlet {
 
                 if (!PriInsuranceName.equals("-") && !PriInsuranceName.equals("") && !PriInsuranceName.equals("1")) {
                     Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + PriInsuranceName;
-                    System.out.println(Query);
+//                    System.out.println(Query);
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -440,7 +447,7 @@ public class DownloadBundle extends HttpServlet {
                 }
                 if (!SecondryInsurance.equals("-") && !SecondryInsurance.equals("") && !SecondryInsurance.equals("1")) {
                     Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + SecondryInsurance;
-                    System.out.println(Query);
+//                    System.out.println(Query);
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -1955,9 +1962,11 @@ public class DownloadBundle extends HttpServlet {
         String ClientName = "";
         String DOS = "";
         String DoctorId = null;
-        final String DoctorName = null;
+        String DoctorName = null;
+        String DOBForAge = null;
         try {
-            PreparedStatement ps = conn.prepareStatement("select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')");
+            PreparedStatement ps = conn.prepareStatement(
+                    "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')");
             rset = ps.executeQuery();
             if (rset.next()) {
                 DateTime = rset.getString(1);
@@ -1967,8 +1976,15 @@ public class DownloadBundle extends HttpServlet {
             rset.close();
             ps.close();
             try {
-                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
-                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = ? ");
+                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), " +
+                        "IFNULL(Title,'-'),IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  " +
+                        "IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), " +
+                        "IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), " +
+                        "IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
+                        "IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
+                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), " +
+                        "IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
+                        " From " + Database + ".PatientReg Where ID = ? ");
                 ps.setInt(1, ID);
                 rset = ps.executeQuery();
                 while (rset.next()) {
@@ -1998,6 +2014,7 @@ public class DownloadBundle extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 ps.close();
@@ -2178,13 +2195,18 @@ public class DownloadBundle extends HttpServlet {
                     Services.DumException("DownloadBundle", "GetINput Victoria", request, e, this.getServletContext());
                 }
             }
-            if (Ethnicity.equals("1")) {
-                Ethnicity = "Hispanic";
-            } else if (Ethnicity.equals("2")) {
-                Ethnicity = "Non-Hispanic";
-            } else if (Ethnicity.equals("3")) {
-                Ethnicity = "Unknown";
+            switch (Ethnicity) {
+                case "1":
+                    Ethnicity = "Hispanic";
+                    break;
+                case "2":
+                    Ethnicity = "Non-Hispanic";
+                    break;
+                case "3":
+                    Ethnicity = "Unknown";
+                    break;
             }
+
             if (GuarantorChk.equals("1")) {
                 Guarantor = "The Patient";
                 GuarantorDOB = DOB;
@@ -2291,6 +2313,11 @@ public class DownloadBundle extends HttpServlet {
                 //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
             } else {
                 SignImages = null;
+            }
+
+
+            if (!DOB.equals("")) {
+                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
             }
 
             String inputFilePathTmp = "";
@@ -7034,7 +7061,7 @@ public class DownloadBundle extends HttpServlet {
                 }
                 if (SelfPayChk != 0 && !PriInsuranceName.equals("-") && !PriInsuranceName.equals("")) {
                     Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + PriInsuranceName;
-                    System.out.println(Query);
+//                    System.out.println(Query);
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     while (rset.next()) {
@@ -10069,14 +10096,14 @@ public class DownloadBundle extends HttpServlet {
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
-            System.out.println("Your current IP address : " + ip);
-            System.out.println("Your current Hostname : " + hostname);
+//            System.out.println("Your current IP address : " + ip);
+//            System.out.println("Your current Hostname : " + hostname);
             if (hostname.trim().equals("romver-01")) {
                 inputFilePath = "";
             } else {
                 inputFilePath = "/sftpdrive";
             }
-            System.out.println("Your current inputFilePath : " + inputFilePath);
+//            System.out.println("Your current inputFilePath : " + inputFilePath);
             inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/adminsaustin.pdf";
             final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
@@ -21797,7 +21824,7 @@ public class DownloadBundle extends HttpServlet {
             images_Map_final = (HashMap<Integer, String>) pdftoImage.GetValues(request, out, conn, Database, ClientId, outputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/md/tmpImages/");
             final Collection<String> values = images_Map_final.values();
             final List<String> imagelist = new ArrayList<String>(values);
-            System.out.println("imagelist Names: " + imagelist);
+//            System.out.println("imagelist Names: " + imagelist);
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
             Parser.SetField("imagelist", String.valueOf(imagelist));

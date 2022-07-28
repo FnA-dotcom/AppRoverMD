@@ -34,6 +34,8 @@ public class ajaxQueries extends HttpServlet {
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         String ActionID = "";
+
+
         ServletContext context = getServletContext();
         PrintWriter out = new PrintWriter(response.getOutputStream());
         response.setContentType("text/html");
@@ -109,6 +111,8 @@ public class ajaxQueries extends HttpServlet {
         String RefSourceName = "";
         String CovidTestNo = "";
         String COVIDStatus = "";
+        String TestType = "";
+        String Q_Filler = "";
 
         StringBuilder CovidBuffer = new StringBuilder();
         StringBuilder PatientCatagoryBuffer = new StringBuilder();
@@ -147,6 +151,10 @@ public class ajaxQueries extends HttpServlet {
             rset.close();
             stmt.close();
 
+            if (facilityIdx == 39 || facilityIdx == 40) { // for Floresville and Schertz
+                Q_Filler = ",TestType";
+            }
+
 
             if (FoundAddInfo > 0) {
                 Query = "Select IFNULL(AdditionalInfoSelect,0), IFNULL(DATE_FORMAT(CovidTestDate,'%Y-%m-%d'),''), " +
@@ -154,10 +162,10 @@ public class ajaxQueries extends HttpServlet {
                         "IFNULL(RefPhysician,''), IFNULL(RefSourceName,''), IFNULL(PatientStatus,''), " +
                         "IFNULL(CovidTestNo,'')," +
                         "CASE WHEN CovidStatus = '' THEN 'NONE' WHEN CovidStatus = 1 THEN 'POSITIVE' " +
-                        "WHEN CovidStatus = 0 THEN 'NEGATIVE'  WHEN CovidStatus = -1 THEN 'NONE' ELSE 'NONE' END,CovidStatus  " +
-                        "from " + dbName + ".Patient_AdditionalInfo " +
+                        "WHEN CovidStatus = 0 THEN 'NEGATIVE'  WHEN CovidStatus = -1 THEN 'NONE' ELSE 'NONE' END,CovidStatus  " + Q_Filler +
+                        " from " + dbName + ".Patient_AdditionalInfo " +
                         " where PatientRegId = " + PatientRegId + " and " +
-                        "VisitId = '" + visitIdx + "'";
+                        " VisitId = '" + visitIdx + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -172,6 +180,8 @@ public class ajaxQueries extends HttpServlet {
                     CovidTestNo = rset.getString(9);
                     COVIDStatus = rset.getString(10);
                     COVIDStatus = rset.getString(11);
+                    if (facilityIdx == 39 || facilityIdx == 40)
+                        TestType = rset.getString(12);
                 }
                 rset.close();
                 stmt.close();
@@ -186,7 +196,7 @@ public class ajaxQueries extends HttpServlet {
                     ReasonLeavingBuffer+"|"+PatientStatusBuffer);*/
         out.println("VN-" + mrn + "-" + visitNumber + "|" + FoundAddInfo + "|" + COVIDStatus + "|" +
                 COVIDTestDate + "|" + CovidTestNo + "|" + PatientCatagory + "|" + RefName + "|" +
-                ReasonLeaving + "|" + RefSourceName + "|" + PatientStatus);
+                ReasonLeaving + "|" + RefSourceName + "|" + PatientStatus + '|' + TestType);
     }
 
 

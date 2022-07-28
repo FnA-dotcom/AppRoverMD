@@ -25,7 +25,6 @@ import java.util.Date;
 
 @SuppressWarnings("Duplicates")
 public class EligibilityInquiry_3 extends HttpServlet {
-
     private static void pushLogs(String Message, Exception exp) {
         try {
             Date dt = GetDate();
@@ -41,7 +40,6 @@ public class EligibilityInquiry_3 extends HttpServlet {
             System.out.println("Unable to Generate Thread for Console Event " + e.getMessage());
         }
     }
-
     private static Date GetDate() {
         try {
             return new Date();
@@ -49,7 +47,6 @@ public class EligibilityInquiry_3 extends HttpServlet {
         }
         return null;
     }
-
     private static String GetExceptionFileName() {
         int temp = 0;
         try {
@@ -61,19 +58,15 @@ public class EligibilityInquiry_3 extends HttpServlet {
             return "invalid filename " + e.getMessage();
         }
     }
-
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
-
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String UserId;
         int FacilityIndex;
@@ -138,7 +131,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
                     break;
                 case "GetDetails":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Patient Details", "Get Patient Details and Auto Fill the Input Fields", FacilityIndex);
-                    GetDetails(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    GetDetails(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper);
                     break;
                 case "GetResponse":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Get Insurance Information", "Get Insurance Info, Response from finaltrizetto And eireponse Class", FacilityIndex);
@@ -191,11 +184,11 @@ public class EligibilityInquiry_3 extends HttpServlet {
         String PatientMRN = "";
         int PatientRegId = 0;
         int InsuranceFound = 0;
-        StringBuffer PatientList = new StringBuffer();
-        StringBuffer ServiceType = new StringBuffer();
-        StringBuffer PayProcedureList = new StringBuffer();
-        StringBuffer CDRList = new StringBuffer();
-        StringBuffer ProfessionalPayersList = new StringBuffer();
+        StringBuilder PatientList = new StringBuilder();
+        StringBuilder ServiceType = new StringBuilder();
+        StringBuilder PayProcedureList = new StringBuilder();
+        StringBuilder CDRList = new StringBuilder();
+        StringBuilder ProfessionalPayersList = new StringBuilder();
         StringBuffer AvailityPayersList = new StringBuffer();
         String PatientId = request.getParameter("PatientId");
         ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
@@ -391,7 +384,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
         }
     }
 
-    private void GetDetails(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
+    private void GetDetails(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId, UtilityHelper helper) throws FileNotFoundException {
         ResultSet rset = null;
         Statement stmt = null;
         String Query = "";
@@ -479,7 +472,12 @@ public class EligibilityInquiry_3 extends HttpServlet {
             out.println(String.valueOf(DOS) + "|" + SubscriberID + "|" + FirstName + "|" + LastName + "|" + DOB + "|" + GroupNo + "|" + Gender + "|" + NPI + "|" + proname);
         } catch (Exception ex) {
             pushLogs("Error in GetDetails in main : ", ex);
-            out.println("Error:-" + ex.getMessage());
+            helper.SendEmailWithAttachment("Error in EligibilityInquiry_3 ** (GetDetails )", servletContext, ex, "EligibilityInquiry_3", "GetDetails", conn);
+            Services.DumException("EligibilityInquiry_3", "Eligibility Get Details", request, ex, getServletContext());
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "PatientUpdateInfo");
+            Parser.SetField("ActionID", "GetInput&ID=" + PatientId);
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
         }
     }
 
@@ -500,6 +498,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
             String DOS = request.getParameter("DateofService").trim();
             String PatientId = request.getParameter("PatientId").trim();
             String proname = request.getParameter("proname").trim();
+            String PatientMRN = null;
             if (Gender.toUpperCase().trim().equals("MALE")) {
                 Gender = "M";
             } else {
@@ -525,6 +524,18 @@ public class EligibilityInquiry_3 extends HttpServlet {
 
             String strMsg = eiresponse3.finaloutput.toString();
             out.println(strMsg);
+
+            Query = "Select MRN " +
+                    "from " + Database + ".PatientReg where status = 0 and ID = " + PatientId;
+            stmt = conn.createStatement();
+//                out.println(Query);
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientMRN = rset.getString(1);
+            }
+            rset.close();
+            stmt.close();
+
             //1 - Trizetto
             //2 - Availity
             try {
@@ -532,7 +543,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
                         "INSERT INTO oe.EligibilityInquiry (PatientMRN,DateofService,TraceId ,PolicyStatus,strmsg, " +
                                 "Name, DateofBirth, Gender, InsuranceNum, GediPayerId, CreatedBy, CreatedDate,ResponseType,FacilityIndex,EProvider) " +
                                 "VALUES (?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?) ");
-                MainReceipt.setString(1, PatientId);
+                MainReceipt.setString(1, PatientMRN);
                 MainReceipt.setString(2, DOS);
                 MainReceipt.setString(3, eiresponse3.traceNo);
                 MainReceipt.setString(4, eiresponse3.policystatus);

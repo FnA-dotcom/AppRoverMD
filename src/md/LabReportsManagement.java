@@ -282,7 +282,7 @@ public class LabReportsManagement extends HttpServlet {
             stmt.close();
 
 
-            Query = " SELECT\r\n"
+            Query = " SELECT "
                     + "	CONCAT(IFNULL(a.FirstName,''), ' ', IFNULL(a.MiddleInitial,''), ' ', IFNULL(a.LastName,'')),IFNULL(a.MRN, ''),IFNULL(DATE_FORMAT(b.OrderDate, '%m/%d/%Y'),''),IFNULL(b.Id, ''),"
                     + "CASE"
                     + " WHEN c.TestStatus = 1 THEN 'BROKEN' "
@@ -292,7 +292,7 @@ public class LabReportsManagement extends HttpServlet {
                     + "WHEN c.TestStatus = 5 THEN 'LOST' "
                     + "WHEN c.TestStatus = 6 THEN 'UNCONCLUSIVE' "
                     + "ELSE 'No Result' END"
-                    + ",IFNULL(e.Location, ''),IFNULL(d.TestName, '')"
+                    + ",IFNULL(e.Location, ''),IFNULL(d.TestName, ''),IFNULL(a.MemID, 'N/A')"
                     + "  FROM roverlab.PatientReg a "
                     + "INNER JOIN roverlab.TestOrder b ON a.ID = b.PatRegIdx "
                     + "INNER JOIN roverlab.Tests c ON b.Id = c.OrderId "
@@ -315,6 +315,7 @@ public class LabReportsManagement extends HttpServlet {
                 CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(8) + "</td>\n");
                 CDRList.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(5) + "</span></td>\n");
                 CDRList.append("</tr>");
                 SNo++;

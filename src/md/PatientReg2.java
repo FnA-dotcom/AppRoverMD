@@ -9,6 +9,7 @@ import Parsehtm.Parsehtm;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -8287,6 +8288,25 @@ public class PatientReg2 extends HttpServlet {
             ResultPdf = "/sftpdrive/AdmissionBundlePdf/Victoria/Result_" + ClientId + "_" + MRN + ".pdf";
             mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Marketing_Slips_" + ClientId + "_" + MRN + ".pdf", ClientId, MRN);
             ResultPdf = "/sftpdrive/AdmissionBundlePdf/Victoria/Result_" + ClientId + "_" + MRN + ".pdf";
+
+
+            if (HIPrimaryInsurance.contains("UNITED HEALTHCARE")) {
+//                System.out.println("HIPrimaryInsurance -> "+HIPrimaryInsurance);
+
+                inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/Commercial-Courtesy-Review-Auth-Form.pdf";
+                outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
+
+                ResultPdf = AttachUHC_Form(HISubscriberPolicyNo, HISubscriberDOB, HISubscriberFirstName + " " + HISubscriberLastName, DOS, HISubscriberRelationtoPatient, Date, outputFilePathTmp2, inputFilePathTmp2,
+                        request, response, out, conn, Database, ResultPdf, DirectoryName, ClientId, MRN, mergePdf);
+            }
+//            System.out.println("SHIPrimaryInsurance -> "+SHISecondaryName);
+            if (SHISecondaryName.contains("UNITED HEALTHCARE")) {
+                inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/Commercial-Courtesy-Review-Auth-Form.pdf";
+                outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
+                ResultPdf = AttachUHC_Form(SHISubscriberPolicyNo, SHISubscriberDOB, SHISubscriberFirstName + " " + SHISubscriberLastName, DOS, SHISubscriberRelationtoPatient, Date, outputFilePathTmp2, inputFilePathTmp2,
+                        request, response, out, conn, Database, ResultPdf, DirectoryName, ClientId, MRN, mergePdf);
+            }
+
             String DOSDate = "";
             String DOSTime = "";
             DOSDate = DOS.substring(0, 10);
@@ -8833,17 +8853,17 @@ public class PatientReg2 extends HttpServlet {
             pdfReader2.close();
             pdfReader3.close();
 
-            if (SignedFrom.contains("SIGNED")) {
-                PreparedStatement MainReceipt = conn.prepareStatement(
-                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount)" +
-                                " VALUES (? ,? ,? ,now(),?) ");
-                MainReceipt.setString(1, MRN);
-                MainReceipt.setInt(2, ID);
-                MainReceipt.setString(3, filename);
-                MainReceipt.setInt(4, pdfReader3.getNumberOfPages());
-                MainReceipt.executeUpdate();
-                MainReceipt.close();
-            }
+//            if (SignedFrom.contains("SIGNED")) {
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount)" +
+                            " VALUES (? ,? ,? ,now(),?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pdfReader3.getNumberOfPages());
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+//            }
 
 //
 //            Parsehtm Parser = new Parsehtm(request);
@@ -13721,6 +13741,76 @@ public class PatientReg2 extends HttpServlet {
             System.out.println(e.getMessage());
         }
         return "";
+    }
+
+    private String AttachUHC_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
+            PdfReader pdfReader = new PdfReader(inputFile);
+            PdfStamper pdfStamper = new PdfStamper(pdfReader, (OutputStream) fos);
+            for (int j = 1; j <= pdfReader.getNumberOfPages(); ++j) {
+
+                if (j == 1) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(j);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(450, 678); // set x and y co-ordinates
+                    pdfContentByte.showText(MemID);//"Member ID Number "); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 678); // set x and y co-ordinates
+                    pdfContentByte.showText(DOB);//"DOB"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 678); // set x and y co-ordinates
+                    pdfContentByte.showText(Name);//"Member Name "); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 573); // set x and y co-ordinates
+                    pdfContentByte.showText(DOS);//"Date Of Service"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110, 535); // set x and y co-ordinates
+                    pdfContentByte.showText(Name);//"Member Name"); //  PATIENT BEFORE add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460, 140); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // Other (Please Specify)   add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 98); // set x and y co-ordinates
+                    pdfContentByte.showText(RelationtoPatient);//"Relation to Subscriber"); // Other (Please Specify)   add the text
+                    pdfContentByte.endText();
+
+                }
+            }
+            pdfStamper.close();
+
+            mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, outputFilePath/*"/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf"*/, ClientId, MRN);
+            ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+            return ResultPdf;
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
