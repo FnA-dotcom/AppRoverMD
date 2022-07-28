@@ -8,20 +8,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a1946788-d5e3-4122-bf11-60e370e5d629" name="Default Changelist" comment="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/AppRoverMD/META-INF/AppRoverMD.kotlin_module" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Handheld/EncryptionDecryption.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Handheld/EncryptionDecryption.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/DownloadBundle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/DownloadBundle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/EligibilityInquiry4.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/EligibilityInquiry4.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/EligibilityInquiry_3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/EligibilityInquiry_3.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/LabReportsManagement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/LabReportsManagement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/PatientReg2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientReg2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/PatientRegRoverLab.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientRegRoverLab.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/PatientUpdateInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientUpdateInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/PrintFaceSheet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PrintFaceSheet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/PrintLabel4.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PrintLabel4.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/Reports_New.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/Reports_New.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/md/ajaxQueries.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/ajaxQueries.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -243,7 +231,7 @@
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "configurable.group.language"
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -510,20 +498,6 @@
       <workItem from="1657831424727" duration="388000" />
       <workItem from="1658152247054" duration="3758000" />
       <workItem from="1658410060580" duration="7991000" />
-    </task>
-    <task id="LOCAL-00014" summary="New File Added on 8 July 2021 Second Upload">
-      <created>1626720916213</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1626720916213</updated>
-    </task>
-    <task id="LOCAL-00015" summary="New File Added on 8 July 2021 Second Upload">
-      <created>1626721070080</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1626721070080</updated>
     </task>
     <task id="LOCAL-00016" summary="New File Added on 2 Aug 2021 Fourth Upload">
       <created>1627919376183</created>
@@ -854,7 +828,21 @@
       <option name="project" value="LOCAL" />
       <updated>1658946564203</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
+      <created>1659024097253</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1659024097253</updated>
+    </task>
+    <task id="LOCAL-00064" summary="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
+      <created>1659024648210</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1659024648210</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
