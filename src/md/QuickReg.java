@@ -2900,7 +2900,7 @@ public class QuickReg extends HttpServlet {
                 }
             }
             final Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully. Please Wait for Further Processing. " + Message + " <br>DATED: " + Date);
+            Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully. Please Wait for Further Processing. " + Message + " <br> DATED: " + Date);
             Parser.SetField("FormName", "QuickReg");
             Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientIndex + "");
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));

@@ -85,7 +85,6 @@ public class DailyVisitsCountSMS {
             rset.close();
             stmt.close();
 
-
             Query = "Select COUNT(*) from schertz.PatientVisit a " +
                     "INNER JOIN schertz.PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' " +
                     " AND DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + TODAY + " 23:59:59' AND b.status=0";
@@ -263,6 +262,13 @@ public class DailyVisitsCountSMS {
                       "Schertz     ||     " + PatientCountOverAll_TODAY_Schertz + "      ||       " + PatientCountInsured_TODAY_Schertz + "      ||       " + PatientCountSelfPay_TODAY_Schertz + "       \n" +
                       "Floresville ||     " + PatientCountOverAll_TODAY_Floresville + "      ||       " + PatientCountInsured_TODAY_Floresville + "      ||       " + PatientCountSelfPay_TODAY_Floresville + "       \n";
 */
+//            System.out.println("PatientCountOverAll_MONTHLY_Schertz --> " + PatientCountOverAll_MONTHLY_Schertz);
+//            System.out.println("PatientCountOverAll_MONTHLYInsured_Schertz  --> " + PatientCountOverAll_MONTHLYInsured_Schertz);
+//            System.out.println("PatientCountOverAll_MONTHLYSelfPay_Schertz --> " + PatientCountOverAll_MONTHLYSelfPay_Schertz);
+//            System.out.println("PatientCountInsured_TODAY_Schertz --> " + PatientCountInsured_TODAY_Schertz);
+//            System.out.println("PatientCountSelfPay_TODAY_Schertz --> " + PatientCountSelfPay_TODAY_Schertz);
+//            System.out.println("PatientCountOverAll_TODAY_Schertz --> " + PatientCountOverAll_TODAY_Schertz);
+
             smsBody = "**" + TODAY + "**\n" +
                     "------------\n" +
                     "**Schertz(T:" + PatientCountOverAll_MONTHLY_Schertz + "|I:" + PatientCountOverAll_MONTHLYInsured_Schertz + "|S:" + PatientCountOverAll_MONTHLYSelfPay_Schertz + ")**\n" +
@@ -286,11 +292,11 @@ public class DailyVisitsCountSMS {
 //            Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
             Twilio.init(AuthFactor[0], AuthFactor[1]);
             Message message = Message.creator(
-                    new com.twilio.type.PhoneNumber("+17084154105"), // Fawad
-//                    new com.twilio.type.PhoneNumber("+14372344164"), // Ali
-//                    new com.twilio.type.PhoneNumber("+14694980033"), // to
-                    new com.twilio.type.PhoneNumber("+19724981837"), // from
-                    smsBody)
+//                    new com.twilio.type.PhoneNumber("+17084154105"), // Fawad
+                            new com.twilio.type.PhoneNumber("+14372344164"), // Ali
+//                    new com.twilio.type.PhoneNumber("+14694980033"), // to ME
+                            new com.twilio.type.PhoneNumber("+19724981837"), // from
+                            smsBody)
                     .create();
 
 /*            System.out.println("Error Code --> " + message.getErrorCode());

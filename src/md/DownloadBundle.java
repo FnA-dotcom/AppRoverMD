@@ -2018,11 +2018,11 @@ public class DownloadBundle extends HttpServlet {
                 }
                 rset.close();
                 ps.close();
-                System.out.println("AGE BEFORE " + DOBForAge);
+
                 if (!DOB.equals("")) {
                     Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
                 }
-                System.out.println("AGE AFTER " + Age);
+
                 ps = conn.prepareStatement("Select name from oe.clients where Id = ?");
                 ps.setInt(1, ClientId);
                 rset = ps.executeQuery();
@@ -4325,7 +4325,6 @@ public class DownloadBundle extends HttpServlet {
             String outputFilePath = null;
             String pageCount = null;
             try {
-                System.out.println("DIR NAME " + DirectoryName);
                 Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " ORDER BY CreatedDate DESC LIMIT 1";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);

@@ -18,7 +18,9 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,6 +30,11 @@ import java.util.Locale;
 public class PatientVisit extends HttpServlet {
     //    private Connection conn = null;
     Integer ScreenIndex = 11;
+
+    public static int getAge(LocalDate dob) {
+        LocalDate curDate = LocalDate.now();
+        return Period.between(dob, curDate).getYears();
+    }
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);

@@ -165,12 +165,11 @@ public class PrintLabel4 extends HttpServlet {
                     "IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Age,''), a.Gender, a.MRN, " +
                     "IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'),DATE_FORMAT(a.CreatedDate,'%m/%d/%Y'))," +
                     "date_format(now(),'%Y%m%d%H%i%s'), IFNULL(a.DoctorsName, '-'),IFNULL(DATE_FORMAT(a.DOB,'%Y-%m-%d'),'') ," +
-                    "IFNULL(a.ReasonVisit,''),IFNULL(a.SelfPayChk,9)," +
-                    "IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'-') " +
-                    " FROM   " + Database + ".PatientReg a " +
-                    " LEFT JOIN " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId " +
-                    " LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.id  " +
-                    " WHERE a.ID= '" + ID + "'";
+                    "IFNULL(a.ReasonVisit,''),IFNULL(a.SelfPayChk,9),IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'-')," +
+                    "IFNULL(b.OtherInsuranceName,'-'),IFNULL(b.PriInsuranceName,'-') " +
+                    "FROM   " + Database + ".PatientReg a " +
+                    "LEFT JOIN " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId " +
+                    "LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.id  where a.ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -216,7 +215,7 @@ public class PrintLabel4 extends HttpServlet {
             stmt.close();
 
             if (!DoctorsId.equals("-")) {
-                Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorsId;
+                Query = "Select CONCAT( DoctorsLastName, ',',DoctorsFirstName) from " + Database + ".DoctorsList where Id = " + DoctorsId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -377,7 +376,6 @@ public class PrintLabel4 extends HttpServlet {
                                         pdfContentByte.showText("INS: " + OtherInsuranceName + "");
                                     } else {
                                         pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
-//                                        System.out.println("\n\nINS: " + OtherInsuranceName + "...");
                                     }
                                     break;
 
@@ -386,7 +384,6 @@ public class PrintLabel4 extends HttpServlet {
                                         pdfContentByte.showText("INS: " + InsuranceName + "");
                                     } else {
                                         pdfContentByte.showText("INS: " + InsuranceName + "...");
-//                                        System.out.println("\n\nINS: " + InsuranceName + "...");
                                     }
                                     break;
                             }
@@ -1870,7 +1867,7 @@ public class PrintLabel4 extends HttpServlet {
             rset.close();
             stmt.close();
             if (!DoctorsId.equals("-")) {
-                Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) " +
+                Query = "Select CONCAT(DoctorsLastName, ',' , DoctorsFirstName) " +
                         "from " + Database + ".DoctorsList where Id = " + DoctorsId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -2972,7 +2969,7 @@ public class PrintLabel4 extends HttpServlet {
             rset.close();
             stmt.close();*/
 
-            Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) " +
+            Query = "Select CONCAT(DoctorsLastName , ', ', DoctorsFirstName) " +
                     "from " + Database + ".DoctorsList where Id = " + DoctorsId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);

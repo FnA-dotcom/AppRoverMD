@@ -8,9 +8,9 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
-import com.lowagie.text.*;
 import com.lowagie.text.Font;
 import com.lowagie.text.Image;
+import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfWriter;
 
 import javax.servlet.*;
@@ -1900,7 +1900,7 @@ public class RegisteredPatients2 extends HttpServlet {
             }
             if (InstallmentPlanFound > 0)
                 try {
-                    out.println("STage 1: Inside Installment Plan Found");
+//                    out.println("STage 1: Inside Installment Plan Found");
                     Query = "Select Id from " + Database + ".InstallmentPlan where Paid = 0 and InvoiceNo = '" + InvoiceNo + "' limit 1";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -1908,14 +1908,14 @@ public class RegisteredPatients2 extends HttpServlet {
                         InstallmentPlanId = rset.getInt(1);
                     rset.close();
                     stmt.close();
-                    out.println("Stage 2: Inside Installment Plan FOund" + Query);
+//                    out.println("Stage 2: Inside Installment Plan FOund" + Query);
                     if (InstallmentPlanId > 0) {
-                        out.println("Stage 3: Inside Installment Plan ID Found");
+//                        out.println("Stage 3: Inside Installment Plan ID Found");
                         Query = " Update " + Database + ".InstallmentPlan set Paid = 1 where Id = " + InstallmentPlanId + "";
                         stmt = conn.createStatement();
                         stmt.executeUpdate(Query);
                         stmt.close();
-                        out.println("Stage 4: Inside Installment Plan ID Found" + Query);
+//                        out.println("Stage 4: Inside Installment Plan ID Found" + Query);
                     }
                 } catch (Exception e) {
                     out.println("Error in Updating Installment plan Table: " + e.getMessage());
@@ -1950,6 +1950,32 @@ public class RegisteredPatients2 extends HttpServlet {
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
             stmt.close();
+
+            int mrn = 0;
+            Query = "SELECT MRN FROM " + Database + ".PatientReg WHERE Id=" + PatientID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next())
+                mrn = rset.getInt(1);
+            rset.close();
+            stmt.close();
+
+            boolean isExist = false;
+            Query = "SELECT COUNT(*) FROM oe.Requet WHERE MRN = " + mrn;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next())
+                isExist = rset.getInt(1) != 0;
+            rset.close();
+            stmt.close();
+
+            if (isExist) {
+                Query = " Update oe.request set Status = 999 where MRN = " + mrn;
+                stmt = conn.createStatement();
+                stmt.executeUpdate(Query);
+                stmt.close();
+            }
+
             out.println("1");
         } catch (Exception var11) {
             out.println(Query);

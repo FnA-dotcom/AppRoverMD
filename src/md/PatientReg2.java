@@ -27,10 +27,17 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 
 @SuppressWarnings("Duplicates")
 public class PatientReg2 extends HttpServlet {
+
+    public static int getAge(LocalDate dob) {
+        LocalDate curDate = LocalDate.now();
+        return Period.between(dob, curDate).getYears();
+    }
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -2527,6 +2534,9 @@ public class PatientReg2 extends HttpServlet {
                 rset.close();
                 stmt.close();
 
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(getAge(LocalDate.parse(DOB)));
+                }
 
                 if (IDFront == null) {
                     IDFront = "/md/images_/Placeholders/doc-preview.jpg";
@@ -6628,6 +6638,7 @@ public class PatientReg2 extends HttpServlet {
         String ClientName = "";
         String DOS = "";
         String DoctorId = null;
+        String DOBForAge = null;
         final String DoctorName = null;
         try {
             PreparedStatement ps = conn.prepareStatement("select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')");
@@ -6640,11 +6651,18 @@ public class PatientReg2 extends HttpServlet {
             rset.close();
             ps.close();
             try {
-                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
-                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = ?");
+                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), " +
+                        "IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  " +
+                        "IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
+                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), " +
+                        "IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')   " +
+                        "From " + Database + ".PatientReg Where ID = ?");
                 ps.setInt(1, ID);
                 rset = ps.executeQuery();
-                while (rset.next()) {
+                if (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -6671,9 +6689,15 @@ public class PatientReg2 extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 ps.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+                }
+
                 ps = conn.prepareStatement("Select name from oe.clients where Id = ?");
                 ps.setInt(1, ClientId);
                 rset = ps.executeQuery();
@@ -6686,10 +6710,15 @@ public class PatientReg2 extends HttpServlet {
                 out.println("Error In PateintReg:--" + e.getMessage());
                 out.println(Query);
             }
-            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation,EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState,PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber,GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode,CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk from " + Database + ".PatientReg_Details where PatientRegId = ? ");
+            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation," +
+                    "EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState," +
+                    "PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber," +
+                    "GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode," +
+                    "CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk " +
+                    "from " + Database + ".PatientReg_Details where PatientRegId = ? ");
             ps.setInt(1, ID);
             rset = ps.executeQuery();
-            while (rset.next()) {
+            if (rset.next()) {
                 Ethnicity = rset.getString(1);
                 Ethnicity_OthersText = rset.getString(2);
                 EmployementChk = rset.getString(3);
@@ -6721,7 +6750,19 @@ public class PatientReg2 extends HttpServlet {
             ps.close();
             if (WorkersCompPolicyChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), " +
+                            "IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), " +
+                            "IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), " +
+                            "IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), " +
+                            "IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), " +
+                            "IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), " +
+                            "IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), " +
+                            "IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), " +
+                            "IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), " +
+                            "IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), " +
+                            "IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), " +
+                            "IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') " +
+                            "from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -6766,7 +6807,24 @@ public class PatientReg2 extends HttpServlet {
             }
             if (MotorVehicleAccidentChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,''),IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'') from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), " +
+                            "IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), " +
+                            "IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), " +
+                            "IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), " +
+                            "IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), " +
+                            "IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), " +
+                            "IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), " +
+                            "IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), " +
+                            "IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), " +
+                            "IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), " +
+                            "IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), " +
+                            "IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), " +
+                            "IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), " +
+                            "IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,'')," +
+                            "IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'') " +
+                            "from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -6814,7 +6872,17 @@ public class PatientReg2 extends HttpServlet {
             }
             if (HealthInsuranceChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(GovtFundedInsurancePlanChk,'0'), IFNULL(GFIPMedicare,'0'), IFNULL(GFIPMedicaid,'0'), IFNULL(GFIPCHIP,'0'), IFNULL(GFIPTricare,'0'), IFNULL(GFIPVHA,'0'), IFNULL(GFIPIndianHealth,'0'), IFNULL(InsuranceSubPatient,''), IFNULL(InsuranceSubGuarantor,''), IFNULL(InsuranceSubOther,''), IFNULL(HIPrimaryInsurance,''), IFNULL(HISubscriberFirstName,''), IFNULL(HISubscriberLastName,''), IFNULL(HISubscriberDOB,''), IFNULL(HISubscriberSSN,''), IFNULL(HISubscriberRelationtoPatient,''), IFNULL(HISubscriberGroupNo,''), IFNULL(HISubscriberPolicyNo,''), IFNULL(SecondHealthInsuranceChk,''), IFNULL(SHISecondaryName,''), IFNULL(SHISubscriberFirstName,''), IFNULL(SHISubscriberLastName,''), IFNULL(SHISubscriberRelationtoPatient,''), IFNULL(SHISubscriberGroupNo,''), IFNULL(SHISubscriberPolicyNo,'')  from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(GovtFundedInsurancePlanChk,'0'), IFNULL(GFIPMedicare,'0'), " +
+                            "IFNULL(GFIPMedicaid,'0'), IFNULL(GFIPCHIP,'0'), IFNULL(GFIPTricare,'0'), IFNULL(GFIPVHA,'0'), " +
+                            "IFNULL(GFIPIndianHealth,'0'), IFNULL(InsuranceSubPatient,''), IFNULL(InsuranceSubGuarantor,''), " +
+                            "IFNULL(InsuranceSubOther,''), IFNULL(HIPrimaryInsurance,''), IFNULL(HISubscriberFirstName,''), " +
+                            "IFNULL(HISubscriberLastName,''), IFNULL(HISubscriberDOB,''), IFNULL(HISubscriberSSN,''), " +
+                            "IFNULL(HISubscriberRelationtoPatient,''), IFNULL(HISubscriberGroupNo,''), " +
+                            "IFNULL(HISubscriberPolicyNo,''), IFNULL(SecondHealthInsuranceChk,''), IFNULL(SHISecondaryName,''), " +
+                            "IFNULL(SHISubscriberFirstName,''), IFNULL(SHISubscriberLastName,''), " +
+                            "IFNULL(SHISubscriberRelationtoPatient,''), IFNULL(SHISubscriberGroupNo,''), " +
+                            "IFNULL(SHISubscriberPolicyNo,'')  " +
+                            "from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {

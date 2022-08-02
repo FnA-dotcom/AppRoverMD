@@ -27,8 +27,10 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Date;
 import java.util.List;
 import java.util.*;
 
@@ -168,6 +170,10 @@ public class PatientRegRoverLab extends HttpServlet {
                 case "ShowResult":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "View Patient Option", "Click on View Patient Option Patients List", FacilityIndex);
                     ShowResult(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper, locationArray);
+                    break;
+                case "PatientHistory":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "View Patient Option", "Click on View Patient Option Patients List", FacilityIndex);
+                    PatientHistory(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper, locationArray);
                     break;
                 case "ShowReport_FILTER":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "View Patient Option", "Click on View Patient Option Patients List", FacilityIndex);
@@ -397,12 +403,15 @@ public class PatientRegRoverLab extends HttpServlet {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
+        String TODAY = "";
         int PatientCount = 0;
         StringBuilder RoverLab = new StringBuilder();
-
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        String today = formatter.format(date);
         StringBuilder locationList = new StringBuilder();
         StringBuilder stageList = new StringBuilder();
-        StringBuilder statusList = new StringBuilder();
+        StringBuilder TestList = new StringBuilder();
         String filter = "";
         String Stage = request.getParameter("Stage") != null ? request.getParameter("Stage").trim() : null;
         String Status = request.getParameter("Status") != null ? request.getParameter("Status").trim() : null;
@@ -427,6 +436,17 @@ public class PatientRegRoverLab extends HttpServlet {
                 System.out.println("filter -> " + filter);
 
             }
+            Query = "Select DATE_FORMAT(NOW(),'%Y-%m-%d')";
+
+
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                TODAY = rset.getString(1);
+
+            }
+            rset.close();
+            stmt.close();
 
 
             Query = "SELECT COUNT(*) FROM " + Database + ".PatientRegRoverLab";
@@ -465,7 +485,9 @@ public class PatientRegRoverLab extends HttpServlet {
                         " INNER JOIN roverlab.Tests d ON b.Id = d.OrderId " +
                         " INNER JOIN roverlab.ListofTests e ON d.TestIdx = e.Id " +
                         " INNER JOIN roverlab.Locations f ON a.TestingLocation = f.Id " +
-                        " WHERE a.Status = 0 AND d.TestStatus IN (1,2,3,4,5,6) " +
+                        " WHERE a.Status = 0 AND d.TestStatus IN (1,2,3,4,5,6) And " +
+                        " DATE_FORMAT(b.OrderDate,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' and " +
+                        " DATE_FORMAT(b.OrderDate,'%Y-%m-%d %h:%i:%s') <= '" + TODAY + " 23:59:59'  " +
                         filter + locCondition +
                         " ORDER BY b.OrderDate DESC limit 500";
                 stmt = conn.createStatement();
@@ -532,29 +554,21 @@ public class PatientRegRoverLab extends HttpServlet {
             Query = "Select Id, Location from roverlab.Locations WHERE Id IN (" + list + ") ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            locationList.append("<option value='-1' selected disabled>Select Location</option>");
+            locationList.append("<option value='' selected>Select Location</option>");
             while (rset.next()) {
                 locationList.append("<option value=" + rset.getString(1) + "  >" + rset.getString(2) + "</option>");
             }
             rset.close();
             stmt.close();
 
-            Query = "Select Id, Status from roverlab.ListofStages";
+            Query = "SELECT Id,TestName FROM " + Database + ".ListofTests " +
+                    "WHERE Status = 0 ORDER BY TestName ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            stageList.append("<option value=\"\" selected>None </option>");
+            TestList.append("<option value='' selected>None</option>");
             while (rset.next()) {
-                stageList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
-            }
-            rset.close();
-            stmt.close();
 
-            Query = "Select Id, Status from roverlab.ListofStatus";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            statusList.append("<option value=\"\" selected>None </option>");
-            while (rset.next()) {
-                statusList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
+                TestList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
             }
             rset.close();
             stmt.close();
@@ -565,7 +579,10 @@ public class PatientRegRoverLab extends HttpServlet {
             Parser.SetField("UserId", UserId);
             Parser.SetField("LocationList", locationList.toString());
             Parser.SetField("StageList", stageList.toString());
-            Parser.SetField("StatusList", statusList.toString());
+            Parser.SetField("TestList", TestList.toString());
+            Parser.SetField("searchdatefrom", String.valueOf(today));
+            Parser.SetField("searchdateto", String.valueOf(today));
+            Parser.SetField("today", String.valueOf(today));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ResultRegisteredPatient_ROVERLAB.html");
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in PatientRegRoverLab ** (ShowReport)", servletContext, e, "PatientRegRoverLab", "ShowReport", conn);
@@ -1780,40 +1797,90 @@ public class PatientRegRoverLab extends HttpServlet {
         String BundleFnName = "";
         String LabelFnName = "";
         int PatientCount = 0;
+        String Location = "";
+        String TestType = "";
+        String EmailStatus = "";
+        String LocationFilter = "";
+        String EmailFilter = "";
+        String TestFilter = "";
         StringBuilder RoverLab = new StringBuilder();
         String filter = "";
         Integer filterCount = 0;
         int SNo = 1;
         StringBuilder locationList = new StringBuilder();
         StringBuilder stageList = new StringBuilder();
-        StringBuilder statusList = new StringBuilder();
+        StringBuilder TestList = new StringBuilder();
+        String DateRange = request.getParameter("Month").trim();
+        String FromDate = request.getParameter("FromDate").trim();
+        String ToDate = request.getParameter("ToDate").trim();
+        System.out.println("in the function");
+//        String TestType = !request.getParameter("TestType").equals("-1") ? request.getParameter("TestType").trim() : null;
+//        String EmailStatus = !request.getParameter("EmailStatus").equals("-1") ? request.getParameter("EmailStatus").trim() : null;
+//        String Location = request.getParameter("Location") != null ? request.getParameter("Location").trim() : null;
+//        if (Stage != null || Status != null || Location != null) {
+//            filter += " WHERE a.Status = 0 AND d.TestStatus IN (1,2,3,4,5,6)  ";
+//            if (Stage != null) {
+//                filter += " AND b.StageIdx = '" + Stage + "' ";
+//                filterCount++;
+//            }
+//            if (Status != null) {
+//                if (filterCount > 0) {
+//                    filter += " AND b.Status = '" + Status + "' ";
+//                } else {
+//                    filter += " b.Status = '" + Status + "' ";
+//                }
+//                filterCount++;
+//            }
+//            if (Location != null) {
+//                if (filterCount > 0) {
+//                    filter += " AND a.TestingLocation = '" + Location + "' ";
+//                    filterCount++;
+//                } else {
+//                    filter += " a.TestingLocation = '" + Location + "' ";
+//                }
+//            }
+//        }
 
-        String Stage = !request.getParameter("Stage").equals("-1") ? request.getParameter("Stage").trim() : null;
-        String Status = !request.getParameter("Status").equals("-1") ? request.getParameter("Status").trim() : null;
-        String Location = request.getParameter("Location") != null ? request.getParameter("Location").trim() : null;
+        if (request.getParameter("Location") == null) {
+            Location = "";
+        } else {
+            Location = request.getParameter("Location");
+        }
 
-        if (Stage != null || Status != null || Location != null) {
-            filter += " WHERE a.Status = 0 AND d.TestStatus IN (1,2,3,4,5,6)  ";
-            if (Stage != null) {
-                filter += " AND b.StageIdx = '" + Stage + "' ";
-                filterCount++;
-            }
-            if (Status != null) {
-                if (filterCount > 0) {
-                    filter += " AND b.Status = '" + Status + "' ";
-                } else {
-                    filter += " b.Status = '" + Status + "' ";
-                }
-                filterCount++;
-            }
-            if (Location != null) {
-                if (filterCount > 0) {
-                    filter += " AND a.TestingLocation = '" + Location + "' ";
-                    filterCount++;
-                } else {
-                    filter += " a.TestingLocation = '" + Location + "' ";
-                }
-            }
+        if (request.getParameter("TestType") == null) {
+            TestType = "";
+        } else {
+            TestType = request.getParameter("TestType");
+        }
+
+        if (request.getParameter("EmailStatus") == null) {
+            EmailStatus = "";
+        } else {
+            EmailStatus = request.getParameter("EmailStatus");
+        }
+
+
+        if (Location == "" || Location == null) {
+            LocationFilter = "";
+        } else {
+
+            LocationFilter = " And a.TestingLocation =" + Location + "";
+        }
+
+
+        if (TestType == "" || TestType == null) {
+            TestFilter = "";
+        } else {
+
+            TestFilter = " AND d.TestIdx =" + TestType + "";
+        }
+
+
+        if (EmailStatus == "" || EmailStatus == null) {
+            EmailFilter = "";
+        } else {
+
+            EmailFilter = " AND b.email =" + EmailStatus + "";
         }
 
 
@@ -1873,22 +1940,19 @@ public class PatientRegRoverLab extends HttpServlet {
                         " WHEN d.TestStatus = 5 THEN 'LOST' " +
                         " WHEN d.TestStatus = 6 THEN 'UNCONCLUSIVE' " +
                         " ELSE 'No Result' END, IFNULL(d.TestStatus,99), " +//14
-                        " e.TestName,f.Location " + //15
-//                        "CASE " +
-//                        " WHEN a.Status = 0 THEN c.Status " +
-//                        " WHEN a.Status = 1 THEN c.Status" +
-//                        " WHEN a.Status = 2 THEN c.Status" +
-//                        " WHEN a.Status = 3 THEN c.Status " +
-//                        " ELSE 'Pending' END " + //10
+                        " e.TestName,f.Location,e.Id, " + //17
+                        " CASE WHEN b.email=0 THEN 'Email Not Sent' WHEN b.email=1 THEN 'Email Sent' Else '' END, IFNULL(DATE_FORMAT(b.emailtime,'%m/%d/%Y %H:%i:%s'),'00/00/0000'), " + //19
+                        " CASE WHEN b.sms=0 THEN 'SMS Not Sent' WHEN b.sms=1 THEN 'Email Sent' Else '' END, IFNULL(DATE_FORMAT(b.smstime,'%m/%d/%Y %H:%i:%s'),'00/00/0000'), " + //21
+                        " b.email,b.sms " +//23
                         " FROM roverlab.PatientReg a " +
                         " INNER JOIN roverlab.TestOrder b ON a.ID = b.PatRegIdx " +
                         " INNER JOIN roverlab.ListofStages c ON b.StageIdx = c.Id " +
                         " INNER JOIN roverlab.Tests d ON b.Id = d.OrderId " +
                         " INNER JOIN roverlab.ListofTests e ON d.TestIdx = e.Id " +
                         " INNER JOIN roverlab.Locations f ON a.TestingLocation = f.Id " +
-                        //" WHERE a.Status = 0 AND d.TestStatus IN (1,2,3,4,5,6) AND " +
-                        filter +
-                        " ORDER BY a.CreatedDate DESC limit 500";
+                        " where a.Status=0 AND b.OrderDate BETWEEN '" + FromDate + " 00:00:00' AND '" + ToDate + " 23:59:59' " +
+                        LocationFilter + TestFilter + EmailFilter +
+                        " ORDER BY b.OrderDate DESC limit 500";
 
                 System.out.println("Query - >>> " + Query);
                 stmt = conn.createStatement();
@@ -1918,13 +1982,31 @@ public class PatientRegRoverLab extends HttpServlet {
                     else
                         RoverLab.append("<td align=left><span class=\"badge badge-light\">" + rset.getString(13) + "</span></td>\n");//Result
 
-                    RoverLab.append("<td>");
-                    RoverLab.append("<button type=\"button\" class=\"waves-effect waves-circle btn btn-circle btn-info btn-sm mb-3\" onclick=\"UpdateInfoPatient(" + rset.getInt(5) + ")\">View</button> &nbsp;&nbsp;&nbsp;");
-                    RoverLab.append("<button type=\"button\" class=\"waves-effect waves-circle btn btn-circle btn-info btn-sm mb-3\" onclick=\"sendResult(" + rset.getInt(11) + "," + rset.getInt(12) + ")\">Send</button> &nbsp;&nbsp;&nbsp;");
-                    //RoverLab.append("<button type=\"button\" class=\"fa fa-file-pdf-o pdfIcon mb-2\" onclick=\"UpdateInfoPatient(" + rset.getInt(5) + ")\"></button>");
-                    RoverLab.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.PatientRegRoverLab?ActionID=GETINPUTRoverLab&ID=" + rset.getInt(5) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
-                    RoverLab.append("<a class=\"btn glyphicon glyphicon-list-alt tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Result\" href=/md/md.RoverLabResult?ActionID=getResultPdf&O_ID=" + rset.getInt(11) + "&T_ID=" + rset.getInt(12) + "&PatRegIdx=" + rset.getInt(5) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                    if (rset.getInt(22) == 1) {
+                        RoverLab.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(18) + "</span></td>\n");//EmailSent
+                    } else if (rset.getInt(22) == 0) {
+                        RoverLab.append("<td align=left><span class=\"badge badge-warning\">" + rset.getString(18) + "</span></td>\n");//EmailSent
+                    }
+                    RoverLab.append("<td align=left>" + rset.getString(19) + "</td>\n");//EmailTime
+                    if (rset.getInt(23) == 1) {
+                        RoverLab.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(20) + "</span></td>\n");//SMS
+                    } else if (rset.getInt(23) == 0) {
+                        RoverLab.append("<td align=left><span class=\"badge badge-warning\">" + rset.getString(20) + "</span></td>\n");//SMS
+                    }
+                    RoverLab.append("<td align=left>" + rset.getString(21) + "</td>\n");//SMSTime
 
+
+                    RoverLab.append("<td>");
+                    RoverLab.append("<button type=\"button\" class=\"waves-effect waves-circle btn btn-circle btn-info btn-sm mb-3\" onclick=\"UpdateInfoPatient(" + rset.getInt(5) + ", " + rset.getInt(11) + ")\">View</button> &nbsp;&nbsp;&nbsp;");
+                    RoverLab.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.PatientRegRoverLab?ActionID=GETINPUTRoverLab&ID=" + rset.getInt(5) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                    if (rset.getInt(17) == 4) {
+                        RoverLab.append("<button type=\"button\" class=\"waves-effect waves-circle btn btn-circle btn-info btn-sm mb-3\" onclick=\"sendResult(" + rset.getInt(11) + "," + rset.getInt(12) + ")\">Send</button> &nbsp;&nbsp;&nbsp;");
+                        RoverLab.append("<a class=\"btn glyphicon glyphicon-list-alt tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Result\" href=/md/md.PatientRegRoverLab?ActionID=sendResultReport&O_ID=" + rset.getInt(11) + "&T_ID=" + rset.getInt(12) + "&PatRegIdx=" + rset.getInt(5) + "&TestType=4 target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                    } else {
+                        RoverLab.append("<button type=\"button\" class=\"waves-effect waves-circle btn btn-circle btn-info btn-sm mb-3\" onclick=\"sendResult(" + rset.getInt(11) + "," + rset.getInt(12) + ")\">Send</button> &nbsp;&nbsp;&nbsp;");
+                        //RoverLab.append("<button type=\"button\" class=\"fa fa-file-pdf-o pdfIcon mb-2\" onclick=\"UpdateInfoPatient(" + rset.getInt(5) + ")\"></button>");
+                        RoverLab.append("<a class=\"btn glyphicon glyphicon-list-alt tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Result\" href=/md/md.RoverLabResult?ActionID=getResultPdf&O_ID=" + rset.getInt(11) + "&T_ID=" + rset.getInt(12) + "&PatRegIdx=" + rset.getInt(5) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                    }
                     RoverLab.append("</td>\n");
                     RoverLab.append("</tr>\n");
                 }
@@ -1934,29 +2016,26 @@ public class PatientRegRoverLab extends HttpServlet {
             Query = "Select Id, Location from roverlab.Locations";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            locationList.append("<option value='-1' selected disabled>Select Location</option>");
+            locationList.append("<option value='' >Select Location</option>");
             while (rset.next()) {
-                locationList.append("<option value=" + rset.getString(1) + "  >" + rset.getString(2) + "</option>");
+                if (rset.getString(1) == Location) {
+                    locationList.append("<option value=" + rset.getString(1) + "  selected>" + rset.getString(2) + "</option>");
+                } else {
+                    locationList.append("<option value=" + rset.getString(1) + "  >" + rset.getString(2) + "</option>");
+
+                }
             }
             rset.close();
             stmt.close();
 
-            Query = "Select Id, Status from roverlab.ListofStages";
+            Query = "SELECT Id,TestName FROM " + Database + ".ListofTests " +
+                    "WHERE Status = 0 ORDER BY TestName ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            stageList.append("<option value='-1' selected>None </option>");
+            TestList.append("<option value='' >None</option>");
             while (rset.next()) {
-                stageList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
-            }
-            rset.close();
-            stmt.close();
 
-            Query = "Select Id, Status from roverlab.ListofStatus";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            statusList.append("<option value='-1' selected>None </option>");
-            while (rset.next()) {
-                statusList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
+                TestList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
             }
             rset.close();
             stmt.close();
@@ -1965,9 +2044,16 @@ public class PatientRegRoverLab extends HttpServlet {
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("RoverLab", RoverLab.toString());
             Parser.SetField("UserId", UserId);
+            Parser.SetField("DateRange", DateRange);
             Parser.SetField("LocationList", locationList.toString());
             Parser.SetField("StageList", stageList.toString());
-            Parser.SetField("StatusList", statusList.toString());
+            Parser.SetField("TestList", TestList.toString());
+            Parser.SetField("searchdatefrom", String.valueOf(FromDate));
+            Parser.SetField("searchdateto", String.valueOf(ToDate));
+
+            Parser.SetField("Selectedlocation", String.valueOf(Location));
+            Parser.SetField("SelectedTestType", String.valueOf(TestType));
+            Parser.SetField("SelectedEmailStatus", String.valueOf(EmailStatus));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ResultRegisteredPatient_ROVERLAB.html");
 
 
@@ -2168,6 +2254,7 @@ public class PatientRegRoverLab extends HttpServlet {
         String VisitId = "";
         String TestingLocation = "";
         String OrderId = "";
+        String OrderDate = "";
         int Status = 0;
         SupportiveMethods suppMethods = new SupportiveMethods();
         StringBuffer LeftSideBarMenu = new StringBuffer();
@@ -2222,7 +2309,7 @@ public class PatientRegRoverLab extends HttpServlet {
                     "IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''),CASE WHEN a.Gender='male' then 'M' else 'F' END, " +
                     "CASE WHEN a.Insured = 'Yes' THEN 'Insured' WHEN a.Insured = 'NO' THEN 'Self Pay' ELSE 'Self Pay' END," +
                     "IFNULL(a.Test,''),IFNULL(a.TestingLocation,''),IFNULL(b.StageIdx,0)," +
-                    " b.OrderNum,IFNULL(b.Status,0),IFNULL(isVerified,0), IFNULL(a.email,'') " +
+                    " b.OrderNum,IFNULL(b.Status,0),IFNULL(isVerified,0), IFNULL(a.email,'') , DATE_FORMAT(b.OrderDate,'%m/%d/%Y') " +
                     " FROM " + Database + ".PatientReg a" +
                     " INNER JOIN " + Database + ".TestOrder b ON a.ID = b.PatRegIdx " +
                     " where a.Status = 0 and a.ID = " + ID;
@@ -2252,6 +2339,7 @@ public class PatientRegRoverLab extends HttpServlet {
                 Status = rset.getInt(18);
                 isVerified = rset.getInt(19);
                 email = rset.getString(20).trim();
+                OrderDate = rset.getString(21).trim();
             }
             rset.close();
             stmt.close();
@@ -3502,6 +3590,7 @@ public class PatientRegRoverLab extends HttpServlet {
             Parser.SetField("StageList", stageList.toString());
             Parser.SetField("StatusList", statusList.toString());
             Parser.SetField("OrderID", OrderId);
+            Parser.SetField("OrderDate", OrderDate);
             Parser.SetField("UserID", UserId);
             Parser.SetField("verifiedUser", verifiedUser);
             Parser.SetField("email", email);
@@ -5467,5 +5556,149 @@ public class PatientRegRoverLab extends HttpServlet {
         return 1;
     }
 
+    void PatientHistory(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper, String locationArray) throws FileNotFoundException {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String MRN = request.getParameter("MRN");
+        String OrderId = request.getParameter("OrderId");
+        String ClientIndex = request.getParameter("ClientId");
+        StringBuffer PatientHistoryList = new StringBuffer();
+        SupportiveMethods suppMethods = new SupportiveMethods();
+        StringBuffer LeftSideBarMenu = new StringBuffer();
+        StringBuffer Header = new StringBuffer();
+        StringBuffer Footer = new StringBuffer();
 
+        System.out.println("Here ! in Patient History");
+
+
+        try {
+
+
+            Query = " SELECT IFNULL(a.OrderNum,''),DATE_FORMAT(a.OrderDate,'%m/%d/%Y'),IFNULL(a.OrderBy,''), a.Status,a.email,a.sms,a.StageIdx, d.TestStatus,  " +
+                    " CASE " +
+                    " WHEN a.Status = 1 THEN 'PENDING' " +
+                    " WHEN a.Status = 2 THEN 'ON-ARIVAL' " +
+                    " WHEN a.Status = 3 THEN 'ACCEPTED' " +
+                    " WHEN a.Status = 4 THEN 'REJECTED' " +
+                    " WHEN a.Status = 5 THEN 'PROCESSING AT LAB' " +
+                    " WHEN a.Status = 6 THEN 'FINALIZING' " +
+                    " WHEN a.Status = 7 THEN 'ANNOUNCED' " +
+                    " WHEN a.Status = 8 THEN 'REFUSED' " +
+                    " WHEN a.Status = 9 THEN 'READY FOR BILL' " +
+                    " WHEN a.Status = 10 THEN 'BILLED' " +
+                    " WHEN a.Status = 11 THEN 'REVIEW' " +
+                    " ELSE 'N/A' END,  " +
+                    " CASE " +
+                    " WHEN a.StageIdx = 0 THEN 'REGISTERED' " +
+                    " WHEN a.StageIdx = 1 THEN 'DISPATCHED' " +
+                    " WHEN a.StageIdx = 2 THEN 'RECEIVED AT LAB' " +
+                    " WHEN a.StageIdx = 3 THEN 'SAMPLE NOT RECEIVED' " +
+                    " ELSE 'N/A' END,  " +
+                    " CASE " +
+                    " WHEN d.TestStatus = 1 THEN 'BROKEN' " +
+                    " WHEN d.TestStatus = 2 THEN 'NEGATIVE' " +
+                    " WHEN d.TestStatus = 3 THEN 'POSITIVE' " +
+                    " WHEN d.TestStatus = 4 THEN 'REJECTED' " +
+                    " WHEN d.TestStatus = 5 THEN 'LOST' " +
+                    " WHEN d.TestStatus = 6 THEN 'UNCONCLUSIVE' " +
+                    " ELSE 'No Result' END,  " +
+                    " CASE WHEN a.email=0 THEN 'Email Not Sent' WHEN a.email=1 THEN 'Email Sent' Else '' END, IFNULL(DATE_FORMAT(a.emailtime,'%m/%d/%Y %H:%i:%s'),'00/00/0000'), " +
+                    " CASE WHEN a.sms=0 THEN 'SMS Not Sent' WHEN a.sms=1 THEN 'Email Sent' Else '' END, IFNULL(DATE_FORMAT(a.smstime,'%m/%d/%Y %H:%i:%s'),'00/00/0000') " +
+                    " FROM roverlab.TestOrder a " +
+                    " INNER JOIN roverlab.PatientReg b ON b.ID = a.PatRegIdx " +
+                    " INNER JOIN roverlab.Tests d ON a.Id = d.OrderId " +
+                    " WHERE b.MRN = " + MRN + "   " +
+                    " ORDER BY a.OrderDate DESC";
+
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            System.out.println("Query excecution--->   " + Query);
+            while (rset.next()) {
+                PatientHistoryList.append("<tr>\n");
+                PatientHistoryList.append("<td align=left>" + rset.getString(1) + "</td>\n");  //order name
+                PatientHistoryList.append("<td align=left>" + rset.getString(2) + "</td>\n"); // order date
+                PatientHistoryList.append("<td align=left>" + rset.getString(3) + "</td>\n"); // order by
+                if (rset.getInt(4) == 0) {
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-danger\">" + rset.getString(9) + "</span></td>\n"); // sttus
+                } else {
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(9) + "</span></td>\n"); // status
+                }
+
+                PatientHistoryList.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(10) + "</span></td>\n"); // stage
+
+
+                if (rset.getInt(8) == 1) {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-warning\">" + rset.getString(11) + "</span></td>\n");//Result
+                } else if (rset.getInt(8) == 2) {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(11) + "</span></td>\n");//Result
+                } else if (rset.getInt(8) == 3) {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-danger\">" + rset.getString(11) + "</span></td>\n");//Result
+                } else if (rset.getInt(8) == 4) {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-info\">" + rset.getString(11) + "</span></td>\n");//Result
+                } else if (rset.getInt(8) == 5) {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-primary\">" + rset.getString(11) + "</span></td>\n");//Result
+                } else if (rset.getInt(8) == 6) {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-dark\">" + rset.getString(11) + "</span></td>\n");//Result
+                } else {
+
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-light\">" + rset.getString(11) + "</span></td>\n");//Result
+
+                }
+
+
+                if (rset.getString(5).equals("0")) {
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-warning\">" + rset.getString(12) + "</span></td>\n");//Result
+                } else {
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(12) + "</span></td>\n");//Result
+                }
+                PatientHistoryList.append("<td align=left>" + rset.getString(13) + "</td>\n"); // email time
+
+                if (rset.getString(6).equals("0")) {
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-warning\">" + rset.getString(14) + "</span></td>\n");//Result
+                } else {
+                    PatientHistoryList.append("<td align=left><span class=\"badge badge-success\">" + rset.getString(14) + "</span></td>\n");//Result
+                }
+                PatientHistoryList.append("<td align=left>" + rset.getString(15) + "</td>\n"); // sms time
+                PatientHistoryList.append("</tr>\n");
+            }
+            System.out.println("Query--->   " + Query);
+            rset.close();
+            stmt.close();
+
+            Header = suppMethods.Header(request, out, conn, servletContext, UserId, Database, ClientId);
+            LeftSideBarMenu = suppMethods.LeftSideBarMenu(request, out, conn, servletContext, UserId, Database, ClientId);
+            Footer = suppMethods.Footer(request, out, conn, servletContext, UserId, Database, ClientId);
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("PatientHistoryList", String.valueOf(PatientHistoryList));
+            Parser.SetField("Header", String.valueOf(Header));
+            Parser.SetField("LeftSideBarMenu", String.valueOf(LeftSideBarMenu));
+            Parser.SetField("Footer", String.valueOf(Footer));
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/PatientHistory_ROVERLAB.html");
+        } catch (Exception e) {
+            System.out.println("in the catch exception of GetReport Function ");
+            System.out.println(e.getMessage());
+            String str = "";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
+            }
+            System.out.println(e);
+//        helper.SendEmailWithAttachment("Error in PatientRegRoverLab ** (ShowReport)", servletContext, e, "PatientRegRoverLab", "ShowReport", conn);
+//        Services.DumException("ShowReport", "PatientRegRoverLab ", request, e);
+//        Parsehtm Parser = new Parsehtm(request);
+//        Parser.SetField("FormName", "ManagementDashboard");
+//        Parser.SetField("ActionID", "GetInput");
+//        Parser.SetField("Message", "MES#002");
+//        Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+//
+
+
+        }
+    }
 }
