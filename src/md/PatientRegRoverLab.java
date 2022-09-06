@@ -36,12 +36,6 @@ import java.util.*;
 
 @SuppressWarnings("Duplicates")
 public class PatientRegRoverLab extends HttpServlet {
-/*    private Connection conn = null;
-    private ResultSet rset = null;
-    private String Query = "";
-    private Statement stmt = null;
-    private PreparedStatement pStmt = null;
-    */
 
     public static int getAge(LocalDate dob) {
         LocalDate curDate = LocalDate.now();
@@ -410,6 +404,7 @@ public class PatientRegRoverLab extends HttpServlet {
         Date date = new Date();
         String today = formatter.format(date);
         StringBuilder locationList = new StringBuilder();
+        StringBuilder statusList = new StringBuilder();
         StringBuilder stageList = new StringBuilder();
         StringBuilder TestList = new StringBuilder();
         String filter = "";
@@ -554,7 +549,7 @@ public class PatientRegRoverLab extends HttpServlet {
             Query = "Select Id, Location from roverlab.Locations WHERE Id IN (" + list + ") ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            locationList.append("<option value='' selected>Select Location</option>");
+            locationList.append("<option value='-1' selected disabled>Select Location</option>");
             while (rset.next()) {
                 locationList.append("<option value=" + rset.getString(1) + "  >" + rset.getString(2) + "</option>");
             }
@@ -569,6 +564,16 @@ public class PatientRegRoverLab extends HttpServlet {
             while (rset.next()) {
 
                 TestList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
+            }
+            rset.close();
+            stmt.close();
+
+            Query = "Select Id, Status from roverlab.ListofStatus";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            statusList.append("<option value=\"\" selected>None </option>");
+            while (rset.next()) {
+                statusList.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + " </option>");
             }
             rset.close();
             stmt.close();
@@ -1102,7 +1107,7 @@ public class PatientRegRoverLab extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=" + MRN + "_" + DateTime + ".pdf");
             response.setContentLength((int) pdfFile.length());
             FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -2016,7 +2021,7 @@ public class PatientRegRoverLab extends HttpServlet {
             Query = "Select Id, Location from roverlab.Locations";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            locationList.append("<option value='' >Select Location</option>");
+            locationList.append("<option value='-1' selected disabled>Select Location</option>");
             while (rset.next()) {
                 if (rset.getString(1) == Location) {
                     locationList.append("<option value=" + rset.getString(1) + "  selected>" + rset.getString(2) + "</option>");
@@ -3794,7 +3799,7 @@ public class PatientRegRoverLab extends HttpServlet {
                 response.addHeader("Content-Disposition", "inline; filename=" + filename);
                 response.setContentLength((int) pdfFile.length());
                 final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+                final OutputStream responseOutputStream = response.getOutputStream();
                 int bytes;
                 while ((bytes = fileInputStream.read()) != -1) {
                     responseOutputStream.write(bytes);
@@ -4021,7 +4026,7 @@ public class PatientRegRoverLab extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=" + Filename);
             response.setContentLength((int) pdfFile.length());
             final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            final OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -4070,6 +4075,7 @@ public class PatientRegRoverLab extends HttpServlet {
         String ExtendedMRN = "";
         String Status = "";
         String CreatedDate = "";
+        String OrderDate = "";
         String EditBy = "";
         String Edittime = "";
         String DOB = "";
@@ -4128,10 +4134,11 @@ public class PatientRegRoverLab extends HttpServlet {
                         "SUBSTRING(DATE_FORMAT(a.DateOfSymp,'%y'),1,1) AS Yearr1,\n" +
                         "SUBSTRING(DATE_FORMAT(a.DateOfSymp,'%y'),2,1) AS Yearr2," +
                         " IFNULL(a.BundleFilePath,''),IFNULL(a.BundleFileName,'')," +
-                        "a.SSN,a.DrivingLicense,a.StateID " +
+                        "a.SSN,a.DrivingLicense,a.StateID,d.OrderDate " +
                         "  From " + Database + ".PatientReg a " +
                         " INNER JOIN " + Database + ".ListofTests b ON a.Test = b.Id " +
                         " INNER JOIN " + Database + ".Locations c ON a.TestingLocation = c.Id " +
+                        " INNER JOIN " + Database + ".TestOrder d ON a.Id = d.PatRegIdx " +
                         " WHERE a.ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -4181,6 +4188,7 @@ public class PatientRegRoverLab extends HttpServlet {
                     SSN = rset.getString(45);
                     DrivingLicense = rset.getString(46);
                     StateID = rset.getString(47);
+                    OrderDate = rset.getString(48);
                 }
                 rset.close();
                 stmt.close();
@@ -4243,7 +4251,7 @@ public class PatientRegRoverLab extends HttpServlet {
                 response.addHeader("Content-Disposition", "inline; filename=" + filename);
                 response.setContentLength((int) pdfFile.length());
                 final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+                final OutputStream responseOutputStream = response.getOutputStream();
                 int bytes;
                 while ((bytes = fileInputStream.read()) != -1) {
                     responseOutputStream.write(bytes);
@@ -4398,34 +4406,51 @@ public class PatientRegRoverLab extends HttpServlet {
                     pdfContentByte.endText();
 
 
-                    if (Ethnicity.equals("Hispanic/Latino")) {
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
-                        pdfContentByte.setColorFill(BaseColor.RED);
-                        pdfContentByte.setTextMatrix(145, 624); // set x and y co-ordinates
-                        pdfContentByte.showText("*"); // Ethnicity
-                        pdfContentByte.endText();
-                    } else if (Ethnicity.equals("Non-Hispanic/Latino")) {
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
-                        pdfContentByte.setColorFill(BaseColor.RED);
-                        pdfContentByte.setTextMatrix(215, 624); // set x and y co-ordinates
-                        pdfContentByte.showText("*"); // Ethnicity
-                        pdfContentByte.endText();
-                    } else if (Ethnicity.equals("Unknown")) {
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
-                        pdfContentByte.setColorFill(BaseColor.RED);
-                        pdfContentByte.setTextMatrix(144, 614); // set x and y co-ordinates
-                        pdfContentByte.showText("*"); // Ethnicity
-                        pdfContentByte.endText();
-                    } else if (Ethnicity.equals("Not Given/Refused")) {
-                        pdfContentByte.beginText();
-                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
-                        pdfContentByte.setColorFill(BaseColor.RED);
-                        pdfContentByte.setTextMatrix(190, 614); // set x and y co-ordinates
-                        pdfContentByte.showText("*"); // Ethnicity
-                        pdfContentByte.endText();
+                    switch (Ethnicity) {
+                        case "Hispanic/Latino":
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
+
+                            pdfContentByte.setColorFill(BaseColor.RED);
+                            pdfContentByte.setTextMatrix(145, 624); // set x and y co-ordinates
+
+                            pdfContentByte.showText("*"); // Ethnicity
+
+                            pdfContentByte.endText();
+                            break;
+                        case "Non-Hispanic/Latino":
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
+
+                            pdfContentByte.setColorFill(BaseColor.RED);
+                            pdfContentByte.setTextMatrix(215, 624); // set x and y co-ordinates
+
+                            pdfContentByte.showText("*"); // Ethnicity
+
+                            pdfContentByte.endText();
+                            break;
+                        case "Unknown":
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
+
+                            pdfContentByte.setColorFill(BaseColor.RED);
+                            pdfContentByte.setTextMatrix(144, 614); // set x and y co-ordinates
+
+                            pdfContentByte.showText("*"); // Ethnicity
+
+                            pdfContentByte.endText();
+                            break;
+                        case "Not Given/Refused":
+                            pdfContentByte.beginText();
+                            pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 7); // set fonts zine and name
+
+                            pdfContentByte.setColorFill(BaseColor.RED);
+                            pdfContentByte.setTextMatrix(190, 614); // set x and y co-ordinates
+
+                            pdfContentByte.showText("*"); // Ethnicity
+
+                            pdfContentByte.endText();
+                            break;
                     }
 
 
@@ -4856,25 +4881,25 @@ public class PatientRegRoverLab extends HttpServlet {
                     pdfContentByte.showText(sampleType); // Specimen ID
                     pdfContentByte.endText();
 
-                    pdfContentByte.beginText();
-                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                    pdfContentByte.setColorFill(BaseColor.BLACK);
-                    pdfContentByte.setTextMatrix(150, 107); // set x and y co-ordinates
-                    pdfContentByte.showText(formattedDateTime); // Specimen ID
-                    pdfContentByte.endText();
+//                    pdfContentByte.beginText();
+//                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+//                    pdfContentByte.setColorFill(BaseColor.BLACK);
+//                    pdfContentByte.setTextMatrix(150, 107); // set x and y co-ordinates
+//                    pdfContentByte.showText(formattedDateTime); // Specimen ID
+//                    pdfContentByte.endText();
 
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                     pdfContentByte.setColorFill(BaseColor.BLACK);
                     pdfContentByte.setTextMatrix(150, 107); // set x and y co-ordinates
-                    pdfContentByte.showText(formattedDateTime); // Date & Time Collected
+                    pdfContentByte.showText(OrderDate); // Date & Time Collected
                     pdfContentByte.endText();
 
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                     pdfContentByte.setColorFill(BaseColor.BLACK);
                     pdfContentByte.setTextMatrix(450, 107); // set x and y co-ordinates
-                    pdfContentByte.showText(formattedDateTime); // Date & Time
+                    pdfContentByte.showText(OrderDate); // Date & Time
                     pdfContentByte.endText();
 
                     pdfContentByte.beginText();
@@ -4888,7 +4913,7 @@ public class PatientRegRoverLab extends HttpServlet {
                     pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                     pdfContentByte.setColorFill(BaseColor.BLACK);
                     pdfContentByte.setTextMatrix(215, 68); // set x and y co-ordinates
-                    pdfContentByte.showText(formattedDateTime); // Date & Time Collected
+                    pdfContentByte.showText(OrderDate); // Date & Time Collected
                     pdfContentByte.endText();
 
                     pdfContentByte.beginText();
@@ -4932,7 +4957,7 @@ public class PatientRegRoverLab extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=" + Filename);
             response.setContentLength((int) pdfFile.length());
             final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            final OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -5031,7 +5056,7 @@ public class PatientRegRoverLab extends HttpServlet {
             List<String> imagelist = new ArrayList(values);
 
             for (int i = 0; i < imagelist.size(); ++i) {
-                Style.append(".desktop-image" + (i + 1) + " {\n\tbackground-image: url(" + (String) imagelist.get(i) + ");\n\tbackground-size: cover;\n\tbackground-position: center;\n\twidth: 600px;\n\theight: 777px;\n\tmargin: 0 auto;\n\tborder: 5px solid #0f0f10;\n\tposition: relative;\n}\n\n.desktop-image" + (i + 1) + "> #Sign" + (i + 1) + "{\n\t\n\tposition: relative;\n\ttop: 54%;\n\tleft: 17%;\n\t/*transform: translate(50%, -50%);*/\n}");
+                Style.append(".desktop-image" + (i + 1) + " {\n\tbackground-image: url(" + imagelist.get(i) + ");\n\tbackground-size: cover;\n\tbackground-position: center;\n\twidth: 600px;\n\theight: 777px;\n\tmargin: 0 auto;\n\tborder: 5px solid #0f0f10;\n\tposition: relative;\n}\n\n.desktop-image" + (i + 1) + "> #Sign" + (i + 1) + "{\n\t\n\tposition: relative;\n\ttop: 54%;\n\tleft: 17%;\n\t/*transform: translate(50%, -50%);*/\n}");
                 ulTag.append("<div id=\"page" + (i + 1) + "\" class=\"images\"><div  class=\"desktop-image" + (i + 1) + "\"><button type=\"button\" class=\"btn btn-primary\" id=\"Sign" + (i + 1) + "\"  onclick=\"signhere(" + (i + 1) + ", this.id);\" class=\"mobile-image-stella\">Patients Sign</button>\n<img id=\"canvasimg" + (i + 1) + "\" style=\"display:none;background-color:rgba(255,255,255,0.6);\">\n\n</div>\n</div>\n");
             }
 
@@ -5564,12 +5589,6 @@ public class PatientRegRoverLab extends HttpServlet {
         String OrderId = request.getParameter("OrderId");
         String ClientIndex = request.getParameter("ClientId");
         StringBuffer PatientHistoryList = new StringBuffer();
-        SupportiveMethods suppMethods = new SupportiveMethods();
-        StringBuffer LeftSideBarMenu = new StringBuffer();
-        StringBuffer Header = new StringBuffer();
-        StringBuffer Footer = new StringBuffer();
-
-        System.out.println("Here ! in Patient History");
 
 
         try {
@@ -5613,7 +5632,6 @@ public class PatientRegRoverLab extends HttpServlet {
 
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            System.out.println("Query excecution--->   " + Query);
             while (rset.next()) {
                 PatientHistoryList.append("<tr>\n");
                 PatientHistoryList.append("<td align=left>" + rset.getString(1) + "</td>\n");  //order name
@@ -5668,18 +5686,11 @@ public class PatientRegRoverLab extends HttpServlet {
                 PatientHistoryList.append("<td align=left>" + rset.getString(15) + "</td>\n"); // sms time
                 PatientHistoryList.append("</tr>\n");
             }
-            System.out.println("Query--->   " + Query);
             rset.close();
             stmt.close();
 
-            Header = suppMethods.Header(request, out, conn, servletContext, UserId, Database, ClientId);
-            LeftSideBarMenu = suppMethods.LeftSideBarMenu(request, out, conn, servletContext, UserId, Database, ClientId);
-            Footer = suppMethods.Footer(request, out, conn, servletContext, UserId, Database, ClientId);
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("PatientHistoryList", String.valueOf(PatientHistoryList));
-            Parser.SetField("Header", String.valueOf(Header));
-            Parser.SetField("LeftSideBarMenu", String.valueOf(LeftSideBarMenu));
-            Parser.SetField("Footer", String.valueOf(Footer));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/PatientHistory_ROVERLAB.html");
         } catch (Exception e) {
             System.out.println("in the catch exception of GetReport Function ");

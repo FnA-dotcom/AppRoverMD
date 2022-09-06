@@ -100,9 +100,6 @@ public class SendSMS extends HttpServlet {
                 case "SendSms":
                     SendSms(request, out, conn, context, smsConfiguration, UserIndex);
                     break;
-                case "SendSmsLAB":
-                    SendSmsLAB(request, out, conn, context, smsConfiguration);
-                    break;
                 default:
                     out.println("Under Development");
                     break;
@@ -220,8 +217,7 @@ public class SendSMS extends HttpServlet {
             Template = smsConfiguration.getSmsTemplate(request, conn, servletContext);
 
             String AdvocatePhNumber = "";
-            Query = "Select IFNULL(AdvocatePhNumber,'') from oe.AdvocateSMSNumber " +
-                    " where AdvocateIdx = " + UserIndex;
+            Query = "Select IFNULL(AdvocatePhNumber,'') from oe.AdvocateSMSNumber where AdvocateIdx = " + UserIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -336,8 +332,7 @@ public class SendSMS extends HttpServlet {
             }
 
             String AdvocatePhNumber = "";
-            Query = "Select IFNULL(AdvocatePhNumber,'') from oe.AdvocateSMSNumber " +
-                    "where AdvocateIdx = " + UserIndex + " AND FacilityIdx=" + Facility;
+            Query = "Select IFNULL(AdvocatePhNumber,'') from oe.AdvocateSMSNumber where AdvocateIdx = " + UserIndex + " AND FacilityIdx=" + Facility;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -374,7 +369,8 @@ public class SendSMS extends HttpServlet {
 
             String ID = request.getParameter("Patient").trim();
 
-            Query = "Select Body FROM oe.SmsTemplates \n" +
+            Query = "Select Body " +
+                    "FROM oe.SmsTemplates \n" +
                     "WHERE Id='" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -522,73 +518,4 @@ public class SendSMS extends HttpServlet {
             System.out.println("EXCEPTION in Saving Record" + ex.getMessage());
         }
     }
-
-    private void SendSmsLAB(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, TwilioSMSConfiguration smsConfiguration) {
-        try {
-            Statement stmt = null;
-            ResultSet rset = null;
-            String Query = "";
-            String Database = "";
-            String[] result;
-            String PtMRN = "0";
-            int facilityIndex = Integer.parseInt(request.getParameter("Facility").trim());
-            String PtName = request.getParameter("Name").trim();
-            String Username = request.getParameter("User").trim();
-            int Priority = Integer.parseInt(request.getParameter("Priority").trim());
-            String Mrn = request.getParameter("Mrn").trim();
-            if (request.getParameter("Mrn").length() != 0)
-                PtMRN = request.getParameter("Mrn").trim();
-//            int PtMRN = Integer.parseInt(!request.getParameter("Mrn").isEmpty() ? request.getParameter("Mrn").trim() : request.getParameter("Mrn") != null ? request.getParameter("Mrn").trim() : "0");
-            String PtPhNumber = request.getParameter("Ph").trim();
-            String Sms = request.getParameter("Sms").trim();
-
-            try {
-                HashMap<Integer, String> hashMap = new HashMap<Integer, String>();
-                Query = "Select Id,dbname from oe.clients where status = 0";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    hashMap.put(rset.getInt(1), rset.getString(2));
-                }
-                rset.close();
-                stmt.close();
-
-                Database = hashMap.get(facilityIndex);
-
-                if (Database == null)
-                    Database = "oe";
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //insertionSMSInfo(Database, facilityIndex, 67, Priority, PtName, PtMRN, PtPhNumber, Sms, Username, 0);
-            //int maxId = smsConfiguration.getMaxSMSIndex(request, conn, servletContext, facilityIndex, Database);
-
-/*            if (Priority == 3) {
-                result = smsConfiguration.sendTwilioMessages(request, conn, servletContext, Sms, facilityIndex, PtPhNumber, 67, Database, PtMRN, maxId);
-                if (result[0].equals("Success")) {
-                    smsConfiguration.updateSMSInfoTable(request, conn, servletContext, maxId, result[1], Database, "0");
-                    out.println("1");
-                } else {
-                    smsConfiguration.updateSMSInfoTable(request, conn, servletContext, maxId, result[1], Database, "999");
-                    //insertionSMSInfo(Database, facilityIndex, advocateIdx, Priority, PtName, PtMRN, PtPhNumber, Sms, Username, 999);
-                    out.println("2~" + result[0] + "");
-                }
-            } else {
-                smsConfiguration.updateSMSInfoTable(request, conn, servletContext, maxId, "", Database, "0");
-                //insertionSMSInfo(Database, facilityIndex, advocateIdx, Priority, PtName, PtMRN, PtPhNumber, Sms, Username, 0);
-                out.println("1");
-            }*/
-            result = smsConfiguration.sendTwilioMessages(request, conn, servletContext, Sms, facilityIndex, PtPhNumber, 67, Database, PtMRN, 0);
-            out.println("1");
-        } catch (Exception ex) {
-            out.println(ex.getMessage());
-            ex.getStackTrace();
-            String str = "";
-            for (int i = 0; i < ex.getStackTrace().length; ++i) {
-                str = str + ex.getStackTrace()[i] + "<br>";
-            }
-            out.println("2");
-        }
-    }
-
 }

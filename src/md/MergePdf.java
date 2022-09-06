@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -40,7 +39,7 @@ public class MergePdf extends HttpServlet {
         Connection conn = null;
         String Action = null;
         final StringBuffer Response = new StringBuffer();
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         String Database = "";
         ResultSet rset = null;
         Statement stmt = null;

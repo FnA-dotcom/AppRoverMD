@@ -9,21 +9,21 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Sublime_hl7loopsender implements Runnable {
+public class Sublime_hl7loopsender implements Runnable
+{
     private static boolean SignonDone;
-    private static int TraceNo;
-
-    static {
-        Sublime_hl7loopsender.SignonDone = false;
-    }
-
     private Socket sock;
     private boolean done;
+    private static int TraceNo;
 
     public Sublime_hl7loopsender(final Socket socket) {
         this.done = false;
         this.sock = socket;
         Sublime_hl7loopsender.TraceNo = 0;
+    }
+
+    static {
+        Sublime_hl7loopsender.SignonDone = false;
     }
 
     public static void main(final String[] args) {
@@ -48,17 +48,18 @@ public class Sublime_hl7loopsender implements Runnable {
             System.out.println("Connecting To  Epower Doc socket  @  172.18.82.10 8083");
             sock = new Socket("172.18.82.10", 8083);
             System.out.println("|||||||||||");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 conn.close();
-            } catch (Exception ee) {
-            }
+            }catch(Exception ee){}
             e.printStackTrace(System.out);
             System.out.println("Exception Creating Socket .........." + e.getMessage());
             final String[] a = null;
             try {
                 Thread.sleep(20000L);
-            } catch (InterruptedException ee) {
+            }
+            catch (InterruptedException ee) {
                 ee.printStackTrace();
             }
             main(a);
@@ -112,7 +113,8 @@ public class Sublime_hl7loopsender implements Runnable {
                     hrset.close();
                     hstmt.close();
                     hstmt2.close();
-                } catch (SQLException ee2) {
+                }
+                catch (SQLException ee2) {
                     System.out.println("Error in Conn: " + ee2.getMessage());
                 }
                 final Date dt2 = new Date();
@@ -125,7 +127,8 @@ public class Sublime_hl7loopsender implements Runnable {
                 }
                 Thread.sleep(8000L);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("Excep in main..." + e.getMessage());
             e.printStackTrace(System.out);
         }
@@ -232,7 +235,8 @@ public class Sublime_hl7loopsender implements Runnable {
             DOB = DOB.replace("-", "");
             if (gender.toUpperCase().compareTo("FEMALE") == 0) {
                 gender = "F";
-            } else {
+            }
+            else {
                 gender = "M";
             }
             System.out.println("G& M pass");
@@ -295,7 +299,8 @@ public class Sublime_hl7loopsender implements Runnable {
             final byte[] byteBuffer = msg.getBytes();
             sock.getOutputStream().write(byteBuffer);
             System.out.println("DEMO GRAPHIC UPDATE REQUEST Send Successfully...[" + new String(byteBuffer) + "] -- [" + byteBuffer.length + "]");
-        } catch (Exception ee) {
+        }
+        catch (Exception ee) {
             System.out.println("Lower " + ee.getMessage());
             ee.getStackTrace();
         }
@@ -308,7 +313,8 @@ public class Sublime_hl7loopsender implements Runnable {
 //            final Connection connection = DriverManager.getConnection("jdbc:mysql://database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=rovermdadmin&password=atyu!ioujy1986");
             Connection connection = DriverManager.getConnection("jdbc:mysql://rovermd-01-master.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=webserver873849&password=Asljdpiwoeurj!!3498");
             return connection;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("GetConnection: " + e.getMessage());
             return null;
         }
@@ -328,13 +334,15 @@ public class Sublime_hl7loopsender implements Runnable {
             final byte[] buf = new byte[size];
             final int readsize = this.sock.getInputStream().read(buf);
             System.out.println("Message received from Server: " + new String(buf));
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace(System.out);
             System.out.println("Exception in Client Thread run method   : " + ex.getMessage());
             final String[] a = null;
             try {
                 Thread.sleep(20000L);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 e.printStackTrace();
                 System.out.println("going for Reconnection");
             }
@@ -347,7 +355,8 @@ public class Sublime_hl7loopsender implements Runnable {
         this.done = true;
         try {
             System.out.println("in Thread stop ....");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println("Exception in Thread stop ...." + ex.getMessage());
         }
         this.sock = null;

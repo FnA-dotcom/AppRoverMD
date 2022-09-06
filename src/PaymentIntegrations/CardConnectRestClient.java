@@ -251,8 +251,7 @@ public class CardConnectRestClient {
     private boolean isEmpty(String str) {
         if (str == null) return true;
         if (str.length() <= 0) return true;
-        if ("".equals(str)) return true;
-        return false;
+        return "".equals(str);
     }
 
     // Internal method to send an HTTP REST request

@@ -12,23 +12,23 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class hl7loopsender_old_27_10_2020 implements Runnable {
+public class hl7loopsender_old_27_10_2020 implements Runnable
+{
     private static boolean SignonDone;
-    private static int TraceNo;
-
-    static {
-        hl7loopsender_old_27_10_2020.SignonDone = false;
-    }
-
     private Socket sock;
     private boolean done;
-
+    private static int TraceNo;
+    
     public hl7loopsender_old_27_10_2020(final Socket socket) {
         this.done = false;
         this.sock = socket;
         hl7loopsender_old_27_10_2020.TraceNo = 0;
     }
-
+    
+    static {
+        hl7loopsender_old_27_10_2020.SignonDone = false;
+    }
+    
     public static void main(final String[] args) {
         Connection conn = null;
         Statement hstmt = null;
@@ -50,13 +50,15 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
             System.out.println("Connecting To  Epower Doc socket  @  " + Host + " " + port);
             sock = new Socket(Host, port);
             System.out.println("|||||||||||");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace(System.out);
             System.out.println("Exception Creating Socket .........." + e.getMessage());
             final String[] a = null;
             try {
                 Thread.sleep(20000L);
-            } catch (InterruptedException ee) {
+            }
+            catch (InterruptedException ee) {
                 ee.printStackTrace();
             }
             main(a);
@@ -117,12 +119,13 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
                     StartTime = dt2.getTime();
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("Excep in main..." + e.getMessage());
             e.printStackTrace(System.out);
         }
     }
-
+    
     public static void sendmsg2(final Socket sock, String msg, final String mrn, final String flag, final Connection conn) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -228,7 +231,8 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
             DOS = DOS.replace(" ", "");
             if (gender.compareTo("female") == 0) {
                 gender = "F";
-            } else {
+            }
+            else {
                 gender = "M";
             }
             System.out.println("G& M pass");
@@ -270,22 +274,22 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
                 }
                 rset.close();
                 stmt.close();
-                if (PriInsuranceName.compareTo("-") == 0) {
-                    Query = " Select PayerName from oe_2.ProfessionalPayers where Id =  " + PriInsuranceName;
-                    System.out.println(Query);
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        PriInsuranceName = rset.getString(1);
-                    }
-                    rset.close();
-                    stmt.close();
+                if(PriInsuranceName.compareTo("-")==0 ) {
+                Query = " Select PayerName from oe_2.ProfessionalPayers where Id =  " + PriInsuranceName;
+                System.out.println(Query);
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    PriInsuranceName = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
                 }
                 IN1 = "IN1|1|" + MemId + "||" + PriInsurance + "||||" + GrpNumber + "|||||||||||||||||||||||||||||||||||";
             }
 
-            if (!DoctorsId.equals("-1") || !DoctorsId.equals("0")) {
-                Query = "Select Concat(DoctorsFirstName,' ', DoctorsLastName) from victoria.DoctorsList where Id = " + DoctorsId;
+            if(!DoctorsId.equals("-1") || !DoctorsId.equals("0")){
+                Query = "Select Concat(DoctorsFirstName,' ', DoctorsLastName) from victoria.DoctorsList where Id = "+DoctorsId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -296,7 +300,7 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
 
             }
             String VisitNumber = "";
-            Query = "Select MAX(VisitNumber) + 1 from oe_2.PatientVisit where PatientRegId = " + Id;
+            Query = "Select MAX(VisitNumber) + 1 from oe_2.PatientVisit where PatientRegId = "+Id;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -304,12 +308,12 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
             }
             rset.close();
             stmt.close();
-            if (VisitNumber.length() == 1) {
-                VisitNumber = "000" + VisitNumber;
-            } else if (VisitNumber.length() == 2) {
-                VisitNumber = "00" + VisitNumber;
-            } else if (VisitNumber.length() == 3) {
-                VisitNumber = "0" + VisitNumber;
+            if(VisitNumber.length() == 1){
+                VisitNumber = "000"+VisitNumber;
+            }else if(VisitNumber.length() == 2){
+                VisitNumber = "00"+ VisitNumber;
+            }else if(VisitNumber.length() == 3){
+                VisitNumber = "0"+VisitNumber;
             }
 
 
@@ -321,7 +325,7 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
 //                    "PV1||3^E/R^02|||||" + Address + "^^" + City + "^" + State + "^" + ZipCode + "|||||||||||||||||||||||||||||||||||||" + MSH7 + "|" + MSH7 + "\r\n" + IN1;
 
             msg = "MSH|^~\\&||665|ADT|3344|" + MSH7 + "||ADT^" + Synctype + "|" + MSH7 + "|P|2.3.1\n" +
-                    "EVN|" + Synctype + "|20200707020302|||XXX^^^^^^^^488 \r\n" +
+                    "EVN|"+Synctype+"|20200707020302|||XXX^^^^^^^^488 \r\n" +
                     "PID|1||" + MRN + "||" + LastName + "^" + FirstName + "^" + MiddleInitial + "||" + DOB + "|" + gender + "||W|" + Address + "^^" + City + "^" + State + "^" + ZipCode + "|" + PhNumber + "|" + PhNumber + "||ENGLISH|M|001||" + SSN + "|||||||||||N\n" +
                     "PV1||3^E/R^02|||||" + DoctorsName + "|||||||||||||||||||||||||||||||||||||" + MSH7 + "|" + MSH7 + "\r\n" +
                     IN1;
@@ -330,24 +334,26 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
             final byte[] byteBuffer = msg.getBytes();
             sock.getOutputStream().write(byteBuffer);
             System.out.println("DEMO GRAPHIC UPDATE REQUEST Send Successfully...[" + new String(byteBuffer) + "] -- [" + byteBuffer.length + "]");
-        } catch (Exception ee) {
+        }
+        catch (Exception ee) {
             System.out.println("Lower " + ee.getMessage());
             ee.getStackTrace();
         }
     }
-
+    
     private static Connection getConnection() {
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
 //            final Connection connection = DriverManager.getConnection("jdbc:mysql://54.167.174.84/oe?user=abdf890092&password=980293339jjjj");
-            final Connection connection = DriverManager.getConnection("jdbc:mysql://" + "database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com" + "/" + "oe" + "?user=" + "rovermdadmin" + "&password=" + "atyu!ioujy1986" + "");
+            final Connection connection =  DriverManager.getConnection("jdbc:mysql://"+"database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com"+"/"+"oe"+"?user="+"rovermdadmin"+"&password="+"atyu!ioujy1986"+"");
             return connection;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return null;
         }
     }
-
-    //  @Override
+    
+  //  @Override
     public void run() {
         final byte[] lenbuf = new byte[2];
         final Connection conn = null;
@@ -361,13 +367,15 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
             final byte[] buf = new byte[size];
             final int readsize = this.sock.getInputStream().read(buf);
             System.out.println("Message received from Server: " + new String(buf));
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace(System.out);
             System.out.println("Exception in Client Thread run method   : " + ex.getMessage());
             final String[] a = null;
             try {
                 Thread.sleep(20000L);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 e.printStackTrace();
                 System.out.println("going for Reconnection");
             }
@@ -375,12 +383,13 @@ public class hl7loopsender_old_27_10_2020 implements Runnable {
         }
         System.out.println("Read Thread Ends....");
     }
-
+    
     protected void stop() {
         this.done = true;
         try {
             System.out.println("in Thread stop ....");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println("Exception in Thread stop ...." + ex.getMessage());
         }
         this.sock = null;

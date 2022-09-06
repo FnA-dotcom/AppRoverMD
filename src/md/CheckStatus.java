@@ -1,7 +1,3 @@
-//
-// Decompiled by Procyon v0.5.36
-//
-
 package md;
 
 import Handheld.UtilityHelper;
@@ -16,22 +12,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @SuppressWarnings("Duplicates")
 public class CheckStatus extends HttpServlet {
-    static String DOS = "";
-    static String Acct = "";
-    static String printabledate = "";
-
-    Integer ScreenIndex = 22;
-
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -95,15 +82,6 @@ public class CheckStatus extends HttpServlet {
             ActionID = request.getParameter("ActionID");
             conn = Services.GetConnection(context, 1);
 
-/*            if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, this.ScreenIndex)) {
-//                out.println("You are not Authorized to access this page");
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("Message", "You are not Authorized to access this page");
-                Parser.SetField("FormName", "ManagementDashboard");
-                Parser.SetField("ActionID", "GetInput");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
-                return;
-            }*/
 
             switch (ActionID) {
                 case "GetInput":
@@ -145,29 +123,22 @@ public class CheckStatus extends HttpServlet {
 
     private void GetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId, UtilityHelper helper) throws ServletException, IOException {
 
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        int PatientCount = 0;
+        ResultSet rset;
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         Date currentDate = new Date();
 
         StringBuffer CDRList = new StringBuffer();
-        int SNo = 1;
         try {
-            Query = "SELECT Id,IFNULL(MRN,0), IFNULL(InvoiceNo,'Insurance'), Routing, Account, CheckNo, Amount, Description,\n" +
-                    "CASE\n" +
-                    "\tWHEN isPaid=0 THEN \"Pending\" \n" +
-                    "\tWHEN isPaid=1 THEN \"Posted\" \n" +
-                    "\tWHEN isPaid=2 THEN \"Deposited\" \n" +
-                    "\tWHEN isPaid=3 THEN \"Declined\"\n" +
-                    "END \n" +
-                    "FROM " + Database + ".CheckInfo\n" +
-                    " where \n" +
-                    "CreatedDate between '" + df.format(currentDate) + " 00:00:00' and '" + df.format(currentDate) + " 23:59:59'";
-//            out.println(Query);
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
+            PreparedStatement ps = conn.prepareStatement(
+            "SELECT a.Id,IFNULL(a.MRN,0), IFNULL(a.InvoiceNo,'Insurance'), a.Routing, a.Account, a.CheckNo, a.Amount, a.Description,\n" +
+                    " b.SettlementStatus , a.CreatedDate , b.Descritpion " +
+                    " FROM " + Database + ".CheckInfo a " +
+                    " RIGHT JOIN oe.SettlementStatuses b " +
+                    " ON a.Status=b.Id " +
+                    " where " +
+                    "CreatedDate between '" + df.format(currentDate) + " 00:00:00' and '" + df.format(currentDate) + " 23:59:59'"
+            );
+            rset = ps.executeQuery();
             while (rset.next()) {
                 CDRList.append("<tr>\n");
                 CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
@@ -177,25 +148,12 @@ public class CheckStatus extends HttpServlet {
                 CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(8) + "</td>\n");
-                CDRList.append("<td align=left id=\"current_status_" + rset.getString(1) + "\">" + rset.getString(9) + "</td>\n");
-                CDRList.append("<td align=left>" +
-                        "<div class=\"input-group\">\n" +
-                        "<select class=\"custom-select\" id=\"checkStatus_" + rset.getString(1) + "\" name=\"checkStatus\" style=\"\n" +
-                        "    height: 40.4px;\n" +
-                        "\">\n" +
-                        "<option value=\"\"selected disabled>Choose...</option> \n" +
-                        "<option value=\"0\" required>Pending </option> \n" +
-                        "<option value=\"1\" >Posted </option> \n" +
-                        "<option value=\"2\" >Deposited </option> \n" +
-                        "<option value=\"3\" >Declined </option> \n" +
-                        "</select>\n" +
-                        "<div class=\"input-group-append\">" +
-                        "<button type=\"button\" class=\"waves-effect waves-light btn btn-outline btn-rounded btn-info\" onclick=\"UpdateStatus(" + rset.getInt(1) + ")\">Update</button>" +
-                        "</div>" +
-                        "</div></td>\n");
+                CDRList.append("<td align=left ><span data-toggle=\"tooltip\" title=\""+ rset.getString(11) +"\">" + rset.getString(9) + "</span></td>\n");
+                CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");
+                CDRList.append("</tr>\n");
             }
             rset.close();
-            stmt.close();
+            ps.close();
 
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", String.valueOf(CDRList));
@@ -221,18 +179,16 @@ public class CheckStatus extends HttpServlet {
         StringBuffer CDRList = new StringBuffer();
 
         try {
-            Query = "SELECT Id,IFNULL(MRN,0), IFNULL(InvoiceNo,'Insurance'), Routing, Account, CheckNo, Amount, Description,\n" +
-                    "CASE\n" +
-                    "\tWHEN isPaid=0 THEN \"Pending\" \n" +
-                    "\tWHEN isPaid=1 THEN \"Posted\" \n" +
-                    "\tWHEN isPaid=2 THEN \"Deposited\" \n" +
-                    "\tWHEN isPaid=3 THEN \"Declined\"\n" +
-                    "END \n" +
-                    "FROM " + Database + ".CheckInfo\n" +
-                    " where \n" +
-                    "CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59'";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT a.Id,IFNULL(a.MRN,0), IFNULL(a.InvoiceNo,'Insurance'), a.Routing, a.Account, a.CheckNo, a.Amount, a.Description,\n" +
+                            " b.SettlementStatus , a.CreatedDate , b.Descritpion " +
+                            " FROM " + Database + ".CheckInfo a " +
+                            " RIGHT JOIN oe.SettlementStatuses b " +
+                            " ON a.Status=b.Id " +
+                            " where " +
+                            " CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59'"
+            );
+            rset = ps.executeQuery();
             while (rset.next()) {
                 CDRList.append("<tr>\n");
                 CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
@@ -242,25 +198,13 @@ public class CheckStatus extends HttpServlet {
                 CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(8) + "</td>\n");
-                CDRList.append("<td align=left id=\"current_status_" + rset.getString(1) + "\">" + rset.getString(9) + "</td>\n");
-                CDRList.append("<td align=left>" +
-                        "<div class=\"input-group\">\n" +
-                        "<select class=\"custom-select\" id=\"checkStatus_" + rset.getString(1) + "\" name=\"checkStatus\" style=\"\n" +
-                        "    height: 40.4px;\n" +
-                        "\">\n" +
-                        "<option value=\"\"selected disabled>Choose...</option> \n" +
-                        "<option value=\"0\" required>Pending </option> \n" +
-                        "<option value=\"1\" >Posted </option> \n" +
-                        "<option value=\"2\" >Deposited </option> \n" +
-                        "<option value=\"3\" >Declined </option> \n" +
-                        "</select>\n" +
-                        "<div class=\"input-group-append\">" +
-                        "<button type=\"button\" class=\"waves-effect waves-light btn btn-outline btn-rounded btn-info\" onclick=\"UpdateStatus(" + rset.getInt(1) + ")\">Update</button>" +
-                        "</div>" +
-                        "</div></td>\n");
+                CDRList.append("<td align=left ><span data-toggle=\"tooltip\" title=\""+ rset.getString(11) +"\">" + rset.getString(9) + "</span></td>\n");
+                CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");
+                CDRList.append("</tr>\n");
             }
             rset.close();
-            stmt.close();
+            ps.close();
+
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", String.valueOf(CDRList));
             Parser.SetField("UserId", String.valueOf(UserId));
@@ -292,6 +236,7 @@ public class CheckStatus extends HttpServlet {
 
             rset.close();
             stmt.close();
+
             Parsehtm Parser = new Parsehtm(request);
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Reports/CheckStatusDateWise.html");
         } catch (Exception var11) {

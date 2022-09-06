@@ -17,8 +17,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 
 public class Hl7dft4_clean {
     static int ee;

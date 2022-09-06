@@ -55,6 +55,7 @@ public class MarketingReport extends HttpServlet {
         PrintWriter out = new PrintWriter(response.getOutputStream());
         Services supp = new Services();
         Connection conn = null;
+        System.out.println("in the handle request");
 
         String ActionID;
         ServletContext context = null;
@@ -74,7 +75,7 @@ public class MarketingReport extends HttpServlet {
             DatabaseName = session.getAttribute("DatabaseName").toString();
             FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
             UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
-
+            System.out.println("in the handle request 4");
             try {
                 if (UserId.equals("")) {
                     Parsehtm Parser = new Parsehtm(request);
@@ -195,6 +196,7 @@ public class MarketingReport extends HttpServlet {
                 Footer = suppMethods.Footer(request, out, conn, servletContext, UserId, Database, ClientId);
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("UserId", String.valueOf(UserId));
+                Parser.SetField("ClientId", String.valueOf(ClientId));
                 Parser.SetField("Header", String.valueOf(Header));
                 Parser.SetField("LeftSideBarMenu", String.valueOf(LeftSideBarMenu));
                 Parser.SetField("Footer", String.valueOf(Footer));
@@ -479,7 +481,10 @@ public class MarketingReport extends HttpServlet {
                 Parser.SetField("Footer", String.valueOf(Footer));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Reports/MarketingReport_frontline.html");
 
-            } else {
+            }
+            else {
+
+           String LifeSaversColumns ="";
                 //TotalCountVariables
                 long TotalReturnPatient = 0;
                 long TotalGoogle = 0;
@@ -496,8 +501,16 @@ public class MarketingReport extends HttpServlet {
                 long TotalNewspaper = 0;
                 long TotalFamilyFriend = 0;
                 long TotalUrgentCare = 0;
+                long TotalAttorney = 0;
+                long TotalInstagram = 0;
+                long TotalYouTubet = 0;
+                long TotalSpotify = 0;
                 long TotalCommunityEvent = 0;
 
+
+                if(ClientId == 41 || ClientId == 42 || ClientId == 43){
+                    LifeSaversColumns =",SUM(Attorney),SUM(Spotify_text),SUM(Youtube_text),SUM(Instagram_text)";
+                }
                 Query = "select * from  (select adddate('1970-01-01',t4.i*10000 + t3.i*1000 + t2.i*100 + t1.i*10 + t0.i) selected_date from \n" +
                         "(select 0 i union select 1 union select 2 union select 3 union select 4 union select 5 union select 6 union select 7 union select 8 union select 9) t0, \n" +
                         "(select 0 i union select 1 union select 2 union select 3 union select 4 union select 5 union select 6 union select 7 union select 8 union select 9) t1, \n" +
@@ -513,7 +526,7 @@ public class MarketingReport extends HttpServlet {
 
 
                     Query2 = " Select SUM(ReturnPatient),SUM(Google),SUM(MapSearch),SUM(Billboard),SUM(OnlineReview),SUM(TV),SUM(Website),SUM(BuildingSignDriveBy)," +
-                            " SUM(Facebook),SUM(School),SUM(Twitter),SUM(Magazine),SUM(Newspaper),SUM(FamilyFriend),SUM(UrgentCare),SUM(CommunityEvent) " +//16
+                            " SUM(Facebook),SUM(School),SUM(Twitter),SUM(Magazine),SUM(Newspaper),SUM(FamilyFriend),SUM(UrgentCare),SUM(CommunityEvent) "+LifeSaversColumns+" " +//16
                             " from " + Database + ".RandomCheckInfo where CreatedDate between '" + DayDate + " 00:00:00' and '" + DayDate + " 23:59:59' ";
                     stmt2 = conn.createStatement();
                     rset2 = stmt2.executeQuery(Query2);
@@ -538,6 +551,13 @@ public class MarketingReport extends HttpServlet {
                         MRList.append("<td align=left>" + rset2.getLong(15) + "</td>\n");
                         MRList.append("<td align=left>" + rset2.getLong(16) + "</td>\n");
 
+                        if(ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                            MRList.append("<td align=left>" + rset2.getLong(17) + "</td>\n");
+                            MRList.append("<td align=left>" + rset2.getLong(18) + "</td>\n");
+                            MRList.append("<td align=left>" + rset2.getLong(19) + "</td>\n");
+                            MRList.append("<td align=left>" + rset2.getLong(20) + "</td>\n");
+                        }
+
                         MRList.append("</tr>");
                         TotalReturnPatient += rset2.getLong(1);
                         TotalGoogle += rset2.getLong(2);
@@ -555,6 +575,16 @@ public class MarketingReport extends HttpServlet {
                         TotalFamilyFriend += rset2.getLong(14);
                         TotalUrgentCare += rset2.getLong(15);
                         TotalCommunityEvent += rset2.getLong(16);
+
+                        if(ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                            TotalAttorney += rset2.getLong(17);
+                            TotalInstagram += rset2.getLong(18);
+                            TotalYouTubet += rset2.getLong(19);
+                            TotalSpotify += rset2.getLong(20);
+
+
+
+                        }
                     }
                     rset2.close();
                     stmt2.close();
@@ -579,6 +609,13 @@ public class MarketingReport extends HttpServlet {
                 MRList.append("<td align=left><font color=\"white\"><b>" + TotalFamilyFriend + "</b></font></td>\n");
                 MRList.append("<td align=left><font color=\"white\"><b>" + TotalUrgentCare + "</b></font></td>\n");
                 MRList.append("<td align=left><font color=\"white\"><b>" + TotalCommunityEvent + "</b></font></td>\n");
+                if(ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                    MRList.append("<td align=left><font color=\"white\"><b>" + TotalAttorney + "</b></font></td>\n");
+                    MRList.append("<td align=left><font color=\"white\"><b>" + TotalInstagram + "</b></font></td>\n");
+                    MRList.append("<td align=left><font color=\"white\"><b>" + TotalYouTubet + "</b></font></td>\n");
+                    MRList.append("<td align=left><font color=\"white\"><b>" + TotalSpotify + "</b></font></td>\n");
+
+                }
                 MRList.append("</tr>");
 
 
@@ -587,6 +624,7 @@ public class MarketingReport extends HttpServlet {
                 Footer = suppMethods.Footer(request, out, conn, servletContext, UserId, Database, ClientId);
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("UserId", String.valueOf(UserId));
+                Parser.SetField("ClientId", String.valueOf(ClientId));
                 Parser.SetField("MRList", String.valueOf(MRList));
                 Parser.SetField("FromDate", String.valueOf(FromDate));
                 Parser.SetField("ToDate", String.valueOf(ToDate));
@@ -703,7 +741,7 @@ public class MarketingReport extends HttpServlet {
                 long TotalEmployerSentMe = 0;
                 long TotalMFPhysicianRefChk = 0;
 
-                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " + //2
+                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " +
                         " IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Address,''), IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''), " +
                         " IFNULL(a.PhNumber,''), IFNULL(a.Email,''), IFNULL(a.ReasonVisit,''), " +
                         " CASE WHEN b.MFFirstVisit = 1 THEN 'Yes' WHEN b.MFFirstVisit = 0 THEN 'No' ELSE '' END,\n" +
@@ -743,12 +781,8 @@ public class MarketingReport extends HttpServlet {
                         " CASE WHEN b.OnlineAdvertisements = 1 THEN 'Yes' WHEN b.OnlineAdvertisements = 0 THEN 'No' ELSE '' END,\n" +
                         " CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,'')) " +
                         " from " + Database + ".PatientReg a " +
-                        " STRAIGHT_JOIN " + Database + ".PatientVisit d on d.PatientRegId = a.ID " +
-                        " LEFT JOIN " + Database + ".MarketingInfo b on a.ID = b.PatientRegId " +
-                        " LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id " +
-                        " WHERE " +
-                        " DATE_FORMAT(d.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
-                        " AND a.Status = 0 GROUP BY a.MRN ";
+                        " LEFT JOIN " + Database + ".MarketingInfo b on a.ID = b.PatientRegId LEFT JOIN "+Database+".DoctorsList c ON a.DoctorsName = c.Id where" +
+                        " a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -765,7 +799,7 @@ public class MarketingReport extends HttpServlet {
 //                    MRList.append("<td align=left>" + rset.getString(9) + "</td>\n");//Number
                     MRList.append("<td align=left>" + rset.getString(10) + "</td>\n");//Email
                     MRList.append("<td align=left>" + rset.getString(11) + "</td>\n");//ReasonV
-                    MRList.append("<td align=left>" + rset.getString(69) + "</td>\n");//Doctors Name
+                    MRList.append("<td align=left>" + rset.getString(69) + "</td>\n");//Doctors Name 
                     MRList.append("<td align=left>" + rset.getString(12) + "</td>\n");//firstVisit
                     MRList.append("<td align=left>" + rset.getString(13) + "</td>\n");//Return Visit
                     MRList.append("<td align=left>" + rset.getString(20) + "</td>\n");//Online Review//internetfind
@@ -794,7 +828,7 @@ public class MarketingReport extends HttpServlet {
                     MRList.append("<td align=left>" + rset.getString(37) + "</td>\n");//Physician Ref
                     MRList.append("<td align=left>" + rset.getString(39) + "</td>\n");//EmpSent
                     MRList.append("<td align=left>" + rset.getString(38) + "</td>\n");//DOS
-//                    MRList.append("<td align=left>" + rset.getString(69) + "</td>\n");//Doctors Name
+//                    MRList.append("<td align=left>" + rset.getString(69) + "</td>\n");//Doctors Name 
                     MRList.append("</tr>");
 
                     TotalMFFirstVisit += rset.getLong(40);
@@ -894,18 +928,17 @@ public class MarketingReport extends HttpServlet {
                         " CASE WHEN b.FrTV = 1 THEN 'Yes' WHEN b.FrTV = 0 THEN 'No' ELSE '' END,\n" +
                         " CASE WHEN b.FrMapSearch = 1 THEN 'Yes' WHEN b.FrMapSearch = 0 THEN 'No' ELSE '' END,\n" +
                         " CASE WHEN b.FrEvent = 1 THEN 'Yes' WHEN b.FrEvent = 0 THEN 'No' ELSE '' END,\n" +
+
                         " IFNULL(b.FrPhysicianReferral,''),\n" +
                         " IFNULL(b.FrNeurologyReferral,''),\n " +
                         " IFNULL(b.FrUrgentCareReferral,''), \n " +
                         " IFNULL(b.FrOrganizationReferral,''), \n " +
                         " IFNULL(b.FrFriendFamily,''), \n " +
-                        " DATE_FORMAT(a.DateofService,'%m/%d/%Y %T'),CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" +
-                        " FROM " + Database + ".PatientReg a " +
-                        " STRAIGHT_JOIN " + Database + ".PatientVisit d on d.PatientRegId = a.ID " +
-                        " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId " +
-                        " LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id where" +
-                        " DATE_FORMAT(d.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
-                        " AND a.Status = 0 GROUP BY a.MRN ";
+
+                        " IFNULL(DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T'),DATE_FORMAT(a.DateofService,'%m/%d/%Y %T')),CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" +
+                        " from " + Database + ".PatientReg a " +
+                        " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId INNER JOIN "+Database+".DoctorsList c ON a.DoctorsName = c.Id where" +
+                        " a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -941,7 +974,7 @@ public class MarketingReport extends HttpServlet {
                     MRList.append("<td align=left>" + rset.getString(27) + "</td>\n");
                     MRList.append("<td align=left>" + rset.getString(28) + "</td>\n");
                     MRList.append("<td align=left>" + rset.getString(29) + "</td>\n");
-
+       
                     MRList.append("</tr>");
                     SNo++;
                 }
@@ -1001,7 +1034,7 @@ public class MarketingReport extends HttpServlet {
                     reportHeaders.append("<th>Other Referral</th>");
                     reportHeaders.append("<th>DOS</th>");
 
-                    Attorney = ",IFNULL(b.Attorney,''),IFNULL(b.Instagram_text,''),IFNULL(b.Youtube_text,''),IFNULL(b.Spotify_text,'')";
+                    Attorney  = ",IFNULL(b.Attorney,''),IFNULL(b.Instagram_text,''),IFNULL(b.Youtube_text,''),IFNULL(b.Spotify_text,'')";
 
 
                 } else {
@@ -1042,35 +1075,36 @@ public class MarketingReport extends HttpServlet {
                 }
 
 
-                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " + //2
-                        " IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Address,''), IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''), " + //8
-                        " IFNULL(a.PhNumber,''), IFNULL(a.Email,''), IFNULL(a.ReasonVisit,''), " + //11
-                        " CASE WHEN b.ReturnPatient = 1 THEN 'Yes' WHEN b.ReturnPatient = 0 THEN 'No' ELSE '' END,\n" + //12
-                        " CASE WHEN b.Google = 1 THEN 'Yes' WHEN b.Google = 0 THEN 'No' ELSE '' END,\n" +//13
-                        " CASE WHEN b.MapSearch = 1 THEN 'Yes' WHEN b.MapSearch = 0 THEN 'No' ELSE '' END,\n" +//14
-                        " CASE WHEN b.Billboard = 1 THEN 'Yes' WHEN b.Billboard = 0 THEN 'No' ELSE '' END,\n" +//15
-                        " CASE WHEN b.OnlineReview = 1 THEN 'Yes' WHEN b.OnlineReview = 0 THEN 'No' ELSE '' END,\n" +//16
-                        " CASE WHEN b.TV = 1 THEN 'Yes' WHEN b.TV = 0 THEN 'No' ELSE '' END,\n" +//17
-                        " CASE WHEN b.Website = 1 THEN 'Yes' WHEN b.Website = 0 THEN 'No' ELSE '' END,\n" +//18
-                        " CASE WHEN b.BuildingSignDriveBy = 1 THEN 'Yes' WHEN b.BuildingSignDriveBy = 0 THEN 'No' ELSE '' END,\n" + //19
-                        " CASE WHEN b.Facebook = 1 THEN 'Yes' WHEN b.Facebook = 0 THEN 'No' ELSE '' END,\n" +//20
-                        " CASE WHEN b.School = 1 THEN IFNULL(b.School_text,'') WHEN b.School = 0 THEN 'No' ELSE '' END,\n" +//21
-                        " CASE WHEN b.Twitter = 1 THEN 'Yes' WHEN b.Twitter = 0 THEN 'No' ELSE '' END,\n" +//22
-                        " CASE WHEN b.Magazine = 1 THEN IFNULL(b.Magazine_text,'') WHEN b.Magazine = 0 THEN 'No' ELSE '' END, " +//23
-                        " CASE WHEN b.Newspaper = 1 THEN IFNULL(b.Newspaper_text,'') WHEN b.Newspaper = 0 THEN 'No' ELSE '' END,\n" +//24
-                        " CASE WHEN b.FamilyFriend = 1 THEN IFNULL(b.FamilyFriend_text,'') WHEN b.FamilyFriend = 0 THEN 'No' ELSE '' END,\n" +//25
-                        " CASE WHEN b.UrgentCare = 1 THEN IFNULL(b.UrgentCare_text,'') WHEN b.UrgentCare = 0 THEN 'No' ELSE '' END,\n" + //26
-                        " CASE WHEN b.CommunityEvent = 1 THEN IFNULL(b.CommunityEvent_text,'') WHEN b.CommunityEvent = 0 THEN 'No' ELSE '' END, \n" +//27
-                        " IFNULL(b.Work_text,''), IFNULL(b.Physician_text,''), IFNULL(b.Other_text,''), \n " + //30
-                        " DATE_FORMAT(a.DateofService,'%m/%d/%Y %T')," + //31
-                        " CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))" + Attorney + "" + //32
-                        " FROM " + Database + ".PatientReg a " +
-                        " STRAIGHT_JOIN " + Database + ".PatientVisit d on d.PatientRegId = a.ID " +
-                        " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId " +
-                        " LEFT JOIN " + Database + ".DoctorsList c ON a.DoctorsName = c.Id " +
-                        " WHERE " +
-                        " DATE_FORMAT(d.DateofService,'%Y-%m-%d %T') between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
-                        " AND a.Status = 0 GROUP BY a.MRN ";
+                Query = " Select IFNULL(a.MRN,''), CONCAT(IFNULL(a.Title,''),' ', IFNULL(a.FirstName,''),' ', IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')), " +
+                        " IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Address,''), IFNULL(a.City,''), IFNULL(a.State,''), IFNULL(a.County,''), IFNULL(a.ZipCode,''), " +
+                        " IFNULL(a.PhNumber,''), IFNULL(a.Email,''), IFNULL(a.ReasonVisit,''), " +
+                        " CASE WHEN b.ReturnPatient = 1 THEN 'Yes' WHEN b.ReturnPatient = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.Google = 1 THEN 'Yes' WHEN b.Google = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.MapSearch = 1 THEN 'Yes' WHEN b.MapSearch = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.Billboard = 1 THEN 'Yes' WHEN b.Billboard = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.OnlineReview = 1 THEN 'Yes' WHEN b.OnlineReview = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.TV = 1 THEN 'Yes' WHEN b.TV = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.Website = 1 THEN 'Yes' WHEN b.Website = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.BuildingSignDriveBy = 1 THEN 'Yes' WHEN b.BuildingSignDriveBy = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.Facebook = 1 THEN 'Yes' WHEN b.Facebook = 0 THEN 'No' ELSE '' END,\n" +
+
+                        " CASE WHEN b.School = 1 THEN IFNULL(b.School_text,'') WHEN b.School = 0 THEN 'No' ELSE '' END,\n" +
+
+                        " CASE WHEN b.Twitter = 1 THEN 'Yes' WHEN b.Twitter = 0 THEN 'No' ELSE '' END,\n" +
+
+                        " CASE WHEN b.Magazine = 1 THEN IFNULL(b.Magazine_text,'') WHEN b.Magazine = 0 THEN 'No' ELSE '' END, " +
+                        " CASE WHEN b.Newspaper = 1 THEN IFNULL(b.Newspaper_text,'') WHEN b.Newspaper = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.FamilyFriend = 1 THEN IFNULL(b.FamilyFriend_text,'') WHEN b.FamilyFriend = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.UrgentCare = 1 THEN IFNULL(b.UrgentCare_text,'') WHEN b.UrgentCare = 0 THEN 'No' ELSE '' END,\n" +
+                        " CASE WHEN b.CommunityEvent = 1 THEN IFNULL(b.CommunityEvent_text,'') WHEN b.CommunityEvent = 0 THEN 'No' ELSE '' END, \n" +
+                        " IFNULL(b.Work_text,''),\n" +
+                        " IFNULL(b.Physician_text,''),\n " +
+                        " IFNULL(b.Other_text,''), \n " +
+
+                        " IFNULL(DATE_FORMAT(a.CreatedDate,'%m/%d/%Y %T'),DATE_FORMAT(a.DateofService,'%m/%d/%Y %T')),CONCAT(IFNULL(c.DoctorsLastName,''),' ',IFNULL(c.DoctorsFirstName,''))"+Attorney+"" +
+                        " from " + Database + ".PatientReg a " +
+                        " LEFT JOIN " + Database + ".RandomCheckInfo b on a.ID = b.PatientRegId INNER JOIN "+Database+".DoctorsList c ON a.DoctorsName = c.Id where" +
+                        " a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1089,7 +1123,7 @@ public class MarketingReport extends HttpServlet {
                     MRList.append("<td align=left>" + rset.getString(11) + "</td>\n");
                     MRList.append("<td align=left>" + rset.getString(32) + "</td>\n");
 
-                    if (ClientId == 41 || ClientId == 42 || ClientId == 43)
+                    if(ClientId == 41 || ClientId == 42 || ClientId == 43)
                         MRList.append("<td align=left>" + rset.getString(33) + "</td>\n");
 
 
@@ -1113,11 +1147,11 @@ public class MarketingReport extends HttpServlet {
                     MRList.append("<td align=left>" + rset.getString(29) + "</td>\n");
 
                     MRList.append("<td align=left>" + rset.getString(30) + "</td>\n");
-                    if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                    if(ClientId == 41 || ClientId == 42 || ClientId == 43) {
                         MRList.append("<td align=left>" + rset.getString(34) + "</td>\n");
                         MRList.append("<td align=left>" + rset.getString(35) + "</td>\n");
                         MRList.append("<td align=left>" + rset.getString(36) + "</td>\n");
-                    }
+                        }
                     MRList.append("<td align=left>" + rset.getString(31) + "</td>\n");
 
 //                    if(ClientId == 41 || ClientId == 42 || ClientId == 43)

@@ -101,13 +101,13 @@ public class CPTCChargeMaster extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
             }
         } catch (Exception e) {
-            System.out.println("in the catch exception of handle request Function ");
-            System.out.println(e.getMessage());
+            //System.out.println("in the catch exception of handle request Function ");
+            //System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
-            System.out.println(str);
+            //System.out.println(str);
         } finally {
             try {
                 if (conn != null)
@@ -136,7 +136,7 @@ public class CPTCChargeMaster extends HttpServlet {
         StringBuffer CPTCDataList = new StringBuffer();
         int SNo = 1;
         try {
-            Query = "Select Id, ifnull(CPTC,''),ifnull(Price,'') from " + Database + ".CPTCChargeMaster  where Status = 0 order by CreatedDate DESC ";
+            Query = "Select Id, ifnull(CPTC,''),ifnull(Inst_Price,''),ifnull(Prof_Price,'') from " + Database + ".CPTCChargeMaster  where Status = 0 order by CreatedDate DESC ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
 
@@ -146,18 +146,19 @@ public class CPTCChargeMaster extends HttpServlet {
                 CPTCDataList.append("<td align=left>" + SNo + "</td>\n");
                 CPTCDataList.append("<td align=left>" + rset.getString(2) + "</td>\n");
                 CPTCDataList.append("<td align=left>" + rset.getString(3) + "</td>\n");
+                CPTCDataList.append("<td align=left>" + rset.getString(4) + "</td>\n");
 
                 CPTCDataList.append("<td align=left><i data-toggle=\"modal\" data-target=\"#exampleModalCenter\"  id=\"edit\" class=\"fa fa-edit\" onClick=\"editRow(" + rset.getInt(1) + ")\"></i></td>\n");
                 CPTCDataList.append("</tr>");
                 SNo++;
             }
-            System.out.println("hee is the Query1----->" + Query);
+            //System.out.println("hee is the Query1----->" + Query);
             rset.close();
             stmt.close();
 
 
             Query = "Select dbname,name from oe.clients where status = 0 ";
-            System.out.println("hee is the Query2------->" + Query);
+            //System.out.println("hee is the Query2------->" + Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             CPTCList.append("<option value='0' selected>Please Select Facility</option>");
@@ -165,7 +166,7 @@ public class CPTCChargeMaster extends HttpServlet {
 
                 CPTCList.append("<option value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
             }
-            System.out.println("hee is the Query2------->" + Query);
+            //System.out.println("hee is the Query2------->" + Query);
             rset.close();
             stmt.close();
             Parsehtm Parser = new Parsehtm(request);
@@ -175,13 +176,13 @@ public class CPTCChargeMaster extends HttpServlet {
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/CPTCChargeMaster.html");
 
         } catch (Exception e) {
-            System.out.println("in the catch exception of GetInput Function ");
-            System.out.println(e.getMessage());
+            //System.out.println("in the catch exception of GetInput Function ");
+            //System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
-            System.out.println(str);
+            //System.out.println(str);
         }
     }
 
@@ -195,7 +196,8 @@ public class CPTCChargeMaster extends HttpServlet {
 
         String CPT = request.getParameter("CPTC").trim();
 
-        String Price = request.getParameter("Price").trim();
+        String Inst_Price = request.getParameter("Inst_Price").trim();
+        String Prof_Price = request.getParameter("Prof_Price").trim();
 
 //    String DBName = request.getParameter("FacilityName").trim();
 
@@ -205,14 +207,15 @@ public class CPTCChargeMaster extends HttpServlet {
         try {
 
             PreparedStatement MainReceipt = conn.prepareStatement(
-                    "INSERT INTO " + Database + ".CPTCChargeMaster (CPTC,Price,CreatedBy,Status,CreatedDate) VALUES (?,?,?,0,now())");
+                    "INSERT INTO " + Database + ".CPTCChargeMaster (CPTC,Inst_Price,Prof_Price,CreatedBy,Status,CreatedDate) VALUES (?,?,?,?,0,now())");
             MainReceipt.setString(1, CPT);
-            MainReceipt.setString(2, Price);
-            MainReceipt.setString(3, UserId);
+            MainReceipt.setString(2, Inst_Price);
+            MainReceipt.setString(3, Prof_Price);
+            MainReceipt.setString(4, UserId);
 
             MainReceipt.executeUpdate();
             MainReceipt.close();
-            System.out.println("hee is the querry" + MainReceipt);
+            //System.out.println("hee is the querry" + MainReceipt);
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in CPTCChargeMaster ** (ShowReport)", servletContext, e, "CPTCChargeMaster", "ShowReport", conn);
             Services.DumException("ShowReport", "CPTCChargeMaster ", request, e);
@@ -230,7 +233,7 @@ public class CPTCChargeMaster extends HttpServlet {
 
 
     private void UploadFileOnly(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper, HttpServletResponse response, int UserIndex) throws FileNotFoundException {
-        System.out.println("inside function----->");
+        //System.out.println("inside function----->");
         Statement stmt = null;
         ResultSet rset = null;
         try {
@@ -246,8 +249,11 @@ public class CPTCChargeMaster extends HttpServlet {
             String[] FacIdx;
             String Query = "";
             String CPT = "";
-            String Price = "";
-            Pattern p = Pattern.compile("[0-9., ]+", Pattern.CASE_INSENSITIVE);
+            String Inst_Price = "";
+            String Prof_Price = "";
+            Pattern p1 = Pattern.compile("[0-9]+", Pattern.CASE_INSENSITIVE);
+            Pattern p2 = Pattern.compile("[0-9.]+", Pattern.CASE_INSENSITIVE);
+
 
 
             try {
@@ -255,19 +261,19 @@ public class CPTCChargeMaster extends HttpServlet {
                 Data = null;
                 Query = FileName = "";
                 Dictionary d = doUpload(request, response, out);
-                System.out.println("Dictionary----->");
+                //System.out.println("Dictionary----->");
                 Enumeration e = d.keys();
 
                 while (e.hasMoreElements()) {
                     key = (String) e.nextElement();
-                    System.out.println("Key----->" + key);
+                    //System.out.println("Key----->" + key);
                     if (key.endsWith(".xls") || key.endsWith(".xlsx")) {
                         FileName = key;
                         FileFound = true;
                         ByteArrayOutputStream baos = null;
                         baos = (ByteArrayOutputStream) d.get(key);
                         Data = baos.toByteArray();
-                        System.out.println("FileName----->" + FileName);
+                        //System.out.println("FileName----->" + FileName);
                     }
 
 
@@ -295,11 +301,11 @@ public class CPTCChargeMaster extends HttpServlet {
                 return;
             }
 
-            System.out.println("FileName is----->" + FileName);
-//            System.out.println("Facility is----->"+Facility);
-//            System.out.println("FacIdx is----->"+FacIdx);
-            System.out.println("UserIndex is----->" + UserIndex);
-            System.out.println("UserId is----->" + UserId);
+            //System.out.println("FileName is----->" + FileName);
+//            //System.out.println("Facility is----->"+Facility);
+//            //System.out.println("FacIdx is----->"+FacIdx);
+            //System.out.println("UserIndex is----->" + UserIndex);
+            //System.out.println("UserId is----->" + UserId);
 
             int i;
             StringBuilder SMSList = new StringBuilder();
@@ -314,36 +320,49 @@ public class CPTCChargeMaster extends HttpServlet {
             Workbook workbook = WorkbookFactory.create(fileIn);
             Sheet sheet = workbook.getSheetAt(0);
             int totalrows = sheet.getLastRowNum();
-            for (i = 1; i <= totalrows; i++) {
+            for (i = 0; i <= totalrows; i++) {
 
 
                 org.apache.poi.ss.usermodel.Row row = sheet.getRow(i);
                 CPT = formatter.formatCellValue(row.getCell(0));
-                Price = formatter.formatCellValue(row.getCell(1));
+                Inst_Price = formatter.formatCellValue(row.getCell(1));
+                Prof_Price = formatter.formatCellValue(row.getCell(2));
 
                 if (CPT == "" || CPT == null) {
                     EmptyFlag = 1;
 
                 }
-                if (Price == "" || CPT == null) {
+                if (Prof_Price == "" || Prof_Price == null) {
                     EmptyFlag = 1;
 
                 }
-                Matcher cptmatcher = p.matcher(CPT);
+                if (Inst_Price == "" || Inst_Price == null) {
+                    EmptyFlag = 1;
+
+                }
+                Matcher cptmatcher = p1.matcher(CPT);
                 boolean CptSpecialCharacterFound = cptmatcher.find();
-                System.out.println("CptSpecialCharacterFound" + cptmatcher);
+                //System.out.println("CptSpecialCharacterFound" + cptmatcher);
                 if (CptSpecialCharacterFound == false) {
                     PatternFlag = 1;
                 }
-                Matcher PriceMatcher = p.matcher(Price);
-                boolean PriceSpecialCharacterFound = PriceMatcher.find();
-                if (PriceSpecialCharacterFound == false) {
-                    System.out.println("PriceSpecialCharacterFound" + PriceMatcher);
+                Matcher Inst_PriceMatcher = p2.matcher(Inst_Price);
+                boolean Inst_PriceSpecialCharacterFound = Inst_PriceMatcher.find();
+                if (Inst_PriceSpecialCharacterFound == false) {
+                    //System.out.println("PriceSpecialCharacterFound" + Inst_PriceMatcher);
+                    PatternFlag = 1;
+                }
+
+                Matcher Prof_PricePriceMatcher = p2.matcher(Prof_Price);
+                boolean Prof_PriceSpecialCharacterFound = Prof_PricePriceMatcher.find();
+                if (Prof_PriceSpecialCharacterFound == false) {
+                    //System.out.println("PriceSpecialCharacterFound" + Prof_PricePriceMatcher);
                     PatternFlag = 1;
                 }
                 SMSList.append("<tr>");
                 SMSList.append("<td align=left>" + CPT + "</td>");
-                SMSList.append("<td align=left>" + Price + "</td>");
+                SMSList.append("<td align=left>" + Inst_Price + "</td>");
+                SMSList.append("<td align=left>" + Prof_Price + "</td>");
                 SMSList.append("</tr>");
 //CPTList.push(CPT);
 //PriceList.push(Price);
@@ -377,7 +396,7 @@ public class CPTCChargeMaster extends HttpServlet {
 
     void SendFile(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper) throws InvalidFormatException, IOException {
 
-        System.out.println("in function send file ");
+        //System.out.println("in function send file ");
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -385,13 +404,14 @@ public class CPTCChargeMaster extends HttpServlet {
         SupportiveMethods suppMethods = new SupportiveMethods();
         StringBuffer CPTCList = new StringBuffer();
 
-//        System.out.println("her is CPT"+request.getParameter("CPT"));
+//        //System.out.println("her is CPT"+request.getParameter("CPT"));
 //        String CPT[] = {request.getParameter("CPT").trim()};
         String CPT = null;//{request.getParameter("CPT").trim()};
 
         String FileName = request.getParameter("FileName").trim();
 //        String CPT = request.getParameter("CPT").trim();
-        String Price = null;
+        String Inst_Price = null;
+        String Prof_Price = null;
 
         UserId = request.getParameter("UserId").trim();
 
@@ -405,25 +425,27 @@ public class CPTCChargeMaster extends HttpServlet {
         Sheet sheet = workbook.getSheetAt(0);
         int totalrows = sheet.getLastRowNum();
 
-        try {
-            for (int i = 1; i <= totalrows; i++) {
+            try {
+            for (int i = 0; i <= totalrows; i++) {
 
                 org.apache.poi.ss.usermodel.Row row = sheet.getRow(i);
                 CPT = formatter.formatCellValue(row.getCell(0));
-                Price = formatter.formatCellValue(row.getCell(1));
-                System.out.println("her is CPT array" + CPT);
+                Inst_Price = formatter.formatCellValue(row.getCell(1));
+                Prof_Price = formatter.formatCellValue(row.getCell(2));
+                //System.out.println("her is CPT array" + CPT);
 
                 PreparedStatement MainReceipt = conn.prepareStatement(
-                        "INSERT INTO " + Database + ".CPTCChargeMaster (FileName,CreatedBy,CPTC,Price,Status,CreatedDate) VALUES (?,?,?,?,0,now())");
+                        "INSERT INTO " + Database + ".CPTCChargeMaster (FileName,CreatedBy,CPTC,Inst_Price,Prof_Price,Status,CreatedDate) VALUES (?,?,?,?,?,0,now())");
                 MainReceipt.setString(1, FileName);
 
                 MainReceipt.setString(2, UserId);
 
                 MainReceipt.setString(3, CPT);
-                MainReceipt.setString(4, Price);
+                MainReceipt.setString(4, Inst_Price);
+                MainReceipt.setString(5, Prof_Price);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-                System.out.println("hee is the querry" + MainReceipt);
+                //System.out.println("hee is the querry" + MainReceipt);
             }
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in CPTCChargeMaster ** (ShowReport)", servletContext, e, "CPTCChargeMaster", "ShowReport", conn);
@@ -512,7 +534,7 @@ public class CPTCChargeMaster extends HttpServlet {
 
 
     void UpdateData(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper) throws FileNotFoundException {
-        System.out.println("in the Update Function");
+        //System.out.println("in the Update Function");
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -521,28 +543,30 @@ public class CPTCChargeMaster extends HttpServlet {
 
 
         String CPT = request.getParameter("CPTC").trim();
-        System.out.println("CPT--->" + CPT);
-        String Price = request.getParameter("Price").trim();
-        System.out.println("CPT--->" + Price);
+        //System.out.println("CPT--->" + CPT);
+        String Inst_Price = request.getParameter("Inst_Price").trim();
+        String Prof_Price = request.getParameter("Prof_Price").trim();
+//        //System.out.println("CPT--->" + Price);
 
         UserId = request.getParameter("UserId").trim();
-        System.out.println("UserId--->" + UserId);
+        //System.out.println("UserId--->" + UserId);
         String Status = request.getParameter("Status").trim();
-        System.out.println("Status--->" + Status);
-        System.out.println("hee is the id" + request.getParameter("Id"));
+        //System.out.println("Status--->" + Status);
+        //System.out.println("hee is the id" + request.getParameter("Id"));
         int Id = Integer.parseInt(request.getParameter("Id").trim());
 
         try {
 
             PreparedStatement MainReceipt = conn.prepareStatement(
-                    "Update " + Database + ".CPTCChargeMaster set CPTC =?,Price =?,UpdatedBy=?,Status=?,UpdatedDate =now()  where Id =" + Id);
+                    "Update " + Database + ".CPTCChargeMaster set CPTC =?,Inst_Price =?,Prof_Price=?,UpdatedBy=?,Status=?,UpdatedDate =now()  where Id =" + Id);
             MainReceipt.setString(1, CPT);
-            MainReceipt.setString(2, Price);
-            MainReceipt.setString(3, UserId);
-            MainReceipt.setString(4, Status);
+            MainReceipt.setString(2, Inst_Price);
+            MainReceipt.setString(3, Prof_Price);
+            MainReceipt.setString(4, UserId);
+            MainReceipt.setString(5, Status);
             MainReceipt.executeUpdate();
             MainReceipt.close();
-            System.out.println("hee is the querry" + MainReceipt);
+            //System.out.println("hee is the querry" + MainReceipt);
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in CPTCChargeMaster ** (ShowReport)", servletContext, e, "CPTCChargeMaster", "ShowReport", conn);
             Services.DumException("ShowReport", "CPTCChargeMaster ", request, e);
@@ -565,24 +589,26 @@ public class CPTCChargeMaster extends HttpServlet {
         String Query = "";
         int Id = Integer.parseInt(request.getParameter("Id").trim());
         String CPT = "";
-        String Price = "";
+        String Inst_Price = "";
+        String Prof_Price = "";
         int Status = 0;
 
 
         try {
-            Query = "Select  CPTC,Price,Status From " + Database + ".CPTCChargeMaster where Id = " + Id;
+            Query = "Select  IFNULL(CPTC,''),IFNULL(Inst_Price,''),IFNULL(Prof_Price,''),Status From " + Database + ".CPTCChargeMaster where Id = " + Id;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
                 CPT = rset.getString(1);
-                Price = rset.getString(2);
-                Status = rset.getInt(3);
+                Inst_Price = rset.getString(2);
+                Prof_Price = rset.getString(3);
+                Status = rset.getInt(4);
 
 
             }
             rset.close();
             stmt.close();
-            out.println(CPT + "|" + Price + "|" + String.valueOf(Status) + "|" + String.valueOf(Id));
+            out.println(CPT + "|" + Inst_Price + "|" + Prof_Price + "|" + String.valueOf(Status) + "|" + String.valueOf(Id));
 
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in CPTCChargeMaster ** (ShowReport)", servletContext, e, "CPTCChargeMaster", "ShowReport", conn);
@@ -624,13 +650,13 @@ public class CPTCChargeMaster extends HttpServlet {
                 CPTCDataList.append("</tr>");
                 SNo++;
             }
-            System.out.println("hee is the Query1----->" + Query);
+            //System.out.println("hee is the Query1----->" + Query);
             rset.close();
             stmt.close();
 
 
 //        	Query="Select dbname,name from oe.clients where status = 0 ";
-//        	  System.out.println("hee is the Query2------->"+Query);
+//        	  //System.out.println("hee is the Query2------->"+Query);
 //            stmt = conn.createStatement();
 //            rset = stmt.executeQuery(Query);
 //            CPTCList.append("<option value='0' selected>Please Select Facility</option>");
@@ -638,7 +664,7 @@ public class CPTCChargeMaster extends HttpServlet {
 //
 //            	CPTCList.append("<option value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
 //            }
-//            System.out.println("hee is the Query2------->"+Query);
+//            //System.out.println("hee is the Query2------->"+Query);
 //            rset.close();
 //            stmt.close();
 //             Parsehtm Parser = new Parsehtm(request); 
@@ -648,13 +674,13 @@ public class CPTCChargeMaster extends HttpServlet {
 //             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/CPTCChargeMaster.html");
             out.println(CPTCDataList);
         } catch (Exception e) {
-            System.out.println("in the catch exception of GetInput Function ");
-            System.out.println(e.getMessage());
+            //System.out.println("in the catch exception of GetInput Function ");
+            //System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
-            System.out.println(str);
+            //System.out.println(str);
         }
     }
 

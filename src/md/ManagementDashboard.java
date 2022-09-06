@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -26,6 +25,10 @@ import java.sql.Statement;
 
 @SuppressWarnings("Duplicates")
 public class ManagementDashboard extends HttpServlet {
+    private Statement stmt = null;
+    private ResultSet rset = null;
+    private String Query = "";
+    private Connection conn = null;
     Integer ScreenIndex = 1;
 
     public void init(final ServletConfig config) throws ServletException {
@@ -45,13 +48,13 @@ public class ManagementDashboard extends HttpServlet {
         int FacilityIndex;
         String DatabaseName;
         String FontColor;
-        PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        PrintWriter out = new PrintWriter(response.getOutputStream());
         Services supp = new Services();
-        int UserIndex = 0;
+        int UserIndex=0;
         String ActionID;
         ServletContext context = null;
         context = this.getServletContext();
-        Connection conn = null;
+
         try {
             HttpSession session = request.getSession(false);
             UtilityHelper helper = new UtilityHelper();
@@ -68,6 +71,7 @@ public class ManagementDashboard extends HttpServlet {
             FontColor = session.getAttribute("FontColor").toString();
             FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
             UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
+
 
 
             try {
@@ -102,7 +106,7 @@ public class ManagementDashboard extends HttpServlet {
             if (ActionID.equals("GetInput")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Management Dashboard", "View Management Dashboard", FacilityIndex);
                 this.GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex, FontColor);
-            } else if (ActionID.equals("GetReport")) {
+            }else if (ActionID.equals("GetReport")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Management Dashboard", "View Management Dashboard", FacilityIndex);
                 this.GetReport(request, out, conn, context, UserId, DatabaseName, FacilityIndex, FontColor);
             } else {
@@ -168,8 +172,8 @@ public class ManagementDashboard extends HttpServlet {
         int SNo = 1;
         try {
 
-            Query = "Select Id,Concat(DoctorsLastName, ',', DoctorsFirstName) " +
-                    " from " + Database + ".DoctorsList where Status = 1";
+            Query = "Select Id,Concat(DoctorsLastName, ',', DoctorsFirstName) from " + Database + ".DoctorsList where Status = 1";
+            //out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -190,9 +194,7 @@ public class ManagementDashboard extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "SELECT DATE_SUB(LAST_DAY(NOW())," +
-                    "INTERVAL DAY(LAST_DAY(NOW()))- 1 DAY) AS 'FIRST DAY OF CURRENT MONTH', " +
-                    "LAST_DAY( now() ), YEAR(NOW())";
+            Query = "SELECT DATE_SUB(LAST_DAY(NOW()),INTERVAL DAY(LAST_DAY(NOW()))- 1 DAY) AS 'FIRST DAY OF CURRENT MONTH', LAST_DAY( now() ), YEAR(NOW())";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -224,13 +226,10 @@ public class ManagementDashboard extends HttpServlet {
             while (rset.next()) {
                 _FromEndDate = rset.getString(1);
                 _ToEndDate = rset.getString(1);
-                Query1 = "Select COUNT(*) from " + Database + ".PatientReg " +
-                        " where Status = 0 and " +
-                        "CreatedDate >= '" + _FromEndDate + " 00:00:00' and " +
-                        "CreatedDate <= '" + _ToEndDate + " 23:59:59'";
+                Query1 = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and CreatedDate >= '" + _FromEndDate + " 00:00:00' and CreatedDate <= '" + _ToEndDate + " 23:59:59'";
                 stmt1 = conn.createStatement();
                 rset1 = stmt1.executeQuery(Query1);
-                if (rset1.next()) {
+                while (rset1.next()) {
                     PatientsCurrentMonthDaily += rset1.getInt(1) + " , ";
                 }
                 rset1.close();
@@ -244,9 +243,7 @@ public class ManagementDashboard extends HttpServlet {
                 PatientsCurrentMonthDaily = PatientsCurrentMonthDaily.substring(0, PatientsCurrentMonthDaily.length() - 1);
             }
 
-            Query = "Select COUNT(*) from " + Database + ".PatientReg " +
-                    " where Status = 0 and  CreatedDate >= '" + FromDate + " 00:00:00' and " +
-                    " CreatedDate <= '" + ToDate + " 23:59:59'";
+            Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and  CreatedDate >= '" + FromDate + " 00:00:00' and CreatedDate <= '" + ToDate + " 23:59:59'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -264,8 +261,7 @@ public class ManagementDashboard extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from " + Database + ".PatientReg " +
-                    " where Status = 0 and ltrim(rtrim(UPPER(Gender))) = ltrim(rtrim(UPPER('male')))";
+            Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and ltrim(rtrim(UPPER(Gender))) = ltrim(rtrim(UPPER('male')))";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -274,8 +270,7 @@ public class ManagementDashboard extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from " + Database + ".PatientReg " +
-                    " where Status = 0 and ltrim(rtrim(UPPER(Gender))) = ltrim(rtrim(UPPER('female')))";
+            Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and ltrim(rtrim(UPPER(Gender))) = ltrim(rtrim(UPPER('female')))";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -551,7 +546,7 @@ public class ManagementDashboard extends HttpServlet {
         String FDate = request.getParameter("FromDate").trim();
         String TDate = request.getParameter("ToDate").trim();
         String Month = request.getParameter("Month").trim();
-        String FromDate = "";
+        String FromDate="";
         String ToDate = "";
         String _FromEndDate = "";
         String _ToEndDate = "";
@@ -585,7 +580,7 @@ public class ManagementDashboard extends HttpServlet {
                 DoctorsList.append("<div class=\"d-flex align-items-center justify-content-between my-15 pr-20\">");
                 DoctorsList.append("<h5 class=\"my-0\"><i class=\"mr-50 w-20 fa fa-user-md\"></i>" + rset.getString(2) + "</h5>");
 
-                Query1 = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and DoctorsName = " + rset.getInt(1) + " and  DateofService >= '" + FDate + " 00:00:00' and DateofService <= '" + TDate + " 23:59:59'";
+                Query1 = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and DoctorsName = " + rset.getInt(1)+" and  DateofService >= '" + FDate + " 00:00:00' and DateofService <= '" + TDate + " 23:59:59'";
                 stmt1 = conn.createStatement();
                 rset1 = stmt1.executeQuery(Query1);
                 if (rset1.next()) {
@@ -675,7 +670,7 @@ public class ManagementDashboard extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and ltrim(rtrim(UPPER(Gender))) = ltrim(rtrim(UPPER('female'))) and  DateofService >= '" + FDate + " 00:00:00' and DateofService <= '" + TDate + " 23:59:59'";
+            Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and ltrim(rtrim(UPPER(Gender))) = ltrim(rtrim(UPPER('female'))) and  DateofService >= '" + FDate +" 00:00:00' and DateofService <= '" + TDate + " 23:59:59'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -694,7 +689,7 @@ public class ManagementDashboard extends HttpServlet {
                 rset.close();
                 stmt.close();
             } else {
-                Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and SelfPayChk = 0 and  DateofService >= '" + FDate + " 00:00:00' and DateofService <= '" + TDate + " 23:59:59'";
+                Query = "Select COUNT(*) from " + Database + ".PatientReg where Status = 0 and SelfPayChk = 0 and  DateofService >= '" + FDate + " 00:00:00' and DateofService <= '" + TDate +" 23:59:59'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -927,6 +922,7 @@ public class ManagementDashboard extends HttpServlet {
             Parser.SetField("FromDate", FDate);
             Parser.SetField("DateRange", Month);
             Parser.SetField("Focus", " FocusOnLoad()");
+
 
 
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ManagementDashboard.html");

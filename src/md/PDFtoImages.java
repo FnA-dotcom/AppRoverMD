@@ -21,7 +21,6 @@ import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.sql.Connection;
@@ -46,12 +45,12 @@ public class PDFtoImages extends HttpServlet {
         this.handleRequest(request, response);
     }
 
-    public void handleRequestold(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    public void handleRequestold(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         Connection conn = null;
         String UserId = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         final Services supp = new Services();
 
         ServletContext context = null;
@@ -104,7 +103,7 @@ public class PDFtoImages extends HttpServlet {
         String Source = "";
         String Dest = "";
         String DirectoryName = "";
-        PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        PrintWriter out = new PrintWriter(response.getOutputStream());
         Services supp = new Services();
 
         String ActionID;
@@ -190,7 +189,7 @@ public class PDFtoImages extends HttpServlet {
                  * Ex:  1. For 300dpi 04-Request-Headers_2.png expected size is 797 KB
                  *      2. For 600dpi 04-Request-Headers_2.png expected size is 2.42 MB
                  */
-                int dpi = 200;// use less dpi for to save more space in hard disk. For professional usage you can use more than 300dpi
+                int dpi = 300;// use less dpi for to save more space in harddisk. For professional usage you can use more than 300dpi
 
                 /*Query = "CREATE TABLE "+Database+".tmpTableImages (\n" +
                         "  `Id` int(11) NOT NULL AUTO_INCREMENT,\n" +
@@ -202,7 +201,7 @@ public class PDFtoImages extends HttpServlet {
                 stmt.close();*/
 
 
-                String ServerName = "";
+                String ServerName="";
                 InetAddress ip = InetAddress.getLocalHost();
                 String hostname = ip.getHostName();
 
@@ -210,16 +209,15 @@ public class PDFtoImages extends HttpServlet {
                 //front-rovermd-01 app1
                 //dev-rover-01 dev1
                 //front2 app
-                switch (hostname) {
-                    case "front-rovermd-01":
-                        ServerName = "app1";
-                        break;
-                    case "dev-rover-01":
-                        ServerName = "dev1";
-                        break;
-                    case "front2.rovermd.com":
-                        ServerName = "app";
-                        break;
+                if(hostname.equals("front-rovermd-01")){
+                    ServerName="app1";
+                }else if(hostname.equals("dev-rover-01")){
+                    ServerName="dev1";
+                }
+                else if(hostname.equals("front2.rovermd.com")){
+                    ServerName="app";
+                }else{
+                    ServerName="appx";
                 }
 
                 for (int i = 0; i < numberOfPages; ++i) {
@@ -227,7 +225,8 @@ public class PDFtoImages extends HttpServlet {
                     BufferedImage bImage = pdfRenderer.renderImageWithDPI(i, dpi, ImageType.RGB);
                     ImageIO.write(bImage, fileExtension, outPutFile);
 
-                    images_Map.put(i, " \"https://" + ServerName + ".rovermd.com:8443/md/tmpImages/" + fileName + "_" + (i + 1) + "." + fileExtension + "\" ");
+
+                    images_Map.put(i, " \"https://"+ServerName+".rovermd.com:8443/md/tmpImages/" + fileName + "_" + (i + 1) + "." + fileExtension+"\" ");
                     /*Query = "Insert into "+Database+".tmpTableImages (ImagePathName) values ('"+"/md/tmpImages/" + fileName +"_"+ (i+1) +"."+ fileExtension+"')";
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);

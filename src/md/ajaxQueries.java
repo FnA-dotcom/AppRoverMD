@@ -8,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -40,6 +41,8 @@ public class ajaxQueries extends HttpServlet {
         PrintWriter out = new PrintWriter(response.getOutputStream());
         response.setContentType("text/html");
         Connection conn = null;
+        HttpSession session = request.getSession(false);
+
 
         try {
             conn = Services.GetConnection(context, 1);
@@ -94,6 +97,7 @@ public class ajaxQueries extends HttpServlet {
         String visitNumber = "";
         ResultSet rset = null;
         String Query = "";
+        String Query2 = "";
         Statement stmt = null;
         int mrn = 0;
         int PatientRegId = 0;
@@ -162,7 +166,7 @@ public class ajaxQueries extends HttpServlet {
                         "IFNULL(RefPhysician,''), IFNULL(RefSourceName,''), IFNULL(PatientStatus,''), " +
                         "IFNULL(CovidTestNo,'')," +
                         "CASE WHEN CovidStatus = '' THEN 'NONE' WHEN CovidStatus = 1 THEN 'POSITIVE' " +
-                        "WHEN CovidStatus = 0 THEN 'NEGATIVE'  WHEN CovidStatus = -1 THEN 'NONE' ELSE 'NONE' END,CovidStatus  " + Q_Filler +
+                        "WHEN CovidStatus = 0 THEN 'NEGATIVE'  WHEN CovidStatus = -1 THEN 'NONE' ELSE 'NONE' END,CovidStatus  " +Q_Filler+
                         " from " + dbName + ".Patient_AdditionalInfo " +
                         " where PatientRegId = " + PatientRegId + " and " +
                         " VisitId = '" + visitIdx + "'";

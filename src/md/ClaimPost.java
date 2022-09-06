@@ -15,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 @SuppressWarnings("Duplicates")
 public class ClaimPost extends HttpServlet {
@@ -83,7 +85,7 @@ public class ClaimPost extends HttpServlet {
                     searchPatient(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments);
                     break;
                 case "SavePatientPayment":
-                    SavePatientPayment(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments, response);
+                    SavePatientPayment(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments,response);
                     break;
                 case "SaveInsurencePayment":
                     SaveInsurencePayment(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments);
@@ -141,7 +143,7 @@ public class ClaimPost extends HttpServlet {
 //            stmt = conn.createStatement();
 //            rset = stmt.executeQuery(Query);
 //            while (rset.next()) {
-//                System.out.println("joooooooo:");
+//                //system.out.println("joooooooo:");
 //                DellAccount.append("<tr>");
 //                DellAccount.append("<td align=left>" + rset.getString(1) + "</td>\n");
 //                DellAccount.append("<td align=left>" + rset.getString(2) + "</td>\n");
@@ -155,6 +157,8 @@ public class ClaimPost extends HttpServlet {
 //            stmt.close();
 
 
+
+
             //old
 //            Query = " Select a.ID,b.Id, a.MRN, a.FirstName, a.MiddleInitial, a.LastName, a.DOB, a.PhNumber  " +
 //                    "from sanmarcos.PatientReg a Inner join sanmarcos.InsuranceInfo b ON b.PatientRegId = a.ID" +
@@ -164,7 +168,7 @@ public class ClaimPost extends HttpServlet {
 //            rset = stmt.executeQuery(Query);
 //            PatientList.append("<option value=-1> Please Select Below Patient </option>");
 //            while (rset.next()) {
-//                System.out.println("jooo_1:" + rset.getString(4));
+//                //system.out.println("jooo_1:" + rset.getString(4));
 //              //  PatientList.append("<option value=" + rset.getInt(1) + ">" + rset.getString(2) + " | " + rset.getString(3) + " | " + rset.getString(4) + " | " + rset.getString(5) + " | " + rset.getString(6) + " | " + rset.getString(7) + " </option>");
 //                PatientList.append("<tr>");
 //                PatientList.append("<td align=left>" + rset.getString(1) + "</td>\n");
@@ -180,14 +184,16 @@ public class ClaimPost extends HttpServlet {
 //            rset.close();
 //            stmt.close();
 //            PatientList.append("</select>");
-//            System.out.println("jooooo:"+PatientList.toString());
+//            //system.out.println("jooooo:"+PatientList.toString());
 //            Parsehtm Parser = new Parsehtm(request);
 //            Parser.SetField("claimPostSearch", String.valueOf(PatientList));
 //            Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Claims/post.html");
 
 
-            Query = " Select id,PayerName, PayerId from oe.ProfessionalPayers where PayerName like '%" + PaymentBy + "%'";
-//            System.out.println("Query 1"+Query);
+
+
+            Query = " Select id,PayerName, PayerId from "+Database+".ProfessionalPayers where PayerName like '%"+PaymentBy+"%'";
+//            //system.out.println("Query 1"+Query);
             PatientList.append("<select class=\"form-control select2\" id=\"PatientId\" name=\"PatientId\" >");
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -203,24 +209,24 @@ public class ClaimPost extends HttpServlet {
 
                 PatientList.append("</tr>");
             }
-//            System.out.println("Query 2"+Query);
+//            //system.out.println("Query 2"+Query);
             rset.close();
             stmt.close();
             PatientList.append("</select>");
-//            System.out.println("jooooo:"+PatientList.toString());
+//            //system.out.println("jooooo:"+PatientList.toString());
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("claimPostSearch", String.valueOf(PatientList));
             Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Claims/post.html");
 
         } catch (Exception e) {
 
-//            System.out.println("in the catch exception of search patient Function ");
-            System.out.println(e.getMessage());
+//            //system.out.println("in the catch exception of search patient Function ");
+            //system.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
-            System.out.println(str);
+            //system.out.println(str);
 
         }
     }
@@ -247,12 +253,14 @@ public class ClaimPost extends HttpServlet {
             PatientList.append("<tbody>");
 
 
-            Query = " Select PatientRegId,PatientName, AcctNo,DOS from " + Database + ".ClaimInfoMaster where PatientName like '%" + searchPatient + "%' ORDER BY CreatedDate ASC";
-//            System.out.println("Query 1"+Query);
+
+
+            Query = " Select PatientRegId,PatientName, AcctNo,DOS from "+Database+".ClaimInfoMaster where PatientName like '%"+searchPatient+"%' ORDER BY CreatedDate ASC";
+//            //system.out.println("Query 1"+Query);
 
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            System.out.println("herr is querry " + Query);
+            //system.out.println("herr is querry "+Query);
             while (rset.next()) {
 //
                 //  PatientList.append("<option value=" + rset.getInt(1) + ">" + rset.getString(2) + " | " + rset.getString(3) + " | " + rset.getString(4) + " | " + rset.getString(5) + " | " + rset.getString(6) + " | " + rset.getString(7) + " </option>");
@@ -262,17 +270,17 @@ public class ClaimPost extends HttpServlet {
                 PatientList.append("<td align=left>" + rset.getString(3) + "</td>\n");
                 PatientList.append("<td align=left>" + rset.getString(4) + "</td>\n");
                 PatientList.append("</tr>");
-                System.out.println("herr is querry " + Query);
+                //system.out.println("herr is querry "+Query);
             }
-//            System.out.println("Query 2"+Query);
+//            //system.out.println("Query 2"+Query);
             rset.close();
             stmt.close();
-            PatientList.append("</tbody>");
-            PatientList.append("</table>");
+           PatientList.append("</tbody>");
+           PatientList.append("</table>");
 
-            out.println(PatientList.toString());
+           out.println(PatientList.toString());
 
-//            System.out.println("jooooo:"+PatientList.toString());
+//            //system.out.println("jooooo:"+PatientList.toString());
 //            Parsehtm Parser = new Parsehtm(request);
 //            Parser.SetField("claimPostSearch", String.valueOf(PatientList));
 //            Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Claims/post.html");
@@ -280,13 +288,13 @@ public class ClaimPost extends HttpServlet {
 
         } catch (Exception e) {
 
-//            System.out.println("in the catch exception of search patient Function ");
-            System.out.println(e.getMessage());
+//            //system.out.println("in the catch exception of search patient Function ");
+            //system.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
-            System.out.println(str);
+            //system.out.println(str);
 
         }
     }
@@ -309,52 +317,55 @@ public class ClaimPost extends HttpServlet {
         }
     }
 
-    private void SavePatientPayment(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId, String database, UtilityHelper helper, int facilityIndex, Payments payments, HttpServletResponse response) throws FileNotFoundException {
+    private void SavePatientPayment(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId, String database, UtilityHelper helper, int facilityIndex, Payments payments, HttpServletResponse response) throws FileNotFoundException, ParseException {
         Statement stmt = null;
         ResultSet rset = null;
         String checkNumber = "";
-        String CopayDOS = "";
+        String CopayDOS="";
         String Query = "";
-        String CardType = "";
+        String CardType="";
         int SNo = 1;
-        System.out.println("out of the try of SavePatientPayment 1");
+        //system.out.println("out of the try of SavePatientPayment 1");
 //        SupportiveMethods suppMethods = new SupportiveMethods();
 //        StringBuffer ClientList = new StringBuffer();
         //for patient payment
         String searchPatient = request.getParameter("searchPatient").trim();
         String searchPatientId = request.getParameter("PatientNameId").trim();
-        System.out.println("found searchPatient");
+        //system.out.println("found searchPatient");
         String paymentAmount = request.getParameter("paymentAmount").trim();
-        System.out.println("found paymentAmount");
+        //system.out.println("found paymentAmount");
         String ReceivedDate = request.getParameter("ReceivedDate").trim();
-        System.out.println("found ReceivedDate");
+        SimpleDateFormat fromUser = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat myFormat = new SimpleDateFormat("MM/dd/yyyy");
+        ReceivedDate = myFormat.format(fromUser.parse(ReceivedDate));
+        //system.out.println("found ReceivedDate---"+ReceivedDate);
         checkNumber = request.getParameter("checkNumber");
         if (checkNumber == null || checkNumber == "") {
             checkNumber = "";
         }
-        System.out.println("found checkNumber" + checkNumber);
+        //system.out.println("found checkNumber"+checkNumber);
         String paymentType = request.getParameter("paymentType").trim();
-        System.out.println("found paymentType");
+        //system.out.println("found paymentType");
         String paymentSource = request.getParameter("paymentSource").trim();
-        System.out.println("found paymentSource");
+        //system.out.println("found paymentSource");
         String memo = request.getParameter("memo").trim();
-        System.out.println("found memo");
+        //system.out.println("found memo");
         CopayDOS = request.getParameter("CopayDOS").trim();
         if (CopayDOS == null || CopayDOS == "") {
             CopayDOS = "0000-00-00";
         }
 
-        System.out.println("found CopayDOS----->" + CopayDOS);
+        //system.out.println("found CopayDOS----->"+CopayDOS);
         CardType = request.getParameter("CardType").trim();
         if (CardType == null || CardType == "") {
             CardType = "";
         }
 
-        System.out.println("found CardType");
+        //system.out.println("found CardType");
 
-        String UserId = request.getParameter("UserId").trim();
-        System.out.println("found UserId" + UserId);
-        System.out.println("out of the try of SavePatientPayment");
+        String  UserId = request.getParameter("UserId").trim();
+        //system.out.println("found UserId"+UserId);
+        //system.out.println("out of the try of SavePatientPayment");
         try {
 //            PreparedStatement MainReceipt = conn.prepareStatement(
 //                    "INSERT INTO primescope.EOB_Master (PatientIdx,PaymentAmount,ReceivedDate,CheckNumber,PaymentType,PaymentSource,Memo,CopayDOS,CardType,CreatedBy,Status,CreatedDate) VALUES (?,?,?,?,?,?,?,?,?,?,0,now()) ");
@@ -373,15 +384,16 @@ public class ClaimPost extends HttpServlet {
 //
 //            MainReceipt.executeUpdate();
 //            MainReceipt.close();
-//            System.out.println("in try of SavePatientPayment"+MainReceipt);
+//            //system.out.println("in try of SavePatientPayment"+MainReceipt);
 
 
 //            Parsehtm Parser = new Parsehtm(request);
 //            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Claims/view_Claims_WRT_Check.html");
 
 
-            response.sendRedirect("md.ViewClaimPayment?ActionID=getClaims_WRT_PatientPayment_inside&PatRegIdx=" + searchPatientId + "&Amt=" + paymentAmount + "&checkNumber=" + checkNumber + "&ReceivedDate=" + ReceivedDate + "&paymentType=" + paymentType + "&paymentSource=" + paymentSource + "&memo=" + memo + "&CopayDOS=" + CopayDOS + "&CardType=" + CardType);
-        } catch (Exception Ex) {
+            response.sendRedirect("md.ViewClaimPayment?ActionID=getClaims_WRT_PatientPayment_inside&PatRegIdx="+searchPatientId+"&Amt="+paymentAmount+"&checkNumber="+checkNumber+"&ReceivedDate="+ReceivedDate+"&paymentType="+paymentType+"&paymentSource="+paymentSource+"&memo="+memo+"&CopayDOS="+CopayDOS+"&CardType="+CardType);
+        }
+        catch (Exception Ex) {
 
             helper.SendEmailWithAttachment("Error in Claim Post ** (handleRequest)", servletContext, Ex, "CardConnectServices", "handleRequest", conn);
             Services.DumException("SavePatientPayment", "Handle Request", request, Ex, getServletContext());
@@ -396,9 +408,10 @@ public class ClaimPost extends HttpServlet {
     }
 
 
+
     //
     private void SaveInsurencePayment(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId, String database, UtilityHelper helper, int facilityIndex, Payments payments) throws FileNotFoundException {
-        System.out.println("INSIDE SaveInsurencePayment");
+        //system.out.println("INSIDE SaveInsurencePayment");
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -411,32 +424,32 @@ public class ClaimPost extends HttpServlet {
 
         //for insurance
         String PaymentBy = request.getParameter("PaymentById").trim();
-        System.out.println("found PaymentBy");
+        //system.out.println("found PaymentBy");
         String PaymentFrom = request.getParameter("PaymentFrom").trim();
-        System.out.println("found PaymentFrom");
-        String InpaymentAmount = request.getParameter("InpaymentAmount").replaceAll("\\$", "").trim();
+        //system.out.println("found PaymentFrom");
+        String InpaymentAmount = request.getParameter("InpaymentAmount").replaceAll("\\$","").trim();
 //        InpaymentAmount=InpaymentAmount.replaceAll(",", "m");
-        System.out.println("found InpaymentAmount");
+        //system.out.println("found InpaymentAmount");
         String InRecievedChkDate = request.getParameter("InRecievedChkDate").trim();
-        System.out.println("found InRecievedChkDate");
+        //system.out.println("found InRecievedChkDate");
         String OtherRefrenceNo = request.getParameter("OtherRefrenceNo").trim();
-        System.out.println("found OtherRefrenceNo");
+        //system.out.println("found OtherRefrenceNo");
         String InChekNo = request.getParameter("InChekNo").trim();
-        System.out.println("found InChekNo -> " + InChekNo);
+        //system.out.println("found InChekNo -> "+InChekNo);
         String insurancePaymentSource = request.getParameter("isurancePaymentSource").trim();
-        System.out.println("found isurancePaymentSource");
+        //system.out.println("found isurancePaymentSource");
         String InCardType = request.getParameter("InCardType").trim();
 
-        if (InCardType == null || InCardType == "") {
-            InCardType = "";
+        if(InCardType== null || InCardType == "" ) {
+            InCardType ="";
         }
 
 
-        System.out.println("found InCardType");
+        //system.out.println("found InCardType");
 //        String Status = request.getParameter("Status").trim();
-//        System.out.println("found Status");
-        String UserId = request.getParameter("UserId").trim();
-        System.out.println("found UserId");
+//        //system.out.println("found Status");
+        String  UserId = request.getParameter("UserId").trim();
+        //system.out.println("found UserId");
 
         try {
 //            PreparedStatement MainReceipt = conn.prepareStatement(
@@ -456,13 +469,13 @@ public class ClaimPost extends HttpServlet {
 ////            MainReceipt.setString(13, UserId);
 //            MainReceipt.executeUpdate();
 //            MainReceipt.close();
-//            System.out.println("found Querry---->"+MainReceipt);
+//            //system.out.println("found Querry---->"+MainReceipt);
 
 
-            PreparedStatement ps = conn.prepareStatement("SELECT PayerName FROM oe.ProfessionalPayers WHERE Id=?");
-            ps.setString(1, PaymentBy);
+            PreparedStatement ps = conn.prepareStatement("SELECT PayerName FROM "+database  +".ProfessionalPayers WHERE Id=?");
+            ps.setString(1,PaymentBy);
             rset = ps.executeQuery();
-            if (rset.next()) {
+            if(rset.next()){
                 InsuranceName = rset.getString(1);
             }
             rset.close();
@@ -483,7 +496,8 @@ public class ClaimPost extends HttpServlet {
             Parser.SetField("InsuranceIdx", PaymentBy);
             Parser.SetField("cancelLink", "md.ClaimPost?ActionID=getClaimPostInput");
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Claims/view_Claims_WRT_Check.html");
-        } catch (Exception Ex) {
+        }
+        catch (Exception Ex) {
             helper.SendEmailWithAttachment("Error in Claim Post ** (handleRequest)", servletContext, Ex, "CardConnectServices", "handleRequest", conn);
             Services.DumException("SaveInsurencePayment", "Handle Request", request, Ex, getServletContext());
             Parsehtm Parser = new Parsehtm(request);
@@ -495,6 +509,12 @@ public class ClaimPost extends HttpServlet {
         }
 //        getClaimPostInput(request, out, conn, servletContext, UserId, UserId, helper, SNo, payments);
     }
+
+
+
+
+
+
 
 
 }

@@ -383,7 +383,6 @@ public class RegisteredPatients2 extends HttpServlet {
             rset.close();
             stmt.close();
 
-//style="color:white"
             Query = "SELECT Id, ReasonVisit,IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')) " +
                     "FROM " + Database + ".PatientVisit WHERE PatientRegId = " + PatientId;
             stmt = conn.createStatement();
@@ -550,13 +549,12 @@ public class RegisteredPatients2 extends HttpServlet {
 //                    Data = baos.toByteArray();
 //                }
                 if (key.toUpperCase().endsWith(".JPG") || key.toUpperCase().endsWith(".JPEG") || key.toUpperCase().endsWith(".PNG") || key.toUpperCase().endsWith(".PDF") || key.toUpperCase().endsWith(".TXT") || key.toUpperCase().endsWith(".CSV") || key.endsWith(".DOC") || key.toUpperCase().endsWith(".DOCX") || key.toUpperCase().endsWith(".XLSX")) {
-                    System.out.println("File Name as Key 1 before  " + key);
-
-                    FileName = key.replaceAll("&", "");
-                    FileName = FileName.replaceAll(" ", "");
+                   System.out.println("File Name as Key before  "+key);
+                
+                	FileName = key.replaceAll("&","");
                     FileFound = true;
-
-                    System.out.println("File Name after 1  " + FileName);
+                    
+                    System.out.println("File Name as Key after   "+FileName);
                     ByteArrayOutputStream baos = null;
                     baos = (ByteArrayOutputStream) d.get(key);
                     Data = baos.toByteArray();
@@ -574,9 +572,9 @@ public class RegisteredPatients2 extends HttpServlet {
                     VisitNo = (String) d.get(key);
                 }
                 if (FileFound) {
-                    System.out.println("File Name  before  2nd  " + FileName);
-                    FileName = FileName.replaceAll("\\s+&", "").trim();
-                    System.out.println("File Name after  2nd " + FileName);
+                    System.out.println("File Name as Key before   "+FileName);
+                    FileName = FileName.replaceAll("\\s+&", "");
+                    System.out.println("File Name as Key after   "+FileName);
                     File fe = new File(String.valueOf(String.valueOf(UploadPath)) + FileName);
                     if (fe.exists())
                         fe.delete();
@@ -607,9 +605,8 @@ public class RegisteredPatients2 extends HttpServlet {
                 out.println("Error in Client Id get (PremisisID)" + e.getMessage());
             }
             DocumentType = DocumentType.substring(4);
-            DocumentName = DocumentName.replaceAll("&", "");
-            DocumentName = DocumentName.replaceAll(" ", "");
-            System.out.println("File Name as Key after   " + DocumentName);
+            DocumentName = DocumentName.replaceAll("&","");
+            System.out.println("File Name as Key after   "+DocumentName);
             try {
 //                Query = "";
 //                stmt = conn.createStatement();
@@ -870,10 +867,7 @@ public class RegisteredPatients2 extends HttpServlet {
         DecimalFormat numFormat = new DecimalFormat("#,###,###.00");
         String PatientId = request.getParameter("PatientId").trim();
         try {
-            Query = "SELECT ID, CONCAT(IFNULL(Title,''),' ',IFNULL(FirstName,''),' ',IFNULL(MiddleInitial,''),' ',IFNULL(LastName,'')), " +
-                    "MRN, DATE_FORMAT(DOB,'%m/%d/%Y') " +
-                    " FROM " + Database + ".PatientReg " +
-                    " where Status = 0 and ID = " + PatientId;
+            Query = "SELECT ID, CONCAT(IFNULL(Title,''),' ',IFNULL(FirstName,''),' ',IFNULL(MiddleInitial,''),' ',IFNULL(LastName,'')), MRN, DATE_FORMAT(DOB,'%m/%d/%Y') FROM " + Database + ".PatientReg where Status = 0 and ID = " + PatientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -978,7 +972,7 @@ public class RegisteredPatients2 extends HttpServlet {
                 CDRList.append("<td align=left>" + numFormat.format(rset.getDouble(11)) + "</td>\n");
                 CDRList.append("<td align=left width=30%> ");
                 CDRList.append("<a class='btn-sm btn btn-primary' href=/md/md.RegisteredPatients?ActionID=InvoicePdf&PatientMRN=" + rset.getString(1) + "&InvoiceNo=" + rset.getString(5) + "&VisitID=" + rset.getInt(13) + ">View</a>\n");
-                CDRList.append("<a class='btn-sm btn btn-success' href=/md/md.RegisteredPatients2?ActionID=PayNow&InvoiceNo=" + rset.getString(5) + ">PayNow</a>\n");
+                CDRList.append("<a class='btn-sm btn btn-success' href=/md/md.RegisteredPatients?ActionID=PayNow&InvoiceNo=" + rset.getString(5) + ">PayNow</a>\n");
                 if (InstallmentPlanFound > 0) {
                     CDRList.append("<a class='btn-sm btn btn-warning' href=/md/md.InstallmentPlan?ActionID=GetInput&InvoiceNo=" + rset.getString(5) + ">Installments (Plan Applied) </a>\n");
                 } else {
@@ -989,7 +983,7 @@ public class RegisteredPatients2 extends HttpServlet {
                         CDRList.append("<br><br> <a class='btn-sm btn btn-info' onclick=\"SendRequest(\'/md/md.SelfServicePortal?Action=SendSignUpRequest&FacilityIndex=" + ClientId + "&MRN=" + PatientInvoiceMRN + "\')\">Send Link</a>\n");
                     CDRList.append("<button type=\"button\" class=\" btn-sm waves-effect waves-light btn  bg-gradient-success\" onclick=\"OpenModal(\'" + rset.getString(5) + "', '" + PatientInvoiceMRN + "','" + numFormat.format(TotalAmount) + "','" + numFormat.format(rset.getDouble(9)) + "','" + numFormat.format(rset.getDouble(8)) + "\');\" >Add Discount</button>\n");
                 }
-                CDRList.append("<a class='btn-sm btn btn-danger' href=/md/md.RegisteredPatients2?ActionID=DeActiveInvoice&InvoiceMasterID=" + rset.getString(10) + "&InvoiceNo=" + rset.getString(5).trim() + ">De-Activate</a>\n");
+                CDRList.append("<a class='btn-sm btn btn-danger' href=/md/md.RegisteredPatients?ActionID=DeActiveInvoice&InvoiceMasterID=" + rset.getString(10) + "&InvoiceNo=" + rset.getString(5).trim() + ">De-Activate</a>\n");
                 CDRList.append("</td>");
                 CDRList.append("</tr>");
                 SNo++;
@@ -1102,12 +1096,7 @@ public class RegisteredPatients2 extends HttpServlet {
                 System.out.println("Error 1-  in Getting Invoice No: " + e.getMessage());
             }
             try {
-                PreparedStatement MainReceipt = conn.prepareStatement(
-                        "INSERT INTO " + Database + ".InvoiceMaster (PatientMRN,InvoiceNo," +
-                                "TotalAmount ,PaidAmount,Paid,PaymentDateTime," +
-                                "InvoiceCreatedBy ,CreatedDate, Status, BalAmount," +
-                                "InstallmentApplied,VisitID) " +
-                                "VALUES (?,?,?,?,?,?,?,now(),0,?,0,?) ");
+                PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".InvoiceMaster (PatientMRN,InvoiceNo,TotalAmount ,PaidAmount,Paid,PaymentDateTime,InvoiceCreatedBy ,CreatedDate, Status, BalAmount,InstallmentApplied,VisitID) \nVALUES (?,?,?,?,?,?,?,now(),0,?,0,?) ");
                 MainReceipt.setString(1, PatientMRN);
                 MainReceipt.setString(2, InvoiceNo);
                 MainReceipt.setDouble(3, TotalAmount);
@@ -1156,7 +1145,7 @@ public class RegisteredPatients2 extends HttpServlet {
             } catch (Exception e) {
                 System.out.println("Error 4- Insertion InvoiceDetail Table :" + e.getMessage());
             }
-            out.println("1|" + PatientMRN + "|" + InvoiceNo + "|" + VisitID);
+            out.println("1|" + PatientMRN + "|" + InvoiceNo);
         } catch (Exception var11) {
             out.println("Error: " + var11.getMessage());
             String str = "";
@@ -1200,7 +1189,6 @@ public class RegisteredPatients2 extends HttpServlet {
                 DirectoryName = rset.getString(1);
             rset.close();
             stmt.close();
-
             Font MainHeading = new Font(2, 12.0F, 1, new Color(0, 0, 0));
             Font normfont = new Font(2, 8.0F, 0, new Color(0, 0, 0));
             Font normfont2 = new Font(2, 10.0F, 0, new Color(0, 0, 0));
@@ -1647,7 +1635,7 @@ public class RegisteredPatients2 extends HttpServlet {
                     "WHERE a.PatientMRN = '" + PatientInvoiceMRN + "' and a.Status = 0 ";*/
             //Changed Query --> 22-OCT-2021
             //By Tabish --> No Visit information was displayed and query was wrongly mapped.
-            Query = "SELECT a.MRN, CONCAT(IFNULL(a.Title,'-'),' ',IFNULL(a.FirstName,''),' ',IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')) AS PatName,DATE_FORMAT(a.DOB,'%d-%m-%Y') AS DOB,\n" +
+            Query = "SELECT a.MRN, CONCAT(IFNULL(a.Title,'-'),' ',IFNULL(a.FirstName,''),' ',IFNULL(a.MiddleInitial,''),' ',IFNULL(a.LastName,'')) AS Name,DATE_FORMAT(a.DOB,'%d-%m-%Y') AS DOB,\n" +
                     "DATE_FORMAT(c.DateofService,'%m/%d/%Y %T') AS DOS, b.InvoiceNo,DATE_FORMAT(b.CreatedDate, '%m/%d/%Y %T') AS InvoiceGeneratedDate,\n" +
                     "b.TotalAmount, b.PaidAmount, b.BalAmount, b.Id AS InvoiceIdx ,b.Discount \n" +
                     "FROM \n" +
@@ -1656,6 +1644,7 @@ public class RegisteredPatients2 extends HttpServlet {
                     " INNER JOIN " + Database + ".PatientVisit c ON a.Id = c.PatientRegId AND c.Id = b.VisitID \n" +
                     " WHERE a.MRN = " + PatientInvoiceMRN + " \n" +
                     "ORDER BY b.CreatedDate DESC";
+            System.out.println("QQ " + Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1681,13 +1670,13 @@ public class RegisteredPatients2 extends HttpServlet {
                 CDRList.append("<td align=left>" + numFormat.format(rset.getDouble(8)) + "</td>\n");
                 CDRList.append("<td align=left>" + numFormat.format(rset.getDouble(9)) + "</td>\n");
                 CDRList.append("<td align=left><a href=/md/md.RegisteredPatients?ActionID=InvoicePdf&PatientMRN=" + rset.getString(1) + "&InvoiceNo=" + rset.getString(5) + ">ViewInvoice_" + rset.getString(1) + "</a></td>\n");
-                CDRList.append("<td align=left><a href=/md/md.RegisteredPatients2?ActionID=PayNow&InvoiceNo=" + rset.getString(5) + ">PayNow</a></td>\n");
+                CDRList.append("<td align=left><a href=/md/md.RegisteredPatients?ActionID=PayNow&InvoiceNo=" + rset.getString(5) + ">PayNow</a></td>\n");
                 if (InstallmentPlanFound > 0) {
                     CDRList.append("<td align=left><a href=/md/md.InstallmentPlan?ActionID=GetInput&InvoiceNo=" + rset.getString(5) + ">Intallments (Plan Applied) </a></td>\n");
                 } else {
                     CDRList.append("<td align=left><a href=/md/md.InstallmentPlan?ActionID=GetInput&InvoiceNo=" + rset.getString(5) + ">Intallments</a></td>\n");
                 }
-                CDRList.append("<td align=left><a href=/md/md.RegisteredPatients2?ActionID=DeActiveInvoice&InvoiceMasterID=" + rset.getString(10) + "&InvoiceNo=" + rset.getString(5).trim() + ">De-Activate Invoice</a></td>\n");
+                CDRList.append("<td align=left><a href=/md/md.RegisteredPatients?ActionID=DeActiveInvoice&InvoiceMasterID=" + rset.getString(10) + "&InvoiceNo=" + rset.getString(5).trim() + ">De-Activate Invoice</a></td>\n");
                 CDRList.append("</tr>");
                 SNo++;
             }
@@ -1737,13 +1726,8 @@ public class RegisteredPatients2 extends HttpServlet {
         DecimalFormat numFormat = new DecimalFormat("#,###,###.00");
         int SNo = 1;
         int InstallmentPlanFound = 0;
-        int patientId = 0;
         try {
-            Query = "Select a.PatientMRN, CONCAT(b.Title,' ',b.FirstName,' ',b.MiddleInitial,' ',b.LastName), " +
-                    "a.TotalAmount, a.PaidAmount, a.BalAmount,b.Id as PatIdx  " +
-                    " from " + Database + ".InvoiceMaster a " +
-                    " LEFT JOIN " + Database + ".PatientReg b on a.PatientMRN = b.MRN " +
-                    " where a.InvoiceNo = '" + InvoiceNo + "'";
+            Query = "Select a.PatientMRN, CONCAT(b.Title,' ',b.FirstName,' ',b.MiddleInitial,' ',b.LastName), a.TotalAmount, a.PaidAmount, a.BalAmount  from " + Database + ".InvoiceMaster a LEFT JOIN " + Database + ".PatientReg b on a.PatientMRN = b.MRN where a.InvoiceNo = '" + InvoiceNo + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -1752,7 +1736,6 @@ public class RegisteredPatients2 extends HttpServlet {
                 TotalAmount = rset.getDouble(3);
                 PaidAmount = rset.getDouble(3) - rset.getDouble(5);
                 BalAmount = rset.getDouble(5);
-                patientId = rset.getInt(6);
             }
             rset.close();
             stmt.close();
@@ -1764,12 +1747,7 @@ public class RegisteredPatients2 extends HttpServlet {
             rset.close();
             stmt.close();
             if (InstallmentPlanFound > 0) {
-                Query = "Select IFNULL(MRN,''), IFNULL(InvoiceNo,''), IFNULL(PaymentAmount,0), " +
-                        "IFNULL(DATE_FORMAT(PaymentDate,'%m/%d/%Y'),''),  " +
-                        "CASE WHEN PAID = 0 THEN 'Pending' WHEN Paid = 1 THEN 'Paid' ELSE 'Pending' END " +
-                        "from " + Database + ".InstallmentPlan " +
-                        "where MRN = '" + PatientMRN + "' and  InvoiceNo = '" + InvoiceNo + "' and " +
-                        " status = 0";
+                Query = "Select IFNULL(MRN,''), IFNULL(InvoiceNo,''), IFNULL(PaymentAmount,0), IFNULL(DATE_FORMAT(PaymentDate,'%m/%d/%Y'),''),  CASE WHEN PAID = 0 THEN 'Pending' WHEN Paid = 1 THEN 'Paid' ELSE 'Pending' END from " + Database + ".InstallmentPlan where MRN = '" + PatientMRN + "' and  InvoiceNo = '" + InvoiceNo + "' and status = 0";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1795,8 +1773,8 @@ public class RegisteredPatients2 extends HttpServlet {
             if (BalAmount == 0.0D) {
                 Parsehtm parsehtm = new Parsehtm(request);
                 parsehtm.SetField("Message", "Payment has already been paid!");
-                parsehtm.SetField("FormName", "PatientUpdateInfo");
-                parsehtm.SetField("ActionID", "GetInput&ID=" + patientId);
+                parsehtm.SetField("FormName", "RegisteredPatients2");
+                parsehtm.SetField("ActionID", "CreateInvoiceInput&PatientId");
                 parsehtm.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Message.html");
                 return;
             }
@@ -1900,7 +1878,7 @@ public class RegisteredPatients2 extends HttpServlet {
             }
             if (InstallmentPlanFound > 0)
                 try {
-//                    out.println("STage 1: Inside Installment Plan Found");
+                    out.println("STage 1: Inside Installment Plan Found");
                     Query = "Select Id from " + Database + ".InstallmentPlan where Paid = 0 and InvoiceNo = '" + InvoiceNo + "' limit 1";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -1908,14 +1886,14 @@ public class RegisteredPatients2 extends HttpServlet {
                         InstallmentPlanId = rset.getInt(1);
                     rset.close();
                     stmt.close();
-//                    out.println("Stage 2: Inside Installment Plan FOund" + Query);
+                    out.println("Stage 2: Inside Installment Plan FOund" + Query);
                     if (InstallmentPlanId > 0) {
-//                        out.println("Stage 3: Inside Installment Plan ID Found");
+                        out.println("Stage 3: Inside Installment Plan ID Found");
                         Query = " Update " + Database + ".InstallmentPlan set Paid = 1 where Id = " + InstallmentPlanId + "";
                         stmt = conn.createStatement();
                         stmt.executeUpdate(Query);
                         stmt.close();
-//                        out.println("Stage 4: Inside Installment Plan ID Found" + Query);
+                        out.println("Stage 4: Inside Installment Plan ID Found" + Query);
                     }
                 } catch (Exception e) {
                     out.println("Error in Updating Installment plan Table: " + e.getMessage());
@@ -1950,32 +1928,6 @@ public class RegisteredPatients2 extends HttpServlet {
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
             stmt.close();
-
-            int mrn = 0;
-            Query = "SELECT MRN FROM " + Database + ".PatientReg WHERE Id=" + PatientID;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                mrn = rset.getInt(1);
-            rset.close();
-            stmt.close();
-
-            boolean isExist = false;
-            Query = "SELECT COUNT(*) FROM oe.Requet WHERE MRN = " + mrn;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                isExist = rset.getInt(1) != 0;
-            rset.close();
-            stmt.close();
-
-            if (isExist) {
-                Query = " Update oe.request set Status = 999 where MRN = " + mrn;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-            }
-
             out.println("1");
         } catch (Exception var11) {
             out.println(Query);
@@ -2028,7 +1980,6 @@ public class RegisteredPatients2 extends HttpServlet {
                 PaymentFound = rset.getInt(1);
             rset.close();
             stmt.close();
-
             if (PaymentFound > 0) {
                 out.println("<!DOCTYPE html><html><body><p style=\"color:gray;\">Invoice Cannot DeActivate Becase it is Paid or Partially Paid</p></body></html>");
                 out.println("<input class=\"btn btn-primary\" type=button name=Back Value=\"  Back  \" onclick=history.back()>");

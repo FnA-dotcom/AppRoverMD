@@ -75,6 +75,13 @@ public class CreateLabUser extends HttpServlet {
                     saveLabUser(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex);
                     break;
 
+                case "editLabUser":
+                    editLabUser(request, out, conn);
+                    break;
+                case "updateLabUser":
+                    updateLabUser(request, out, conn);
+                    break;
+
                 default:
                     helper.deleteUserSession(request, conn, session.getId());
                     //Invalidating Session.
@@ -241,5 +248,106 @@ public class CreateLabUser extends HttpServlet {
         }
 
     }
+
+    void editLabUser(HttpServletRequest request, PrintWriter out, Connection conn) {
+        try {
+            String Query = null;
+            Statement stmt = null;
+            ResultSet rset = null;
+            StringBuffer CDRList = new StringBuffer();
+            String idxptr = request.getParameter("str");
+
+            Query = "SELECT firstname,lastname,userid,email,usertype,password,clientid,indexptr FROM oe.sysusers where indexptr = " + idxptr + " and status = 0 ORDER BY create_date DESC";
+
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+
+
+            while (rset.next()) {
+                String passdec = FacilityLogin.decrypt(rset.getString(6));
+                CDRList.append(rset.getString(1) + "~" + rset.getString(2) + "~" + rset.getString(3) + "~" +
+                        "" + rset.getString(4) + "~" + rset.getString(5) + "~" + passdec + "~" + rset.getString(7) + "~" + rset.getString(8));
+            }
+            rset.close();
+            stmt.close();
+
+            out.println(CDRList);
+        } catch (Exception var11) {
+            out.println(var11.getMessage());
+            String str = "";
+            for (int i = 0; i < (var11.getStackTrace()).length; i++)
+                str = str + var11.getStackTrace()[i] + "<br>";
+            out.println(str);
+            out.flush();
+            out.close();
+        }
+    }
+
+    void updateLabUser(HttpServletRequest request, PrintWriter out, Connection conn) {
+        try {
+            Statement stmt = null;
+            ResultSet rset = null;
+            String Query = null;
+            String firstname = request.getParameter("firstname");
+            String lastname = request.getParameter("lastname");
+            String username = request.getParameter("username");
+            String email = request.getParameter("email");
+            String pwd = request.getParameter("pwd");
+            String Company = "";
+            String clientId = "";
+            String user_type = request.getParameter("user_type");
+            String userId = request.getParameter("userId");
+            String idxptr = request.getParameter("idxptr");
+
+
+            String passwordEnc = FacilityLogin.encrypt(pwd);
+
+//            if (user_type.equals("4")) {
+            Company = request.getParameter("Company");
+            clientId = request.getParameter("clientId");
+
+            if (Company.equals("")) {
+                PreparedStatement ps = conn.prepareStatement("SELECT name FROM oe.clients WHERE id=" + clientId);
+                System.out.println("Query : " + ps.toString());
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    Company = rset.getString(1);
+                }
+                rset.close();
+                ps.close();
+            }
+
+            Query = "UPDATE oe.sysusers SET userid='" + userId + "',firstname='" + firstname + "',lastname='" + lastname + "'," +
+                    "password='" + passwordEnc + "',username='" + username + "',companyname='" + Company + "',usertype='" + user_type + "'," +
+                    "create_date=now(),email='" + email + "',clientid='" + clientId + "' WHERE indexptr='" + idxptr + "'";
+            System.out.println("Update Query " + Query);
+            stmt = conn.createStatement();
+            stmt.executeUpdate(Query);
+
+            stmt.close();
+//            } else {
+//                Company = request.getParameter("Company");
+//                clientId = request.getParameter("clientId");
+//                Query = "UPDATE oe.sysusers SET userid='" + userId + "',firstname='" + firstname + "',lastname='" + lastname + "'," +
+//                        "password='" + passwordEnc + "',username='" + username + "',companyname='" + Company + "',usertype='" + user_type + "'," +
+//                        "create_date=now(),email='" + email + "' WHERE indexptr='" + idxptr + "'";
+//
+//                stmt = conn.createStatement();
+//                stmt.executeUpdate(Query);
+//
+//                stmt.close();
+//            }
+            out.println("1");
+        } catch (Exception var11) {
+            System.out.println(var11.getMessage());
+            String str = "";
+            for (int i = 0; i < (var11.getStackTrace()).length; i++)
+                str = str + var11.getStackTrace()[i] + "<br>";
+            System.out.println(str);
+            out.flush();
+            out.close();
+        }
+    }
+
 
 }

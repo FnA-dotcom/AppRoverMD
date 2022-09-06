@@ -18,11 +18,11 @@ import java.sql.*;
 @SuppressWarnings("Duplicates")
 public class AdFacAssign extends HttpServlet {
 
-//    private Connection conn = null;
-//    private Statement stmt = null;
-//    private ResultSet rset = null;
-//    private String Query = "";
-//    private PreparedStatement pStmt = null;
+    private Connection conn = null;
+    private Statement stmt = null;
+    private ResultSet rset = null;
+    private String Query = "";
+    private PreparedStatement pStmt = null;
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -49,10 +49,7 @@ public class AdFacAssign extends HttpServlet {
         ServletContext context = null;
         context = this.getServletContext();
         UtilityHelper helper = new UtilityHelper();
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
+
         try {
             HttpSession session = request.getSession(false);
 
@@ -123,14 +120,12 @@ public class AdFacAssign extends HttpServlet {
 
 
     public void GetInput(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
+
         try {
             StringBuilder AdvocateList = new StringBuilder();
             StringBuilder SentFromPhNList = new StringBuilder();
 
-            Query = "Select indexptr, IFNULL(username,'') from oe.sysusers where usertype in (1,2,3,7,9,10,12)";
+            Query = "Select indexptr, IFNULL(username,'') from oe.sysusers where usertype in (7,10)";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             AdvocateList.append("<option value=''> Select Advocate </option>");
@@ -161,9 +156,6 @@ public class AdFacAssign extends HttpServlet {
     }
 
     public void GetFacilities(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
         try {
             String AdvocatePhN = "";
             String twilioPhN = "";
@@ -175,7 +167,7 @@ public class AdFacAssign extends HttpServlet {
             Query = "Select IFNULL(AdvocatePhNumber,''),IFNULL(PhNumber,'') from oe.AdvocateSMSNumber where AdvocateIdx = " + AdvocateIdx;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            if (rset.next()){
                 AdvocatePhN = rset.getString(1);
                 twilioPhN = rset.getString(2);
             }
@@ -224,7 +216,7 @@ public class AdFacAssign extends HttpServlet {
             rset = stmt.executeQuery(Query);
             SentFromPhNList.append("<option value=''> Select Sender Number </option>");
             while (rset.next()) {
-                if (twilioPhN.equals(rset.getString(1)))
+                if(twilioPhN.equals(rset.getString(1)))
                     SentFromPhNList.append("<option value=" + rset.getString(1) + " selected> " + rset.getString(1) + " </option>");
                 else
                     SentFromPhNList.append("<option value=" + rset.getString(1) + "> " + rset.getString(1) + " </option>");
@@ -232,7 +224,7 @@ public class AdFacAssign extends HttpServlet {
             rset.close();
             stmt.close();
 
-            out.println(AdvocatePhN + "|" + FacChkboxList.toString() + "|" + SentFromPhNList.toString());
+            out.println(AdvocatePhN + "|" + FacChkboxList.toString()+ "|" + SentFromPhNList.toString());
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -240,10 +232,6 @@ public class AdFacAssign extends HttpServlet {
     }
 
     public void SaveData(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        PreparedStatement pStmt = null;
         try {
             StringBuilder AdvocateList = new StringBuilder();
             StringBuilder SentFromPhNList = new StringBuilder();
@@ -327,10 +315,6 @@ public class AdFacAssign extends HttpServlet {
     }
 
     private void InsertAdvocateSMSNumberHistory(HttpServletRequest request, Connection conn, ServletContext context, String Database, int AdvocateIdx, PrintWriter out, UtilityHelper helper) throws FileNotFoundException {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        PreparedStatement pStmt = null;
         try {
             Query = "Select Id, IFNULL(AdvocateIdx,''), IFNULL(FacilityIdx,''), IFNULL(PhNumber,''), IFNULL(Status,0), IFNULL(CreatedDate,''), " +
                     "IFNULL(AdvocatePhNumber,'') from oe.AdvocateSMSNumber where AdvocateIdx = " + AdvocateIdx;

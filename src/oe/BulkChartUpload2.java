@@ -22,8 +22,6 @@ import java.util.StringTokenizer;
 
 @SuppressWarnings("Duplicates")
 public class BulkChartUpload2 extends HttpServlet {
-    public static final String UPLOAD_DIR = "uploadedFiles";
-    private static final long serialVersionUID = 1L;
     static String ClientIndex = "0";
 
     public void init(final ServletConfig config) throws ServletException {
@@ -74,6 +72,10 @@ public class BulkChartUpload2 extends HttpServlet {
         out.flush();
         out.close();
     }
+
+    public static final String UPLOAD_DIR = "uploadedFiles";
+    private static final long serialVersionUID = 1L;
+
 
     void BulkUploadInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final HttpServletResponse response) {
         Statement hstmt = null;
@@ -147,7 +149,6 @@ public class BulkChartUpload2 extends HttpServlet {
         return fileName;
     }
 
-
     void UploadFiles(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final HttpServletResponse response) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -201,7 +202,7 @@ public class BulkChartUpload2 extends HttpServlet {
 
                         if (UploadPath.equals("")) {
                             Query = "SELECT directory_1 FROM oe.clients WHERE Id = " + Clients;
-                            out.println("Query " + Query + "<br>");
+                            out.println("Query " + Query +"<br>");
                             stmt = conn.createStatement();
                             rset = stmt.executeQuery(Query);
                             if (rset.next()) {
@@ -210,7 +211,7 @@ public class BulkChartUpload2 extends HttpServlet {
                             rset.close();
                             stmt.close();
 
-                            out.println("Path " + UploadPath + "<br>");
+                            out.println("Path " + UploadPath +"<br>");
                         }
                         //break;
                     }
@@ -232,7 +233,7 @@ public class BulkChartUpload2 extends HttpServlet {
                 out.println("Second Loop path " + UploadPath + "<br>");
                 if (FileFound) {
                     FileName = FileName.replaceAll("\\s+", "");
-                    out.println("FileName: " + FileName + "<br>");
+                    out.println("FileName: "+ FileName + "<br>");
 /*                    File fe = new File(String.valueOf(UploadPath) + FileName);
                     if (fe.exists()) {
                         fe.delete();

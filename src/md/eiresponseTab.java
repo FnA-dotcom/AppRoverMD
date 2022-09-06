@@ -20,13 +20,14 @@ public class eiresponseTab {
     public static StringBuffer subscriberaddinfo = new StringBuffer();
     public static StringBuffer trace_number = new StringBuffer();
     public static StringBuffer otherinfo = new StringBuffer();
+    static int benefittable = 1;
     public static StringBuffer trace_id = new StringBuffer();
     public static String policystatus = "";
     public static String planinfo = "";
     public static String validtill = "";
     public static String traceNo = "";
+
     public static StringBuffer finaloutput = new StringBuffer();
-    static int benefittable = 1;
 
     public static void main(String[] args) {
 
@@ -499,10 +500,13 @@ public class eiresponseTab {
                             }
 
 
+
+
                             NodeList relationship = eElement.getElementsByTagName("relationship");
                             if (relationship.getLength() > 0) {
                                 visitChildNodes(relationship);
                             }
+
 
 
                             System.out.println();
@@ -523,10 +527,13 @@ public class eiresponseTab {
                             otherinfo.append("</tr>\n");
 
 
+
                             NodeList date_plan = eElement.getElementsByTagName("date");
                             if (date_plan.getLength() > 0) {
                                 visitChildNodes(date_plan);
                             }
+
+
 
 
                             System.out.println();
@@ -543,10 +550,15 @@ public class eiresponseTab {
                             System.out.println("**********************************************");
 
 
+
+
+
                             NodeList subscriberaddinfo = eElement.getElementsByTagName("subscriberaddinfo");
                             if (subscriberaddinfo.getLength() > 0) {
                                 visitChildNodes(subscriberaddinfo);
                             }
+
+
 
 
                             NodeList trace_number = eElement.getElementsByTagName("trace_number");

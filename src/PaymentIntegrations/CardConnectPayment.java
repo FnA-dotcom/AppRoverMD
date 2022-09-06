@@ -49,7 +49,7 @@ public class CardConnectPayment extends HttpServlet {
         String commCard;
 
 
-/*        System.out.println("***************** Auth Transaction START **************************");
+        System.out.println("***************** Auth Transaction START **************************");
         System.out.println("EndPoint " + EndPoint);
         System.out.println("UserName " + UserName);
         System.out.println("Password " + Password);
@@ -63,7 +63,7 @@ public class CardConnectPayment extends HttpServlet {
         System.out.println("country " + country);
         System.out.println("zipCode " + zipCode);
         System.out.println("Address " + address);
-        System.out.println("***************** Auth Transaction END **************************");*/
+        System.out.println("***************** Auth Transaction END **************************");
 
 /*        if (country.equals("UnitedStates") || country.equals("United States") ||
                 country.equals("UNITED STATES") || country.equals("UNITEDSTATES") ||
@@ -105,10 +105,10 @@ public class CardConnectPayment extends HttpServlet {
         //
         request.put("ecomind", "E");
 
-//        System.out.println("%%%%%%%%%%%%% TABISH %%%%%%%%%%%%%%%");
+        System.out.println("%%%%%%%%%%%%% TABISH %%%%%%%%%%%%%%%");
         // Create the REST client
         CardConnectRestClient client = new CardConnectRestClient(EndPoint, UserName, Password);
-//        System.out.println("%%%%%%%%%%%%% TABISH 1111 %%%%%%%%%%%%%%%");
+        System.out.println("%%%%%%%%%%%%% TABISH 1111 %%%%%%%%%%%%%%%");
         // Send an AuthTransaction request
         JSONObject response = client.authorizeTransaction(request);
         if (response == null) {
@@ -234,7 +234,7 @@ public class CardConnectPayment extends HttpServlet {
                 RetrieveReference, Expiry, AVSResponse, Receipt, BinType, Amount, AccountNo, orderId, commCard};
     }
 
-    private static Key generateKey() throws Exception {
+    private static Key generateKey() {
         Key key = new SecretKeySpec(keyValue, ALGO);
         return key;
     }
@@ -271,106 +271,6 @@ public class CardConnectPayment extends HttpServlet {
             System.out.println("Connection Exception 33306 --> " + e.getMessage());
             return null;
         }
-    }
-
-    public String[] InquireTransaction(String Values, int ClientId, Connection conn) {
-        String ENDPOINT = "";
-        String USERNAME = "";
-        String PASSWORD = "";
-        String MerchantId = "";
-        //Type Flag
-        // 0 - Sandbox
-        //int FlagType = 0;
-        // 1 - Dev
-        //int FlagType = 1;
-        // 2 - Prod
-        int FlagType = 2;
-
-        String Message = "";
-
-        String FirstName = "";
-        String LastName = "";
-        String Address = "";
-        String City = "";
-        String State = "";
-        String ZipCode = "";
-        String Country = "";
-        String Amount = "";
-        String myToken = "";
-        String myExpiryDate = "";
-        String Currency = "";
-        String CVV2 = "";
-
-        String AuthString[];
-        try {
-            //Connection conn = getConnection();
-
-            String[] splitValues = decrypt(Values).split("\\^");
-/*            System.out.println("FirstName : " + splitValues[0]);
-            System.out.println("LastName: " + splitValues[1]);
-            System.out.println("City: " + splitValues[2]);
-            System.out.println("State: " + splitValues[3]);
-            System.out.println("ZipCode: " + splitValues[4]);
-            System.out.println("Country: " + splitValues[5]);
-            System.out.println("Address: " + splitValues[6]);
-            System.out.println("Amount: " + splitValues[7]);
-            System.out.println("myToken: " + splitValues[8]);
-            System.out.println("myExpiryDate: " + splitValues[9]);
-            System.out.println("CVV2: " + splitValues[10]);*/
-
-            FirstName = splitValues[0];
-            LastName = splitValues[1];
-            City = splitValues[2];
-            State = splitValues[3];
-            ZipCode = splitValues[4];
-            Country = splitValues[5];
-            Address = splitValues[6];
-            Amount = splitValues[7];
-            myToken = splitValues[8];
-            myExpiryDate = splitValues[9];
-            CVV2 = splitValues[10];
-
-//            System.out.println("FirstName : " + FirstName);
-//            System.out.println("LastName: " + LastName);
-//            System.out.println("City: " + City);
-//            System.out.println("State: " + State);
-//            System.out.println("ZipCode: " + ZipCode);
-//            System.out.println("Country: " + Country);
-//            System.out.println("Address: " + Address);
-//            System.out.println("Amount: " + Amount);
-//            System.out.println("myToken: " + myToken);
-//            System.out.println("myExpiryDate: " + myExpiryDate);
-//            System.out.println("CVV2: " + CVV2);
-
-            UtilityHelper helper = new UtilityHelper();
-            String[] AuthConnect = helper.getAuthConnect(conn, FlagType, ClientId);
-            ENDPOINT = AuthConnect[0];
-            USERNAME = AuthConnect[1];
-            PASSWORD = AuthConnect[2];
-            MerchantId = AuthConnect[3];
-            Currency = AuthConnect[4];
-
-/*            System.out.println("ENDPOINT : " + ENDPOINT);
-            System.out.println("USERNAME: " + USERNAME);
-            System.out.println("PASSWORD: " + PASSWORD);
-            System.out.println("MerchantId: " + MerchantId);
-            System.out.println("Currency: " + Currency);*/
-
-            String Name = FirstName + "" + LastName;
-
-            AuthString = authTransaction(ENDPOINT, USERNAME, PASSWORD, MerchantId, myToken, myExpiryDate, Amount, Currency, Name, City, State, Country, ZipCode, CVV2, Address);
-//            System.out.println("AuthString: " + Arrays.toString(AuthString));
-        } catch (Exception e) {
-            Message = e.getMessage() + " <br> ";
-            for (int i = 0; i < e.getStackTrace().length; ++i) {
-                Message = Message + e.getStackTrace()[i] + " ******* <br>";
-            }
-            return new String[]{Message};
-        }
-        if (!AuthString.equals(""))
-            return new String[]{AuthString[0], AuthString[1], AuthString[2], AuthString[3], AuthString[4], AuthString[5], AuthString[6], AuthString[7], AuthString[8], AuthString[9], AuthString[10], AuthString[11], AuthString[12], AuthString[13], AuthString[14], AuthString[15]};
-        else
-            return new String[]{Arrays.toString(AuthString)};
     }
 
     /**
@@ -557,5 +457,105 @@ public class CardConnectPayment extends HttpServlet {
             return new String[]{Message};
         }
         return new String[]{AuthString[0], AuthString[1], AuthString[2], AuthString[3], AuthString[4], AuthString[5], AuthString[6], AuthString[7], AuthString[8], AuthString[9], AuthString[10], AuthString[11], AuthString[12], AuthString[13], AuthString[14], AuthString[15]};
+    }
+
+    public String[] InquireTransaction(String Values, int ClientId, Connection conn) {
+        String ENDPOINT = "";
+        String USERNAME = "";
+        String PASSWORD = "";
+        String MerchantId = "";
+        //Type Flag
+        // 0 - Sandbox
+        //int FlagType = 0;
+        // 1 - Dev
+        //int FlagType = 1;
+        // 2 - Prod
+        int FlagType = 2;
+
+        String Message = "";
+
+        String FirstName = "";
+        String LastName = "";
+        String Address = "";
+        String City = "";
+        String State = "";
+        String ZipCode = "";
+        String Country = "";
+        String Amount = "";
+        String myToken = "";
+        String myExpiryDate = "";
+        String Currency = "";
+        String CVV2 = "";
+
+        String AuthString[];
+        try {
+            //Connection conn = getConnection();
+
+            String[] splitValues = decrypt(Values).split("\\^");
+/*            System.out.println("FirstName : " + splitValues[0]);
+            System.out.println("LastName: " + splitValues[1]);
+            System.out.println("City: " + splitValues[2]);
+            System.out.println("State: " + splitValues[3]);
+            System.out.println("ZipCode: " + splitValues[4]);
+            System.out.println("Country: " + splitValues[5]);
+            System.out.println("Address: " + splitValues[6]);
+            System.out.println("Amount: " + splitValues[7]);
+            System.out.println("myToken: " + splitValues[8]);
+            System.out.println("myExpiryDate: " + splitValues[9]);
+            System.out.println("CVV2: " + splitValues[10]);*/
+
+            FirstName = splitValues[0];
+            LastName = splitValues[1];
+            City = splitValues[2];
+            State = splitValues[3];
+            ZipCode = splitValues[4];
+            Country = splitValues[5];
+            Address = splitValues[6];
+            Amount = splitValues[7];
+            myToken = splitValues[8];
+            myExpiryDate = splitValues[9];
+            CVV2 = splitValues[10];
+
+/*            System.out.println("FirstName : " + FirstName);
+            System.out.println("LastName: " + LastName);
+            System.out.println("City: " + City);
+            System.out.println("State: " + State);
+            System.out.println("ZipCode: " + ZipCode);
+            System.out.println("Country: " + Country);
+            System.out.println("Address: " + Address);
+            System.out.println("Amount: " + Amount);
+            System.out.println("myToken: " + myToken);
+            System.out.println("myExpiryDate: " + myExpiryDate);
+            System.out.println("CVV2: " + CVV2);*/
+
+            UtilityHelper helper = new UtilityHelper();
+            String[] AuthConnect = helper.getAuthConnect(conn, FlagType, ClientId);
+            ENDPOINT = AuthConnect[0];
+            USERNAME = AuthConnect[1];
+            PASSWORD = AuthConnect[2];
+            MerchantId = AuthConnect[3];
+            Currency = AuthConnect[4];
+
+/*            System.out.println("ENDPOINT : " + ENDPOINT);
+            System.out.println("USERNAME: " + USERNAME);
+            System.out.println("PASSWORD: " + PASSWORD);
+            System.out.println("MerchantId: " + MerchantId);
+            System.out.println("Currency: " + Currency);*/
+
+            String Name = FirstName + "" + LastName;
+
+            AuthString = authTransaction(ENDPOINT, USERNAME, PASSWORD, MerchantId, myToken, myExpiryDate, Amount, Currency, Name, City, State, Country, ZipCode, CVV2, Address);
+//            System.out.println("AuthString: " + Arrays.toString(AuthString));
+        } catch (Exception e) {
+            Message = e.getMessage() + " <br> ";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                Message = Message + e.getStackTrace()[i] + " ******* <br>";
+            }
+            return new String[]{Message};
+        }
+        if (!AuthString.equals(""))
+            return new String[]{AuthString[0], AuthString[1], AuthString[2], AuthString[3], AuthString[4], AuthString[5], AuthString[6], AuthString[7], AuthString[8], AuthString[9], AuthString[10], AuthString[11], AuthString[12], AuthString[13], AuthString[14], AuthString[15]};
+        else
+            return new String[]{Arrays.toString(AuthString)};
     }
 }

@@ -120,14 +120,14 @@ public class BulkChartUpload extends HttpServlet {
             }
             hrset.close();
             hstmt.close();
-            if (!UploadPath.endsWith("/")) {
-                UploadPath = UploadPath + "/";
+            if(!UploadPath.endsWith("/")){
+                UploadPath = UploadPath+"/";
             }
 //            Cookie UploadPathh = new Cookie("UploadPath", UploadPath);
 //            response.addCookie(UploadPathh);
             HttpSession session = request.getSession(true);
             session.setAttribute("UploadPath", UploadPath);
-            out.println(UploadPath + "|" + Clients);
+            out.println(UploadPath+"|"+Clients);
         } catch (Exception e) {
             out.println("Error in getting Report: " + e.getMessage());
         }
@@ -189,7 +189,7 @@ public class BulkChartUpload extends HttpServlet {
                 if (FileFound) {
                     FileName = FileName.replaceAll("\\s+", "");
                     long unixTime = System.currentTimeMillis() / 1000L;
-                    File fe = new File(String.valueOf(UploadPath) + unixTime + "_" + FileName);
+                    File fe = new File(String.valueOf(UploadPath) +unixTime+"_"+ FileName);
                     if (fe.exists()) {
                         fe.delete();
                     }
@@ -252,6 +252,8 @@ public class BulkChartUpload extends HttpServlet {
 //                out.println("FileName:"+fNameArr[j]+"<br>");
 //                out.println("FileSize:"+fSizeArr[i]+"<br>");
             }
+
+
 
 
 //out.println("*******************************************************************"+"<br>");
@@ -341,18 +343,18 @@ public class BulkChartUpload extends HttpServlet {
         String User = request.getParameter("Users").trim();
         String dosdate = request.getParameter("dosdate").trim();
         try {
-            DToDate = dosdate.substring(0, 19);
-            DFromDate = dosdate.substring(22, 41);
+            DToDate =dosdate.substring(0, 19);
+            DFromDate=dosdate.substring(22,41);
 
-            if (User.equals("-1")) {
+            if(User.equals("-1")) {
                 UserCondition = " ";
-            } else {
-                UserCondition = " and a.UserId = '" + User + "'";
+            }else{
+                UserCondition = " and a.UserId = '"+User+"'";
             }
-            if (ClientIndex.equals("-1")) {
+            if(ClientIndex.equals("-1")) {
                 ClientIndexCondition = " ";
-            } else {
-                ClientIndexCondition = " and a.ClientId = " + ClientIndex;
+            }else{
+                ClientIndexCondition = " and a.ClientId = "+ClientIndex;
             }
             Query = "SELECT id,name FROM oe.clients WHERE status = 0";
             stmt = conn.createStatement();
@@ -387,7 +389,7 @@ public class BulkChartUpload extends HttpServlet {
                     " oe.BulkFiles_Upload_logs a " +
                     " LEFT JOIN oe.clients b on a.ClientId = b.Id " +
                     " LEFT JOIN oe.sysusers c on a.UserId = c.userid " +
-                    " where a.CreatedDate between '" + DToDate + "' and '" + DFromDate + "' " + UserCondition + ClientIndexCondition;
+                    " where a.CreatedDate between '"+DToDate+"' and '"+DFromDate+"' "+UserCondition + ClientIndexCondition;
 //            out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -396,7 +398,7 @@ public class BulkChartUpload extends HttpServlet {
                 CDRList.append("<td align=center>" + SNo + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
-                CDRList.append("<td align=left>" + Math.round(Float.parseFloat(rset.getString(3)) / 1024) + " KiloByte</td>\n");
+                CDRList.append("<td align=left>" + Math.round(Float.parseFloat(rset.getString(3))/1024) + " KiloByte</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
                 CDRList.append("</tr>\n");

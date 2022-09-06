@@ -21,6 +21,7 @@ public class eiresponse2 {
     public static StringBuffer subscriberaddinfo = new StringBuffer();
     public static StringBuffer trace_number = new StringBuffer();
     public static StringBuffer otherinfo = new StringBuffer();
+    static int benefittable = 1;
     public static StringBuffer trace_id = new StringBuffer();
     public static String policystatus = "";
     public static String planinfo = "";
@@ -28,8 +29,8 @@ public class eiresponse2 {
     public static String traceNo = "";
     public static String ResultMessage = "";
     public static int Error = 0;
+
     public static StringBuffer finaloutput = new StringBuffer();
-    static int benefittable = 1;
 
     public static void main(String[] args) {
 
@@ -510,7 +511,7 @@ public class eiresponse2 {
                     for (int i = 0; i < nodes.getLength(); i++) {
                         Element element = (Element) nodes.item(i);
                         NodeList title = element.getElementsByTagName("ResponseAsXml");
-                        if (title.getLength() == 0) {
+                        if (title.getLength() == 0){
 //                            System.out.println(" ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ TTTTTT ^^^^^^^^^^^^^^^^^^^");
                             StringBuilder style = new StringBuilder();
                             // PrintWriter out = new PrintWriter(new File("d:\\xmlFile2223.html"));

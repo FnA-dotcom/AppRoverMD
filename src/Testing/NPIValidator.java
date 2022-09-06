@@ -29,7 +29,7 @@ public class NPIValidator {
         for (int i = 0; i < str.length(); ++i)
             //doubled every alternate digit
             if (i % 2 == 0) numerals.add(2 * Character.getNumericValue(str.charAt(i)));
-                //added unaffected digits
+            //added unaffected digits
             else numerals.add(Character.getNumericValue(str.charAt(i)));
         return numerals;
     }
@@ -52,13 +52,11 @@ public class NPIValidator {
         Instant start = Instant.now();
 
         //NPI example
-        String npi = "1124623889";//12254176601;1234567893
+        String npi = "15385030242";//"1234567893";
 
         if (npi.matches(NPI_REGEX)) {
-            if (isValid(npi))
-                System.out.println("NPI is VALID");
-            else
-                System.out.println("NPI is INVALID");
+            if(isValid(npi)) System.out.println("NPI is VALID");
+            else System.out.println("NPI is INVALID");
         } else {
             System.out.println("NPI is INVALID\nmentioned below might be the causes\n(*)NPI should contain Numeric Characters \n" +
                     "(*)NPI length should be 10 digit");

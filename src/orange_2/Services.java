@@ -20,7 +20,8 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.Properties;
 
-public class Services {
+public class Services
+{
     public static String GetInetAddr(final int ip) {
         String IP = "";
         IP = (ip & 0xFF) + "." + (ip >> 8 & 0xFF) + "." + (ip >> 16 & 0xFF) + "." + (ip >> 24 & 0xFF);
@@ -31,7 +32,8 @@ public class Services {
         try {
             final ServletContext servletcontext = context;
             return servletcontext.getInitParameter(str);
-        } catch (Exception _ex) {
+        }
+        catch (Exception _ex) {
             return null;
         }
     }
@@ -71,15 +73,18 @@ public class Services {
             String mysqldb = context.getInitParameter("mysqldb");
             if (db == 1) {
                 mysqldb = context.getInitParameter("mysql_dbuser1");
-            } else if (db == 2) {
+            }
+            else if (db == 2) {
                 mysql_dbuser = context.getInitParameter("mysql_dbuser2");
-            } else if (db == 3) {
+            }
+            else if (db == 3) {
                 mysql_dbuser = context.getInitParameter("mysql_dbuser3");
             }
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             final Connection connection = DriverManager.getConnection("jdbc:mysql://" + mysql_server + "/" + mysqldb + "?user=" + mysqlusr + "&password=" + mysqlpwd + "");
             return connection;
-        } catch (Exception _ex) {
+        }
+        catch (Exception _ex) {
             final String a = _ex.getMessage().toString();
             return null;
         }
@@ -94,14 +99,17 @@ public class Services {
             final String mysqldb = context.getInitParameter("mysqldb");
             if (db == 1) {
                 mysql_dbuser = context.getInitParameter("mysql_dbuser1");
-            } else if (db == 2) {
+            }
+            else if (db == 2) {
                 mysql_dbuser = context.getInitParameter("mysql_dbuser2");
-            } else if (db == 3) {
+            }
+            else if (db == 3) {
                 mysql_dbuser = context.getInitParameter("mysql_dbuser3");
             }
             final String A = "jdbc:mysql://" + mysql_server + "/" + mysqldb + "?user=" + mysqlusr + "&password=" + mysqlpwd + "";
             return A;
-        } catch (Exception _ex) {
+        }
+        catch (Exception _ex) {
             final String a = _ex.getMessage().toString();
             return null;
         }
@@ -128,21 +136,23 @@ public class Services {
         final int m = dt.getMonth() + 1;
         final int y = dt.getYear() + 1900;
         int i = 0;
-        final String[] Months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        final String[] Months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
         if (day == null || month == null || year == null) {
             return false;
         }
         for (i = 1; i <= 31; ++i) {
             if (i == d) {
                 day.append("<option value=" + i + " selected>" + i + "</option>");
-            } else {
+            }
+            else {
                 day.append("<option value=" + i + ">" + i + "</option>");
             }
         }
         for (i = 1; i <= 12; ++i) {
             if (i == m) {
                 month.append("<option value=" + i + " selected>" + Months[i - 1] + "</option>");
-            } else {
+            }
+            else {
                 month.append("<option value=" + i + ">" + Months[i - 1] + "</option>");
             }
         }
@@ -150,7 +160,8 @@ public class Services {
         for (EndingYear = dt.getYear() + 1900, i = 2013; i <= EndingYear; ++i) {
             if (i == y) {
                 year.append("<option value=" + i + " selected>" + i + "</option>");
-            } else {
+            }
+            else {
                 year.append("<option value=" + i + ">" + i + "</option>");
             }
         }
@@ -163,21 +174,23 @@ public class Services {
         final int m = dt.getMonth() + 1;
         final int y = dt.getYear() + 1900;
         int i = 0;
-        final String[] Months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        final String[] Months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
         if (day == null || month == null || year == null) {
             return false;
         }
         for (i = 1; i <= 31; ++i) {
             if (i == d) {
                 day.append("<option value=" + i + " selected>" + i + "</option>");
-            } else {
+            }
+            else {
                 day.append("<option value=" + i + ">" + i + "</option>");
             }
         }
         for (i = 1; i <= 12; ++i) {
             if (i == m) {
                 month.append("<option value=" + i + " selected>" + Months[i - 1] + "</option>");
-            } else {
+            }
+            else {
                 month.append("<option value=" + i + ">" + Months[i - 1] + "</option>");
             }
         }
@@ -185,21 +198,24 @@ public class Services {
         for (EndingYear = dt.getYear() + 1900, i = 2013; i <= EndingYear; ++i) {
             if (i == y) {
                 year.append("<option value=" + i + " selected>" + i + "</option>");
-            } else {
+            }
+            else {
                 year.append("<option value=" + i + ">" + i + "</option>");
             }
         }
         for (i = 0; i < 24; ++i) {
             if (i > 9) {
                 hour.append("<option value=\"" + i + "\">" + i + "</option>\n");
-            } else {
+            }
+            else {
                 hour.append("<option value=\"0" + i + "\">0" + i + "</option>\n");
             }
         }
         for (i = 0; i < 60; ++i) {
             if (i > 9) {
                 minutes.append("<option value=\"" + i + "\">" + i + "</option>\n");
-            } else {
+            }
+            else {
                 minutes.append("<option value=\"0" + i + "\">0" + i + "</option>\n");
             }
         }
@@ -211,7 +227,8 @@ public class Services {
             final Date date = GetDate();
             final DecimalFormat decimalformat = new DecimalFormat("#00");
             return decimalformat.format(date.getYear() + 1900) + "_" + decimalformat.format(date.getMonth() + 1) + "_" + decimalformat.format(date.getDate()) + ".log";
-        } catch (Exception exception) {
+        }
+        catch (Exception exception) {
             return "invalid filename " + exception.getMessage();
         }
     }
@@ -220,7 +237,8 @@ public class Services {
         try {
             final Date date = new Date();
             return date;
-        } catch (Exception _ex) {
+        }
+        catch (Exception _ex) {
             return null;
         }
     }
@@ -237,8 +255,8 @@ public class Services {
             filewriter.flush();
             filewriter.close();
             printwriter.close();
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
 
     private static String GetExceptionFilePath(final HttpServletRequest request) {
@@ -255,11 +273,12 @@ public class Services {
             //Connection connection = DriverManager.getConnection("jdbc:mysql://"+mysql_server+"/"+mysql_dbuser+"?user="+mysqlusr+"&password="+mysqlpwd+"");
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             //return DriverManager.getConnection("jdbc:mysql://127.0.0.1/oe?user=abc1234open&password=abc!@#$1234");
-            return DriverManager.getConnection("jdbc:mysql://" + mysql_server + "/" + mysql_dbuser + "?user=" + mysqlusr + "&password=" + mysqlpwd + "");
+            return DriverManager.getConnection("jdbc:mysql://"+mysql_server+"/"+mysql_dbuser+"?user="+mysqlusr+"&password="+mysqlpwd+"");
 //            final Connection mysqlconn = null;
 //            Class.forName("com.mysql.jdbc.Driver").newInstance();
 //            return DriverManager.getConnection("jdbc:mysql://127.0.0.1/oe_2?user=oe&password=abc1234oe");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             return null;
         }
     }
@@ -279,8 +298,8 @@ public class Services {
             fr.flush();
             fr.close();
             pr.close();
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
 
     public static String REC(final String Str) {
@@ -301,15 +320,13 @@ public class Services {
             fr.flush();
             fr.close();
             pr.close();
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
 
     public static boolean checkSession(final PrintWriter out, final HttpServletRequest request) {
         if (request.getSession(false) == null) {
-            String UserId = "";
-            String Zone = "";
-            String Passwd = "";
+            String UserId = "";String Zone = ""; String Passwd = "";
             final Cookie[] cookies = request.getCookies();
             UserId = (Zone = (Passwd = ""));
             final int checkCookie = 0;
@@ -320,13 +337,13 @@ public class Services {
                     UserId = cValue;
                 }
             }
-            if (UserId.toUpperCase().equals("VICTORIA")) {
+            if(UserId.toUpperCase().equals("VICTORIA")){
                 out.println(" <center><table cellpadding=3 cellspacing=2><tr><td bgcolor=\"#FFFFFF\">  <font color=green face=arial><b>Your Session Has Been Expired</b></font>  </td></tr></table>  <p>  <font face=arial size=+1><b><a href=/orange_2/loginVictoria.html target=_top> Return to login Portal  </a></b></font> <br><font face=arial size=-2>(You will need to sign in again.)</font><br>  </center> ");
-            } else if (UserId.toUpperCase().equals("ORANGE01")) {
+            }else if(UserId.toUpperCase().equals("ORANGE01")){
                 out.println(" <center><table cellpadding=3 cellspacing=2><tr><td bgcolor=\"#FFFFFF\">  <font color=green face=arial><b>Your Session Has Been Expired</b></font>  </td></tr></table>  <p>  <font face=arial size=+1><b><a href=/orange_2/loginOrange.html target=_top> Return to login Portal  </a></b></font> <br><font face=arial size=-2>(You will need to sign in again.)</font><br>  </center> ");
-            } else if (UserId.toUpperCase().equals("ODESSA")) {
+            }else if(UserId.toUpperCase().equals("ODESSA")){
                 out.println(" <center><table cellpadding=3 cellspacing=2><tr><td bgcolor=\"#FFFFFF\">  <font color=green face=arial><b>Your Session Has Been Expired</b></font>  </td></tr></table>  <p>  <font face=arial size=+1><b><a href=/orange_2/loginOddasa.html target=_top> Return to login Portal  </a></b></font> <br><font face=arial size=-2>(You will need to sign in again.)</font><br>  </center> ");
-            } else if (UserId.toUpperCase().equals("S.AUSTIN")) {
+            }else if(UserId.toUpperCase().equals("S.AUSTIN")){
                 out.println(" <center><table cellpadding=3 cellspacing=2><tr><td bgcolor=\"#FFFFFF\">  <font color=green face=arial><b>Your Session Has Been Expired</b></font>  </td></tr></table>  <p>  <font face=arial size=+1><b><a href=/orange_2/loginSAustin.html target=_top> Return to login Portal  </a></b></font> <br><font face=arial size=-2>(You will need to sign in again.)</font><br>  </center> ");
             }
             return false;
@@ -334,7 +351,8 @@ public class Services {
         return true;
     }
 
-    public static int SendEmail11(String ToEmail, String ToEmail1, String ToEmail2, String EmailSubject, String HTMLText, PrintWriter out, ServletContext servletContext) {
+    public static int SendEmail11( String ToEmail, String ToEmail1, String ToEmail2, String EmailSubject, String HTMLText, PrintWriter out, ServletContext servletContext)
+    {
         String to = ToEmail;
         String to1 = ToEmail1;
         String to2 = ToEmail2;
@@ -345,6 +363,8 @@ public class Services {
         final String SMTP_AUTH_PWD = "open_me1234";
         final String CONTA_PADRAO = "alert@yextel.com";
         final String SENHA_CONTA_PADRAO = "open_me1234";
+
+
 
 
         String from = "alert@yextel.com";
@@ -359,7 +379,8 @@ public class Services {
         });
 
         //Session session = Session.getDefaultInstance(props);
-        try {
+        try
+        {
 
 
             session.setDebug(true);
@@ -375,13 +396,16 @@ public class Services {
             message.setSubject(EmailSubject);
 
 
+
             message.setContent(HTMLText, "text/html");
 
 
             Transport.send(message);
 
             return 1;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.println("Unable to send email :" + e.getMessage());
         }
         return -1;
@@ -391,7 +415,7 @@ public class Services {
         return "jdbc:mysql://127.0.0.1/asteriskcdrdb?user=abc1234open&password=abc!@#$1234";
     }
 
-    public static int SendEmail(String ToEmail, String ToEmail1, String ToEmail2, String EmailSubject, String HTMLText, PrintWriter out, ServletContext servletContext) {
+    public static int SendEmail( String ToEmail, String ToEmail1, String ToEmail2, String EmailSubject, String HTMLText, PrintWriter out, ServletContext servletContext) {
         final String CONTA_PADRAO = "alert@yextel.com";
         final String SENHA_CONTA_PADRAO = "open_me1234";
         String from = "alert@yextel.com";
@@ -438,7 +462,7 @@ public class Services {
         return config;
     }
 
-    public void Dologing(String UserId, Connection conn, String UserIP, String ActionID, String MainTask, String SubTask, int ClientId) {
+    public void Dologing (String UserId, Connection conn, String UserIP, String ActionID, String MainTask, String SubTask, int ClientId) {
         Statement stmt = null;
         ResultSet rset = null;
         int Id = 0;
@@ -453,19 +477,23 @@ public class Services {
             }
             rset.close();
             stmt.close();
-        } catch (Exception e) {
-            System.out.println("Error in getting Max Id from SysActivityLogs Table: " + e.getMessage());
+        }
+        catch (Exception e) {
+            System.out.println("Error in getting Max Id from SysActivityLogs Table: "+e.getMessage());
         }
         _Unique_id = "LogID-00" + Id;
         try {
-            Query = " insert into  oe.SysActivityLogs  " + " (UserIP, ActionID, CreatedDate, UserId, UniqueId, MainTask, SubTask, ClientId) " + "values " + "('" + UserIP + "','" + ActionID + "',now(),'" + UserId + "','" + _Unique_id + "'," + "'" + MainTask + "','" + SubTask + "', " + ClientId + ")";
+            Query = " insert into  oe.SysActivityLogs  " + " (UserIP, ActionID, CreatedDate, UserId, UniqueId, MainTask, SubTask, ClientId) " + "values " + "('" + UserIP + "','" + ActionID + "',now(),'" + UserId + "','" + _Unique_id + "'," + "'" + MainTask+ "','" + SubTask + "', "+ClientId+")";
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
             stmt.close();
-        } catch (Exception e) {
-            System.out.println("Error in Inserting SysActivityLogs Table: " + e.getMessage());
+        }
+        catch (Exception e) {
+            System.out.println("Error in Inserting SysActivityLogs Table: "+e.getMessage());
         }
     }
+
+
 
 
 }

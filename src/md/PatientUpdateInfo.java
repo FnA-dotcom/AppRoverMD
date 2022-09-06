@@ -50,7 +50,6 @@ public class PatientUpdateInfo extends HttpServlet {
 
         try {
             HttpSession session = request.getSession(false);
-
             boolean validSession = helper.checkSession(request, context, session, out);
             if (!validSession) {
                 out.flush();
@@ -204,25 +203,25 @@ public class PatientUpdateInfo extends HttpServlet {
         StringBuffer LeftSideBarMenu = new StringBuffer();
         StringBuffer Header = new StringBuffer();
         StringBuffer Footer = new StringBuffer();
-        StringBuffer NotesList = new StringBuffer();
-        StringBuffer AlertList = new StringBuffer();
-        StringBuffer AlertListModal = new StringBuffer();
-        StringBuffer PatientList = new StringBuffer();
-        StringBuffer CovidBuffer = new StringBuffer();
-        StringBuffer CDRList = new StringBuffer();
-        StringBuffer visitDropDown = new StringBuffer();
-        StringBuffer DoctorsBuffer = new StringBuffer();
-        StringBuffer AdditionalInfoSelectBuffer = new StringBuffer();
-        StringBuffer PatientCatagoryBuffer = new StringBuffer();
-        StringBuffer TestType = new StringBuffer();
-        StringBuffer ReasonLeavingBuffer = new StringBuffer();
-        StringBuffer PatientStatusBuffer = new StringBuffer();
-        StringBuffer RefPhysicianNameBuffer = new StringBuffer();
-        StringBuffer Month = new StringBuffer();
-        StringBuffer Day = new StringBuffer();
-        StringBuffer Year = new StringBuffer();
-        StringBuffer Hours = new StringBuffer();
-        StringBuffer Mins = new StringBuffer();
+        StringBuilder NotesList = new StringBuilder();
+        StringBuilder AlertList = new StringBuilder();
+        StringBuilder AlertListModal = new StringBuilder();
+        StringBuilder PatientList = new StringBuilder();
+        StringBuilder CovidBuffer = new StringBuilder();
+        StringBuilder CDRList = new StringBuilder();
+        StringBuilder visitDropDown = new StringBuilder();
+        StringBuilder DoctorsBuffer = new StringBuilder();
+        StringBuilder AdditionalInfoSelectBuffer = new StringBuilder();
+        StringBuilder PatientCatagoryBuffer = new StringBuilder();
+        StringBuilder TestType = new StringBuilder();
+        StringBuilder ReasonLeavingBuffer = new StringBuilder();
+        StringBuilder PatientStatusBuffer = new StringBuilder();
+        StringBuilder RefPhysicianNameBuffer = new StringBuilder();
+        StringBuilder Month = new StringBuilder();
+        StringBuilder Day = new StringBuilder();
+        StringBuilder Year = new StringBuilder();
+        StringBuilder Hours = new StringBuilder();
+        StringBuilder Mins = new StringBuilder();
         String ID = request.getParameter("ID").trim();
 
         String facilityName = helper.getFacilityName(request, conn, servletContext, ClientId);
@@ -248,7 +247,6 @@ public class PatientUpdateInfo extends HttpServlet {
                     "CASE WHEN COVIDStatus = 1 THEN 'POSITIVE' WHEN COVIDStatus = 0 THEN 'NEGATIVE'  WHEN COVIDStatus = -1 THEN 'NONE' ELSE 'NONE' END, IFNULL(Address,''), " +
                     "IFNULL(City,''), IFNULL(State,''), IFNULL(County,''), IFNULL(ZipCode,''), IFNULL(DoctorsName,''), IFNULL(SelfPayChk,0),CASE WHEN Gender='male' then 'M' else 'F' END " +
                     "FROM " + Database + ".PatientReg where Status = 0 and ID = " + ID;
-//            out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -258,7 +256,6 @@ public class PatientUpdateInfo extends HttpServlet {
                 MRN = rset.getString(4);
                 ReasonVisit = rset.getString(5);
                 DOS = rset.getString(7);
-                //COVIDStatus = rset.getString(8);
                 Address = rset.getString(9);
                 City = rset.getString(10);
                 State = rset.getString(11);
@@ -312,27 +309,16 @@ public class PatientUpdateInfo extends HttpServlet {
                     }
                     rset.close();
                     stmt.close();
-//                    Query = "Select IFNULL(HIPrimaryInsurance,'-'), IFNULL(HISubscriberGroupNo,''), IFNULL(HISubscriberPolicyNo,'') " +
-//                            " from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = " + ID;
-//                    stmt = conn.createStatement();
-//                    rset = stmt.executeQuery(Query);
-//                    if (rset.next()) {
-//                        PrimaryInsurance = rset.getString(1);
-//                        GroupNo = rset.getString(2);
-//                        MemId = rset.getString(3);
-//                    }
-//                    rset.close();
-//                    stmt.close();
                 } else {
                     InsuredStatus = "Self Pay";
                 }
-
             } else {
                 if (SelfPayChk == 1) {
                     int PriInsCode = 0;
                     int SecInsCode = 0;
                     int CorpInsCode = 0;
                     InsuredStatus = "Insured";
+
                     Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0)," +
                             " IFNULL(PriInsuranceName,0),IFNULL(SecondryInsurance,0)," +
                             " IFNULL(CorporateAccountPriIns,0)" +
@@ -357,40 +343,30 @@ public class PatientUpdateInfo extends HttpServlet {
                         priInsName = rset.getString(1).trim();
                     rset.close();
                     stmt.close();
-//                 	System.out.println("In getinput function");
-//                    if(ClientId == 25) {
-//                    System.out.println("in GetInput");
 
                     // for other isurances
                     if (PriInsCode == 8605) {
 //                        System.out.println("in sanmarcos if ");
                         Query = "SELECT IFNULL(OtherInsuranceName,0) " +
                                 " FROM " + Database + ".InsuranceInfo WHERE PriInsuranceName = " + PriInsCode;
-//                        System.out.println("in sQuery of Priinsurence name ");
-
                         stmt = conn.createStatement();
                         rset = stmt.executeQuery(Query);
                         if (rset.next())
                             priInsName = "Others - " + rset.getString(1).trim();
                         rset.close();
                         stmt.close();
-//                        System.out.println("in sQuery of Priinsurence name " + Query);
                     }
 //                    }
                     // for corporate insiurances
                     if (PriInsCode == -999) {
-//                        System.out.println("in sanmarcos if ");
                         Query = "SELECT IFNULL(Name,0) " +
                                 " FROM " + Database + ".CorporateAccountIns WHERE id = " + CorpInsCode;
-//                        System.out.println("in sQuery of corporateinsurance name ");
-
                         stmt = conn.createStatement();
                         rset = stmt.executeQuery(Query);
                         if (rset.next())
                             priInsName = "Corporate - " + rset.getString(1).trim();
                         rset.close();
                         stmt.close();
-//                        System.out.println("in sQuery of Corporate insurance name " + Query);
                     }
 
 
@@ -412,7 +388,6 @@ public class PatientUpdateInfo extends HttpServlet {
             } else {
                 WorkerCompPolicyChk = "YES";
             }
-
             if (MotorVehicleAccidentChk.equals("0")) {
                 MotorVehicleAccidentChk = "NO";
             } else {
@@ -440,13 +415,6 @@ public class PatientUpdateInfo extends HttpServlet {
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
-//                NotesList.append("<tr>\n");
-//                NotesList.append("<td align=left>"+rset.getString(2)+"</td>\n");
-////                NotesList.append("<td align=left>" + rset.getString(2) + "</td>\n");
-////                NotesList.append("<td align=left>" + rset.getString(4) + "</td>\n");
-////                NotesList.append("<td align=left>" + rset.getString(3) + "</td>\n");
-//                NotesList.append("<td align=left ><i class=\"fa fa-trash\" onclick=\"DeleteNote("+rset.getInt(5)+")\"></i></td>\n");
-//                NotesList.append("</tr>\n");
                 NotesList.append("<div class=\"box\" >\n" +
                         "\t\t\t\t  <div class=\"box-header\" style='height: 50%;'>\n" +
                         "\t\t\t\t\t<h5 class=\"box-title\" style='margin-right: 10%;'>" + rset.getString(2) + "" +
@@ -536,40 +504,6 @@ public class PatientUpdateInfo extends HttpServlet {
                 stmt.close();
 
             }
-/*            switch (COVIDStatus.toUpperCase()) {
-                case "POSITIVE":
-                    CovidBuffer.append("<select class=\"form-control \" id=\"covid_status\" name=\"covid_status\"  style=\"color:black\">\n" +
-                            "<option value=\"\"> Please Select Any</option>\n" +
-                            "<option value=\"1\" selected> Positive</option>\n" +
-                            "<option value=\"0\"> Negative</option>\n" +
-                            "<option value=\"-1\"> None</option>\n" +
-                            "</select>\n");
-                    break;
-                case "NEGATIVE":
-                    CovidBuffer.append("<select class=\"form-control \" id=\"covid_status\" name=\"covid_status\"  style=\"color:black\">\n" +
-                            "<option value=\"\"> Please Select Any</option>\n" +
-                            "<option value=\"1\" > Positive</option>\n" +
-                            "<option value=\"0\" selected> Negative</option>\n" +
-                            "<option value=\"-1\"> None</option>\n" +
-                            "</select>\n");
-                    break;
-                case "NONE":
-                    CovidBuffer.append("<select class=\"form-control \" id=\"covid_status\" name=\"covid_status\"  style=\"color:black\">\n" +
-                            "<option value=\"\"> Please Select Any</option>\n" +
-                            "<option value=\"1\" > Positive</option>\n" +
-                            "<option value=\"0\" > Negative</option>\n" +
-                            "<option value=\"-1\" selected> None</option>\n" +
-                            "</select>\n");
-                    break;
-                default:
-                    CovidBuffer.append("<select class=\"form-control \" id=\"covid_status\" name=\"covid_status\"  style=\"color:black\">\n" +
-                            "<option value=\"\"> Please Select Any</option>\n" +
-                            "<option value=\"1\" > Positive</option>\n" +
-                            "<option value=\"0\" > Negative</option>\n" +
-                            "<option value=\"-1\"> None</option>\n" +
-                            "</select>\n");
-                    break;
-            }*/
             CovidBuffer.append("<select class=\"form-control \" id=\"covid_status\" name=\"covid_status\"  style=\"color:black\">\n" +
                     "<option value=\"\"> Please Select Any</option>\n" +
                     "<option value=\"1\" > Positive</option>\n" +
@@ -592,7 +526,6 @@ public class PatientUpdateInfo extends HttpServlet {
                         "FROM " + Database + ".PatientVisit a  " +
                         " INNER JOIN " + Database + ".PatientReg b on a.PatientRegId = b.Id " +
                         " WHERE b.ID =  " + ID + " order by a.DateofService desc";
-//                System.out.println("QUERY " + Query);
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -616,8 +549,8 @@ public class PatientUpdateInfo extends HttpServlet {
                     rset2.close();
                     stmt2.close();
 
-                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and VisitId = " + rset.getInt(10) + " and ClaimType = 1";
-//                    System.out.println("ClaimCountInstitutional " + Query2);
+                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and " +
+                            "VisitId = " + rset.getInt(10) + " and ClaimType = 1";
                     stmt2 = conn.createStatement();
                     rset2 = stmt2.executeQuery(Query2);
                     if (rset2.next()) {
@@ -625,8 +558,9 @@ public class PatientUpdateInfo extends HttpServlet {
                     }
                     rset2.close();
                     stmt2.close();
-                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and VisitId = " + rset.getInt(10) + " and ClaimType = 2 ";
-//                    System.out.println("ClaimCountProfessional " + Query2);
+
+                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and " +
+                            "VisitId = " + rset.getInt(10) + " and ClaimType = 2 ";
                     stmt2 = conn.createStatement();
                     rset2 = stmt2.executeQuery(Query2);
                     if (rset2.next()) {
@@ -648,11 +582,11 @@ public class PatientUpdateInfo extends HttpServlet {
                     CDRList.append("<td align=left>" + transactionType + "</td>\n");//Transaction Type
                     CDRList.append("<td><button id=addCovidDetail class=\"btn btn-primary btn-sm\" data-toggle=\"modal\" data-target=\"#modal-left\" onclick=\"covidTracking(this.value)\" value=" + rset.getInt(15) + ">Tracker</button>");
 
-                    CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.DownloadBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                    CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.DownloadBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
 
                     if (userType == 12) {
-                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/md.InsClaimTesting?ActionID=AddInfo&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=1>Institutional<span class=\"badge badge-pill badge-danger\">" + ClaimCountInstitutional + "</Span></a>");
-                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/md.AddInfo?ActionID=AddinfoProf&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=2>Professional<span class=\"badge badge-pill badge-danger\">" + ClaimCountProfessional + "</span></a>");
+                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/Claims.InsClaimTesting?ActionID=AddInfo&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=1>Institutional<span class=\"badge badge-pill badge-danger\">" + ClaimCountInstitutional + "</Span></a>");
+                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/Claims.AddInfo?ActionID=AddinfoProf&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=2>Professional<span class=\"badge badge-pill badge-danger\">" + ClaimCountProfessional + "</span></a>");
                     }
                     CDRList.append("</td>");
                     if (patAddInfo > 0)
@@ -661,9 +595,6 @@ public class PatientUpdateInfo extends HttpServlet {
                         CDRList.append("<td>No History</td>\n");
                     CDRList.append("</tr>");
                 }
-                rset.close();
-                stmt.close();
-                CDRList.append("</tbody>");
             } else {
                 //CDRList.append("<thead style=\"color:black;\">\n<tr>\n<th >MRN</th>\n<th >Acct#</th>\n<th >Patient Name</th>\n<th >Date of Birth</th>\n<th >Number</th>\n<th >Reason of Visit</th>\n<th >Date of Service</th>\n<th >COVID Status</th>\n</tr>\n</thead>\n<tbody style=\"color:black;\">\n");
                 CDRList.append("<thead style=\"color:black;\">\n<tr>\n<th >Acct#</th>\n<th >Reason of Visit</th>\n<th >Date of Service</th>\n<th>COVID Status</th>\n<th>T Type</th>\n<th>Action</th>\n<th>History</th>\n</tr>\n</thead>\n<tbody style=\"color:black;\">\n");
@@ -700,8 +631,8 @@ public class PatientUpdateInfo extends HttpServlet {
                     rset2.close();
                     stmt2.close();
 
-                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and VisitId = " + rset.getInt(10) + " and ClaimType = 1";
-//                    System.out.println("ClaimCountInstitutional " + Query2);
+                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and " +
+                            "VisitId = " + rset.getInt(10) + " and ClaimType = 1";
                     stmt2 = conn.createStatement();
                     rset2 = stmt2.executeQuery(Query2);
                     if (rset2.next()) {
@@ -709,8 +640,9 @@ public class PatientUpdateInfo extends HttpServlet {
                     }
                     rset2.close();
                     stmt2.close();
-                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and VisitId = " + rset.getInt(10) + " and ClaimType = 2 ";
-//                    System.out.println("ClaimCountProfessional " + Query2);
+
+                    Query2 = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + ID + " and " +
+                            "VisitId = " + rset.getInt(10) + " and ClaimType = 2 ";
                     stmt2 = conn.createStatement();
                     rset2 = stmt2.executeQuery(Query2);
                     if (rset2.next()) {
@@ -733,24 +665,24 @@ public class PatientUpdateInfo extends HttpServlet {
                     CDRList.append("<td>");
                     CDRList.append("<button id=addCovidDetail class=\"btn btn-primary btn-sm\" data-toggle=\"modal\" data-target=\"#modal-left\" onclick=\"covidTracking(this.value)\" value=" + rset.getInt(10) + "> Tracker</button>");
                     if (ClientId == 38) {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.DownloadBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.DownloadBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     } else if (ClientId == 25) {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.SanMarcosBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.SanMarcosBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     } else if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.LifeSaversBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.LifeSaversBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     } else if (ClientId == 40) {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.FloresvilleBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.FloresvilleBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     } else if (ClientId == 39) {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.SchertzBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.SchertzBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     } else if (ClientId == 27 || ClientId == 29) {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.FrontlineBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.FrontlineBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     } else {
-                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.DownloadBundle?ActionID=" + BundleFnName + "&ID=" + ID + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
+                        CDRList.append("<a class=\"btn fa fa-file-pdf-o pdfIcon mb-2 tooltip-demo\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Click for Bundle\" href=/md/md.DownloadBundle?ActionID=" + BundleFnName + "&ID=" + ID + "&VisitId=" + rset.getString(10) + " target=\"_blank\" rel=\"noopener noreferrer\"></a>");
                     }
 
                     if (userType == 12) {
-                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/md.InsClaimTesting?ActionID=Addinfo&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=1>Institutional<span class=\"badge badge-pill badge-danger\">" + ClaimCountInstitutional + "</Span></a>");
-                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/md.AddInfo?ActionID=AddinfoProf&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=2>Professional<span class=\"badge badge-pill badge-danger\">" + ClaimCountProfessional + "</span></a>");
+                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/Claims.InsClaimTesting?ActionID=Addinfo&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=1>Institutional<span class=\"badge badge-pill badge-danger\">" + ClaimCountInstitutional + "</Span></a>");
+                        CDRList.append("<br><a class='btn-sm btn btn-primary' href=/md/Claims.AddInfo?ActionID=AddinfoProf&VisitId=" + rset.getInt(10) + "&PatientRegId=" + ID + "&AcctNo=VN-" + MRN + "-" + rset.getString(9) + "&ClaimType=2>Professional<span class=\"badge badge-pill badge-danger\">" + ClaimCountProfessional + "</span></a>");
                     }
                     CDRList.append("</td>");
 
@@ -760,10 +692,10 @@ public class PatientUpdateInfo extends HttpServlet {
                         CDRList.append("<td>No History</td>\n");
                     CDRList.append("</tr>");
                 }
-                rset.close();
-                stmt.close();
-                CDRList.append("</tbody>");
             }
+            rset.close();
+            stmt.close();
+            CDRList.append("</tbody>");
             //************************ CURRENTLY ON LIVE *********************
 
             //***************************** FOR CLAIM *******************************************
@@ -958,18 +890,16 @@ public class PatientUpdateInfo extends HttpServlet {
             rset.close();
             stmt.close();
 
-            //zur start vistDropdown
             Query = "Select id,CONCAT(ReasonVisit,' | ',DateofService)as visit from " + Database + ".PatientVisit where mrn=" + MRN;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            //  visitDropDown.append("<option value=\"\" selected> </option>");
+
             while (rset.next()) {
                 visitDropDown.append("<option value=\"" + rset.getInt(1) + "\" selected>" + rset.getString(2) + " </option>");
 
             }
             rset.close();
             stmt.close();
-            //zur end visit Dropdown
 
             if (AdditionalInfoSelect == 1) {
                 AdditionalInfoSelectBuffer.append("<select class=\"form-control\" id=\"AdditionalInfoSelect\" name=\"AdditionalInfoSelect\" onchange=\"OpenAdditonalInfoTab(this.value)\">\n" +
@@ -991,27 +921,6 @@ public class PatientUpdateInfo extends HttpServlet {
                         "</select>\n");
             }
 
-/*
-            if (PatientCatagory == 1) {
-                PatientCatagoryBuffer.append("<select class=\"form-control\" id=\"PatientCatagory\" name=\"PatientCatagory\" >\n" +
-                        "<option value=\"\">Select Any</option> \n" +
-                        "<option value=\"1\" selected>VIP </option> \n" +
-                        "<option value=\"2\">SVIP </option>\n" +
-                        "</select>\n");
-            } else if (PatientCatagory == 2) {
-                PatientCatagoryBuffer.append("<select class=\"form-control\" id=\"PatientCatagory\" name=\"PatientCatagory\" >\n" +
-                        "<option value=\"\">Select Any</option> \n" +
-                        "<option value=\"1\" >VIP </option> \n" +
-                        "<option value=\"2\" selected>SVIP </option>\n" +
-                        "</select>\n");
-            } else {
-                PatientCatagoryBuffer.append("<select class=\"form-control\" id=\"PatientCatagory\" name=\"PatientCatagory\" >\n" +
-                        "<option value=\"\" selected>Select Any</option> \n" +
-                        "<option value=\"1\" >VIP </option> \n" +
-                        "<option value=\"2\" >SVIP </option>\n" +
-                        "</select>\n");
-            }
-*/
             PatientCatagoryBuffer.append("<select class=\"form-control\" id=\"PatientCatagory\" name=\"PatientCatagory\" >\n" +
                     "<option value=\"\" selected>Select Any</option> \n" +
                     "<option value=\"1\" >VIP </option> \n" +
@@ -1030,48 +939,6 @@ public class PatientUpdateInfo extends HttpServlet {
                 stmt.close();
             }
 
-/*            if (ReasonLeaving == 1) {
-                ReasonLeavingBuffer.append("<select class=\"form-control\" id=\"ReasonLeaving\" name=\"ReasonLeaving\" >\n" +
-                        "<option value=\"\">Select Any</option> \n" +
-                        "<option value=\"1\" selected>MSE </option> \n" +
-                        "<option value=\"2\">AMA </option>\n" +
-                        "<option value=\"3\">LWBS </option>\n" +
-                        "<option value=\"4\">Eloped </option>\n" +
-                        "</select>\n");
-            } else if (ReasonLeaving == 2) {
-                ReasonLeavingBuffer.append("<select class=\"form-control\" id=\"ReasonLeaving\" name=\"ReasonLeaving\" >\n" +
-                        "<option value=\"\">Select Any</option> \n" +
-                        "<option value=\"1\" >MSE </option> \n" +
-                        "<option value=\"2\"selected >AMA </option>\n" +
-                        "<option value=\"3\">LWBS </option>\n" +
-                        "<option value=\"4\">Eloped </option>\n" +
-                        "</select>\n");
-            } else if (ReasonLeaving == 3) {
-                ReasonLeavingBuffer.append("<select class=\"form-control\" id=\"ReasonLeaving\" name=\"ReasonLeaving\" >\n" +
-                        "<option value=\"\">Select Any</option> \n" +
-                        "<option value=\"1\" >MSE </option> \n" +
-                        "<option value=\"2\" >AMA </option>\n" +
-                        "<option value=\"3\" selected>LWBS </option>\n" +
-                        "<option value=\"4\" >Eloped </option>\n" +
-                        "</select>\n");
-            } else if (ReasonLeaving == 4) {
-                ReasonLeavingBuffer.append("<select class=\"form-control\" id=\"ReasonLeaving\" name=\"ReasonLeaving\" >\n" +
-                        "<option value=\"\">Select Any</option> \n" +
-                        "<option value=\"1\" >MSE </option> \n" +
-                        "<option value=\"2\" >AMA </option>\n" +
-                        "<option value=\"3\" >LWBS </option>\n" +
-                        "<option value=\"4\" selected>Eloped </option>\n" +
-                        "</select>\n");
-            } else {
-                ReasonLeavingBuffer.append("<select class=\"form-control\" id=\"ReasonLeaving\" name=\"ReasonLeaving\" >\n" +
-                        "<option value=\"\" selected>Select Any</option> \n" +
-                        "<option value=\"1\" >MSE </option> \n" +
-                        "<option value=\"2\" >AMA </option>\n" +
-                        "<option value=\"3\" >LWBS </option>\n" +
-                        "<option value=\"4\" >Eloped </option>\n" +
-                        "</select>\n");
-            }*/
-
             Query = "Select Id, TransactionType from " + Database + ".TransactionTypes";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1082,36 +949,6 @@ public class PatientUpdateInfo extends HttpServlet {
             rset.close();
             stmt.close();
 
-
-/*            if (PatientStatus == 1) {
-                PatientStatusBuffer.append("<select class=\"form-control\" id=\"PatientStatus\" name=\"PatientStatus\" >\n" +
-                        "<option value=\"\">Select Any </option>\n" +
-                        "<option value=\"2\">OBS</option>\n" +
-                        "<option value=\"1\" selected>Transferred</option>\n" +
-                        "<option value=\"3\" >OBS/Transferred</option>\n" +
-                        "</select>\n");
-            } else if (PatientStatus == 2) {
-                PatientStatusBuffer.append("<select class=\"form-control\" id=\"PatientStatus\" name=\"PatientStatus\" >\n" +
-                        "<option value=\"\">Select Any </option>\n" +
-                        "<option value=\"2\" selected>OBS</option>\n" +
-                        "<option value=\"1\" >Transferred</option>\n" +
-                        "<option value=\"3\" >OBS/Transferred</option>\n" +
-                        "</select>\n");
-            } else if (PatientStatus == 3) {
-                PatientStatusBuffer.append("<select class=\"form-control\" id=\"PatientStatus\" name=\"PatientStatus\" >\n" +
-                        "<option value=\"\">Select Any </option>\n" +
-                        "<option value=\"2\" >OBS</option>\n" +
-                        "<option value=\"1\" >Transferred</option>\n" +
-                        "<option value=\"3\" selected >OBS/Transferred</option>\n" +
-                        "</select>\n");
-            } else {
-                PatientStatusBuffer.append("<select class=\"form-control\" id=\"PatientStatus\" name=\"PatientStatus\" >\n" +
-                        "<option value=\"\" selected>Select Any </option>\n" +
-                        "<option value=\"2\" >OBS</option>\n" +
-                        "<option value=\"1\" >Transferred</option>\n" +
-                        "<option value=\"3\" >OBS/Transferred</option>\n" +
-                        "</select>\n");
-            }*/
             PatientStatusBuffer.append("<select class=\"form-control\" id=\"PatientStatus\" name=\"PatientStatus\" >\n" +
                     "<option value=\"\" selected>Select Any </option>\n" +
                     "<option value=\"2\" >OBS</option>\n" +
@@ -1220,22 +1057,6 @@ public class PatientUpdateInfo extends HttpServlet {
             out.flush();
             out.close();
         }
-/*        finally {
-            try {
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                helper.SendEmailWithAttachment("Error in PatientUpdateInfo ** (handleRequest -- SqlException)", servletContext, e, "PatientUpdateInfo", "handleRequest", conn);
-                Services.DumException("PatientUpdateInfo", "Handle Request", request, e, getServletContext());
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("FormName", "ManagementDashboard");
-                Parser.SetField("ActionID", "GetInput");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-            }
-            out.flush();
-            out.close();
-        }*/
     }
 
     private void AddNotesInput(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
@@ -1248,7 +1069,9 @@ public class PatientUpdateInfo extends HttpServlet {
         StringBuilder PatientList = new StringBuilder();
         StringBuilder NotesList = new StringBuilder();
         try {
-            Query = "SELECT ID, CONCAT(IFNULL(Title,''),' ',IFNULL(FirstName,''),' ',IFNULL(MiddleInitial,''),' ',IFNULL(LastName,'')), MRN, DATE_FORMAT(DOB,'%m/%d/%Y') FROM " + Database + ".PatientReg where Status = 0 and ID = " + PatientId;
+            Query = "SELECT ID, CONCAT(IFNULL(Title,''),' ',IFNULL(FirstName,''),' ',IFNULL(MiddleInitial,''),' ',IFNULL(LastName,'')), " +
+                    "MRN, DATE_FORMAT(DOB,'%m/%d/%Y') " +
+                    "FROM " + Database + ".PatientReg where Status = 0 and ID = " + PatientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1262,7 +1085,6 @@ public class PatientUpdateInfo extends HttpServlet {
                     " from " + Database + ".Notes where PatientRegId = " + PatientId + " and Status = 0 order by Id desc ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-//                out.println(Query);
             while (rset.next()) {
                 NotesList.append("<tr><td align=left>" + SNo + "</td>\n");
                 NotesList.append("<td align=left>" + rset.getString(1) + "</td>\n");
@@ -1283,13 +1105,10 @@ public class PatientUpdateInfo extends HttpServlet {
             Parser.SetField("NotesList", String.valueOf(NotesList));
             Parser.SetField("PatientInvoiceMRN", String.valueOf(PatientInvoiceMRN));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/GetInputNotes_copy.html");
-
         } catch (Exception e) {
             Services.DumException("PatientUpdateInfo", "AddnotesInput :", request, e, this.getServletContext());
             return;
         }
-
-
     }
 
     private void AddNotes(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
@@ -1317,16 +1136,6 @@ public class PatientUpdateInfo extends HttpServlet {
                     " from " + Database + ".Notes where PatientRegId = " + PatientId + " and Status = 0 order by Id desc ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-/*            NotesList.append("\n" +
-                    "<div class=\"table-responsive table-wrapper-scroll-y my-custom-scrollbar\">\n" +
-                    "<table id=\"complex_header\" class=\"table table-striped table-bordered display\" style=\"width:100%;\">\t\t\t\t\t\t\t\n" +
-                    "<thead style=\"color:black;\">\n" +
-                    "<tr>\n" +
-                    "<th >Notes</th>\n" +
-                    "<th ></th>\n" +
-                    "</tr>\n" +
-                    "</thead>\n" +
-                    "<tbody style=\"color:black;\"> \n");*/
             while (rset.next()) {
                 NotesList.append("<div class=\"box\" >\n" +
                         "\t\t\t\t  <div class=\"box-header\" style='height: 50%;'>\n" +
@@ -1338,25 +1147,15 @@ public class PatientUpdateInfo extends HttpServlet {
                         "\t\t\t\t  </div>\t\t\t\t  \n" +
                         "\t\t\t\t</div>");
             }
-//            NotesList.append("</tbody></table></div>");
             rset.close();
             stmt.close();
 
             out.println("1|" + NotesList.toString());
-            /*Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Message", String.valueOf("Notes Successfully Added"));
-            Parser.SetField("FormName", String.valueOf("PatientUpdateInfo"));
-            Parser.SetField("ActionID", String.valueOf("GetInput&ID="+PatientId));
-            Parser.SetField("UserId", String.valueOf(UserId));
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Success.html");*/
-
         } catch (Exception e) {
             out.println("Error: Insertion Notes Table " + e.getMessage());
             Services.DumException("PatientUpdateInfo", "AddNotes 2- Insertion Notes Table :", request, e, this.getServletContext());
             return;
         }
-
-
     }
 
     private void DeleteNote(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
@@ -1378,8 +1177,6 @@ public class PatientUpdateInfo extends HttpServlet {
             Services.DumException("PatientUpdateInfo", "AddNotes 2- Updating Note able :", request, e, this.getServletContext());
             return;
         }
-
-
     }
 
     private void UpdateDoctorId(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
@@ -1425,8 +1222,6 @@ public class PatientUpdateInfo extends HttpServlet {
             Services.DumException("PatientUpdateInfo", "AddNotes 2- Updating Patient RegT able :", request, e, this.getServletContext());
             return;
         }
-
-
     }
 
     private void UpdateCovidStatus(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
@@ -1438,7 +1233,6 @@ public class PatientUpdateInfo extends HttpServlet {
 
         try {
             Query = "Update " + Database + ".PatientReg Set COVIDStatus = '" + CovidStatus + "' where ID = " + PatientRegId;
-
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
             stmt.close();
@@ -1450,8 +1244,6 @@ public class PatientUpdateInfo extends HttpServlet {
             Services.DumException("PatientUpdateInfo", "AddNotes 2- Updating Patient RegT able :", request, e, this.getServletContext());
             return;
         }
-
-
     }
 
     private void AddAdditionalInfoOLD(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper) throws FileNotFoundException {
@@ -1873,3 +1665,107 @@ public class PatientUpdateInfo extends HttpServlet {
         }
     }
 }
+
+
+
+            /*
+            if (ClientId != 9 && ClientId != 28) {
+                if (SelfPayChk == 1) {
+                    int PriInsCode = 0;
+                    year = 0;
+                    i = 0;
+                    InsuredStatus = "Insured";
+                    Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0),IFNULL(PriInsuranceName,0)," +
+                            "IFNULL(SecondryInsurance,0),IFNULL(CorporateAccountPriIns,0) " +
+                            "from " + Database + ".InsuranceInfo where PatientRegId = " + ID;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        WorkerCompPolicyChk = rset.getString(1);
+                        MotorVehicleAccidentChk = rset.getString(2);
+                        PriInsCode = rset.getInt(3);
+                        year = rset.getInt(4);
+                        i = rset.getInt(5);
+                    }
+
+                    rset.close();
+                    stmt.close();
+
+                    Query = "SELECT CONCAT(PayerId,' - ',LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') ))) AS InsName  " +
+                            "FROM " + Database + ".ProfessionalPayers WHERE id = " + PriInsCode;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        priInsName = rset.getString(1).trim();
+                    }
+
+                    rset.close();
+                    stmt.close();
+                    if (PriInsCode == 8605) {
+                        Query = "SELECT IFNULL(OtherInsuranceName,0)  FROM " + Database + ".InsuranceInfo " +
+                                "WHERE PriInsuranceName = " + PriInsCode;
+                        stmt = conn.createStatement();
+                        rset = stmt.executeQuery(Query);
+                        if (rset.next()) {
+                            priInsName = "Others - " + rset.getString(1).trim();
+                        }
+
+                        rset.close();
+                        stmt.close();
+                    }
+
+                    if (PriInsCode == -999) {
+                        Query = "SELECT IFNULL(Name,0)  FROM " + Database + ".CorporateAccountIns WHERE id = " + i;
+                        stmt = conn.createStatement();
+                        rset = stmt.executeQuery(Query);
+                        if (rset.next()) {
+                            priInsName = "Corporate - " + rset.getString(1).trim();
+                        }
+
+                        rset.close();
+                        stmt.close();
+                    }
+
+                    Query = "SELECT CONCAT(PayerId,' - ',LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') ))) AS InsName  FROM " + Database + ".ProfessionalPayers WHERE id = " + year;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        secInsName = rset.getString(1).trim();
+                    }
+
+                    rset.close();
+                    stmt.close();
+                } else {
+                    InsuredStatus = "Self Pay";
+                }
+            } else {
+                Query = "Select IFNULL(WorkersCompPolicyChk,0), IFNULL(MotorVehicleAccidentChk,0),IFNULL(HealthInsuranceChk,0)" +
+                        " from " + Database + ".PatientReg_Details where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    WorkerCompPolicyChk = rset.getString(1);
+                    MotorVehicleAccidentChk = rset.getString(2);
+                    HealthInsuranceChk = rset.getString(3);
+                }
+
+                rset.close();
+                stmt.close();
+                if (!HealthInsuranceChk.equals("0")) {
+                    InsuredStatus = "Insured";
+                    Query = "SELECT HIPrimaryInsurance,IFNULL(SHISecondaryName,'-')  " +
+                            "FROM " + Database + ".Patient_HealthInsuranceInfo  WHERE  PatientRegId = " + ID;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        priInsName = rset.getString(1).trim();
+                        secInsName = rset.getString(2).trim();
+                    }
+
+                    rset.close();
+                    stmt.close();
+                } else {
+                    InsuredStatus = "Self Pay";
+                }
+            }
+            */

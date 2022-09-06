@@ -113,6 +113,29 @@ public class Payments extends HttpServlet {
         return foundCredentials;
     }
 
+    public int checkAccountExists(HttpServletRequest request, Connection conn, int ClientId, ServletContext servletContext) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        UtilityHelper helper = new UtilityHelper();
+        int foundCredentials = 0;
+        try {
+            Query = "Select IFNULL(COUNT(*),0) from oe.ACHCredentials " +
+                    "WHERE FacilityIndex = " + ClientId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                foundCredentials = rset.getInt(1);
+            }
+            rset.close();
+            stmt.close();
+        } catch (Exception Ex) {
+            helper.SendEmailWithAttachment("Error in Checking Check Credentials Table ", servletContext, Ex, "DAL - Payments", "checkAccountExists", conn);
+            Services.DumException("DAL - Payments", "checkAccountExists", request, Ex, getServletContext());
+        }
+        return foundCredentials;
+    }
+
     public boolean addressVerification(HttpServletRequest request, Connection conn, String dbName, ServletContext servletContext, int mrn) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -789,8 +812,11 @@ public class Payments extends HttpServlet {
             MainReceipt.close();
 
         } catch (Exception Ex) {
-            helper.SendEmailWithAttachment("Error in insertionCardConnectResponses Table ", servletContext, Ex, "DAL - Payments", "insertionCardConnectResponses", conn);
-            Services.DumException("DAL - Payments", "insertionCardConnectResponses", request, Ex, getServletContext());
+            helper.SendEmailWithAttachment("Error in insertionCardConnectResponses Table ",
+                    servletContext,
+                    Ex, "DAL - Payments", "insertionCardConnectResponses",
+                    conn);
+            Services.DumException("DAL - Payments", "insertionCardConnectResponses", request, Ex, servletContext);
         }
     }
 

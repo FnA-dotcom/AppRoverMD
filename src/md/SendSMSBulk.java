@@ -22,10 +22,8 @@ import java.util.*;
 //import com.itextpdf.text.pdf.PdfWriter;
 @SuppressWarnings("Duplicates")
 public class SendSMSBulk extends HttpServlet {
-/*    private Connection conn = null;
-    private Statement stmt = null;
-    private ResultSet rset = null;
-    private String Query = ""; */
+    private Connection conn = null;
+
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -41,7 +39,7 @@ public class SendSMSBulk extends HttpServlet {
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
-        Connection conn = null;
+
         ServletContext context;
         context = getServletContext();
         PrintWriter out = new PrintWriter(response.getOutputStream());
@@ -114,13 +112,18 @@ public class SendSMSBulk extends HttpServlet {
                 if (conn != null)
                     conn.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+/*                e.printStackTrace();
                 helper.SendEmailWithAttachment("Error in PatientVisit ** (handleRequest -- SqlException)", context, e, "PatientVisit", "handleRequest", conn);
                 Services.DumException("PatientVisit", "Handle Request", request, e, getServletContext());
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("FormName", "ManagementDashboard");
                 Parser.SetField("ActionID", "GetInput");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");*/
+                String str = "";
+                for (int i = 0; i < e.getStackTrace().length; ++i) {
+                    str = str + e.getStackTrace()[i] + "<br>";
+                }
+                out.println(str);
             }
             out.flush();
             out.close();
@@ -130,6 +133,9 @@ public class SendSMSBulk extends HttpServlet {
 
     private void GetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper, TwilioSMSConfiguration smsConfiguration, int userIndex) throws FileNotFoundException {
         StringBuilder FacilityList;
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
         try {
 /*            Query = "Select Id, IFNULL(name,'') from oe.clients where Id not in (23,32,33) and status = 0";
             stmt = conn.createStatement();
@@ -140,6 +146,8 @@ public class SendSMSBulk extends HttpServlet {
             }
             rset.close();
             stmt.close();*/
+            StringBuffer CDRList = new StringBuffer();
+            int SNo = 1;
             FacilityList = smsConfiguration.getFacilityList(request, conn, servletContext, userIndex);
 
 /*            Query = "";
@@ -150,19 +158,43 @@ public class SendSMSBulk extends HttpServlet {
             }
             rset.close();
             stmt.close();*/
+            Query = "SELECT PatientMRN,PatientName,PatientPhNumber,Sms,SentAt " +
+                    "FROM " + Database + ".SMS_Info " +
+                    "where Status=0 " +
+                    "ORDER BY SentAt Desc";
+            //out.println(Query);
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            while (rset.next()) {
+                CDRList.append("<tr><td align=left>" + SNo + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//PhNumber
+                CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
+                CDRList.append("</tr>");
+                SNo++;
+            }
+            rset.close();
+            stmt.close();
 
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("UserId", String.valueOf(UserId));
             Parser.SetField("FacilityList", String.valueOf(FacilityList));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/SendSMSBulk.html");
         } catch (Exception e) {
-            helper.SendEmailWithAttachment("Error in GetInput ** (SendSMSBulk^^ MES#001)", servletContext, e, "SendSMSBulk", "GetInput", conn);
+/*            helper.SendEmailWithAttachment("Error in GetInput ** (SendSMSBulk^^ MES#001)", servletContext, e, "SendSMSBulk", "GetInput", conn);
             Services.DumException("SendSMSBulk", "GetInput", request, e);
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "ManagementDashboard");
             Parser.SetField("ActionID", "GetInput");
             Parser.SetField("Message", "MES#001");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");*/
+            String str = "";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
+            }
+            out.println(str);
         }
     }
 
@@ -170,12 +202,10 @@ public class SendSMSBulk extends HttpServlet {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
-        String Facility = "";
-        String FileName = "";
         try {
-
+            String Facility = "";
             String key = "";
-
+            String FileName = "";
             int dbFound = 0;
             boolean FileFound;
             byte Data[];
@@ -210,7 +240,7 @@ public class SendSMSBulk extends HttpServlet {
                     throw new Exception("You have Uploaded Incorrect File.");
                 }
 
-                File f = new File("/sftpdrive/opt/BulkSMSFiles/" + FileName);
+                File f = new File("/sftpdrive/opt/" + FileName);
                 if (f.exists()) {
                     f.delete();
                 }
@@ -236,13 +266,11 @@ public class SendSMSBulk extends HttpServlet {
             String Template = "";
             DataFormatter formatter = new DataFormatter(Locale.US);
             FileInputStream fileIn = null;
-            fileIn = new FileInputStream("/sftpdrive/opt/BulkSMSFiles/" + FileName);
+            fileIn = new FileInputStream("/sftpdrive/opt/" + FileName);
 
-            Query = "Select IFNULL(name,''), IFNULL(dbname ,'') " +
-                    "FROM oe.clients WHERE Id=" + FacIdx[0] + "";
+            Query = "Select IFNULL(FullName,''), IFNULL(dbname ,'') FROM oe.clients WHERE Id=" + FacIdx[0] + "";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            System.out.println(Query);
             if (rset.next()) {
                 FacilityName = rset.getString(1);
                 Database = rset.getString(2);
@@ -275,8 +303,10 @@ public class SendSMSBulk extends HttpServlet {
             Sheet sheet = workbook.getSheetAt(0);
             int totalrows = sheet.getLastRowNum();
             for (i = 1; i <= totalrows; i++) {
+
+
                 Row row = sheet.getRow(i);
-//                System.out.println("Cell Type " + row.getCell(0).getCellType() + "<br>");
+                //System.out.println("Cell Type " + row.getCell(0).getCellType() + "<br>");
 /*                if (row.getCell(0) != null) {
                     //Integer
                     if (row.getCell(0).getCellType() == 1)
@@ -287,21 +317,17 @@ public class SendSMSBulk extends HttpServlet {
                     MRN = 0;*/
 
                 //System.out.println(MRN);
-
-
                 if (row.getCell(0) != null) {
                     MRN = formatter.formatCellValue(row.getCell(0));
-                } else {
+                } else
                     MRN = "0";
-                }
-
-//                if (MRN.equals("0") || MRN.equals(""))
-//                    continue;
-
                 PatientName = formatter.formatCellValue(row.getCell(1));
                 Priority = formatter.formatCellValue(row.getCell(2));
                 PhNumber = formatter.formatCellValue(row.getCell(3));
                 TempType = formatter.formatCellValue(row.getCell(4));
+
+
+
 /*                _bIndex_ = row.getCell(0).getCellType();
                 out.println("_bIndex_:--- " + _bIndex_ + "| <br>");
                 if (_bIndex_ == 1) {
@@ -320,26 +346,16 @@ public class SendSMSBulk extends HttpServlet {
                     MRN = "";
 */
 
-/*                 ");
+/*                out.println("MRN:--- " + MRN + "| <br> ");
                 out.println("PatientName:--- "+PatientName+"|");
                 out.println("Priority:--- "+Priority+"|");
                 out.println("PhNumber:--- "+PhNumber+"|");
-               */
+                out.println("TempType:--- "+TempType+"|");*/
 //                out.println("<br>");
-//                System.out.println("TempType:--- "+TempType+"|");
 
                 if ((PatientName.equals("") || PatientName.equals(null) || PatientName.isEmpty()) &&
                         (PhNumber.equals("") || PhNumber.equals(null) || PhNumber.isEmpty()))
-                    continue;
-
-                if (TempType.equals("") || TempType.equals(null) || TempType.isEmpty()) {
-                    Parsehtm Parser = new Parsehtm(request);
-                    Parser.SetField("Message", "Please enter Template Type in the Excel Sheet!");
-                    Parser.SetField("FormName", "SendSMSBulk");
-                    Parser.SetField("ActionID", "GetInput");
-                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Error.html");
-                    return;
-                }
+                    break;
 
                 switch (Priority) {
                     case "1":
@@ -354,7 +370,7 @@ public class SendSMSBulk extends HttpServlet {
                 }
 
 
-                Query = "Select IFNULL(Body ,'') FROM oe.SmsTemplates WHERE Id = " + TempType;
+                Query = "Select IFNULL(Body ,'') FROM oe.SmsTemplates WHERE Id='" + TempType + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next())
@@ -391,24 +407,29 @@ public class SendSMSBulk extends HttpServlet {
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ViewDataSendSMSBulk.html");
 
         } catch (Exception e) {
-            helper.SendEmailWithAttachment("Error in UploadFileOnly ** (FacilityName: " + Facility + "^^ MES#002^^ Perform BY: " + UserId + " File Name : " + FileName + ")", servletContext, e, "SendSMSBulk", "UploadFileOnly", conn);
+/*            helper.SendEmailWithAttachment("Error in UploadFileOnly ** (^^ MES#002)", servletContext, e, "SendSMSBulk", "UploadFileOnly", conn);
             Services.DumException("SendSMSBulk", "UploadFileOnly", request, e);
-/*            String str = "";
+*//*            String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
             System.out.println("ERROR " + str);
-            System.out.println("ERROR " + e);*/
+            System.out.println("ERROR " + e);*//*
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "ManagementDashboard");
             Parser.SetField("ActionID", "GetInput");
             Parser.SetField("Message", "MES#002");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");*/
 /*            out.println(e.getMessage());
 
             out.println(str);
             out.flush();
             out.close();*/
+            String str = "";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
+            }
+            out.println(str);
         }
     }
 
@@ -439,11 +460,9 @@ public class SendSMSBulk extends HttpServlet {
 
             DataFormatter formatter = new DataFormatter(Locale.US);
             FileInputStream fileIn = null;
-            fileIn = new FileInputStream("/sftpdrive/opt/BulkSMSFiles/" + FileName);
-//            System.out.println(FacIdx[0]);
-            Query = "Select IFNULL(name,''), IFNULL(dbname ,''), status " +
-                    "FROM oe.clients WHERE Id='" + FacIdx[0] + "'";
-//            System.out.println(Query);
+            fileIn = new FileInputStream("/sftpdrive/opt/" + FileName);
+
+            Query = "Select IFNULL(FullName,''), IFNULL(dbname ,''), status FROM oe.clients WHERE Id='" + FacIdx[0] + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -453,8 +472,6 @@ public class SendSMSBulk extends HttpServlet {
             }
             rset.close();
             stmt.close();
-
-            System.out.println(FacilityName);
 
             if (ClientStatus == 1) {
                 Database = "oe";
@@ -503,8 +520,7 @@ public class SendSMSBulk extends HttpServlet {
                     PhNumber = PhNumber.replace("-", "");
                 }
 
-//                Query = "Select IFNULL(Body ,'') FROM oe.SmsTemplates WHERE Id='" + TempType + "'";
-                Query = "Select IFNULL(Body ,'') FROM oe.SmsTemplates WHERE id = " + TempType;
+                Query = "Select IFNULL(Body ,'') FROM oe.SmsTemplates WHERE Id='" + TempType + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next())
@@ -513,14 +529,14 @@ public class SendSMSBulk extends HttpServlet {
                     Template = "999";
                 rset.close();
                 stmt.close();
-//                System.out.println("FIRST TEMPLATE " + Template);
+
                 if (!Template.equals("999")) {
                     Template = Template.replaceAll("\\bName\\b", PatientName);
                     Template = Template.replaceAll("\\bUserName\\b", UserName);
                     Template = Template.replaceAll("\\bClientName\\b", FacilityName);
                     Template = Template.replaceAll("\\bAdvocatePhNumber\\b", AdvocatePhNumber);
                 }
-//                System.out.println("SECOND TEMPLATE " + Template);
+
 
                 try {
 /*                    PreparedStatement MainReceipt = conn.prepareStatement(
@@ -536,7 +552,7 @@ public class SendSMSBulk extends HttpServlet {
                     MainReceipt.executeUpdate();
                     MainReceipt.close();*/
 
-                    insertionSMSInfo(Database, Integer.parseInt(FacIdx[0]), UserIndex, Integer.parseInt(Priority), PatientName, MRN, PhNumber, Template, "Bulk Upload", 0, conn);
+                    insertionSMSInfo(Database, Integer.parseInt(FacIdx[0]), UserIndex, Integer.parseInt(Priority), PatientName, MRN, PhNumber, Template, "Bulk Upload", 0);
                     int maxId = smsConfiguration.getMaxSMSIndex(request, conn, servletContext, Integer.parseInt(FacIdx[0]), Database);
 
                     if (Priority.equals("3")) {
@@ -572,19 +588,19 @@ public class SendSMSBulk extends HttpServlet {
             Parser.SetField("ClientIndex", "");
             Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
         } catch (Exception e) {
-            helper.SendEmailWithAttachment("Error in Send SMS ** (SendSMSBulk^^ MES#001)", servletContext, e, "SendSMSBulk", "SendSMS", conn);
+/*            helper.SendEmailWithAttachment("Error in GetInput ** (SendSMSBulk^^ MES#001)", servletContext, e, "SendSMSBulk", "GetInput", conn);
             Services.DumException("SendSMSBulk", "GetInput", request, e);
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "ManagementDashboard");
             Parser.SetField("ActionID", "GetInput");
             Parser.SetField("Message", "MES#001");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");*/
 //            out.println(e.getMessage());
-//            String str = "";
-//            for (int i = 0; i < e.getStackTrace().length; ++i) {
-//                str = str + e.getStackTrace()[i] + "<br>";
-//            }
-//            out.println(str);
+            String str = "";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
+            }
+            out.println(str);
             out.flush();
             out.close();
         }
@@ -649,7 +665,7 @@ public class SendSMSBulk extends HttpServlet {
                 } else if (st.equals("\r\n") && state == 2) {
                     state = 4;
                 } else if (state == 4) {
-                    value = value + st;
+                    value = String.valueOf(String.valueOf(value)) + st;
                 } else if (state == 3) {
                     buffer.write(bytes, 0, i);
                 }
@@ -660,7 +676,7 @@ public class SendSMSBulk extends HttpServlet {
         }
     }
 
-    private void insertionSMSInfo(String Database, int facilityIndex, int advocateIdx, int Priority, String PtName, String PtMRN, String PtPhNumber, String Sms, String Username, int status, Connection conn) {
+    private void insertionSMSInfo(String Database, int facilityIndex, int advocateIdx, int Priority, String PtName, String PtMRN, String PtPhNumber, String Sms, String Username, int status) {
         PreparedStatement MainReceipt = null;
         try {
             MainReceipt = conn.prepareStatement(
@@ -679,8 +695,9 @@ public class SendSMSBulk extends HttpServlet {
             MainReceipt.executeUpdate();
             MainReceipt.close();
         } catch (Exception ex) {
-            System.out.println("EXCEPTION in Saving Record insertionSMSInfo " + ex.getMessage());
+            System.out.println("EXCEPTION in Saving Record" + ex.getMessage());
         }
     }
+
 
 }

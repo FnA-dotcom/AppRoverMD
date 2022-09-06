@@ -11,8 +11,8 @@ public class TimeCheck {
         //Adding zero in start
 
         if (DOS1.length() == 7)
-            DOS1 = "0" + DOS1;
+            DOS1 = "0"+DOS1;
 
-        System.out.println("DOS 1 --> " + DOS1);
+        System.out.println("DOS 1 --> " +DOS1 );
     }
 }

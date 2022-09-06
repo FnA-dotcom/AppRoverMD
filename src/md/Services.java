@@ -67,7 +67,7 @@ public class Services {
             Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
             return DriverManager.getConnection("jdbc:mysql://" + mysql_server + "/" + mysqldb + "?user=" + mysqlusr + "&password=" + mysqlpwd + "&characterEncoding=latin1");
         } catch (Exception _ex) {
-            final String a = _ex.getMessage().toString();
+            final String a = _ex.getMessage();
             System.out.println(_ex.getMessage());
             return null;
         }
@@ -90,7 +90,7 @@ public class Services {
             final String A = "jdbc:mysql://" + mysql_server + "/" + mysqldb + "?user=" + mysqlusr + "&password=" + mysqlpwd + "";
             return A;
         } catch (Exception _ex) {
-            final String a = _ex.getMessage().toString();
+            final String a = _ex.getMessage();
             return null;
         }
     }
@@ -215,7 +215,7 @@ public class Services {
 
 
     private static String GetExceptionFilePath(final HttpServletRequest request) {
-        return "/opt/Htmls/logs/";
+        return "/opt/Htmls/logs/md";
     }
 
     public static Connection getMysqlConn(ServletContext context) {
@@ -244,21 +244,21 @@ public class Services {
     public static void DumException(final String ClassName, final String FuncName, final HttpServletRequest request, final Exception exp) {
         String FileName = "";
         final String UserId = GetCookie("UserId", request);
-//        final String UserIP = request.getRemoteAddr() == null ? null : request.getRemoteAddr();
+        final String UserIP = request.getRemoteAddr();
         try {
 
-            StringBuffer requestinfo = new StringBuffer();
+            StringBuffer requestinfo= new StringBuffer();
 
             Enumeration<String> headerNames = request.getHeaderNames();
-            while (headerNames.hasMoreElements()) {
+            while(headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                requestinfo.append("Header Name - " + headerName + ", Value - " + request.getHeader(headerName) + "\n");
+                requestinfo.append("Header Name - " + headerName + ", Value - " + request.getHeader(headerName)+"\n");
             }
 
             Enumeration<String> params = request.getParameterNames();
-            while (params.hasMoreElements()) {
+            while(params.hasMoreElements()){
                 String paramName = params.nextElement();
-                requestinfo.append("Parameter Name - " + paramName + ", Value - " + request.getParameter(paramName) + "\n");
+                requestinfo.append("Parameter Name - "+paramName+", Value - "+request.getParameter(paramName)+"\n");
             }
 
 
@@ -286,7 +286,7 @@ public class Services {
 //            fr.write("USER IP: " + UserIP + "\n");
             fr.write("Url: " + url + "\n");
             fr.write("Uri: " + uri + "\n");
-//            fr.write("IP: " + UserIP + "\n");
+            fr.write("IP: " + UserIP + "\n");
             fr.write("Scheme: " + scheme + "\n");
             fr.write("Server Name: " + serverName + "\n");
             fr.write("Port: " + portNumber + "\n");
@@ -301,7 +301,7 @@ public class Services {
             fr.write(requestinfo.toString());
             fr.write("\r\n ===========================  REQUEST ENDS  ========================  \r\n");
             fr.write("\r\n ===========================  EXCEPTION STARTS ========================  \r\n");
-            fr.write(new Date().toString() + "^" + UserId + "^" + ClassName + "^" + FuncName + "^" + exp.getMessage() + "\r\n");
+            fr.write(new Date().toString() + "^" + UserId + "^" + ClassName + "^" + UserIP + "^" + FuncName + "^" + exp.getMessage() + "\r\n");
             final PrintWriter pr = new PrintWriter(fr, true);
             exp.printStackTrace(pr);
             fr.write("\r\n ===========================  EXCEPTION ENDS ========================  \r\n");
@@ -314,20 +314,20 @@ public class Services {
 
     public static void DumException(final String ClassName, final String FuncName, final HttpServletRequest request, final Exception exp, final ServletContext servletContext) {
         String FileName = "";
-//        final String UserIP = request.getRemoteAddr();
+        final String UserIP = request.getRemoteAddr();
         try {
 
-            StringBuffer requestinfo = new StringBuffer();
+            StringBuffer requestinfo= new StringBuffer();
             Enumeration<String> headerNames = request.getHeaderNames();
-            while (headerNames.hasMoreElements()) {
+            while(headerNames.hasMoreElements()) {
                 String headerName = headerNames.nextElement();
-                requestinfo.append("Header Name - " + headerName + ", Value - " + request.getHeader(headerName) + "\n");
+                requestinfo.append("Header Name - " + headerName + ", Value - " + request.getHeader(headerName)+"\n");
             }
 
             Enumeration<String> params = request.getParameterNames();
-            while (params.hasMoreElements()) {
+            while(params.hasMoreElements()){
                 String paramName = params.nextElement();
-                requestinfo.append("Parameter Name - " + paramName + ", Value - " + request.getParameter(paramName) + "\n");
+                requestinfo.append("Parameter Name - "+paramName+", Value - "+request.getParameter(paramName)+"\n");
             }
 
             FileName = GetExceptionFilePath(servletContext) + GetExceptionFileName();
@@ -348,7 +348,7 @@ public class Services {
 //            fr.write("USER IP: " + UserIP + "\n");
             fr.write("Url: " + url + "\n");
             fr.write("Uri: " + uri + "\n");
-//            fr.write("IP: " + UserIP + "\n");
+            fr.write("IP: " + UserIP + "\n");
             fr.write("Scheme: " + scheme + "\n");
             fr.write("Server Name: " + serverName + "\n");
             fr.write("Port: " + portNumber + "\n");
@@ -366,7 +366,7 @@ public class Services {
             for (int i = 0; i < exp.getStackTrace().length; ++i) {
                 str = String.valueOf(str) + exp.getStackTrace()[i] + "<br>";
             }
-            fr.write(new Date().toString() + "^" + ClassName + "^" + FuncName + "^" + exp.getMessage() + str + "\r\n");
+            fr.write(new Date().toString() + "^" + ClassName + "^" + FuncName + "^" + UserIP + "^" + exp.getMessage() + str + "\r\n");
             final PrintWriter pr = new PrintWriter(fr, true);
             exp.printStackTrace(pr);
             fr.write("\r\n");
@@ -401,7 +401,7 @@ public class Services {
     public static void doLogMethodMessage(ServletContext servletcontext, String Method, String Message, final HttpServletRequest request) {
         try {
             String FileName = GetMobileExceptionFilePath(servletcontext) + GetExceptionFileName();
-            java.util.Date dt = new java.util.Date();
+            Date dt = new Date();
             FileWriter fr = new FileWriter(FileName, true);
             fr.write(dt.toString() + " -- " + Method + " -- " + Message + "\r\n");
             fr.write("\r\n");

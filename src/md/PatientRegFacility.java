@@ -16,12 +16,12 @@ import java.util.Calendar;
 
 @SuppressWarnings("Duplicates")
 public class PatientRegFacility extends HttpServlet {
-/*    CallableStatement cStmt = null;
+    CallableStatement cStmt = null;
+    private Connection conn = null;
     ResultSet rset = null;
     String Query = "";
     Statement stmt = null;
     PreparedStatement pStmt = null;
-    private Connection conn = null;*/
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -37,7 +37,7 @@ public class PatientRegFacility extends HttpServlet {
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
-        Connection conn = null;
+
         ServletContext context;
         context = getServletContext();
         PrintWriter out = new PrintWriter(response.getOutputStream());
@@ -47,11 +47,9 @@ public class PatientRegFacility extends HttpServlet {
         int ClientIndex = 0;
         String DatabaseName = "";
         String UserId = "";
-        ResultSet rset = null;
-        String Query = "";
-        Statement stmt = null;
         try {
             ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
+
             ActionID = request.getParameter("ActionID");
 
             conn = Services.GetConnection(context, 1);
@@ -78,6 +76,7 @@ public class PatientRegFacility extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             switch (ActionID) {
                 case "GetValues":
                     this.GetValues(request, out, conn, context, DatabaseName, helper);
@@ -121,30 +120,29 @@ public class PatientRegFacility extends HttpServlet {
             ResultSet rset = null;
             String Query = "";
             String Date = "";
+            String PRF_name = "";
             StringBuffer Month = new StringBuffer();
             StringBuffer Day = new StringBuffer();
             StringBuffer Year = new StringBuffer();
             StringBuffer ProfessionalPayersList = new StringBuffer();
             int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
-            System.out.println("Facility Index " + ClientIndex);
-
             Query = "Select Date_format(now(),'%Y-%m-%d')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            while (rset.next()) {
                 Date = rset.getString(1);
             }
             rset.close();
             stmt.close();
 
-/*            Query = "Select PRF_name from oe.clients where Id = " + ClientIndex;
+            Query = "Select PRF_name from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                String PRF_name = rset.getString(1);
+            while (rset.next()) {
+                PRF_name = rset.getString(1);
             }
             rset.close();
-            stmt.close();*/
+            stmt.close();
             //Select Id, PayerId, LTRIM(rtrim(PayerName)) from oe_2.ProfessionalPayers where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId
             // Select Id, PayerId, LTRIM(rtrim(PayerName)) from ProfessionalPayers where PayerName like  '%Texas%'  or PayerName like   '%ALL%' group by PayerId
 
@@ -354,7 +352,7 @@ public class PatientRegFacility extends HttpServlet {
 
             try {
                 if (request.getParameter("Title") == null) {
-                    Title = "";
+                    Title = "Mr";
                 } else {
                     Title = request.getParameter("Title").trim();
                 }
@@ -364,7 +362,7 @@ public class PatientRegFacility extends HttpServlet {
                     FirstName = request.getParameter("FirstName").trim();
                 }
                 if (request.getParameter("LastName") == null) {
-                    LastName = "";
+                    LastName = "Mr";
                 } else {
                     LastName = request.getParameter("LastName").trim();
                 }
@@ -390,7 +388,7 @@ public class PatientRegFacility extends HttpServlet {
                     Age = request.getParameter("Age").trim();
                 }
                 if (request.getParameter("gender") == null) {
-                    gender = "";
+                    gender = "male";
                 } else {
                     gender = request.getParameter("gender").trim();
                 }

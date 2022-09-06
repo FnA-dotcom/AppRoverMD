@@ -24,13 +24,15 @@ import java.text.NumberFormat;
 
 @SuppressWarnings("Duplicates")
 public class TransactionReportDateWise extends HttpServlet {
-    Integer CardConnectTransaction_Index = 23;
-    Integer BoltTransaction_Index = 24;
     private Connection conn = null;
     private Statement stmt = null;
     private ResultSet rset = null;
     private String Query = null;
     private PreparedStatement pStmt = null;
+
+    Integer CardConnectTransaction_Index = 23;
+    Integer BoltTransaction_Index = 24;
+
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -88,7 +90,7 @@ public class TransactionReportDateWise extends HttpServlet {
             switch (Action) {
                 case "cardConnectGetInput":
 
-/*                    if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, CardConnectTransaction_Index)) {
+                    if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,CardConnectTransaction_Index)){
 //                out.println("You are not Authorized to access this page");
                         Parsehtm Parser = new Parsehtm(request);
                         Parser.SetField("Message", "You are not Authorized to access this page");
@@ -96,7 +98,7 @@ public class TransactionReportDateWise extends HttpServlet {
                         Parser.SetField("ActionID", "GetInput");
                         Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
                         return;
-                    }*/
+                    }
 
 
                     GetInput(request, out, conn, context, UserId, FacilityIndex, helper);
@@ -105,11 +107,11 @@ public class TransactionReportDateWise extends HttpServlet {
                     getTransactionPassword(request, out, conn, context, UserId, FacilityIndex, helper, DatabaseName);
                     break;
                 case "cardConnectShowReport":
-                    showReport(request, out, conn, context, UserId, helper, FacilityIndex, DatabaseName, payments);
+                    showReport(request, out, conn, context, UserId, helper, FacilityIndex, DatabaseName);
                     break;
                 case "boltGetInput":
 
-/*                    if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, BoltTransaction_Index)) {
+                    if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,BoltTransaction_Index)){
 //                out.println("You are not Authorized to access this page");
                         Parsehtm Parser = new Parsehtm(request);
                         Parser.SetField("Message", "You are not Authorized to access this page");
@@ -117,7 +119,7 @@ public class TransactionReportDateWise extends HttpServlet {
                         Parser.SetField("ActionID", "GetInput");
                         Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
                         return;
-                    }*/
+                    }
 
                     boltGetInput(request, out, conn, context, UserId, FacilityIndex, helper);
                     break;
@@ -208,7 +210,7 @@ public class TransactionReportDateWise extends HttpServlet {
         String TransactionPwd = request.getParameter("xQar2f0").trim();
         int FlagType = Integer.parseInt(request.getParameter("o85RtQa20").trim());
         try {
-            TransactionPwd = FacilityLogin.encrypt(TransactionPwd);
+            TransactionPwd = FacilityLogin_old.encrypt(TransactionPwd);
 
             Query = "SELECT COUNT(*) FROM " + databaseName + ".TransactionCredentials WHERE UserPassword = '" + TransactionPwd + "' ";
             stmt = conn.createStatement();
@@ -248,16 +250,18 @@ public class TransactionReportDateWise extends HttpServlet {
         }
     }
 
-    private void showReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, UtilityHelper helper, int facilityIndex, String databaseName, Payments payments) {
+    private void showReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, UtilityHelper helper, int facilityIndex, String databaseName) {
         stmt = null;
         rset = null;
         Query = "";
-        StringBuilder TransactionReport;
+        StringBuilder TransactionReport = new StringBuilder();
         String FromDate = request.getParameter("FromDate").trim();
         String ToDate = request.getParameter("ToDate").trim();
-
+        int SrlNo = 1;
+        int refundFlag = 0;
+        int voidFlag = 0;
+        String Status = "";
         try {
-            TransactionReport = payments.showTransactionReportDatewise(request, conn, servletContext, FromDate + " 00:00:00", ToDate + " 23:59:59", facilityIndex, databaseName);
             //StringBuilder TransactionReport = helper.showTransactionReport(request, servletContext, conn, FromDate, ToDate, facilityIndex, databaseName);
 
 /*            Query = "SELECT CONCAT(a.FirstName, ' ', a.LastName , ' ', a.MiddleInitial) AS NAME,DATE_FORMAT(a.DOB,'%d-%b-%Y') AS DOB, a.Gender,b.InvoiceNo,\n" +
@@ -279,7 +283,7 @@ public class TransactionReportDateWise extends HttpServlet {
                     " b.refundFlag = 0 AND b.voidFlag = 0 \n" +
                     "STRAIGHT_JOIN oe.clients c ON a.ClientIndex = c.Id " +
                     "ORDER BY b.CreatedDate DESC ";*/
-            /*Query = "SELECT a.ID, CONCAT(IFNULL(a.FirstName,''), ' ', IFNULL(a.LastName,'') , ' ', IFNULL(a.MiddleInitial,'')) AS NAME,DATE_FORMAT(a.DOB,'%d-%b-%Y') AS DOB, a.Gender, a.MRN,\n" +
+            Query = "SELECT a.ID, CONCAT(IFNULL(a.FirstName,''), ' ', IFNULL(a.LastName,'') , ' ', IFNULL(a.MiddleInitial,'')) AS NAME,DATE_FORMAT(a.DOB,'%d-%b-%Y') AS DOB, a.Gender, a.MRN,\n" +
                     "b.InvoiceNo,b.ResponseText,b.ResponseStatus,b.RetRef,IFNULL(DATE_FORMAT(b.RetRefDate,'%d-%b-%Y'),'00-00-0000') AS RetDate," +
                     "b.CreatedDate AS PaymentDate,IFNULL(b.Remarks,'-'),  IFNULL(b.Amount,0), IFNULL(b.AccountNo,'-'), c.`name` AS ClientName, " +
                     "b.Id AS CardConnectId, b.refundFlag, b.voidFlag,DATE_FORMAT(b.CreatedDate ,'%d-%b-%Y') \n" +
@@ -388,7 +392,7 @@ public class TransactionReportDateWise extends HttpServlet {
                     TransactionReport.append("</tr>");
                 }
                 ++SrlNo;
-            }*/
+            }
 
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("TransactionReport", TransactionReport.toString());
@@ -405,8 +409,7 @@ public class TransactionReportDateWise extends HttpServlet {
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
-        }
-/*        finally {
+        } finally {
             try {
                 if (conn != null) {
                     conn.close();
@@ -416,7 +419,7 @@ public class TransactionReportDateWise extends HttpServlet {
             }
             out.flush();
             out.close();
-        }*/
+        }
     }
 
     private void boltGetInput(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, int facilityIndex, UtilityHelper helper) {
@@ -520,7 +523,6 @@ public class TransactionReportDateWise extends HttpServlet {
                     if (resptext.equals("Approval") && !amount.equals("0.0")) {
                         BoltTransactionReport.append("<button id=refundBtn onclick=\"refund(this.value)\" class=\"btn btn-primary btn-sm\" disabled title=\"Amount is refunded!\" value=" + rset.getInt(8) + " target=NewFrame1> <font color = \"FFFFFF\"> <i class=\"fa fa-plus\"></i> [Refund] </font></button>&nbsp;&nbsp;");
                         BoltTransactionReport.append("<button id=voidBtn class=\"btn btn-danger btn-sm\" onclick=\"voidTransactions(this.value)\" disabled title=\"Amount is refunded!\" disabled value=" + rset.getInt(8) + " target=NewFrame1 > <font color = \"FFFFFF\"> <i class=\"fa fa-trash-o\"></i> [Void] </font></button>");
-                        BoltTransactionReport.append("<button id=printBtn class=\"btn btn-info btn-sm\" onclick=\"printReceipt(" + rset.getString(5) + ",'" + rset.getString(6) + "'," + rset.getInt(8) + ",'R','" + amount + "')\" value=" + rset.getInt(8) + " target=NewFrame1 > <font color = \"FFFFFF\"> <i class=\"fa fa-print\"></i>[Receipt]</font></button>");
                     } else if (amount.equals("0.0") || amount.equals("0")) {
                         BoltTransactionReport.append("<button id=refundBtn title=\"Amount is zero!\" class=\"btn btn-primary btn-sm\" disabled> <font color = \"FFFFFF\"> <i class=\"fa fa-plus\" ></i> [Refund] </font></button>&nbsp;&nbsp;");
                         BoltTransactionReport.append("<button id=voidBtn class=\"btn btn-danger btn-sm\" title=\"Amount is zero!\" disabled> <font color = \"FFFFFF\"> <i class=\"fa fa-trash-o\" ></i> [Void] </font></button>");
@@ -545,7 +547,6 @@ public class TransactionReportDateWise extends HttpServlet {
                     if (resptext.equals("Approval") && !amount.equals("0.0")) {
                         BoltTransactionReport.append("<button id=refundBtn onclick=\"refund(this.value)\" class=\"btn btn-primary btn-sm\"  disabled title=\"Amount is voided!\" value=" + rset.getInt(8) + " target=NewFrame1> <font color = \"FFFFFF\"> <i class=\"fa fa-plus\"></i> [Refund] </font></button>&nbsp;&nbsp;");
                         BoltTransactionReport.append("<button id=voidBtn class=\"btn btn-danger btn-sm\" onclick=\"voidTransactions(this.value)\" disabled title=\"Amount is voided!\" disabled value=" + rset.getInt(8) + " target=NewFrame1 > <font color = \"FFFFFF\"> <i class=\"fa fa-trash-o\"></i> [Void] </font></button>");
-                        BoltTransactionReport.append("<button id=printBtn class=\"btn btn-info btn-sm\" onclick=\"printReceipt(" + rset.getString(5) + ",'" + rset.getString(6) + "'," + rset.getInt(8) + ",'V','" + amount + "')\" value=" + rset.getInt(8) + " target=NewFrame1 > <font color = \"FFFFFF\"> <i class=\"fa fa-print\"></i>[Receipt]</font></button>");
                     } else if (amount.equals("0.0") || amount.equals("0")) {
                         BoltTransactionReport.append("<button id=refundBtn title=\"Amount is zero!\" class=\"btn btn-primary btn-sm\" disabled> <font color = \"FFFFFF\"> <i class=\"fa fa-plus\" ></i> [Refund] </font></button>&nbsp;&nbsp;");
                         BoltTransactionReport.append("<button id=voidBtn class=\"btn btn-danger btn-sm\" title=\"Amount is zero!\" disabled> <font color = \"FFFFFF\"> <i class=\"fa fa-trash-o\" ></i> [Void] </font></button>");
@@ -640,10 +641,10 @@ public class TransactionReportDateWise extends HttpServlet {
 
         try {
             String[] cardConnect = helper.getCardConnectData(request, conn, servletContext, CardConnectIndx, databaseName);
-            PatientMRN = Integer.parseInt(cardConnect[0]);
-            Amount = cardConnect[1];
-            RetRef = cardConnect[2];
-            InvoiceNo = cardConnect[3];
+            Amount = cardConnect[0];
+            RetRef = cardConnect[1];
+            InvoiceNo = cardConnect[2];
+            PatientMRN = Integer.parseInt(cardConnect[3]);
             facilityIndex = Integer.parseInt(cardConnect[4]);
 
 /*            Query = "SELECT PatientMRN,Amount,RetRef,InvoiceNo,ClientIndex FROM " + databaseName + ".CardConnectResponses " +
@@ -779,19 +780,9 @@ public class TransactionReportDateWise extends HttpServlet {
                 }
 
                 try {
-/*
                     Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
                             "RefundFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', RefundDateTime = now() " +
                             " WHERE PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0";
-*/
-
-                    //Changed query 3rd Aug 2021
-                    // Paid col is not updating correct value. Previously it was updating the previous value which was present in the table
-                    // Now change it back to '0' as amount is fully refunded/voided
-                    Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "RefundFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = 0, RefundDateTime = now() " +
-                            " WHERE PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0";
-
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
                     stmt.close();
@@ -1012,14 +1003,8 @@ public class TransactionReportDateWise extends HttpServlet {
                 }
 
                 try {
-                   /* Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "RefundFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', RefundDateTime = now() " +
-                            " WHERE PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0";
-*/                    //Changed query 3rd Aug 2021
-                    // Paid col is not updating correct value. Previously it was updating the previous value which was present in the table
-                    // Now change it back to '0' as amount is fully refunded/voided
                     Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "RefundFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = 0, RefundDateTime = now() " +
+                            "RefundFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', RefundDateTime = now() " +
                             " WHERE PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0";
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
@@ -1129,14 +1114,7 @@ public class TransactionReportDateWise extends HttpServlet {
         String UserIP = helper.getClientIp(request);
 
         try {
-            String[] cardConnect = helper.getCardConnectData(request, conn, servletContext, CardConnectIndx, databaseName);
-            PatientMRN = Integer.parseInt(cardConnect[0]);
-            Amount = cardConnect[1];
-            RetRef = cardConnect[2];
-            InvoiceNo = cardConnect[3];
-            facilityIndex = Integer.parseInt(cardConnect[4]);
-
-/*            Query = "SELECT PatientMRN,Amount,RetRef,InvoiceNo,ClientIndex FROM " + databaseName + ".CardConnectResponses " +
+            Query = "SELECT PatientMRN,Amount,RetRef,InvoiceNo,ClientIndex FROM " + databaseName + ".CardConnectResponses " +
                     " WHERE Id = " + CardConnectIndx;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1145,19 +1123,19 @@ public class TransactionReportDateWise extends HttpServlet {
                 Amount = rset.getString(2);
                 RetRef = rset.getString(3);
                 InvoiceNo = rset.getString(4);
-//                facilityIndex = rset.getInt(5);
+                facilityIndex = rset.getInt(5);
             }
             rset.close();
-            stmt.close();*/
+            stmt.close();
 
-/*            Query = "Select dbname, IFNULL(DirectoryName,'') from oe.clients where Id = " + facilityIndex;
+            Query = "Select dbname, IFNULL(DirectoryName,'') from oe.clients where Id = " + facilityIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
                 databaseName = rset.getString(1);
             }
             rset.close();
-            stmt.close();*/
+            stmt.close();
 
             String[] AuthConnect = helper.getAuthConnect(conn, FlagType, facilityIndex);
             ENDPOINT = AuthConnect[0];
@@ -1254,29 +1232,20 @@ public class TransactionReportDateWise extends HttpServlet {
                 rset.close();
                 stmt.close();*/
 
-/*                if (Paid == 1) {
+                if (Paid == 1) {
                     if (PaidAmount == BalanceAmount) {
                         Paid = 0;
                     }
-                }*/
+                }
 
                 payments.insertInvoiceMasterHistory(request, conn, servletContext, databaseName, String.valueOf(PatientMRN), InvoiceNo, UserIP);
 
                 try {
                     //payments.updateInvoiceMaster(request, conn, servletContext, databaseName, PaidAmount, CCAmount, BalanceAmount, Paid, PatientMRN, InvoiceNo);
 
-/*
                     Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "VoidFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', VoidDateTime = now() " +
+                            "RefundFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', RefundDateTime = now() " +
                             " WHERE PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0";
-*/
-                    //Changed query 3rd Aug 2021
-                    // Paid col is not updating correct value. Previously it was updating the previous value which was present in the table
-                    // Now change it back to '0' as amount is fully refunded/voided
-                    Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "VoidFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = 0, VoidDateTime = now() " +
-                            " WHERE PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0";
-
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
                     stmt.close();
@@ -1523,14 +1492,8 @@ public class TransactionReportDateWise extends HttpServlet {
                 }
 
                 try {
- /*                   Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "VoidFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', VoidDateTime = now(), CreatedBy = '" + UserId + "' " +
-                            "where PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0 ";
-*/                    //Changed query 3rd Aug 2021
-                    // Paid col is not updating correct value. Previously it was updating the previous value which was present in the table
-                    // Now change it back to '0' as amount is fully refunded/voided
                     Query = " Update " + databaseName + ".InvoiceMaster set PaidAmount = '" + nf.format(PaidAmount - Double.parseDouble(Amount)) + "', " +
-                            "VoidFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = 0, VoidDateTime = now(), CreatedBy = '" + UserId + "' " +
+                            "VoidFlag = 1 , BalAmount = '" + nf.format((BalanceAmount + Double.parseDouble(Amount))) + "', Paid = '" + Paid + "', VoidDateTime = now(), CreatedBy = '" + UserId + "' " +
                             "where PatientMRN = " + PatientMRN + " AND InvoiceNo = '" + InvoiceNo + "' AND Status = 0 ";
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);

@@ -20,55 +20,6 @@ import java.util.HashMap;
 
 @SuppressWarnings("Duplicates")
 public class LabManifestsRetrieve extends HttpServlet {
-    public static String getsamplecount(Connection Conn, String Database, String Manifestid) {
-        String _getsamplecount = "";
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String deviceid = "";
-        String name = null;
-        try {
-            Query = "select count(*)  FROM  " + Database + ".ManifestDetails  where Manifestidx=" + Manifestid;
-            hstmt = Conn.createStatement();
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                _getsamplecount = hrset.getString(1);
-            }
-            hrset.close();
-            hstmt.close();
-            return _getsamplecount;
-        } catch (Exception localException) {
-        }
-        return _getsamplecount;
-    }
-
-    public static HashMap<String, String> listoflocation(Connection Conn, String Database) {
-        HashMap<String, String> hm = new HashMap();
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String deviceid = "";
-        String name = null;
-        try {
-            Query = "SELECT id,Location,concat(Address,'^^',City,'^',State,'^',Zip)	" +
-                    " FROM  " + Database + ".Locations ORDER BY Id";
-            hstmt = Conn.createStatement();
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                hm.put(hrset.getString(1), hrset.getString(2));
-            }
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception localException) {
-        }
-        return hm;
-    }
-
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -276,6 +227,7 @@ public class LabManifestsRetrieve extends HttpServlet {
         }
     }
 
+
     private void GetInput_view(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, HttpServletResponse response, String UserId, String Database, int ClientId, UtilityHelper helper, String locationArray) throws FileNotFoundException {
         Statement stmt = null;
         ResultSet rset = null;
@@ -413,6 +365,30 @@ public class LabManifestsRetrieve extends HttpServlet {
         }
     }
 
+    public static String getsamplecount(Connection Conn, String Database, String Manifestid) {
+        String _getsamplecount = "";
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String deviceid = "";
+        String name = null;
+        try {
+            Query = "select count(*)  FROM  " + Database + ".ManifestDetails  where Manifestidx=" + Manifestid;
+            hstmt = Conn.createStatement();
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                _getsamplecount = hrset.getString(1);
+            }
+            hrset.close();
+            hstmt.close();
+            return _getsamplecount;
+        } catch (Exception localException) {
+        }
+        return _getsamplecount;
+    }
+
     public StringBuilder locationlist(Connection conn) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -435,6 +411,33 @@ public class LabManifestsRetrieve extends HttpServlet {
         return _locationList;
 
     }
+
+
+    public static HashMap<String, String> listoflocation(Connection Conn, String Database) {
+        HashMap<String, String> hm = new HashMap();
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String deviceid = "";
+        String name = null;
+        try {
+            Query = "SELECT id,Location,concat(Address,'^^',City,'^',State,'^',Zip)	" +
+                    " FROM  " + Database + ".Locations ORDER BY Id";
+            hstmt = Conn.createStatement();
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                hm.put(hrset.getString(1), hrset.getString(2));
+            }
+            hrset.close();
+            hstmt.close();
+            return hm;
+        } catch (Exception localException) {
+        }
+        return hm;
+    }
+
 
     private void GetInput_org(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, HttpServletResponse response, String UserId, String Database, int ClientId, UtilityHelper helper, String locationArray) throws FileNotFoundException {
         Statement stmt = null;

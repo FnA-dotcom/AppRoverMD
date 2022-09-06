@@ -13,20 +13,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DecimalFormat;
 
 @SuppressWarnings("Duplicates")
 public class CashPayments extends HttpServlet {
-/*    private Connection conn = null;
+    private Connection conn = null;
     private Statement stmt = null;
     private ResultSet rset = null;
     private String Query = null;
     private PreparedStatement pStmt = null;
-    */
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -42,7 +38,7 @@ public class CashPayments extends HttpServlet {
 
     public void serviceHandling(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String Action;
-        Connection conn = null;
+
         ServletContext context;
         context = getServletContext();
         PrintWriter out = new PrintWriter(response.getOutputStream());
@@ -116,9 +112,9 @@ public class CashPayments extends HttpServlet {
     }
 
     private void cashPaymentSave(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId, String database, UtilityHelper helper, int facilityIndex, Payments payments) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = null;
+        stmt = null;
+        rset = null;
+        Query = "";
 
         int PayMethod = Integer.parseInt(request.getParameter("PayMethod").trim());
         int InstallmentPlanFound = Integer.parseInt(request.getParameter("InstallmentPlanFound").trim());

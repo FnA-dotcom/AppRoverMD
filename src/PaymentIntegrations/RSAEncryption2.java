@@ -7,7 +7,7 @@ import java.util.Arrays;
 public class RSAEncryption2 {
     public static void main(String[] args) {
         String password = "password";
-        password = "Patient|Testing A|Houston|TX|77090||17154 Butte Creek Rd";
+        password ="Patient|Testing A|Houston|TX|77090||17154 Butte Creek Rd";
         KeyPair keyPair = RSAKeyPair.keyPairRSA();
         Key publicKey = keyPair.getPublic();
         Key privateKey = keyPair.getPrivate();

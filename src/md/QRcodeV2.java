@@ -14,8 +14,8 @@ public class QRcodeV2 {
     //static function that creates QR Code
     public static void generateQRcode(String data, String path, String charset, Map map, int h, int w)
             throws WriterException, IOException {
-//the BitMatrix class represents the 2D matrix of bits  
-//MultiFormatWriter is a factory class that finds the appropriate Writer subclass for the BarcodeFormat requested and encodes the barcode with the supplied contents.  
+//the BitMatrix class represents the 2D matrix of bits
+//MultiFormatWriter is a factory class that finds the appropriate Writer subclass for the BarcodeFormat requested and encodes the barcode with the supplied contents.
         BitMatrix matrix = new MultiFormatWriter().encode(new String(data.getBytes(charset), charset),
                 BarcodeFormat.QR_CODE, w, h);
         MatrixToImageWriter.writeToFile(matrix, path.substring(path.lastIndexOf('.') + 1), new File(path));
@@ -23,12 +23,12 @@ public class QRcodeV2 {
 
     public static String generateQRcode_v1(String data, String path, String charset, int h, int w)
             throws WriterException, IOException {
-//the BitMatrix class represents the 2D matrix of bits  
-//MultiFormatWriter is a factory class that finds the appropriate Writer subclass for the BarcodeFormat requested and encodes the barcode with the supplied contents.  
+//the BitMatrix class represents the 2D matrix of bits
+//MultiFormatWriter is a factory class that finds the appropriate Writer subclass for the BarcodeFormat requested and encodes the barcode with the supplied contents.
         Map<EncodeHintType, ErrorCorrectionLevel> hashMap = new HashMap<EncodeHintType, ErrorCorrectionLevel>();
-//generates QR code with Low level(L) error correction capability  
+//generates QR code with Low level(L) error correction capability
         hashMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
-//invoking the user-defined method that creates the QR code  
+//invoking the user-defined method that creates the QR code
 
 
         BitMatrix matrix = new MultiFormatWriter().encode(new String(data.getBytes(charset), charset),
@@ -40,12 +40,12 @@ public class QRcodeV2 {
 
     public static String generateQRcode_v2(String data, String path, String charset, int h, int w)
             throws WriterException, IOException {
-//the BitMatrix class represents the 2D matrix of bits  
-//MultiFormatWriter is a factory class that finds the appropriate Writer subclass for the BarcodeFormat requested and encodes the barcode with the supplied contents.  
+//the BitMatrix class represents the 2D matrix of bits
+//MultiFormatWriter is a factory class that finds the appropriate Writer subclass for the BarcodeFormat requested and encodes the barcode with the supplied contents.
         Map<EncodeHintType, ErrorCorrectionLevel> hashMap = new HashMap<EncodeHintType, ErrorCorrectionLevel>();
-//generates QR code with Low level(L) error correction capability  
+//generates QR code with Low level(L) error correction capability
         hashMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
-//invoking the user-defined method that creates the QR code  
+//invoking the user-defined method that creates the QR code
 
 
         BitMatrix matrix = new MultiFormatWriter().encode(new String(data.getBytes(charset), charset),

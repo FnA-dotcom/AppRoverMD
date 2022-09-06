@@ -5,13 +5,14 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Arrays;
+import java.util.Base64;
 
 public class RSAEncryption {
-    static String plainText = "Tabish";
+    static String plainText = "Plain text which need to be encrypted by Java RSA Encryption in ECB Mode";
 
-    public static void main(String[] args) throws Exception {
-        plainText = "Tabish";
+    public static void main(String[] args) throws Exception
+    {
+        plainText ="Mouhid";
         // Get an instance of the RSA key generator
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(4096);
@@ -23,22 +24,30 @@ public class RSAEncryption {
         PublicKey publicKey = keyPair.getPublic();
         PrivateKey privateKey = keyPair.getPrivate();
 
-        System.out.println("Original Text  : " + plainText);
+        System.out.println("Original Text  : "+plainText);
 
-        // Encryption
-//        byte[] cipherTextArray = encrypt(plainText, publicKey);
+//        // Encryption
+        byte[] cipherTextArray = encrypt(plainText, publicKey);
+        String encryptedText = Base64.getEncoder().encodeToString(cipherTextArray);
 //        String encryptedText = Base64.getEncoder().encodeToString(cipherTextArray);
-//        System.out.println("Encrypted Text : "+encryptedText);
+//        String encryptedText = "V0eAM3enQWvLbUHuKbMjYZzA3G616ewRqQcGJZAFeqwBLytmiSTD2vpqGh3kkb346Y4nt+PKbOQaIFOOT2i8Kxj6FrKkX4o+9bX8tpmSYGOs7nLX4NQpZFjWXYY2g44Ltz34IxbsA1Ca2cmkceskdIfL4EcuspYHEOijN60BB6TPjwr4lhxiVm/k44j7AuSAM2Q04xITiEXpV9sjp+joJ09OSR6rjDD6icgXR/JZMRGOIJnio6LJwh7iUgcp5/wMVKKD2y6ADBPtCcpJZXMn6SOQjEq73CNja/whWs2sh+4boOUDnAb02qLfrKdbLniBEboIA3Qu/+IvFje6ChvgUuPMixvzhG3pXKRRngIvIXs7zJ7f/90AMmH16zQKyEoHyiJUEGvDlkmzL/PyLC1WkFb7nWReoIrx1K3CUnwLPt5dlKr5bgpfTLoRN1WTaIg4DIluti85QQpTYHjNXpcx7TDnfHvy9sUXfHByrLqIE60wioQVPJ/+TDyK1LNhJc1yO5LzGdEno1xx53kaLvjRhQChC82jsiaB2yasfZx6fHX9s7840m3XitobtOE21QAZuiaV4P/1fZTccMj1VFUiPEsVOV2pTSPIKdCMaqTdtlpRfSwCPUM5408Q0spCm0jb2iVHtxXSC2tymvcnkDg5czhOMvOWZTE+b5dyt/z0gcQ=";
+
+
+//        System.out.println("cipherTextArray : "+cipherTextArray);
+        System.out.println("Encrypted Text : "+encryptedText);
+        System.out.println("Encrypted Text : "+Base64.getEncoder().encodeToString(cipherTextArray));
+//        System.out.println("Encrypted Text : "+Base64.getEncoder().encodeToString(cipherTextArray));
+//        System.out.println("cipherTextArray : "+ Base64.getDecoder().decode(encryptedText.getBytes()));
+
 
         // Decryption
-        String encryptedText = "O5jdPpymAujV32egYh6kRhlxeGxH7pttNW4FYXcu5hX/2XtDAjKN3/HkzWopm8fw9gTh2zPn7+EePBNmvn2TdItPbxhQo5b8vLDYvsK+Q05yBNtkk9HnQ+d9sboOsJMUMj6M28685pSYfAsai7npA8YCZOp0JS1TEwaY5UGfGrqgtmQTvqyvUSblqWHddXzREyEEaxCIpPOGZxUyEcDjHR3StYzBcFs4cclh8NAnzmgd0E2E/IepPP7BpbdTzLfgslk8FGgoMGYJJcxh0wxyTvY/nQxBRcrTsEEXF96MXwXkXmbI5ZAHv0KOLBkyKeT+t23JITFmbz4DOJ6mXP88/VS6Nyz9MLYFdVwFE3qoLXL67zP9OVER6LTFqoGe9c8rrVZdVjZAZHBQrrPz0uJzmVGfLL6k7tbs8n0DXK5RZSsNh+LHGPySxensIkIbNl+S4TGvtGruhvJpB9mfpOlYjcRQ758X0SkDYnx18EDd00c0j+vJX+fUYxVcKrmTUXkF1zVYQYAb/3QfD5WZyEgHVU+Po2EMWuibAkRVHpCTnO+xuVuVQMS7Y2d7XvDSpCXKSV22yjl0Wtc5481muymFnsO/RUWnu1ErJxVduyx4PKtr17WivU1L7A/Rti8jN2AcQAhuinULxIZt2QPRzVDekdkj3n64uDaawHwqeFuI1HA=\n";
-        System.out.println("BYTES " + Arrays.toString(encryptedText.getBytes()));
-        byte[] cipherTextArray = encryptedText.getBytes();
-        String decryptedText = decrypt(cipherTextArray, privateKey);
-        System.out.println("DeCrypted Text : " + decryptedText);
+        String decryptedText = decrypt(Base64.getDecoder().decode(encryptedText.getBytes()), privateKey);
+//        String decryptedText = decrypt(encryptedText.getBytes(), privateKey);
+        System.out.println("DeCrypted Text : "+decryptedText);
     }
 
-    public static byte[] encrypt(String plainText, PublicKey publicKey) throws Exception {
+    public static byte[] encrypt (String plainText,PublicKey publicKey ) throws Exception
+    {
         //Get Cipher Instance RSA With ECB Mode and OAEPWITHSHA-512ANDMGF1PADDING Padding
         Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-512ANDMGF1PADDING");
 
@@ -46,12 +55,13 @@ public class RSAEncryption {
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
         //Perform Encryption
-        byte[] cipherText = cipher.doFinal(plainText.getBytes());
+        byte[] cipherText = cipher.doFinal(plainText.getBytes()) ;
 
         return cipherText;
     }
 
-    public static String decrypt(byte[] cipherTextArray, PrivateKey privateKey) throws Exception {
+    public static String decrypt (byte[] cipherTextArray, PrivateKey privateKey) throws Exception
+    {
         //Get Cipher Instance RSA With ECB Mode and OAEPWITHSHA-512ANDMGF1PADDING Padding
         Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA-512ANDMGF1PADDING");
 

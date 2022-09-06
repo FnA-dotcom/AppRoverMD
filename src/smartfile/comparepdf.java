@@ -12,11 +12,11 @@ public class comparepdf {
 
     public static void main(String[] args) throws IOException {
 
-        String file = "450_4424_LOWERY_SARA_18639_202012071031_20201207141153_EDPHYS.PDF";
-        String file2 = "LOWERY_2.PDF";
-
-
-        arePDFFilesEqual(new File("d://" + file), new File("d://" + file2));
+    	String file="450_4424_LOWERY_SARA_18639_202012071031_20201207141153_EDPHYS.PDF";
+    	String file2="LOWERY_2.PDF";
+        
+    	
+    	arePDFFilesEqual(new File("d://"+file),new File("d://"+file2));
       /*  try (PDDocument document = PDDocument.load(new File("d://"+file))) {
         	
             document.getClass();
@@ -93,50 +93,56 @@ public class comparepdf {
         }*/
 
     }
-
-    private static void arePDFFilesEqual(File pdfFile1, File pdfFile2) throws IOException {
-        System.out.print("Comparing PDF files (" + pdfFile1 + "," + pdfFile2 + ")");
+    
+    private static void arePDFFilesEqual(File pdfFile1, File pdfFile2) throws IOException
+    {
+        System.out.print("Comparing PDF files ("+pdfFile1+","+pdfFile2+")");
         PDDocument pdf1 = PDDocument.load(pdfFile1);
         PDDocument pdf2 = PDDocument.load(pdfFile2);
         PDPageTree pdf1pages = pdf1.getDocumentCatalog().getPages();
         PDPageTree pdf2pages = pdf2.getDocumentCatalog().getPages();
         String name = pdf2.getDocumentCatalog().getNames().toString();
-        try {
-            System.out.println(name);
-            if (pdf1pages.getCount() != pdf2pages.getCount()) {
-                String message = "Number of pages in the files (" + pdfFile1 + "," + pdfFile2 + ") do not match. pdfFile1 has " + pdf1pages.getCount() + " no pages, while pdf2pages has " + pdf2pages.getCount() + " no of pages";
+        try
+        {
+        	System.out.println(name);
+            if (pdf1pages.getCount() != pdf2pages.getCount())
+            {
+                String message = "Number of pages in the files ("+pdfFile1+","+pdfFile2+") do not match. pdfFile1 has "+pdf1pages.getCount()+" no pages, while pdf2pages has "+pdf2pages.getCount()+" no of pages";
                 System.out.println(message);
                 //throw new TestException(message);
             }
             PDFTextStripper pdfStripper = new PDFTextStripper();
             System.out.println("pdfStripper is :- " + pdfStripper);
             System.out.println("pdf1pages.size() is :- " + pdf1pages.getCount());
-            for (int i = 0; i < pdf1pages.getCount(); i++) {
+            for (int i = 0; i < pdf1pages.getCount(); i++)
+            {
                 pdfStripper.setStartPage(i + 1);
                 pdfStripper.setEndPage(i + 1);
                 String pdf1PageText = pdfStripper.getText(pdf1);
                 String pdf2PageText = pdfStripper.getText(pdf2);
-                String message = "Contents of the files (" + pdfFile1 + "," + pdfFile2 + ") do not match on Page no: " + (i + 1) + " pdf1PageText is : " + pdf1PageText + " , while pdf2PageText is : " + pdf2PageText;
+                String message = "Contents of the files ("+pdfFile1+","+pdfFile2+") do not match on Page no: " + (i + 1)+" pdf1PageText is : "+pdf1PageText+" , while pdf2PageText is : "+pdf2PageText;
                 System.out.println(message);
-                if (!pdf1PageText.equals(pdf2PageText)) {
-                    String message1 = "Contents of the files (" + pdfFile1 + "," + pdfFile2 + ") do not match on Page no: " + (i + 1) + " pdf1PageText is : " + pdf1PageText + " , while pdf2PageText is : " + pdf2PageText;
+                if (!pdf1PageText.equals(pdf2PageText))
+                {
+                    String message1 = "Contents of the files ("+pdfFile1+","+pdfFile2+") do not match on Page no: " + (i + 1)+" pdf1PageText is : "+pdf1PageText+" , while pdf2PageText is : "+pdf2PageText;
                     System.out.println(message1);
                     System.out.println("fff");
                     System.out.println("pdf1PageText is " + pdf1PageText);
                     System.out.println("pdf2PageText is " + pdf2PageText);
                     //String difference = String.d(pdf1PageText, pdf2PageText);
-                    // System.out.println("difference is "+difference);
-                    // throw new TestException(message+" [[ Difference is ]] "+difference);
+                   // System.out.println("difference is "+difference);
+                   // throw new TestException(message+" [[ Difference is ]] "+difference);
                 }
             }
-            System.out.println("Returning True , as PDF Files (" + pdfFile1 + "," + pdfFile2 + ") get matched");
+            System.out.println("Returning True , as PDF Files ("+pdfFile1+","+pdfFile2+") get matched");
         } finally {
             pdf1.close();
             pdf2.close();
         }
     }
-
-    public static boolean isStringOnlyAlphabet(String str) {
-        return ((str != null) && (!str.equals("")) && (str.matches("^[a-zA-Z]*$")));
-    }
+    
+    public static boolean isStringOnlyAlphabet(String str) 
+    { 
+        return ((str != null) && (!str.equals("")) && (str.matches("^[a-zA-Z]*$"))); 
+    } 
 }

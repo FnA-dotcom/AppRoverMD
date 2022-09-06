@@ -29,6 +29,18 @@ public class CopyClaim extends HttpServlet {
     private ResultSet rset = null;
     private String Query = "";
 
+    public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
+    }
+
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
+    }
+
     public static HashMap<Integer, String> claim_status_list(String aa, Connection Conn) {
 
         HashMap<Integer, String> hm = new HashMap<Integer, String>();
@@ -56,18 +68,6 @@ public class CopyClaim extends HttpServlet {
         } catch (Exception e) {
             return hm;
         }
-    }
-
-    public void init(final ServletConfig config) throws ServletException {
-        super.init(config);
-    }
-
-    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        this.handleRequest(request, response);
-    }
-
-    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        this.handleRequest(request, response);
     }
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
@@ -126,15 +126,15 @@ public class CopyClaim extends HttpServlet {
             }
             this.rset.close();
             this.stmt.close();
-            if (ActionID.compareTo("CopyInstoProf") == 0) {
+            if (ActionID.compareTo("CopyInstoProf") == 0){
                 supp.Dologing(UserIndex, conn, request.getRemoteAddr(), ActionID, "Copy Claim from Ins to Prof", "Copy Claim", FacilityIndex);
                 ConvertInstoProf(request, out, conn, context, UserIndex, DatabaseName, FacilityIndex, helper);
-            } else if (ActionID.compareTo("CopyProftoInst") == 0) {
+            }else if(ActionID.compareTo("CopyProftoInst") == 0){
                 supp.Dologing(UserIndex, conn, request.getRemoteAddr(), ActionID, "Copy Claim from Prof to Ins", "Copy Claim", FacilityIndex);
                 ConvertProftoInst(request, out, conn, context, UserIndex, DatabaseName, FacilityIndex, helper);
-            } else if (ActionID.compareTo("ChkClaim") == 0) {
+            }else if( ActionID.compareTo("ChkClaim") == 0){
                 supp.Dologing(UserIndex, conn, request.getRemoteAddr(), ActionID, "Copy Claim from Ins to Prof", "Copy Claim", FacilityIndex);
-                ChkClaim(request, out, conn, context, UserId, DatabaseName, FacilityIndex, helper, DirectoryName, response);
+                ChkClaim( request,  out,  conn,  context,  UserId,  DatabaseName,  FacilityIndex,  helper,  DirectoryName,  response);
             } else {
                 out.println("Under Development");
             }
@@ -203,6 +203,8 @@ public class CopyClaim extends HttpServlet {
         StringBuilder FreqList = new StringBuilder();
         StringBuilder SupervisingProvider = new StringBuilder();
         StringBuilder OrderingProvider = new StringBuilder();
+        StringBuilder ReferringProvider = new StringBuilder();
+
         StringBuilder BillingProvider = new StringBuilder();
         StringBuilder ChargeList = new StringBuilder();
         StringBuilder _DescriptionFrom = new StringBuilder();
@@ -255,6 +257,8 @@ public class CopyClaim extends HttpServlet {
         String _RenderingProvider = "";
         String _SupervisingProvider = "";
         String _OrderingProvider = "";
+        String _ReferringProvider = "";
+
         String _Frequency = "";
         String _BillingProvider = "";
         String _ChargeOption = "";
@@ -276,42 +280,42 @@ public class CopyClaim extends HttpServlet {
         String _OperatingProvider = "";
         String _CreatedDate = "";
         String TransportReasonCode = "";
-        String DelayReasonCodeAddInfo = "";
-        String EmploymentStatusAddInfo = "";
-        String AutoAccidentAddInfo = "";
-        String OtherAccidentAddInfo = "";
-        String AutoAccident_StateAddInfo = "";
-        String PatHomeboundAddInfo = "";
-        String ProvAccAssigAddInfo = "";
-        String AutoAccStateDive = "";
-        String POAInfoCodes = "";
-        String AmbClaimInfoInfo = "";
-        String AccidentIllnesDateAddInfo = "";
-        String LastMenstrualPeriodDateAddInfo = "";
-        String InitialTreatDateAddInfo = "";
-        String LastSeenDateAddInfo = "";
-        String UnabletoWorkFromDateAddInfo = "";
-        String UnabletoWorkToDateAddInfo = "";
-        String ClaimCodesAddinfo = "";
-        String OtherClaimIDAddinfo = "";
-        String ClaimNoteAddinfo = "";
-        String ResubmitReasonCodeAddinfo = "";
-        String HospitalizedFromDateAddInfo = "";
-        String HospitalizedToDateAddInfo = "";
-        String LabChargesAddInfo = "";
-        String SpecialProgCodeAddInfo = "";
-        String PatientSignOnFileAddInfo = "";
-        String InsuredSignOnFileAddInfo = "";
-        String PXCTaxQualiAddInfo = "";
-        String DocumentationMethodAddInfo = "";
-        String DocumentationTypeAddInfo = "";
-        String PatientHeightAddInfo = "";
-        String PatientWeightAddInfo = "";
-        String ServAuthExcepAddInfo = "";
-        String DemoProjectAddInfo = "";
-        String MemmoCertAddInfo = "";
-        String InvDevExempAddInfo = "";
-        String AmbPatGrpAddInfo = "";
+        String DelayReasonCodeAddInfo  = "";
+        String EmploymentStatusAddInfo  = "";
+        String AutoAccidentAddInfo  = "";
+        String OtherAccidentAddInfo  = "";
+        String AutoAccident_StateAddInfo  = "";
+        String PatHomeboundAddInfo  = "";
+        String ProvAccAssigAddInfo  = "";
+        String AutoAccStateDive  = "";
+        String POAInfoCodes  = "";
+        String AmbClaimInfoInfo  = "";
+        String AccidentIllnesDateAddInfo  = "";
+        String LastMenstrualPeriodDateAddInfo  = "";
+        String InitialTreatDateAddInfo  = "";
+        String LastSeenDateAddInfo  = "";
+        String UnabletoWorkFromDateAddInfo  = "";
+        String UnabletoWorkToDateAddInfo  = "";
+        String ClaimCodesAddinfo  = "";
+        String OtherClaimIDAddinfo  = "";
+        String ClaimNoteAddinfo  = "";
+        String ResubmitReasonCodeAddinfo  = "";
+        String HospitalizedFromDateAddInfo  = "";
+        String HospitalizedToDateAddInfo  = "";
+        String LabChargesAddInfo  = "";
+        String SpecialProgCodeAddInfo  = "";
+        String PatientSignOnFileAddInfo  = "";
+        String InsuredSignOnFileAddInfo  = "";
+        String PXCTaxQualiAddInfo  = "";
+        String DocumentationMethodAddInfo  = "";
+        String DocumentationTypeAddInfo  = "";
+        String PatientHeightAddInfo  = "";
+        String PatientWeightAddInfo  = "";
+        String ServAuthExcepAddInfo  = "";
+        String DemoProjectAddInfo  = "";
+        String MemmoCertAddInfo  = "";
+        String InvDevExempAddInfo  = "";
+        String AmbPatGrpAddInfo  = "";
 
         String AmbClaimInfoCodes = "";
         String TranReasonInfoCodes = "";
@@ -405,7 +409,7 @@ public class CopyClaim extends HttpServlet {
             stmt.close();
 
 
-            Query = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where Status = 0 and PatientRegId = " + PatientRegId + " " +
+            Query = "Select COUNT(*) from " + Database + ".ClaimInfoMaster where  PatientRegId = " + PatientRegId + " " +
                     " and VisitId = " + VisitId + " and ClaimType = 1";// + ClaimType;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -416,7 +420,7 @@ public class CopyClaim extends HttpServlet {
             stmt.close();
 
             if (FoundClaim > 0) {
-                Query = "Select ClaimNumber from " + Database + ".ClaimInfoMaster where Status = 0 and PatientRegId = " + PatientRegId + " " +
+                Query = "Select ClaimNumber from " + Database + ".ClaimInfoMaster where  PatientRegId = " + PatientRegId + " " +
                         " and VisitId = " + VisitId + " and ClaimType = 1";// + ClaimType;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -441,10 +445,12 @@ public class CopyClaim extends HttpServlet {
                         " IFNULL(a.SupervisingProvider,''), IFNULL(a.OrderingProvider,''), IFNULL(a.Freq,''), IFNULL(a.PriInsuranceNameId,''), " +
                         " IFNULL(a.SecondaryInsuranceId,''), IFNULL(b.PayerName,''), IFNULL(c.PayerName,''), IFNULL(a.GrpNumber,'') " +
                         " from " + Database + ".ClaimInfoMaster a " +
-                        " LEFT JOIN oe.AvailityClearHousePayerList b on a.PriInsuranceNameId = b.Id " +
-                        " LEFT JOIN oe.AvailityClearHousePayerList c on a.SecondaryInsuranceId= c.Id" +
-                        " where a.Status = 0 and a.ClaimNumber = '" + ClaimNo + "'";
+                        " LEFT JOIN oe_2.ProfessionalPayers b on a.PriInsuranceNameId = b.Id " +
+                        " LEFT JOIN oe_2.ProfessionalPayers c on a.SecondaryInsuranceId= c.Id" +
+                        " where  a.ClaimNumber = '" + ClaimNo + "'";
                 stmt = conn.createStatement();
+
+                System.out.println("COPY CLAIM -> QUERY -> "+Query);
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
                     ClaimInfoMasterId = rset.getInt(1);
@@ -466,7 +472,7 @@ public class CopyClaim extends HttpServlet {
                     SecondryInsuranceId = rset.getString(17);
                     PriInsuranceName = rset.getString(18);
                     SecondryInsurance = rset.getString(19);
-                    if (GrpNumber.equals("")) {
+                    if(GrpNumber.equals("")){
                         GrpNumber = rset.getString(20);
                     }
                 }
@@ -502,10 +508,11 @@ public class CopyClaim extends HttpServlet {
                         "IFNULL(a.ICDH,''), IFNULL(a.ICDI,''), IFNULL(a.ICDJ,''), IFNULL(a.ICDK,''), IFNULL(a.ICDL,''), IFNULL(a.ChargeOption,''), " +
                         "IFNULL(a.ServiceFromDate,''),IFNULL(a.ServiceToDate,''), IFNULL(a.HCPCSProcedure,''), IFNULL(a.POS,''), IFNULL(a.TOS,''), IFNULL(a.Mod1,''), " +
                         "IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), IFNULL(a.Mod4,''), IFNULL(a.DXPointer,''), IFNULL(a.UnitPrice,''), IFNULL(a.Units,''), IFNULL(a.Amount,''), " +
-                        "IFNULL(a.ChargesStatus,''), IFNULL(b.descname,'') " +
+                        "IFNULL(a.ChargesStatus,''), IFNULL(b.descname,''),IFNULL(a.ServiceDate,''),IFNULL(e.ChargeOption,'') " +
                         "from " + Database + ".ClaimChargesInfo a " +
                         "LEFT JOIN oe.claim_status_list b on a.ChargesStatus = b.Id " +
-                        " where a.Status = 0 and a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNo + "'";
+                        "LEFT JOIN oe.ChargeOption e on a.ChargesStatus = e.Id " +
+                        " where  a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNo + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -524,21 +531,22 @@ public class CopyClaim extends HttpServlet {
                     _ChargeOption = rset.getString(13);
 
                     ChargeList.append("<tr>");
-                    ChargeList.append("<td>" + rset.getString(14) + "</td>");//serviceFromDAte
-                    ChargeList.append("<td>" + rset.getString(15) + "</td>");//ServiceToDate
-                    ChargeList.append("<td>" + rset.getString(16) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(17) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(18) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(19) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(20) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(21) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(22) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(23) + "</td>");
-                    ChargeList.append("<td>" + rset.getDouble(24) + "</td>");
-                    ChargeList.append("<td>" + rset.getDouble(25) + "</td>");
-                    ChargeList.append("<td>" + rset.getDouble(26) + "</td>");
-                    ChargeList.append("<td>" + rset.getString(28) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(29) + "</td>");//serviceFromDAte
+                    ChargeList.append("<td >" + rset.getString(29) + "</td>");//ServiceToDate
+                    ChargeList.append("<td >" + rset.getString(16) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(17) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(18) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(19) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(20) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(21) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(22) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(23) + "</td>");
+                    ChargeList.append("<td >" + rset.getDouble(24) + "</td>");
+                    ChargeList.append("<td >" + rset.getDouble(25) + "</td>");
+                    ChargeList.append("<td >" + rset.getDouble(26) + "</td>");
+                    ChargeList.append("<td >" + rset.getString(30) + "</td>");
                     ChargeList.append("<td style=\"display:none;\">" + rset.getString(27) + "</td>");
+                    ChargeList.append("<td class=\"edit-disabled otherTD\" id='Other_" + ChargesCount + "'>Other</td>");
                     ChargeList.append("<td><button type='button' class='btn btn-danger btn-xs' onclick='deleteCharge(this)'><span class='glyphicon glyphicon-trash'></span></button></td>");
                     ChargeList.append("</tr>");
                     ChargesCount++;
@@ -555,8 +563,8 @@ public class CopyClaim extends HttpServlet {
                         " IFNULL(ProvAccAssigAddInfo,''), IFNULL(PXCTaxQualiAddInfo,''), IFNULL(DocumentationMethodAddInfo,''), IFNULL(DocumentationTypeAddInfo,''), " +
                         "IFNULL(PatientHeightAddInfo,''), IFNULL(PatientWeightAddInfo,''), IFNULL(ServAuthExcepAddInfo,''), IFNULL(DemoProjectAddInfo,''), " +
                         "IFNULL(MemmoCertAddInfo,''), IFNULL(InvDevExempAddInfo,''), IFNULL(AmbPatGrpAddInfo,''), IFNULL(DelayReasonCodeAddInfo,'') " +
-                        " from " + Database + ".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        "and ClaimNumber = '" + ClaimNo + "'";
+                        " from "+Database+".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = "+ClaimInfoMasterId +" " +
+                        "and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -603,10 +611,10 @@ public class CopyClaim extends HttpServlet {
                         "IFNULL(DropoffStateInfoCode,''), IFNULL(DropoffZipCodeInfoCode,''), IFNULL(PatAdmitHosChk,''), IFNULL(PatMoveStretChk,''), " +
                         "IFNULL(PatUnconShockChk,''), IFNULL(PatTransEmerSituaChk,''), IFNULL(PatPhyRestrainChk,''), IFNULL(PatvisiblehemorrChk,''), " +
                         "IFNULL(AmbSerNeccChk,''), IFNULL(PatconfbedchairChk,'') " +
-                        "from " + Database + ".ClaimAmbulanceCodes where status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        "from "+Database+".ClaimAmbulanceCodes where status = 0 and ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                if (rset.next()) {
+                if(rset.next()){
                     AmbClaimInfoCodes = rset.getString(1);
                     TranReasonInfoCodes = rset.getString(2);
                     TranMilesInfoCodes = rset.getString(3);
@@ -659,6 +667,7 @@ public class CopyClaim extends HttpServlet {
             } else {
 
 
+
                 Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
                 stmt = conn.createStatement();
                 RenderingProvider.append("<option class=Inner value=\"\"></option>");
@@ -709,14 +718,26 @@ public class CopyClaim extends HttpServlet {
             rset.close();
             stmt.close();
 
+            Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
+            stmt = conn.createStatement();
+            ReferringProvider.append("<option class=Inner value=\"\"></option>");
+            for (rset = stmt.executeQuery(Query1); rset.next(); ) {
+                if (_ReferringProvider.equals(rset.getString(1)))
+                    ReferringProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(2) + "</option>");
+                else
+                    ReferringProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+            }
+            rset.close();
+            stmt.close();
+
             Query1 = "SELECT FreqId,Frequency FROM oe.FrequencyList where Status = 1";
             stmt = conn.createStatement();
 //            FreqList.append("<option class=Inner value=\"\">Select Any</option>");
             for (rset = stmt.executeQuery(Query1); rset.next(); ) {
                 if (_Frequency.equals(rset.getString(1)))
-                    FreqList.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(1) + " - " + rset.getString(2) + "</option>");
+                    FreqList.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" +rset.getString(1)+" - "+ rset.getString(2) + "</option>");
                 else
-                    FreqList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(1) + " - " + rset.getString(2) + "</option>");
+                    FreqList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" +rset.getString(1)+" - "+ rset.getString(2) + "</option>");
             }
             rset.close();
             stmt.close();
@@ -725,17 +746,17 @@ public class CopyClaim extends HttpServlet {
             stmt = conn.createStatement();
             for (rset = stmt.executeQuery(Query); rset.next(); ) {
                 if (_ChargeOption.equals(rset.getString(1)))
-                    ChargeOption.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(1) + " - " + rset.getString(2) + "</option>");
+                    ChargeOption.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" +rset.getString(1)+" - "+ rset.getString(2) + "</option>");
                 else
-                    ChargeOption.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(1) + " - " + rset.getString(2) + "</option>");
+                    ChargeOption.append("<option class=Inner value=\"" + rset.getString(1) + "\">" +rset.getString(1)+" - "+ rset.getString(2) + "</option>");
             }
             rset.close();
             stmt.close();
 
-            if (AutoAccidentAddInfo.equals("1")) {
-                AutoAccStateDive = "#AutoAccStateDive{display:block;}";
-            } else {
-                AutoAccStateDive = "#AutoAccStateDive{display:none;}";
+            if(AutoAccidentAddInfo.equals("1")){
+                AutoAccStateDive="#AutoAccStateDive{display:block;}";
+            }else{
+                AutoAccStateDive="#AutoAccStateDive{display:none;}";
             }
 
             HashMap<Integer, String> hm2 = new HashMap<Integer, String>();
@@ -827,6 +848,8 @@ public class CopyClaim extends HttpServlet {
             hstmt.close();
 
 
+
+
             HashMap<String, String> HMYesNo = new HashMap<String, String>();
             HMYesNo.put("1", "YES");
             HMYesNo.put("0", "NO");
@@ -877,6 +900,7 @@ public class CopyClaim extends HttpServlet {
                     _PatHomeboundAddInfo.append("<option class=Inner value=\"" + entry.getKey() + "\"  >" + entry.getValue().toString() + "</option>");
                 }
             }
+
 
 
             HashMap<String, String> HMRelInfo = new HashMap<String, String>();
@@ -940,6 +964,25 @@ public class CopyClaim extends HttpServlet {
                 }
             }
 
+
+            Query = "SELECT SUBSTRING(IFNULL(MAX(Convert(Substring(ClaimNumber,4,8) ,UNSIGNED INTEGER)),0)+10000001,2,7) " +
+                    "FROM " + Database + ".ClaimInfoMaster";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                ClaimNo = rset.getString(1);
+            }
+            rset.close();
+            stmt.close();
+
+            if (ClaimNo.equals("0000001")) {
+                ClaimNo = "0001081";
+            }
+            if (ClaimType.equals("2")) {
+                Head = "Professional";
+                ClaimNo = "CP-" + ClaimNo;
+            }
+
             PatAdmitHosChk = CheckBox(PatAdmitHosChk);
             PatMoveStretChk = CheckBox(PatMoveStretChk);
             PatUnconShockChk = CheckBox(PatUnconShockChk);
@@ -982,6 +1025,7 @@ public class CopyClaim extends HttpServlet {
             Parser.SetField("BillingProvider", String.valueOf(BillingProvider));
             Parser.SetField("SupervisingProvider", String.valueOf(SupervisingProvider));
             Parser.SetField("OrderingProvider", String.valueOf(OrderingProvider));
+            Parser.SetField("ReferringProvider", String.valueOf(ReferringProvider));
             Parser.SetField("FreqList", String.valueOf(FreqList));
             Parser.SetField("_PolicyType", String.valueOf(_PolicyType));
             Parser.SetField("_SecondaryInsuranceMemId", String.valueOf(_SecondaryInsuranceMemId));
@@ -1003,7 +1047,7 @@ public class CopyClaim extends HttpServlet {
             Parser.SetField("ICDL", String.valueOf(ICDL));
             Parser.SetField("ChargeList", String.valueOf(ChargeList));
             Parser.SetField("_DescriptionFrom", String.valueOf(_DescriptionFrom));
-            Parser.SetField("ChargesCount", String.valueOf(ChargesCount + " Charges"));
+            Parser.SetField("ChargesCount", String.valueOf(ChargesCount+" Charges"));
             Parser.SetField("AutoAccident_StateAddInfo", String.valueOf(AutoAccident_StateAddInfo));
             Parser.SetField("_OtherAccidentAddInfo", String.valueOf(_OtherAccidentAddInfo));
             Parser.SetField("_EmploymentStatusAddInfo", String.valueOf(_EmploymentStatusAddInfo));
@@ -1021,9 +1065,9 @@ public class CopyClaim extends HttpServlet {
             Parser.SetField("AccidentIllnesDateAddInfo", String.valueOf(AccidentIllnesDateAddInfo));
             Parser.SetField("LastMenstrualPeriodDateAddInfo", String.valueOf(LastMenstrualPeriodDateAddInfo));
             Parser.SetField("InitialTreatDateAddInfo", String.valueOf(InitialTreatDateAddInfo));
-            Parser.SetField("LastSeenDateAddInfo", String.valueOf(LastSeenDateAddInfo));
-            Parser.SetField("UnabletoWorkFromDateAddInfo", String.valueOf(UnabletoWorkFromDateAddInfo));
-            Parser.SetField("UnabletoWorkToDateAddInfo", String.valueOf(UnabletoWorkToDateAddInfo));
+            Parser.SetField("LastSeenDateAddInfo", String.valueOf(LastSeenDateAddInfo ));
+            Parser.SetField("UnabletoWorkFromDateAddInfo", String.valueOf(UnabletoWorkFromDateAddInfo ));
+            Parser.SetField("UnabletoWorkToDateAddInfo", String.valueOf(UnabletoWorkToDateAddInfo ));
             Parser.SetField("ClaimCodesAddinfo", String.valueOf(ClaimCodesAddinfo));
             Parser.SetField("OtherClaimIDAddinfo", String.valueOf(OtherClaimIDAddinfo));
             Parser.SetField("ClaimNoteAddinfo", String.valueOf(ClaimNoteAddinfo));
@@ -1279,6 +1323,8 @@ public class CopyClaim extends HttpServlet {
         StringBuilder InfoCodeOcc = new StringBuilder();
         StringBuilder InfoCodeValueCode = new StringBuilder();
         StringBuilder InfoCodeCondCode = new StringBuilder();
+        StringBuilder ReferringProvider = new StringBuilder();
+        String _ReferringProvider = "";
 
         String note = "";
         String PatientName = "";
@@ -1311,30 +1357,30 @@ public class CopyClaim extends HttpServlet {
         String _OperatingProvider = "";
         String _CreatedDate = "";
         String DescriptionFrom = "";
-        String StatmentCoverFromDateAddInfo = "";
-        String StatmentCoverToDateAddInfo = "";
-        String AdmissionDateAddInfo = "";
-        String AdmissionHourAddInfo = "";
-        String AdmissionTypeAddInfo = "";
-        String AdmissionSourceAddInfo = "";
-        String DischargeHourAddInfo = "";
-        String PatientStatusAddInfo = "";
-        String DelayReasonCodeAddInfo = "";
-        String EmploymentStatusAddInfo = "";
-        String AutoAccidentAddInfo = "";
-        String OtherAccidentAddInfo = "";
-        String PPSAddInfo = "";
-        String RemarksAddInfo = "";
-        String AutoAccident_StateAddInfo = "";
-        String ReleaseInfoAddInfo = "";
-        String AssofBenifitAddInfo = "";
-        String ProvAccAssigAddInfo = "";
-        String AutoAccStateDive = "";
-        String PrincipalDiagInfoCodes = "";
-        String POAInfoCodes = "";
-        String AdmittingDiagInfoCodes = "";
-        String PrincipalProcedureInfoCodes = "";
-        String PrincipalProcedureDateInfoCodes = "";
+        String StatmentCoverFromDateAddInfo  = "";
+        String StatmentCoverToDateAddInfo  = "";
+        String AdmissionDateAddInfo  = "";
+        String AdmissionHourAddInfo  = "";
+        String AdmissionTypeAddInfo  = "";
+        String AdmissionSourceAddInfo  = "";
+        String DischargeHourAddInfo  = "";
+        String PatientStatusAddInfo  = "";
+        String DelayReasonCodeAddInfo  = "";
+        String EmploymentStatusAddInfo  = "";
+        String AutoAccidentAddInfo  = "";
+        String OtherAccidentAddInfo  = "";
+        String PPSAddInfo  = "";
+        String RemarksAddInfo  = "";
+        String AutoAccident_StateAddInfo  = "";
+        String ReleaseInfoAddInfo  = "";
+        String AssofBenifitAddInfo  = "";
+        String ProvAccAssigAddInfo  = "";
+        String AutoAccStateDive  = "";
+        String PrincipalDiagInfoCodes  = "";
+        String POAInfoCodes  = "";
+        String AdmittingDiagInfoCodes  = "";
+        String PrincipalProcedureInfoCodes  = "";
+        String PrincipalProcedureDateInfoCodes  = "";
         try {
 
             note = "Open Add info and load pdf";
@@ -1404,7 +1450,7 @@ public class CopyClaim extends HttpServlet {
             stmt.close();
 
 
-            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster where Status = 0 and PatientRegId = " + PatientRegId + " " +
+            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster where  PatientRegId = " + PatientRegId + " " +
                     " and VisitId = " + VisitId + " and ClaimType = 2";// + ClaimType;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1415,7 +1461,7 @@ public class CopyClaim extends HttpServlet {
             stmt.close();
 
             if (FoundClaim > 0) {
-                Query = "Select ClaimNumber from " + Database + ".ClaimInfoMaster where Status = 0 and PatientRegId = " + PatientRegId + " " +
+                Query = "Select ClaimNumber from " + Database + ".ClaimInfoMaster where  PatientRegId = " + PatientRegId + " " +
                         " and VisitId = " + VisitId + " and ClaimType = 2 order by Id desc ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -1434,15 +1480,16 @@ public class CopyClaim extends HttpServlet {
                 }
 
 
+
                 Query = " Select a.Id,IFNULL(a.RefNumber,''), IFNULL(a.TypeBillText,''),IFNULL(a.UploadDate,''), IFNULL(a.AttendingProvider,''), " +
                         " IFNULL(a.BillingProviders,''), IFNULL(a.PolicyType,''), " +
                         " IFNULL(a.SecondaryInsuranceMemId,''), IFNULL(a.SecondaryInsuranceGrpNumber,''), " +
                         " IFNULL(a.OperatingProvider,''), DATE_FORMAT(a.CreatedDate,'%m%d%y'),IFNULL(a.PriInsuranceNameId,''), IFNULL(a.SecondaryInsuranceId,''), " +
                         " IFNULL(b.PayerName,''), IFNULL(c.PayerName,''), IFNULL(a.GrpNumber,'') " +
                         " from " + Database + ".ClaimInfoMaster a " +
-                        " LEFT JOIN oe.AvailityClearHousePayerList b on a.PriInsuranceNameId = b.Id " +
-                        " LEFT JOIN oe.AvailityClearHousePayerList c on a.SecondaryInsuranceId = c.Id  " +
-                        " where a.Status = 0 and a.ClaimNumber = '" + ClaimNo + "'";
+                        " LEFT JOIN oe_2.ProfessionalPayers b on a.PriInsuranceNameId = b.Id " +
+                        " LEFT JOIN oe_2.ProfessionalPayers c on a.SecondaryInsuranceId = c.Id  " +
+                        " where  a.ClaimNumber = '" + ClaimNo + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -1461,7 +1508,7 @@ public class CopyClaim extends HttpServlet {
                     SecondryInsuranceId = rset.getString(13);
                     PriInsuranceName = rset.getString(14);
                     SecondryInsurance = rset.getString(15);
-                    if (GrpNumber.equals("")) {
+                    if(GrpNumber.equals("")){
                         GrpNumber = rset.getString(16);
                     }
 
@@ -1513,7 +1560,7 @@ public class CopyClaim extends HttpServlet {
                         "LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCS = b.CPTCode " +
                         "LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
                         "LEFT JOIN oe.claim_status_list d on a.ChargesStatus = d.Id " +
-                        "where a.Status = 0 and a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNo + "'";
+                        "where  a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNo + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1543,8 +1590,8 @@ public class CopyClaim extends HttpServlet {
                         "IFNULL(AdmissionSourceAddInfo,''), IFNULL(DischargeHourAddInfo,''), IFNULL(PatientStatusAddInfo,''), IFNULL(DelayReasonCodeAddInfo,'')," +
                         "IFNULL(EmploymentStatusAddInfo,''), IFNULL(AutoAccidentAddInfo,''), IFNULL(OtherAccidentAddInfo,''), IFNULL(PPSAddInfo,''), " +
                         "IFNULL(RemarksAddInfo,''), IFNULL(AutoAccident_StateAddInfo,''), IFNULL(ReleaseInfoAddInfo,''), IFNULL(AssofBenifitAddInfo,''), " +
-                        "IFNULL(ProvAccAssigAddInfo,'') from " + Database + ".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        "and ClaimNumber = '" + ClaimNo + "'";
+                        "IFNULL(ProvAccAssigAddInfo,'') from "+Database+".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = "+ClaimInfoMasterId +" " +
+                        "and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -1572,8 +1619,8 @@ public class CopyClaim extends HttpServlet {
 
                 Query = "Select IFNULL(PrincipalDiagInfoCodes,''), IFNULL(POAInfoCodes,''), IFNULL(AdmittingDiagInfoCodes,''), " +
                         "IFNULL(PrincipalProcedureInfoCodes,''), IFNULL(PrincipalProcedureDateInfoCodes,'') " +
-                        "from " + Database + ".ClaimInformationCode where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNo + "'";
+                        "from "+Database+".ClaimInformationCode where Status = 0 and ClaimInfoMasterId = "+ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -1587,9 +1634,9 @@ public class CopyClaim extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                Query = "Select IFNULL(a.Code,''), IFNULL(b.Description,'') from " + Database + ".ClaimInfoCodeExtCauseInj a " +
+                Query = "Select IFNULL(a.Code,''), IFNULL(b.Description,'') from "+Database+".ClaimInfoCodeExtCauseInj a " +
                         " LEFT JOIN oe.DiagnosisCodes b on a.Code = b.Code where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1602,9 +1649,9 @@ public class CopyClaim extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                Query = "Select IFNULL(a.Code,''), IFNULL(b.Description,'') from " + Database + ".ClaimInfoCodeReasVisit a " +
+                Query = "Select IFNULL(a.Code,''), IFNULL(b.Description,'') from "+Database+".ClaimInfoCodeReasVisit a " +
                         " LEFT JOIN oe.DiagnosisCodes b on a.Code = b.Code where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1619,9 +1666,9 @@ public class CopyClaim extends HttpServlet {
 
                 Query = "Select IFNULL(a.Code,''), IFNULL(b.Description,''), " +
                         "CASE WHEN a.PQA = 'Y' THEN 'Y - Yes' WHEN a.PQA = '1' THEN '1 - Unreported' WHEN a.PQA = 'N' THEN 'N - No'" +
-                        " WHEN a.PQA = 'U' THEN 'U - Unknown' WHEN a.PQA = 'W' THEN 'W - Undetermined' ELSE '' END from " + Database + ".ClaimInfoCodeOthDiag a " +
+                        " WHEN a.PQA = 'U' THEN 'U - Unknown' WHEN a.PQA = 'W' THEN 'W - Undetermined' ELSE '' END from "+Database+".ClaimInfoCodeOthDiag a " +
                         " LEFT JOIN oe.DiagnosisCodes b on a.Code = b.Code where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1635,9 +1682,9 @@ public class CopyClaim extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                Query = "Select IFNULL(a.Code,''), IFNULL(a.Date,''), IFNULL(b.Description,'') from " + Database + ".ClaimInfoCodeOthProcedure a " +
+                Query = "Select IFNULL(a.Code,''), IFNULL(a.Date,''), IFNULL(b.Description,'') from "+Database+".ClaimInfoCodeOthProcedure a " +
                         " LEFT JOIN oe.ProcedureCodes b on a.Code = b.ProcedureCode where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1652,9 +1699,9 @@ public class CopyClaim extends HttpServlet {
                 stmt.close();
 
                 Query = "Select IFNULL(a.Code,''), IFNULL(a.FromDate,''), IFNULL(a.ToDate,''), IFNULL(b.Description,'') " +
-                        " from " + Database + ".ClaimInfoCodeOccSpan a " +
+                        " from "+Database+".ClaimInfoCodeOccSpan a " +
                         " LEFT JOIN oe.OccurenceSpanCodes b on a.Code = b.OccurenceSpanCode where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1670,9 +1717,9 @@ public class CopyClaim extends HttpServlet {
                 stmt.close();
 
                 Query = "Select IFNULL(a.Code,''), IFNULL(a.Date,''), IFNULL(b.Description,'') " +
-                        " from " + Database + ".ClaimInfoOccurance a " +
+                        " from "+Database+".ClaimInfoOccurance a " +
                         " LEFT JOIN oe.OcurrenceCodes b on a.Code = b.OccuranceCode where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1687,9 +1734,9 @@ public class CopyClaim extends HttpServlet {
                 stmt.close();
 
                 Query = "Select IFNULL(a.Code,''), IFNULL(a.Amount,''), IFNULL(b.Description,'') " +
-                        " from " + Database + ".ClaimInfoCodeValueCode a " +
+                        " from "+Database+".ClaimInfoCodeValueCode a " +
                         " LEFT JOIN oe.ValueCodes b on a.Code = b.ValueCode where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1704,9 +1751,9 @@ public class CopyClaim extends HttpServlet {
                 stmt.close();
 
                 Query = "Select IFNULL(a.Code,''), IFNULL(b.Description,'') " +
-                        " from " + Database + ".ClaimInfoCodeConditionCode a " +
+                        " from "+Database+".ClaimInfoCodeConditionCode a " +
                         " LEFT JOIN oe.ConditionCodes b on a.Code = b.ConditionCode where a.Status = 0 and " +
-                        " a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNo + "'";
+                        " a.ClaimInfoMasterId = "+ClaimInfoMasterId +" and ClaimNumber = '"+ClaimNo+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1745,6 +1792,7 @@ public class CopyClaim extends HttpServlet {
                 }
 
             } else {
+
 
 
                 Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
@@ -1788,10 +1836,10 @@ public class CopyClaim extends HttpServlet {
             } else {
                 _DescriptionFrom.append("<option value=''>Select Any </option> <option value='1' selected > CPT/HCPCS </option><option value='0'>REVCODE </option> ");
             }
-            if (AutoAccidentAddInfo.equals("1")) {
-                AutoAccStateDive = "#AutoAccStateDive{display:block;}";
-            } else {
-                AutoAccStateDive = "#AutoAccStateDive{display:none;}";
+            if(AutoAccidentAddInfo.equals("1")){
+                AutoAccStateDive="#AutoAccStateDive{display:block;}";
+            }else{
+                AutoAccStateDive="#AutoAccStateDive{display:none;}";
             }
 
             HashMap<Integer, String> hm2 = new HashMap<Integer, String>();
@@ -1984,6 +2032,37 @@ public class CopyClaim extends HttpServlet {
                 }
             }
 
+            Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
+            stmt = conn.createStatement();
+            ReferringProvider.append("<option class=Inner value=\"\"></option>");
+            for (rset = stmt.executeQuery(Query1); rset.next(); ) {
+                if (_ReferringProvider.equals(rset.getString(1)))
+                    ReferringProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(2) + "</option>");
+                else
+                    ReferringProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+            }
+            rset.close();
+            stmt.close();
+
+
+            Query = "SELECT SUBSTRING(IFNULL(MAX(Convert(Substring(ClaimNumber,4,8) ,UNSIGNED INTEGER)),0)+10000001,2,7) " +
+                    "FROM " + Database + ".ClaimInfoMaster";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                ClaimNo = rset.getString(1);
+            }
+            rset.close();
+            stmt.close();
+
+            if (ClaimNo.equals("0000001")) {
+                ClaimNo = "0001081";
+            }
+            if (ClaimType.equals("1")) {
+                Head = "Institutional";
+                ClaimNo = "CI-" + ClaimNo;
+            }
+
             Services.GetCalendar(Day, Month, Year);
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("PatientName", PatientName.toString());
@@ -2027,7 +2106,7 @@ public class CopyClaim extends HttpServlet {
             Parser.SetField("_CreatedDate", String.valueOf(_CreatedDate));
             Parser.SetField("ChargeList", String.valueOf(ChargeList));
             Parser.SetField("_DescriptionFrom", String.valueOf(_DescriptionFrom));
-            Parser.SetField("ChargesCount", String.valueOf(ChargesCount + " Charges"));
+            Parser.SetField("ChargesCount", String.valueOf(ChargesCount+" Charges"));
             Parser.SetField("_DischargeHourAddInfo", String.valueOf(_DischargeHourAddInfo));
             Parser.SetField("_AdmissionHourAddInfo", String.valueOf(_AdmissionHourAddInfo));
             Parser.SetField("StatmentCoverFromDateAddInfo", String.valueOf(StatmentCoverFromDateAddInfo));
@@ -2059,6 +2138,10 @@ public class CopyClaim extends HttpServlet {
             Parser.SetField("FoundClaim", String.valueOf(0));
             Parser.SetField("ClaimInfoMasterId", String.valueOf(ClaimInfoMasterId));
 
+            Parser.SetField("ReferringProvider", String.valueOf(ReferringProvider));
+
+
+
 
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/Addinfo.html");
         } catch (Exception e) {
@@ -2081,7 +2164,7 @@ public class CopyClaim extends HttpServlet {
         VisitId = Integer.parseInt(request.getParameter("VisitId").trim());
         ClaimType = Integer.parseInt(request.getParameter("ClaimType").trim());
         try {
-            this.Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster  where Status = 0 and PatientRegId = " + PatientRegId + " and VisitId = " + VisitId + " and ClaimType = " + ClaimType;
+            this.Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster  where Status = 0 and PatientRegId = " + PatientRegId + " and VisitId = " + VisitId + " and ClaimType = "+ClaimType;
             this.stmt = conn.createStatement();
             this.rset = this.stmt.executeQuery(this.Query);
             if (this.rset.next())
@@ -2106,8 +2189,8 @@ public class CopyClaim extends HttpServlet {
                 VariableName = request.getParameter(VariableName).trim();
             }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
+        }catch(Exception e){
+            System.out.println(e.getMessage()+ "VariableName"+VariableName);
         }
         return VariableName;
     }
@@ -2120,42 +2203,42 @@ public class CopyClaim extends HttpServlet {
                 VariableName = request.getParameter(String.valueOf(VariableName)).trim();
             }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
+        }catch(Exception e){
+            System.out.println(e.getMessage()+ "VariableName"+VariableName);
         }
         return VariableName;
     }
 
     private String CheckCheckBoxValue(HttpServletRequest request, String VariableName) {
-        try {
+        try{
             if (request.getParameter(VariableName) == null) {
                 VariableName = "0";
             } else {
                 VariableName = request.getParameter(VariableName).trim();
-                if (VariableName.equals("on")) {
+                if(VariableName.equals("on")){
                     VariableName = "1";
-                } else {
+                }else{
                     VariableName = "0";
                 }
             }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
+        }catch(Exception e){
+            System.out.println(e.getMessage()+ "VariableName"+VariableName);
         }
         return VariableName;
     }
 
     private String CheckBox(String VariableName) {
         String ChkBox = "";
-        try {
-            if (VariableName.equals("1")) {
-                ChkBox = "<input type=\"checkbox\" id=\"" + VariableName + "\" name=\"" + VariableName + "\" class=\"filled-in\" checked />";
-            } else {
-                ChkBox = "<input type=\"checkbox\" id=\"" + VariableName + "\" name=\"" + VariableName + "\" class=\"filled-in\" />";
+        try{
+            if(VariableName.equals("1")){
+                ChkBox = "<input type=\"checkbox\" id=\""+VariableName+"\" name=\""+VariableName+"\" class=\"filled-in\" checked />";
+            }else{
+                ChkBox = "<input type=\"checkbox\" id=\""+VariableName+"\" name=\""+VariableName+"\" class=\"filled-in\" />";
             }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
+        }catch(Exception e){
+            System.out.println(e.getMessage()+ "VariableName"+VariableName);
         }
         return ChkBox;
     }

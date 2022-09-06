@@ -31,46 +31,6 @@ public class PatientCharts extends HttpServlet {
     private String Query = "";
     private Connection conn = null;
 
-    public static String logging(final int userindex, final int filestatus, final int indexptr, final Connection conn) {
-        Statement hstmt = null;
-        final ResultSet hrset = null;
-        String Query = "";
-        try {
-            hstmt = conn.createStatement();
-            Query = " insert into oe.fileactivity(fileindex,created,userindex,filestatus)  values('" + indexptr + "',now()," + userindex + ",'" + filestatus + "') ";
-            hstmt.execute(Query);
-        } catch (Exception ex) {
-        }
-        return null;
-    }
-
-    public static String createnote(final int userindex, final String note, final int claimid, final Connection conn, final String mrn) {
-        Statement hstmt = null;
-        final ResultSet hrset = null;
-        String Query = "";
-        try {
-            hstmt = conn.createStatement();
-            Query = " insert into oe.claim_note(note,userindex,createddate,claimid, mrn)  values('" + note + "','" + userindex + "',now(), '" + claimid + "', '" + mrn + "') ";
-            hstmt.execute(Query);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        return null;
-    }
-
-    public static String markuser(final int userindex, final int filestatus, final int indexptr, final Connection conn) {
-        Statement hstmt = null;
-        final ResultSet hrset = null;
-        String Query = "";
-        try {
-            hstmt = conn.createStatement();
-            Query = " update  oe.filelogs_sftp set processby=" + userindex + " where processby=0 and id=" + indexptr;
-            hstmt.execute(Query);
-        } catch (Exception ex) {
-        }
-        return null;
-    }
-
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -175,6 +135,7 @@ public class PatientCharts extends HttpServlet {
 
     }
 
+
     private void GetChartList(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, String UserId, String Database, int ClientId) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -273,5 +234,45 @@ public class PatientCharts extends HttpServlet {
         } catch (Exception e) {
             out.println("Unable to process request ..." + e.getMessage());
         }
+    }
+
+    public static String logging(final int userindex, final int filestatus, final int indexptr, final Connection conn) {
+        Statement hstmt = null;
+        final ResultSet hrset = null;
+        String Query = "";
+        try {
+            hstmt = conn.createStatement();
+            Query = " insert into oe.fileactivity(fileindex,created,userindex,filestatus)  values('" + indexptr + "',now()," + userindex + ",'" + filestatus + "') ";
+            hstmt.execute(Query);
+        } catch (Exception ex) {
+        }
+        return null;
+    }
+
+    public static String createnote(final int userindex, final String note, final int claimid, final Connection conn, final String mrn) {
+        Statement hstmt = null;
+        final ResultSet hrset = null;
+        String Query = "";
+        try {
+            hstmt = conn.createStatement();
+            Query = " insert into oe.claim_note(note,userindex,createddate,claimid, mrn)  values('" + note + "','" + userindex + "',now(), '" + claimid + "', '" + mrn + "') ";
+            hstmt.execute(Query);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return null;
+    }
+
+    public static String markuser(final int userindex, final int filestatus, final int indexptr, final Connection conn) {
+        Statement hstmt = null;
+        final ResultSet hrset = null;
+        String Query = "";
+        try {
+            hstmt = conn.createStatement();
+            Query = " update  oe.filelogs_sftp set processby=" + userindex + " where processby=0 and id=" + indexptr;
+            hstmt.execute(Query);
+        } catch (Exception ex) {
+        }
+        return null;
     }
 }

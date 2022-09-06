@@ -1,3 +1,7 @@
+//
+// Decompiled by Procyon v0.5.36
+//
+
 package oe;
 
 import Parsehtm.Parsehtm;
@@ -11,173 +15,178 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
-import static oe.PatientChart.Clientlist;
-
-@SuppressWarnings("Duplicates")
 public class FollowUpReport extends HttpServlet {
-    private Connection conn = null;
-    private Statement stmt = null;
-    private ResultSet rset = null;
-    private String Query = null;
-    private PreparedStatement pStmt = null;
-
-    public void init(ServletConfig config) throws ServletException {
+    public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        serviceHandling(request, response);
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
     }
 
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        serviceHandling(request, response);
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
     }
 
-    private void serviceHandling(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String Action = "";
-        ServletContext context;
-        context = getServletContext();
-        PrintWriter out = new PrintWriter(response.getOutputStream());
-        response.setContentType("text/html");
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
         String UserId = "";
-        int FacilityIndex;
-        String DatabaseName;
+        String Zone = "";
+        String Passwd = "";
+        final String ActionID = request.getParameter("ActionID").trim();
+        response.setContentType("text/html");
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         final Services supp = new Services();
-
+        ServletContext context = null;
+        context = this.getServletContext();
+        conn = Services.getMysqlConn(context);
+        final Cookie[] cookies = request.getCookies();
+        UserId = (Zone = (Passwd = ""));
+        final int checkCookie = 0;
+        for (int coky = 0; coky < cookies.length; ++coky) {
+            final String cName = cookies[coky].getName();
+            final String cValue = cookies[coky].getValue();
+            if (cName.equals("UserId")) {
+                UserId = cValue;
+            }
+        }
+        if (ActionID.equals("GetReport")) {
+            this.GetReport(request, out, conn, context, UserId, response);
+        } else if (ActionID.equals("GetReportInput")) {
+            this.GetReportInput(request, out, conn, context, UserId, response);
+        } else {
+            out.println("Under Development");
+        }
         try {
-            context = this.getServletContext();
-            conn = Services.getMysqlConn(context);
-            if (conn == null) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("Error", "Unable to connect. Our team is looking into it!");
-                return;
+            conn.close();
+        } catch (Exception ex) {
+        }
+        out.flush();
+        out.close();
+    }
+
+    void GetReportInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final HttpServletResponse response) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        final StringBuffer Clients = new StringBuffer();
+        try {
+            Query = "Select id,name from oe.clients where status = 0";
+            hstmt = conn.createStatement();
+            hrset = hstmt.executeQuery(Query);
+            System.out.println(Query);
+            Clients.append("<option value=\"-1\">------ All -----</option>");
+            while (hrset.next()) {
+                Clients.append("<option value=" + hrset.getInt(1) + ">" + hrset.getString(2) + "</option>");
             }
-            Cookie[] cookies = request.getCookies();
-            int checkCookie = 0;
-            for (Cookie cooky : cookies) {
-                String cName = cooky.getName();
-                String cValue = cooky.getValue();
-                if (cName.equals("UserId")) {
-                    UserId = cValue;
-                }
-            }
-            Action = request.getParameter("ActionID").trim();
-            switch (Action) {
-                case "FollowupInputReport":
-                    FollowupInputReport(request, out, conn, context, UserId);
-                    break;
-                case "showFollowupReport":
-                    showReportFollowup(request, out, conn, context, UserId);
-                    break;
-                default:
-                    out.println("Under Development");
-                    break;
-            }
-        } catch (Exception Ex) {
-            out.println("Exception in main..");
-            out.flush();
-            out.close();
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            out.flush();
-            out.close();
+            hrset.close();
+            hstmt.close();
+            final Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("Clients", Clients.toString());
+            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/FollowUpReport.html");
+        } catch (Exception e) {
+            out.println("Error in getting Report: " + e.getMessage());
         }
     }
 
-    private void FollowupInputReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId) {
-        try {
-            String UserId = request.getParameter("User").trim();
-            StringBuffer ClientList = new StringBuffer();
-            ClientList.append("<option class=Inner value=\"-1\"> All </option>");
-            HashMap<Integer, String> hm = new HashMap<>();
-            hm = Clientlist("a", conn);
-            Set<Map.Entry<Integer, String>> set = hm.entrySet();
-            for (Map.Entry<Integer, String> entry : set) {
-                ClientList.append("<option class=Inner value=\"" + entry.getKey() + "\">" + entry.getValue().toString() + "</option>");
-            }
-
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("UserId", UserId);
-            Parser.SetField("ClientList", ClientList.toString());
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Reports/getFollowupInput.html");
-
-        } catch (Exception Ex) {
-            out.println("0~Error while fetching report");
-            String Message = Ex.getMessage() + " <br> ";
-            for (int i = 0; i < Ex.getStackTrace().length; ++i) {
-                Message = Message + Ex.getStackTrace()[i] + " ******* <br>";
-            }
-            out.println(Message);
+    void GetReport(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final HttpServletResponse response) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        Statement hstmt2 = null;
+        ResultSet hrset2 = null;
+        String Query2 = "";
+        final int requestedMonthInt = Integer.parseInt(request.getParameter("Month").trim());
+        String clientid = "";
+        String clientname = "";
+        final String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "Novermber", "December"};
+        final String requestedYearString = request.getParameter("Year").trim();
+        String requestedMonthString = request.getParameter("Month").trim();
+        final String Clients = request.getParameter("Clients").trim();
+        int monthcount = 0;
+        long TotalCount = 0L;
+        if (requestedMonthString.length() == 1) {
+            requestedMonthString = "0" + requestedMonthString;
         }
-    }
-
-    private void showReportFollowup(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String userId) {
-        stmt = null;
-        rset = null;
-        pStmt = null;
-        Query = "";
-        int SNo = 1;
-        StringBuilder ClaimFollowup = new StringBuilder();
+        int requestedMonthLength = 0;
+        if (requestedMonthInt == 1 || requestedMonthInt == 3 || requestedMonthInt == 5 || requestedMonthInt == 7 || requestedMonthInt == 8 || requestedMonthInt == 10 || requestedMonthInt == 12) {
+            requestedMonthLength = 31;
+        } else if (requestedMonthInt == 2) {
+            requestedMonthLength = 28;
+        } else {
+            requestedMonthLength = 30;
+        }
         try {
-            String FDate = request.getParameter("FDate").trim();
-            int Facility = Integer.parseInt(request.getParameter("ClientList").trim());
-            String UserId = request.getParameter("UserId").trim();
-
-            String condition = "";
-            if (Facility < 0)
-                condition = "";
-            else
-                condition = " AND a.FacilityIdx = " + Facility;
-            String DToDate = FDate.substring(0, 19);
-            String DFromDate = FDate.substring(22, 41);
-            Query = "SELECT a.FollowupRemarks,DATE_FORMAT(a.FollowupDateTime,'%d-%b-%Y'),a.FollowupEnterBy, \n" +
-                    "a.MRN,b.`name`, a.ClaimIdx,c.firstname,c.lastname,c.dosdate,c.id\n" +
-                    "FROM oe.ClaimFollowups a \n" +
-                    "INNER JOIN oe.clients b ON a.FacilityIdx = b.Id " +
-                    "INNER JOIN filelogs_sftp c ON a.ClaimIdx = c.Id " +
-                    "WHERE a.FollowupDateTime BETWEEN '" + DToDate + "' AND '" + DFromDate + "' AND " +
-                    "UPPER(a.CreatedBy) = UPPER('" + UserId + "') " + condition + " ";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                ClaimFollowup.append("<tr><td align=left>" + SNo + "</td>\n");
-                ClaimFollowup.append("<td align=left>" + rset.getString(7) + "</td>\n");//firstname
-                ClaimFollowup.append("<td align=left>" + rset.getString(8) + "</td>\n");//lastname
-                ClaimFollowup.append("<td align=left>" + rset.getString(9) + "</td>\n");//dosdate
-                ClaimFollowup.append("<td align=left>" + rset.getInt(4) + "</td>\n");//MRN
-                ClaimFollowup.append("<td align=left>" + rset.getString(2) + "</td>\n");//FollowupDateTime
-                ClaimFollowup.append("<td align=left>" + rset.getString(1) + "</td>\n");//FollowupRemarks
-                ClaimFollowup.append("<td align=left>" + rset.getString(3) + "</td>\n");//FollowupEnterBy
-                ClaimFollowup.append("<td align=left>" + rset.getString(5) + "</td>\n");//Facility
-                ClaimFollowup.append("<td><a class=\"btn btn-sm btn-primary\" href=/oe/oe.PatientChart?Action=Addinfo&indexptr=" + rset.getString(10) + "&mrn=" + rset.getString(4) + " target='_blank'>Details</a></td>");
-                ClaimFollowup.append("</tr>");
-                SNo++;
+            final StringBuffer List = new StringBuffer();
+            final StringBuffer ClientsBuffer = new StringBuffer();
+            Query = "Select id,name from oe.clients where status = 0";
+            hstmt = conn.createStatement();
+            hrset = hstmt.executeQuery(Query);
+            System.out.println(Query);
+            ClientsBuffer.append("<option value=\"-1\">------ All -----</option>");
+            while (hrset.next()) {
+                ClientsBuffer.append("<option value=" + hrset.getInt(1) + ">" + hrset.getString(2) + "</option>");
             }
-            rset.close();
-            stmt.close();
-
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("ClaimFollowup", ClaimFollowup.toString());
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Reports/FollowUpReport.html");
-
-        } catch (Exception Ex) {
-            out.println("0~Error while fetching report");
-            String Message = Ex.getMessage() + " <br> ";
-            for (int i = 0; i < Ex.getStackTrace().length; ++i) {
-                Message = Message + Ex.getStackTrace()[i] + " ******* <br>";
+            hrset.close();
+            hstmt.close();
+            List.append("<table width=\"100%\" id=\"ReportTable\" class=\"table table-bordered table-striped\">");
+            List.append("<thead>");
+            List.append("<tr>");
+            List.append("<th style=\"width:30%\">ClientName</th> ");
+            for (int i = 1; i <= requestedMonthLength; ++i) {
+                List.append("<th style=\"width:02%\">" + requestedMonthString + "/" + String.format("%02d", i) + "/" + requestedYearString + "</th> ");
             }
-            out.println(Message);
+            List.append("<th style=\"width:08%\">Total</th> ");
+            List.append("</tr>");
+            List.append("</thead>");
+            if (Clients.equals("-1")) {
+                Query = "SELECT id,name,directory_1,remotedirectory,tablename FROM oe.clients WHERE id NOT IN (1,9,10,12)";
+            } else {
+                Query = "SELECT id,name,directory_1,remotedirectory,tablename FROM oe.clients WHERE id = '" + Clients + "'";
+            }
+            hstmt = conn.createStatement();
+            hrset = hstmt.executeQuery(Query);
+            System.out.println(Query);
+            while (hrset.next()) {
+                clientid = hrset.getString(1);
+                clientname = hrset.getString(2);
+                List.append(" <tbody>");
+                List.append("<tr>");
+                List.append("<td align=left>" + clientname + "</td>");
+                monthcount = 0;
+                for (int i = 1; i <= requestedMonthLength; ++i) {
+                    Query2 = "SELECT count(*) FROM (SELECT DISTINCT firstname, lastname,substr(dosdate,1,10) FROM filelogs_sftp  WHERE clientdirectory= " + clientid + " AND substr(dosdate,1,10)='" + requestedYearString + "-" + requestedMonthString + "-" + String.format("%02d", i) + "' ) t";
+                    System.out.println(Query2);
+                    hstmt2 = conn.createStatement();
+                    hrset2 = hstmt2.executeQuery(Query2);
+                    hrset2.next();
+                    List.append("<td align=left>" + hrset2.getInt(1) + "</td>");
+                    monthcount += hrset2.getInt(1);
+                    hrset2.close();
+                    hstmt2.close();
+                }
+                List.append("<td align=left>" + monthcount + "</td>");
+                List.append("</tr>");
+                TotalCount += monthcount;
+            }
+            List.append("<tr style=\"background-color:#D9DDFC\">");
+            List.append("<td align=left></td>");
+            List.append("<td colspan='" + requestedMonthLength + "' style=\"width:02%;text-align:center;font-weight: bold;\">Complete Total</td> ");
+            List.append("<td align=left style=\"font-weight: bold;\">" + TotalCount + "</td>");
+            List.append("</tr>");
+            List.append("</tbody>");
+            List.append("</table>");
+            String MonthName = "";
+            if (Integer.parseInt(requestedMonthString) >= 1 && Integer.parseInt(requestedMonthString) <= 12) {
+                MonthName = months[Integer.parseInt(requestedMonthString) - 1];
+            }
+            out.println(List + "|" + "Month Name: " + MonthName);
+        } catch (Exception e) {
+            out.println("Error in getting Report: " + e.getMessage());
         }
     }
 }

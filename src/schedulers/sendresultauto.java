@@ -41,8 +41,7 @@ public class sendresultauto {
                     + " FROM  " + Database + ".PatientReg a\r\n" +
                     " LEFT JOIN  " + Database + ".TestOrder b ON a.ID=b.PatRegIdx \r\n" +
                     " LEFT JOIN  " + Database + ".Tests c ON b.ID=c.OrderId \r\n" +
-                    " where  b.status IN (6,7) and b.email=0 AND c.TestIdx != 4 and a.MRN = 311645";
-                    //" AND a.Email NOT IN ('tabish.hafeez@fam-llc.com','amustafa@fam-llc.com') limit 50";
+                    " where  b.status IN (6,7) and b.email=0 AND c.TestIdx != 4 AND a.email NOT IN('tabish.hafeez@fam-llc.com','amustufa@fam-llc.com') AND b.OrderDate > '2022-06-01 00:00:00' limit 50";
             System.out.println(Query);
             hstmt = conn.createStatement();
             hrset = hstmt.executeQuery(Query);
@@ -80,8 +79,7 @@ public class sendresultauto {
             Statement stmt = null;
             String Query = "";
 
-            Query = "UPDATE " + Database + ".TestOrder SET status=7, email=" + mstatus + ",emailtime=now() " +
-                    "WHERE Id = " + o_id;
+            Query = "UPDATE " + Database + ".TestOrder SET status=7, email=" + mstatus + ",emailtime=now() WHERE Id = " + o_id;
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
             stmt.close();
@@ -245,11 +243,9 @@ public class sendresultauto {
                 System.out.println("Email Sent..");
             } catch (Exception e) {
                 e.printStackTrace();
-                return 999;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return 999;
         }
         return 1;
     }

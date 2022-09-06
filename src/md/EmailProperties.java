@@ -8,7 +8,7 @@ public class EmailProperties {
     private String SMTP_AUTH_USER;
     private String SMTP_AUTH_PWD;
 
-    public EmailProperties(Properties properties) {
+    public EmailProperties(Properties properties){
         this.SMTP_HOST_NAME = properties.getProperty("HostName");
         this.Port = properties.getProperty("Port");
         this.SMTP_AUTH_USER = properties.getProperty("AuthUser");

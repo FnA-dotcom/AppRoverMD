@@ -848,4 +848,3 @@ public class EligibilityInquiry4 extends HttpServlet {
         }
     }
 }
-

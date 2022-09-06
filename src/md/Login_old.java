@@ -21,25 +21,26 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Hashtable;
 
-public class Login_old extends HttpServlet {
+public class Login_old extends HttpServlet
+{
     private static final String CONTENT_TYPE = "text/html; charset=windows-1252";
-
+    
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
-
+    
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         this.HandleRequest(request, response);
     }
-
+    
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         this.HandleRequest(request, response);
     }
-
+    
     public void HandleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         String Action = null;
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         try {
             final String constring = Services.ConnString(this.getServletContext(), 1);
             conn = Services.GetConnection(this.getServletContext(), 1);
@@ -50,7 +51,8 @@ public class Login_old extends HttpServlet {
                 out.close();
                 return;
             }
-        } catch (Exception excp) {
+        }
+        catch (Exception excp) {
             conn = null;
             System.out.println("Exception excp conn: " + excp.getMessage());
         }
@@ -82,23 +84,30 @@ public class Login_old extends HttpServlet {
             }
             if (Action.compareTo("Login_old") == 0) {
                 this.Login(request, response, out, conn, context);
-            } else if (Action.compareTo("LoginAdmin") == 0) {
+            }
+            else if (Action.compareTo("LoginAdmin") == 0) {
                 this.LoginAdmin(request, response, out, conn, context);
-            } else if (Action.compareTo("Logout") == 0) {
+            }
+            else if (Action.compareTo("Logout") == 0) {
                 this.Logout(request, response, out, conn, context);
-            } else if (Action.compareTo("Register") == 0) {
+            }
+            else if (Action.compareTo("Register") == 0) {
                 this.Register(request, response, out, conn, context);
-            } else if (Action.compareTo("forgetpassword") == 0) {
+            }
+            else if (Action.compareTo("forgetpassword") == 0) {
                 this.forgetpassword(request, response, out, conn, context);
-            } else if (Action.compareTo("passwordreset") == 0) {
+            }
+            else if (Action.compareTo("passwordreset") == 0) {
                 this.passwordreset(request, response, out, conn, context);
-            } else if (Action.compareTo("passwordresetsave") == 0) {
+            }
+            else if (Action.compareTo("passwordresetsave") == 0) {
                 this.passwordresetsave(request, response, out, conn, context);
             }
             out.flush();
             out.close();
             conn.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Services.DumException("Login_old", "HandleRequest", request, e, this.getServletContext());
             try {
                 final Cookie cookie = new Cookie("UserId", "");
@@ -107,13 +116,13 @@ public class Login_old extends HttpServlet {
                 final Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Error", Message);
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "index.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
         out.flush();
         out.close();
     }
-
+    
     public void Login(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext context1) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -170,17 +179,18 @@ public class Login_old extends HttpServlet {
                 final HttpSession session = request.getSession(true);
                 final Hashtable ht = new Hashtable();
                 ht.put(UserId, session);
-                context2.setAttribute("ActiveSessions", (Object) ht);
-            } else {
-                final Hashtable ht2 = (Hashtable) context2.getAttribute("ActiveSessions");
+                context2.setAttribute("ActiveSessions", (Object)ht);
+            }
+            else {
+                final Hashtable ht2 = (Hashtable)context2.getAttribute("ActiveSessions");
                 if (ht2.get(UserId) != null) {
                     final HttpSession session2 = (HttpSession) ht2.get(UserId);
                     ht2.remove(UserId);
-                    context2.setAttribute("ActiveSessions", (Object) ht2);
+                    context2.setAttribute("ActiveSessions", (Object)ht2);
                 }
                 final HttpSession session2 = request.getSession(true);
                 ht2.put(UserId, session2);
-                context2.setAttribute("ActiveSessions", (Object) ht2);
+                context2.setAttribute("ActiveSessions", (Object)ht2);
             }
 
             Query = "SELECT name FROM oe.clients WHERE Id = " + ClientIndex;
@@ -196,36 +206,46 @@ public class Login_old extends HttpServlet {
             Parser.SetField("UserType", String.valueOf(UserType));
             if (UserType.equals("1")) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "WelcomeMenu.html");
-            } else if (UserType.equals("9")) {
+            }
+            else if (UserType.equals("9")) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "WelcomeMenuadmin.html");
-            } else if (UserType.equals("3")) {
+            }
+            else if (UserType.equals("3")) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "main_wallboard.html");
-            } else if (UserType.equals("4")) {
+            }
+            else if (UserType.equals("4")) {
                 if (ClientIndex == 8) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main.html");
-                } else if (ClientIndex == 9) {
+                }
+                else if (ClientIndex == 9) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_Victoria.html");
-                } else if (ClientIndex == 10) {
+                }
+                else if (ClientIndex == 10) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_Oddasa.html");
-                } else if (ClientIndex == 12) {
+                }
+                else if (ClientIndex == 12) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_saustin.html");
-                } else if (ClientIndex == 15) {
+                }
+                else if (ClientIndex == 15) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_Sublime.html");
                 }
-            } else if (UserType.equals("5")) {
+            }
+            else if (UserType.equals("5")) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_supervisor_main.html");
-            } else if (UserType.equals("6")) {
+            }
+            else if (UserType.equals("6")) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "WelcomeMenu_agent.html");
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Services.DumException("Login_old", "Login_old", request, e, this.getServletContext());
             try {
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("Error", e.getMessage());
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "index.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
     }
 
@@ -271,12 +291,12 @@ public class Login_old extends HttpServlet {
                 throw new Exception("Waiting for Approvel , Contact OE Representative !!!");
             }
 
-            if (UserType.equals("7")) {
+            if(UserType.equals("7")){
 
-                Query = "Select userid from oe.sysusers where clientid = " + ClientIndex;
+                Query = "Select userid from oe.sysusers where clientid = "+ClientIndex;
                 hstmt = conn.createStatement();
                 hrset = hstmt.executeQuery(Query);
-                if (hrset.next()) {
+                if(hrset.next()){
                     UserId = hrset.getString(1);
                 }
             }
@@ -296,17 +316,18 @@ public class Login_old extends HttpServlet {
                 final HttpSession session = request.getSession(true);
                 final Hashtable ht = new Hashtable();
                 ht.put(UserId, session);
-                context2.setAttribute("ActiveSessions", (Object) ht);
-            } else {
-                final Hashtable ht2 = (Hashtable) context2.getAttribute("ActiveSessions");
+                context2.setAttribute("ActiveSessions", (Object)ht);
+            }
+            else {
+                final Hashtable ht2 = (Hashtable)context2.getAttribute("ActiveSessions");
                 if (ht2.get(UserId) != null) {
                     final HttpSession session2 = (HttpSession) ht2.get(UserId);
                     ht2.remove(UserId);
-                    context2.setAttribute("ActiveSessions", (Object) ht2);
+                    context2.setAttribute("ActiveSessions", (Object)ht2);
                 }
                 final HttpSession session2 = request.getSession(true);
                 ht2.put(UserId, session2);
-                context2.setAttribute("ActiveSessions", (Object) ht2);
+                context2.setAttribute("ActiveSessions", (Object)ht2);
             }
 
             Query = "SELECT name FROM oe.clients WHERE Id = " + ClientIndex;
@@ -320,29 +341,33 @@ public class Login_old extends HttpServlet {
             Parser.SetField("UserName", UNAME);
             Parser.SetField("ClientId", String.valueOf(ClientId));
             Parser.SetField("UserType", String.valueOf(UserType));
-            if (UserType.equals("7")) {
+            if(UserType.equals("7")){
                 if (ClientIndex == 8) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main.html");
-                } else if (ClientIndex == 9) {
+                }
+                else if (ClientIndex == 9) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_Victoria.html");
-                } else if (ClientIndex == 10) {
+                }
+                else if (ClientIndex == 10) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_Oddasa.html");
-                } else if (ClientIndex == 12) {
+                }
+                else if (ClientIndex == 12) {
                     Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "ob_admin_main_saustin.html");
                 }
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Services.DumException("Login_old", "Login_old", request, e, this.getServletContext());
             try {
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("Error", e.getMessage());
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "index.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
     }
-
+    
     public void Register(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext context1) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -421,21 +446,23 @@ public class Login_old extends HttpServlet {
                 final Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("UserName", UNAME);
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "successregister.html");
-            } else {
+            }
+            else {
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("UserName", UNAME);
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Unsuccessregister.html");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 final Parsehtm Parser3 = new Parsehtm(request);
                 Parser3.SetField("Error", e.getMessage());
                 Parser3.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "register.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
     }
-
+    
     public void forgetpassword(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext context1) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -484,16 +511,17 @@ public class Login_old extends HttpServlet {
             EmailResult = Services.SendEmail(UserId, UserId, UserId, EmailSubject, HTMLText, out, this.getServletContext());
             Parser.SetField("UserName", UNAME);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "forgetpasswordlink.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("Error", e.getMessage());
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "index.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
     }
-
+    
     public void passwordreset(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext context1) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -531,16 +559,17 @@ public class Login_old extends HttpServlet {
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("UserName", UNAME);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "resetpassword.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("Error", e.getMessage());
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "index.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
     }
-
+    
     public void passwordresetsave(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext context1) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -587,17 +616,18 @@ public class Login_old extends HttpServlet {
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("UserName", UNAME);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "resetpassworddone.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("Error", e.getMessage());
                 Parser2.SetField("token", token);
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "resetpassword.html");
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
         }
     }
-
+    
     public void Logout(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext context) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -616,42 +646,48 @@ public class Login_old extends HttpServlet {
             session.invalidate();
             final ServletContext servletcontext = this.getServletContext();
             if (context.getAttribute("ActiveSessions") != null) {
-                final Hashtable ht = (Hashtable) servletcontext.getAttribute("ActiveSessions");
+                final Hashtable ht = (Hashtable)servletcontext.getAttribute("ActiveSessions");
                 ht.remove(UserId);
-                context.setAttribute("ActiveSessions", (Object) ht);
+                context.setAttribute("ActiveSessions", (Object)ht);
             }
             final String Message = "You have been successfully logged out from the System.";
             System.out.println(clientid);
-            System.out.println("usertype:-" + usertype);
+            System.out.println("usertype:-"+usertype);
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("Error", Message);
-            if (usertype.equals("7")) {
+            if(usertype.equals("7")){
                 System.out.println("Inside");
                 Parser.GenerateHtml(out, "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/md/index.html");
-            } else if (clientid == 8) {
+            }else if (clientid == 8) {
                 System.out.println(this.getServletContext() + "loginVictoria.html");
                 Parser.GenerateHtml(out, "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/md/loginOrange.html");
-            } else if (clientid == 9) {
+            }
+            else if (clientid == 9) {
                 System.out.println(this.getServletContext() + "loginVictoria.html");
                 Parser.GenerateHtml(out, "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/md/loginVictoria.html");
-            } else if (clientid == 10) {
+            }
+            else if (clientid == 10) {
                 System.out.println(this.getServletContext() + "loginVictoria.html");
                 Parser.GenerateHtml(out, "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/md/loginOddasa.html");
-            } else if (clientid == 12) {
+            }
+            else if (clientid == 12) {
                 System.out.println(this.getServletContext() + "loginSouthAustin.html");
                 Parser.GenerateHtml(out, "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/md/loginSAustin.html");
-            } else if (clientid == 15) {
+            }
+            else if (clientid == 15) {
                 System.out.println(this.getServletContext() + "loginSouthAustin.html");
                 Parser.GenerateHtml(out, "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/md/loginSublime.html");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println(e.getMessage());
             try {
                 Services.DumException("Login_old", "Logout", request, e, this.getServletContext());
                 final Parsehtm Parser2 = new Parsehtm(request);
                 Parser2.SetField("Error", e.getMessage());
                 Parser2.GenerateHtml(out, Services.GetHtmlPath(context) + "index.html");
-            } catch (Exception exception) {
+            }
+            catch (Exception exception) {
                 out.println(exception.getMessage());
             }
         }

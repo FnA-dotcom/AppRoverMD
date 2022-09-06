@@ -108,7 +108,6 @@ public class finaltrizetto2 {
 //            System.out.println("Response SOAP Message22222222:");
             soapResponse.writeTo(out);
             String strMsg = new String(out.toByteArray());
-            StringBuilder strMsg1 = new StringBuilder();
             //  strMsg=strMsg.replace("/(&lt;)/g","<").replace("/(&gt;)/g",">");
 //            System.out.println(replaceChars(strMsg));
 
@@ -149,11 +148,7 @@ public class finaltrizetto2 {
         try {
             Connection mysqlconn = null;
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            //
-            //DEV Server
-            //return DriverManager.getConnection("jdbc:mysql://database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=rovermdadmin&password=atyu!ioujy1986");
-            //Live Server
-            return DriverManager.getConnection("jdbc:mysql://rovermd-01-master.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=rovermdadmin&password=atyu!ioujy1986");
+            return DriverManager.getConnection("jdbc:mysql://database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=rovermdadmin&password=atyu!ioujy1986");
         } catch (Exception ex) {
         }
         return null;

@@ -19,33 +19,34 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class PatientInfo extends HttpServlet {
+public class PatientInfo extends HttpServlet
+{
     public static String msgfinal;
     public static String msgresponse;
-
+    
+    public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+    
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
+    }
+    
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
+    }
+    
     static {
         PatientInfo.msgfinal = null;
         PatientInfo.msgresponse = null;
     }
-
-    public void init(final ServletConfig config) throws ServletException {
-        super.init(config);
-    }
-
-    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        this.handleRequest(request, response);
-    }
-
-    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        this.handleRequest(request, response);
-    }
-
+    
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         String UserId = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         final Services supp = new Services();
 
         ServletContext context = null;
@@ -68,7 +69,7 @@ public class PatientInfo extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select dbname from oe.clients where Id = " + ClientId;
+            Query = "Select dbname from oe.clients where Id = "+ClientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -85,19 +86,19 @@ public class PatientInfo extends HttpServlet {
 //            else if (ClientId == 10) {
 //                Database = "oddasa";
 //            }
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
         if (ActionID.equals("GetValues")) {
             this.GetValues(request, out, conn, context, Database);
         }
         try {
             conn.close();
-        } catch (Exception ex2) {
         }
+        catch (Exception ex2) {}
         out.flush();
         out.close();
     }
-
+    
     void GetValues(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, String Database) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -131,7 +132,7 @@ public class PatientInfo extends HttpServlet {
         String msg = "";
         int SelfPayChk = 0;
         try {
-            Query = "Select Title, FirstName, MiddleInitial, LastName, MaritalStatus, MRN, DOB, Age, Gender, Email, PhNumber, Address, City, State, Country,  ZipCode, SSN, Occupation, Employer, EmpContact, PriCarePhy, ReasonVisit, SelfPayChk, CreatedDate from " + Database + ".PatientReg where ID = " + ID;
+            Query = "Select Title, FirstName, MiddleInitial, LastName, MaritalStatus, MRN, DOB, Age, Gender, Email, PhNumber, Address, City, State, Country,  ZipCode, SSN, Occupation, Employer, EmpContact, PriCarePhy, ReasonVisit, SelfPayChk, CreatedDate from "+Database+".PatientReg where ID = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -169,7 +170,8 @@ public class PatientInfo extends HttpServlet {
             DOB = DOB.replace("-", "");
             if (gender.compareTo("female") == 0) {
                 gender = "F";
-            } else {
+            }
+            else {
                 gender = "M";
             }
             MaritalStatus = MaritalStatus.substring(1, 1);
@@ -180,7 +182,8 @@ public class PatientInfo extends HttpServlet {
             hstmt.close();
             out.println("<!DOCTYPE html><html><body><p style=\"color:white;\">Request has been send to ERM , Find Patient MRN " + MRN + "</p>");
             out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println(e.getMessage());
         }
     }

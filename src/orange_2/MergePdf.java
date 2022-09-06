@@ -24,30 +24,31 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 
-public class MergePdf extends HttpServlet {
+public class MergePdf extends HttpServlet
+{
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
-
+    
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         this.HandleRequest(request, response);
     }
-
+    
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         this.HandleRequest(request, response);
     }
-
+    
     public void HandleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         String Action = null;
         final StringBuffer Response = new StringBuffer();
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         String Database = "";
         ResultSet rset = null;
         Statement stmt = null;
         int ClientId = 0;
         String UserId = "";
-        String Query = "";
+        String Query ="";
         String Path1 = "";
         String Path2 = "";
         ServletContext context = null;
@@ -69,7 +70,7 @@ public class MergePdf extends HttpServlet {
             String mysqlpwd = context.getInitParameter("mysqlpwd");
             UserId = Services.GetCookie("UserId", request);
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            conn = DriverManager.getConnection("jdbc:mysql://" + mysql_server + "/" + mysql_dbuser + "?user=" + mysqlusr + "&password=" + mysqlpwd + "");
+            conn = DriverManager.getConnection("jdbc:mysql://"+mysql_server+"/"+mysql_dbuser+"?user="+mysqlusr+"&password="+mysqlpwd+"");
             //conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1/oe_2?user=oe&password=abc1234oe");
             Query = "Select ClientId from oe.sysusers where ltrim(rtrim(UPPER(UserId))) = ltrim(rtrim(UPPER('" + UserId + "')))";
             stmt = conn.createStatement();
@@ -80,7 +81,7 @@ public class MergePdf extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select dbname from oe.clients where Id = " + ClientId;
+            Query = "Select dbname from oe.clients where Id = "+ClientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -98,7 +99,8 @@ public class MergePdf extends HttpServlet {
 //            else if (ClientId == 10) {
 //                Database = "oddasa";
 //            }
-        } catch (Exception excp) {
+        }
+        catch (Exception excp) {
             conn = null;
             System.out.println("Exception excp conn: " + excp.getMessage());
         }
@@ -112,7 +114,8 @@ public class MergePdf extends HttpServlet {
             if (Action.compareTo("GETINPUT") == 0) {
                 this.GETINPUT(request, response, out, conn, Database, Path1, Path2);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println("Exception in Main ... ");
             out.flush();
             out.close();
@@ -121,7 +124,7 @@ public class MergePdf extends HttpServlet {
         out.flush();
         out.close();
     }
-
+    
     public void GETINPUT(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out, final Connection conn, final String Database, String Path1, String Path2) {
         try {
 
@@ -150,7 +153,7 @@ public class MergePdf extends HttpServlet {
             doc1.close();
             doc2.close();
 
-        } catch (Exception e) {
+        }catch(Exception e){
             out.println(e.getMessage());
         }
     }

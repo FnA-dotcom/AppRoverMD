@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,7 +48,7 @@ public class PatientReg2_Mobile extends HttpServlet {
         final String UserId = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         final Services supp = new Services();
         ServletContext context = null;
         UtilityHelper helper = new UtilityHelper();
@@ -2177,9 +2178,9 @@ public class PatientReg2_Mobile extends HttpServlet {
             responseJSON.put("StateCode", State);
             responseJSON.put("IsValidDOB", true);
             responseJSON.put("Zipcode", ZipCode);
-            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString((Object) responseJSON);
+            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJSON);
 
-            //System.out.println("Request: " + Request);
+            System.out.println("Request: " + Request);
             final String BaseURL = "https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1";
             final String Mask = "";
             final URL url = new URL("https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1");
@@ -2192,7 +2193,7 @@ public class PatientReg2_Mobile extends HttpServlet {
             uc.setAllowUserInteraction(false);
             uc.setDoOutput(true);
             final OutputStream os = uc.getOutputStream();
-            os.write(Request.getBytes("UTF-8"));
+            os.write(Request.getBytes(StandardCharsets.UTF_8));
             os.close();
             uc.connect();
             final InputStream is = uc.getInputStream();

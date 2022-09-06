@@ -3,13 +3,27 @@
   <component name="AnalysisUIOptions">
     <option name="SCOPE_TYPE" value="3" />
   </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="BookmarkManager">
     <bookmark url="file://$PROJECT_DIR$/../HopOn/src/HopOn/Supportive.java" description="} catch (Exception ex) {" line="64" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1946788-d5e3-4122-bf11-60e370e5d629" name="Default Changelist" comment="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+    <list default="true" id="a1946788-d5e3-4122-bf11-60e370e5d629" name="Default Changelist" comment="Git Testing">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Testing/TwilioExample.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Testing/TwilioExample.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/EligibilityInquiry4.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/EligibilityInquiry4.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/EligibilityInquiry_3.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/EligibilityInquiry_3.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientReg.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg2_15JAN2021.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg2_20OCT2021.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg2_21APRIL2021.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg2_27DEC2021.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientReg99.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientReg99.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/PatientUpdateInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/PatientUpdateInfo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/md/UserManagement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/md/UserManagement.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,11 +115,14 @@
   <component name="Git.Settings">
     <option name="PREVIOUS_COMMIT_AUTHORS">
       <list>
+        <option value="TabSid1992 &lt;tabish.hafeez@fam-llc.com&gt;" />
         <option value="FnA-dotcom &lt;tabish.hafeez@fam-llc.com&gt;" />
       </list>
     </option>
-    <option name="UPDATE_TYPE" value="MERGE" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/md/eiresponse3.java" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -223,17 +240,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "D:/IdeaProjects/AppRoverMD",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/IdeaProjects/AppRoverMDNew&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.javacompiler&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\USER\IdeaProjects\AppRoverMD\src\md" />
@@ -242,10 +259,6 @@
       <recent name="C:\Users\tabish.hafeez\IdeaProjects\AppRoverMD\src\md" />
       <recent name="C:\Users\tabish.hafeez\IdeaProjects\AppRoverMD\src" />
     </key>
-    <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="md" />
-      <recent name="Handheld" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\USER\IdeaProjects\AppRoverMD\src\md" />
       <recent name="C:\Users\tabish.hafeez\IdeaProjects\AppRoverMD\src\md" />
@@ -253,8 +266,12 @@
       <recent name="C:\Users\tabish.hafeez\IdeaProjects\AppRoverMD\src\PaymentIntegrations" />
       <recent name="C:\Users\tabish.hafeez\IdeaProjects\AppRoverMD\src\oe" />
     </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="md" />
+      <recent name="Handheld" />
+    </key>
   </component>
-  <component name="RunManager" selected="Application.EncryptionDecryption">
+  <component name="RunManager" selected="Application.TwilioExample">
     <configuration name="AposthropheS" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Testing.AposthropheS" />
       <module name="AppRoverMD" />
@@ -268,12 +285,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="CardConnectRestClientExample" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="PaymentIntegrations.CardConnectRestClientExample" />
+    <configuration name="DailyVisitsCountSMS" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="schedulers.DailyVisitsCountSMS" />
       <module name="AppRoverMD" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="PaymentIntegrations.*" />
+          <option name="PATTERN" value="schedulers.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -294,8 +311,8 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="NCDTestingExcel" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="Testing.NCDTestingExcel" />
+    <configuration name="TwilioExample" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Testing.TwilioExample" />
       <module name="AppRoverMD" />
       <extension name="coverage">
         <pattern>
@@ -321,19 +338,19 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Application.TwilioExample" />
+      <item itemvalue="Application.AposthropheS" />
+      <item itemvalue="Application.DailyVisitsCountSMS" />
       <item itemvalue="Application.EncryptionDecryption" />
       <item itemvalue="Application.sendresultauto" />
-      <item itemvalue="Application.NCDTestingExcel" />
-      <item itemvalue="Application.CardConnectRestClientExample" />
-      <item itemvalue="Application.AposthropheS" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.TwilioExample" />
         <item itemvalue="Application.EncryptionDecryption" />
+        <item itemvalue="Application.DailyVisitsCountSMS" />
         <item itemvalue="Application.sendresultauto" />
         <item itemvalue="Application.AposthropheS" />
-        <item itemvalue="Application.CardConnectRestClientExample" />
-        <item itemvalue="Application.NCDTestingExcel" />
       </list>
     </recent_temporary>
   </component>
@@ -498,27 +515,6 @@
       <workItem from="1657831424727" duration="388000" />
       <workItem from="1658152247054" duration="3758000" />
       <workItem from="1658410060580" duration="7991000" />
-    </task>
-    <task id="LOCAL-00016" summary="New File Added on 2 Aug 2021 Fourth Upload">
-      <created>1627919376183</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1627919376183</updated>
-    </task>
-    <task id="LOCAL-00017" summary="New File Added on 3 Aug 2021 Fifth Upload">
-      <created>1628004192824</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1628004192824</updated>
-    </task>
-    <task id="LOCAL-00018" summary="New File Added on 6 Aug 2021 Sixth Upload">
-      <created>1628259956233</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1628259956233</updated>
     </task>
     <task id="LOCAL-00019" summary="New File Added on 6 Aug 2021 Sixth Upload">
       <created>1628260021575</created>
@@ -842,7 +838,28 @@
       <option name="project" value="LOCAL" />
       <updated>1659024648210</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="New Files Added on 27 JULY 2022 Thirty EIGHT Upload">
+      <created>1659025307735</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1659025307735</updated>
+    </task>
+    <task id="LOCAL-00066" summary="New Files Added on 28 JULY 2022 Thirty NINTH Upload">
+      <created>1659033519614</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1659033519614</updated>
+    </task>
+    <task id="LOCAL-00067" summary="Git Testing">
+      <created>1659455186474</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1659455186475</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
@@ -942,8 +959,6 @@
     <ignored-roots>
       <path value="$PROJECT_DIR$" />
     </ignored-roots>
-    <MESSAGE value="Revert &quot;New File Added on 31 Aug 2021 Thirteenth Upload&quot;&#10;&#10;This reverts commit 74c900e" />
-    <MESSAGE value="New File Added on 14 Sept 2021 Fourteenth Upload" />
     <MESSAGE value="New File Added on 15 Sept 2021 Fifteenth Upload" />
     <MESSAGE value="New File Added on 17 Sept 2021 Sixteenth Upload" />
     <MESSAGE value="New File Added on 27 Sept 2021 Eighteenth Upload" />
@@ -967,7 +982,9 @@
     <MESSAGE value="New File Added on 24 JUNE 2022 Thirty SIXTH Upload" />
     <MESSAGE value="New File Added on 07 JULY 2022 Thirty SEVENTH Upload" />
     <MESSAGE value="New Files Added on 27 JULY 2022 Thirty EIGHT Upload" />
-    <option name="LAST_COMMIT_MESSAGE" value="New Files Added on 27 JULY 2022 Thirty EIGHT Upload" />
+    <MESSAGE value="New Files Added on 28 JULY 2022 Thirty NINTH Upload" />
+    <MESSAGE value="Git Testing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Git Testing" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />

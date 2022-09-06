@@ -31,10 +31,6 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("Duplicates")
 public class FacilityLogin extends HttpServlet {
-//    private PreparedStatement pStmt = null;
-//    private String Query = "";
-//    private Statement stmt = null;
-
     private static final String ALGO = "AES";
     private static final byte[] keyValue =
             new byte[]{'T', '#', '3', 'B', '3', '$', 'T',
@@ -595,7 +591,7 @@ public class FacilityLogin extends HttpServlet {
         int isPwdChanged = 0;
 
         try {
-            String ar[] = helper.MasterConfig(conn, request, context);
+            String[] ar = helper.MasterConfig(conn, request, context);
             String exp_period = "";
             String wrong_pass = "";
             String pass_history = "";
@@ -610,14 +606,14 @@ public class FacilityLogin extends HttpServlet {
 
             if (UserId == null || UserId.trim().length() < 1) {
                 throw new Exception("UserId Empty, Please Enter UserId.");
-                //Update PRETRY INcrement 1
+                //Update PRETRY Increment 1
             } else {
                 //Check if Userid is correct
                 useridChk = helper.CheckUserId(request, UserId, conn, context, "7,10,9,12,2,3,1");
                 if (!useridChk) {
                     throw new Exception("UserID Incorrect!, Enter Valid User ID");
                 } else {
-                    if (Password == null || Password.trim() == null || Password.trim().length() == 0) {
+                    if (Password == null || Password.trim().length() == 0) {
                         //helper.UpdatePRetry(request,UserId, conn, context,);
                         throw new Exception("Password Empty, Please Enter Password.");
                     } else {
@@ -661,7 +657,7 @@ public class FacilityLogin extends HttpServlet {
                             isPwdChanged = hrset.getInt(6);
 //                            System.out.println("UserType " + UserType);
 //                            UserType.equals("10")
-                            if (Arrays.asList("10", "9", "12", "2", "3", "1").contains(UserType)) {
+                            if (Arrays.asList("10","9","12","2","3","1").contains(UserType)){
                                 Multimap<String, Integer> multimap = ArrayListMultimap.create();
 //                                Query = "SELECT indexptr,userid FROM oe.sysusers WHERE usertype = 10";
                                 Query = "SELECT indexptr,userid FROM oe.sysusers WHERE usertype in (10,9,12,2,3,1)";
@@ -759,36 +755,36 @@ public class FacilityLogin extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Forms/PasswordScreen.html");
             } else {
 
-                Parser.SetField("UserName", UNAME);
-                Parser.SetField("ClientId", String.valueOf(ClientId));
-                Parser.SetField("UserIndex", String.valueOf(userindex));
-                Parser.SetField("UserType", String.valueOf(UserType));
-                Parser.SetField("ClientIndex", String.valueOf(FacilityIndex));
-                Parser.SetField("FacilityIndex", String.valueOf(FacilityIndex));
-                Parser.SetField("FontColor", FontColor);
-                Parser.SetField("icon", String.valueOf(icon));
-                Parser.SetField("ShowFacility", "<h5 class=\"mb-0\">Logged As : <b> " + ClientId + " </b></h5>");
+            Parser.SetField("UserName", UNAME);
+            Parser.SetField("ClientId", String.valueOf(ClientId));
+            Parser.SetField("UserIndex", String.valueOf(userindex));
+            Parser.SetField("UserType", String.valueOf(UserType));
+            Parser.SetField("ClientIndex", String.valueOf(FacilityIndex));
+            Parser.SetField("FacilityIndex", String.valueOf(FacilityIndex));
+            Parser.SetField("FontColor", FontColor);
+            Parser.SetField("icon", String.valueOf(icon));
+            Parser.SetField("ShowFacility", "<h5 class=\"mb-0\">Logged As : <b> " + ClientId + " </b></h5>");
 
 //            if (UserType.equals("10") || UserType.equals("7")) {
 //                if (FacilityIndex == 27 || FacilityIndex == 29) {
-                ReportView.append("<li><a id=\"PatientDemographics\" style=\"display: none;\" href=\"/md/md.PatientDemographics?ActionID=GetInput&FacilityIndex=" + FacilityIndex + "\" target=\"NewFrame1\"><i class=\"ti-more\"></i>Patient Demographics</a></li>");
-                Parser.SetField("ReportView", ReportView.toString());
+            ReportView.append("<li><a id=\"PatientDemographics\" style=\"display: none;\" href=\"/md/md.PatientDemographics?ActionID=GetInput&FacilityIndex=" + FacilityIndex + "\" target=\"NewFrame1\"><i class=\"ti-more\"></i>Patient Demographics</a></li>");
+            Parser.SetField("ReportView", ReportView.toString());
 //                }
 
-                SMSSend.append("<li id=\"SMSManagement\" style=\"display: none;\" class=\"treeview\">");
-                SMSSend.append("<a href=\"#\">");
-                SMSSend.append("<i class=\"ti-pencil-alt\"></i>");
-                SMSSend.append("<span>SMS Management</span>");
-                SMSSend.append("<span class=\"pull-right-container\">");
-                SMSSend.append("<i class=\"fa fa-angle-right pull-right\"></i>");
-                SMSSend.append("</span></a>");
-                SMSSend.append("<ul class=\"treeview-menu\">");
-                SMSSend.append("<li id=\"SingleSMS\" style=\"display: none;\"><a href=\"/md/md.SendSMS?ActionID=GetInput \"target=\"NewFrame1\"><i class=\"ti-more\"></i> Single SMS </a></li>");
-                SMSSend.append("<li id=\"BulkSMS\" style=\"display: none;\"><a href=\"/md/md.SendSMSBulk?ActionID=GetInput \"target=\"NewFrame1\"><i class=\"ti-more\"></i> Bulk SMS </a></li>");
-                SMSSend.append("<li id=\"SMSReport\" style=\"display: none;\"><a href=\"/md/md.SMS_Report?ActionID=GetInput \"target=\"NewFrame1\"><i class=\"ti-more\"></i> SMS Report </a></li>");
-                SMSSend.append("</ul> </li>");
-                Parser.SetField("SMSSend", SMSSend.toString());
-                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + menu);
+            SMSSend.append("<li id=\"SMSManagement\" style=\"display: none;\" class=\"treeview\">");
+            SMSSend.append("<a href=\"#\">");
+            SMSSend.append("<i class=\"ti-pencil-alt\"></i>");
+            SMSSend.append("<span>SMS Management</span>");
+            SMSSend.append("<span class=\"pull-right-container\">");
+            SMSSend.append("<i class=\"fa fa-angle-right pull-right\"></i>");
+            SMSSend.append("</span></a>");
+            SMSSend.append("<ul class=\"treeview-menu\">");
+            SMSSend.append("<li id=\"SingleSMS\" style=\"display: none;\"><a href=\"/md/md.SendSMS?ActionID=GetInput \"target=\"NewFrame1\"><i class=\"ti-more\"></i> Single SMS </a></li>");
+            SMSSend.append("<li id=\"BulkSMS\" style=\"display: none;\"><a href=\"/md/md.SendSMSBulk?ActionID=GetInput \"target=\"NewFrame1\"><i class=\"ti-more\"></i> Bulk SMS </a></li>");
+            SMSSend.append("<li id=\"SMSReport\" style=\"display: none;\"><a href=\"/md/md.SMS_Report?ActionID=GetInput \"target=\"NewFrame1\"><i class=\"ti-more\"></i> SMS Report </a></li>");
+            SMSSend.append("</ul> </li>");
+            Parser.SetField("SMSSend", SMSSend.toString());
+            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + menu);
             }
         } catch (Exception e) {
             Services.DumException("Login", "Login", request, e, this.getServletContext());
@@ -800,6 +796,7 @@ public class FacilityLogin extends HttpServlet {
             }
         }
     }
+
 
     private void saveNewPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext context, UtilityHelper helper) {
         Statement stmt = null;
@@ -828,7 +825,6 @@ public class FacilityLogin extends HttpServlet {
             String previousPassword = "";
             String username = "";
             Query = "SELECT password,username FROM oe.sysusers WHERE userid = '" + UserId + "' ";
-            System.out.println("QQQ " + Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -837,8 +833,6 @@ public class FacilityLogin extends HttpServlet {
             }
             rset.close();
             stmt.close();
-/*
-            System.out.println("previousPassword " + previousPassword);
 
             String ClientName = "";
             Query = "SELECT name FROM oe.clients WHERE Id = " + FacilityIndex;
@@ -849,7 +843,6 @@ public class FacilityLogin extends HttpServlet {
             rset.close();
             stmt.close();
 
-
             if (!passwordEnc.equals(previousPassword)) {
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("UserName", username);
@@ -858,7 +851,6 @@ public class FacilityLogin extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Forms/PasswordScreen.html");
                 return;
             }
-*/
 
             String ar[] = helper.MasterConfig(conn, request, context);
             String exp_period = "";

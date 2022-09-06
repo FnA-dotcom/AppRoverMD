@@ -9,6 +9,7 @@ import com.itextpdf.text.pdf.PdfStamper;
 import md.MergePdf;
 import md.PDFtoImages;
 import md.Services;
+import md.SupportiveMethods;
 import org.apache.commons.io.FileUtils;
 
 import javax.imageio.ImageIO;
@@ -132,7 +133,6 @@ public class MobileSignPrint extends HttpServlet {
             String MRN = "";
             String PatientName = "";
             String AUTHID = "";
-            String dbName = "";
             String SendType = "1";
             InetAddress ip = InetAddress.getLocalHost();
             long unixTime = System.currentTimeMillis() / 1000L;
@@ -141,20 +141,11 @@ public class MobileSignPrint extends HttpServlet {
             String outputFilePath = request.getParameter("outputFilePath");
             String FileName = request.getParameter("FileName");
             String PatientRegId = request.getParameter("PatientRegId");
-            int FacilityIdx = Integer.parseInt(request.getParameter("FacilityIdx"));
-            String UserId = request.getParameter("UserId");
 
-            Query = "Select dbname from oe.clients where Id = " + FacilityIdx;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                dbName = rset.getString(1);
-            }
-            rset.close();
-            stmt.close();
 
             int found = 0;
-            found = helper.signPDFCheck(request, conn, servletContext, dbName, Integer.parseInt(PatientRegId));
+            found = helper.signPDFCheck(request, conn, servletContext, "ER_Dallas", Integer.parseInt(PatientRegId));
+//            out.println("found --> " + found + "<br>");
             if (found > 0) {
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Message", "This Bundle is already been signed!");
@@ -173,12 +164,12 @@ public class MobileSignPrint extends HttpServlet {
             java.util.List<String> imagelist = new ArrayList(values);
 //            out.println("Image Size --> " + imagelist.size() + "<br>");
             for (int i = 0; i < imagelist.size(); ++i) {
-                Style.append(".desktop-image" + (i + 1) + " {\n\tbackground-image: url(" + (String) imagelist.get(i) + ");\n\tbackground-size: cover;\n\tbackground-position: center;\n\twidth: 600px;\n\theight: 800px;\n\tmargin: 0 auto;\n\tborder: 5px solid #0f0f10;\n\tposition: relative;\n}\n\n.desktop-image" + (i + 1) + ">button {\n\twidth: 20%;\n\tposition: relative;\n\ttop: 80%;\n\tleft: 30%;\n\t/*transform: translate(50%, -50%);*/\n}");
+                Style.append(".desktop-image" + (i + 1) + " {\n\tbackground-image: url(" + imagelist.get(i) + ");\n\tbackground-size: cover;\n\tbackground-position: center;\n\twidth: 600px;\n\theight: 800px;\n\tmargin: 0 auto;\n\tborder: 5px solid #0f0f10;\n\tposition: relative;\n}\n\n.desktop-image" + (i + 1) + ">button {\n\twidth: 20%;\n\tposition: relative;\n\ttop: 80%;\n\tleft: 30%;\n\t/*transform: translate(50%, -50%);*/\n}");
                 ulTag.append("<div id=\"page" + (i + 1) + "\" class=\"images\">\n<div  class=\"desktop-image" + (i + 1) + "\">\n<button type=\"button\" class=\"btn btn-primary\" id=\"Sign" + (i + 1) + "\"  onclick=\"signhere(" + (i + 1) + ", this.id);\" class=\"mobile-image-stella\">Sign Here " + (i + 1) + "</button>\n<img id=\"canvasimg" + (i + 1) + "\" style=\"display:none;background-color:rgba(255,255,255,0.6);\">\n</div>\n</div>\n");
             }
 
             Query = "Select MRN, CONCAT(IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) " +
-                    "from " + dbName + ".PatientReg where ID = " + PatientRegId;
+                    "from ER_Dallas.PatientReg where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -187,12 +178,12 @@ public class MobileSignPrint extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            //AUTHID = MRN+"-"+ip+"-"+unixTime; AUTHID is equals to Signature TEXT URLDATA FOR THAT SIGNATURE ONLY TAKE ONE SIGN HERE.
+            //AUTHID = MRN+"-"+ip+"-"+unixTime; AUTHID is equals to Dignature TEXT URLDATA FOR THAT SIGNATURE ONLY TAKE ONE SIGN HERE.
 
 //          Insert Data in the SignRequest Table here.
             try {
                 PreparedStatement MainReceipt = conn.prepareStatement(
-                        "INSERT INTO " + dbName + ".SignRequest (MRN,Status,isSign,IP,CreatedBy,CreatedDate," +
+                        "INSERT INTO ER_Dallas.SignRequest (MRN,Status,isSign,IP,CreatedBy,CreatedDate," +
                                 " SendType,SignBy,UID, AUTHID, PatientRegId) VALUES (?,?,?,?,?,now(),?,?,?,?,?) ");
                 MainReceipt.setString(1, MRN);
                 MainReceipt.setInt(2, 0);
@@ -212,6 +203,11 @@ public class MobileSignPrint extends HttpServlet {
                 return;
             }
 
+/*            Query = "UPDATE ER_Dallas.RequestToMobile SET Status = 2 WHERE PatientRegIdx = " + PatientRegId;
+            stmt = conn.createStatement();
+            stmt.executeUpdate(Query);
+            stmt.close();*/
+
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
             Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -222,8 +218,6 @@ public class MobileSignPrint extends HttpServlet {
             Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
             Parser.SetField("UID", String.valueOf(uuid));
             Parser.SetField("MRN", String.valueOf(MRN));
-            Parser.SetField("FacilityIdx", String.valueOf(FacilityIdx));
-            Parser.SetField("UserId", UserId);
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/MobSigningBundle.html");
 
 
@@ -237,15 +231,19 @@ public class MobileSignPrint extends HttpServlet {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
+        SupportiveMethods suppMethods = new SupportiveMethods();
+        StringBuffer LeftSideBarMenu = new StringBuffer();
+        StringBuffer Header = new StringBuffer();
+        StringBuffer Footer = new StringBuffer();
+        String Message = "";
         String imagedataURL = "";
         String PatientRegId = "";
+        boolean FileFound = false;
+        byte[] Data = null;
         String key = "";
         String UID = "";
         String MRN = "";
-        String FacilityIdx = "";
-        String UserId = "";
         String pageCount = "";
-        String Message = "";
         try {
             Dictionary d = doUpload(request, response, out);
             Enumeration en = d.keys();
@@ -261,10 +259,6 @@ public class MobileSignPrint extends HttpServlet {
                     MRN = (String) d.get(key);
                 } else if (key.startsWith("pageCount")) {
                     pageCount = (String) d.get(key);
-                } else if (key.startsWith("FacilityIdx")) {
-                    FacilityIdx = (String) d.get(key);
-                } else if (key.startsWith("UserId")) {
-                    UserId = (String) d.get(key);
                 }
             }
             PatientRegId = PatientRegId.substring(4);
@@ -272,32 +266,18 @@ public class MobileSignPrint extends HttpServlet {
             UID = UID.substring(4);
             MRN = MRN.substring(4);
             pageCount = pageCount.substring(4);
-            FacilityIdx = FacilityIdx.substring(4);
-            UserId = UserId.substring(4);
 
             String[] imageURL = imagedataURL.split("\\~");
 
             BufferedImage image = null;
             byte[] imageByte;
-            String dbName = "";
-            String DirectoryName = "";
-            Query = "Select dbname,DirectoryName from oe.clients where Id = " + FacilityIdx;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                dbName = rset.getString(1);
-                DirectoryName = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
-
             for (int i = 0; i < imageURL.length; i++) {
                 try {
                     byte[] imagedata = DatatypeConverter.parseBase64Binary(imageURL[i].substring(imageURL[i].indexOf(",") + 1));
                     BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imagedata));
-                    ImageIO.write(bufferedImage, "png", new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + ".png"));
+                    ImageIO.write(bufferedImage, "png", new File("/sftpdrive/AdmissionBundlePdf/SignImg/ERDallas/img_" + i + "_" + PatientRegId + ".png"));
 
-                    String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + ".png");
+                    String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/ERDallas/img_" + i + "_" + PatientRegId + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/ERDallas/img_" + i + "_" + PatientRegId + ".png");
 
                     if (ImageTransparent.trim().toUpperCase().equals("CONVERTED")) {
                         Message = " and Transparency DONE";
@@ -308,10 +288,10 @@ public class MobileSignPrint extends HttpServlet {
                 } catch (IOException e) {
                     out.println("Error in IO" + e.getStackTrace());
                 }
+                break;
             }
 
-
-            Query = "UPDATE " + dbName + ".SignRequest SET isSign = 1 , SignBy = 'Mobile User', SignTime = NOW() " +
+            Query = "UPDATE ER_Dallas.SignRequest SET isSign = 1 , SignBy = 'Mobile User', SignTime = NOW() " +
                     "WHERE PatientRegId = " + PatientRegId + " AND " +
                     "MRN = " + MRN + " AND UID = '" + UID + "' ";
             stmt = conn.createStatement();
@@ -319,11 +299,18 @@ public class MobileSignPrint extends HttpServlet {
             stmt.close();
 
             //Status = 2 -- Document is Signed!
-            Query = "UPDATE " + dbName + ".RequestToMobile SET Status = 2 WHERE PatientRegIdx = " + PatientRegId;
+            Query = "UPDATE ER_Dallas.RequestToMobile SET Status = 2 WHERE PatientRegIdx = " + PatientRegId;
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
             stmt.close();
 
+/*
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
+            Parser.SetField("FormName", "Handheld.MobileSignPrint");
+            Parser.SetField("ActionID", "GETINPUTERDallas&ID=" + PatientRegId);
+            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/MobileMessage.html");
+*/
             try {
                 String outputFilePath = "/md/tmpImages";
                 File directory = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/md/tmpImages/");
@@ -1181,7 +1168,7 @@ public class MobileSignPrint extends HttpServlet {
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(60.0f, 450.0f);
-                        pdfContentByte.showText(WCPInjuryDescription.substring(0, WCPInjuryDescription.length()));
+                        pdfContentByte.showText(WCPInjuryDescription);
                         pdfContentByte.endText();
                     }
                     if (WCPInjuryDescription.length() > 114 && WCPInjuryDescription.length() <= 228) {
@@ -1195,7 +1182,7 @@ public class MobileSignPrint extends HttpServlet {
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(60.0f, 435.0f);
-                        pdfContentByte.showText(WCPInjuryDescription.substring(114, WCPInjuryDescription.length()));
+                        pdfContentByte.showText(WCPInjuryDescription.substring(114));
                         pdfContentByte.endText();
                     }
                     if (WCPInjuryDescription.length() > 228 && WCPInjuryDescription.length() <= 342) {
@@ -1215,7 +1202,7 @@ public class MobileSignPrint extends HttpServlet {
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(60.0f, 420.0f);
-                        pdfContentByte.showText(WCPInjuryDescription.substring(228, WCPInjuryDescription.length()));
+                        pdfContentByte.showText(WCPInjuryDescription.substring(228));
                         pdfContentByte.endText();
                     }
                     if (WCPInjuryDescription.length() > 342 && WCPInjuryDescription.length() <= 456) {
@@ -1241,7 +1228,7 @@ public class MobileSignPrint extends HttpServlet {
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(60.0f, 408.0f);
-                        pdfContentByte.showText(WCPInjuryDescription.substring(342, WCPInjuryDescription.length()));
+                        pdfContentByte.showText(WCPInjuryDescription.substring(342));
                         pdfContentByte.endText();
                     }
                     if (WCPInjuryDescription.length() > 456) {
@@ -1273,7 +1260,7 @@ public class MobileSignPrint extends HttpServlet {
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(60.0f, 393.0f);
-                        pdfContentByte.showText(WCPInjuryDescription.substring(456, WCPInjuryDescription.length()));
+                        pdfContentByte.showText(WCPInjuryDescription.substring(456));
                         pdfContentByte.endText();
                     }
                     pdfContentByte.beginText();
@@ -1834,7 +1821,7 @@ public class MobileSignPrint extends HttpServlet {
             String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf";
             FileOutputStream fos2 = new FileOutputStream(new File(outputFilePathTmp2));
             PdfReader pdfReader2 = new PdfReader(inputFilePathTmp2);
-            PdfStamper pdfStamper2 = new PdfStamper(pdfReader2, (OutputStream) fos2);
+            PdfStamper pdfStamper2 = new PdfStamper(pdfReader2, fos2);
             for (int j = 1; j <= pdfReader2.getNumberOfPages(); ++j) {
                 if (j == 1) {
                     final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);
@@ -1863,7 +1850,7 @@ public class MobileSignPrint extends HttpServlet {
             outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MEDICAIDSELFPAYAGREEMENT_" + ClientId + "_" + MRN + ".pdf";
             fos2 = new FileOutputStream(new File(outputFilePathTmp2));
             pdfReader2 = new PdfReader(inputFilePathTmp2);
-            pdfStamper2 = new PdfStamper(pdfReader2, (OutputStream) fos2);
+            pdfStamper2 = new PdfStamper(pdfReader2, fos2);
             for (int j = 1; j <= pdfReader2.getNumberOfPages(); ++j) {
                 if (j == 1) {
                     final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);

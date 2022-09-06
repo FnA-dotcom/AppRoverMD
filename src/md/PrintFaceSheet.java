@@ -85,13 +85,13 @@ public class PrintFaceSheet extends HttpServlet {
             }
             if (ActionID.compareTo("GETINPUTFrontline") == 0) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Print Labels Option ", "Click on Print Lable Option from View Patients Tab for Orange and Odessa", FacilityIndex);
-                this.GETINPUTFrontline(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex);
+                this.GETINPUTFrontline(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex,helper);
             } else if (ActionID.compareTo("GETINPUTSanMarcos") == 0) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Print Labels Option ", "Click on Print Lable Option from View Patients Tab for Orange and Odessa", FacilityIndex);
-                this.GETINPUTSanMarcos(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex);
+                this.GETINPUTSanMarcos(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex,helper);
             } else if (ActionID.compareTo("GETINPUTVictoria") == 0) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Print Labels Option ", "Click on Print Lable Option from View Patients Tab for Orange and Odessa", FacilityIndex);
-                this.GETINPUTVictoria(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex);
+                this.GETINPUTVictoria(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex,helper);
             } else {
                 helper.deleteUserSession(request, conn, session.getId());
                 //Invalidating Session.
@@ -121,7 +121,7 @@ public class PrintFaceSheet extends HttpServlet {
         return Period.between(dob, curDate).getYears();
     }
 
-    private void GETINPUTSanMarcos(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId) {
+    private void GETINPUTSanMarcos(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId, UtilityHelper helper) {
         final String ID = request.getParameter("PatientId");
         Statement stmt = null;
         ResultSet rset = null;
@@ -232,7 +232,7 @@ public class PrintFaceSheet extends HttpServlet {
             stmt.close();
 
             if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+                Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
             } else {
                 Age = "0";
             }
@@ -1337,7 +1337,7 @@ public class PrintFaceSheet extends HttpServlet {
         }
     }
 
-    private void GETINPUTVictoria(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId) {
+    private void GETINPUTVictoria(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId, UtilityHelper helper) {
         final String ID = request.getParameter("PatientId");
         Statement stmt = null;
         ResultSet rset = null;
@@ -2055,7 +2055,7 @@ public class PrintFaceSheet extends HttpServlet {
         }
     }
 
-    private void GETINPUTFrontline(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId) {
+    private void GETINPUTFrontline(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId, UtilityHelper helper) {
         final String ID = request.getParameter("PatientId");
         Statement stmt = null;
         ResultSet rset = null;
@@ -2146,7 +2146,7 @@ public class PrintFaceSheet extends HttpServlet {
             stmt.close();
 
             if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+                Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
             } else {
                 Age = "0";
             }
@@ -2188,7 +2188,6 @@ public class PrintFaceSheet extends HttpServlet {
             String Race = "";
 
             Query = "Select IFNULL(Race,'0') from " + Database + ".PatientReg_Details where PatientRegId = " + ID;
-//            System.out.println("QUery 3: "+Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -2198,9 +2197,6 @@ public class PrintFaceSheet extends HttpServlet {
             stmt.close();
 
             switch (Race) {
-                case "0":
-                    Race = "Not Specified";
-                    break;
                 case "1":
                     Race = "African American";
                     break;
@@ -2226,9 +2222,6 @@ public class PrintFaceSheet extends HttpServlet {
 
 
             switch (Ethnicity) {
-                case "0":
-                    Ethnicity = "Not Specified";
-                    break;
                 case "1":
                     Ethnicity = "Hispanic or Latino";
                     break;
@@ -2341,9 +2334,8 @@ public class PrintFaceSheet extends HttpServlet {
 
                 try {
                     if (!SecondInsurance.equals("")) {
-                        Query = "SELECT IFNULL(PayerName,'') " +
-                                "FROM " + Database + ".ProfessionalPayers " +
-                                "WHERE id = " + SecondInsurance;
+                        Query = "SELECT IFNULL(PayerName,'') FROM " + Database + ".ProfessionalPayers " +
+                                " WHERE id = " + SecondInsurance;
                         stmt = conn.createStatement();
                         rset = stmt.executeQuery(Query);
                         if (rset.next()) {
@@ -2355,15 +2347,6 @@ public class PrintFaceSheet extends HttpServlet {
                 } catch (Exception e) {
                     e.getStackTrace();
                 }
-
-
-                System.out.println("SecondInsurance ---> " + SecondInsurance);
-                System.out.println("SecondMemId ---> " + SecondMemId);
-                System.out.println("SecondGrpNumber ---> " + SecondGrpNumber);
-                System.out.println("SecondPatientRelationtoPrimary ---> " + SecondPatientRelationtoPrimary);
-                System.out.println("SecondDOB ---> " + SecondDOB);
-                System.out.println("SecondPayerName ---> " + SecondPayerName);
-
 
                 if (PayerName.length() > 30)
                     PayerName = PayerName.substring(0, 30);
@@ -2379,8 +2362,6 @@ public class PrintFaceSheet extends HttpServlet {
                     SecondPayerName = SecondPayerName.substring(0, 20);
                 else
                     SecondPayerName = SecondPayerName.substring(0, SecondPayerName.length());
-
-
             }
 
             for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
@@ -2884,7 +2865,7 @@ public class PrintFaceSheet extends HttpServlet {
                     pdfContentByte.endText();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////// Secondary insurance /////////////////////////////////////////////
-                    if (ClientId == 27) {
+                    //if (ClientId == 27) {
                         if (!SecondInsurance.equals("")) {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -3086,7 +3067,7 @@ public class PrintFaceSheet extends HttpServlet {
                             pdfContentByte.endText();
 
                         }
-                    }
+                    //}
 
                 }
 

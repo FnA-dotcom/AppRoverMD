@@ -23,10 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.InetAddress;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 @SuppressWarnings("Duplicates")
 public class FloresvilleBundle extends HttpServlet {
@@ -122,7 +119,8 @@ public class FloresvilleBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTfloresville(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUTfloresville_Inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, final int PatientVisitNumber, final int PatRegId, final String SignedFrom) {
+
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -153,7 +151,6 @@ public class FloresvilleBundle extends HttpServlet {
         String PriCarePhy = "";
         String ReasonVisit = "";
         String MRN = "";
-        int ClientIndex = 0;
         String ClientName = "";
         String DOS = "";
         String DoctorId = null;
@@ -227,13 +224,22 @@ public class FloresvilleBundle extends HttpServlet {
         final String Other = "";
         String Other_text = "";
         String ResultPdf = "";
+        String DirectoryNameTow = "";
+        int VisitIndex = 0;
         String PriInsurerName = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+        final int ID = PatRegId;
         try {
+            if (SignedFrom.contains("REGISTRATION")) {
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -245,10 +251,17 @@ public class FloresvilleBundle extends HttpServlet {
             rset.close();
             stmt.close();
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), " +
+                        "IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),D" +
+                        "ATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                if (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -271,12 +284,12 @@ public class FloresvilleBundle extends HttpServlet {
                     ReasonVisit = rset.getString(18);
                     SelfPayChk = rset.getInt(19);
                     MRN = rset.getString(20);
-                    ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
                 }
                 rset.close();
                 stmt.close();
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -285,18 +298,17 @@ public class FloresvilleBundle extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
+
                 if (!DoctorId.equals("-")) {
-//                    out.println("Inside Get Doc Name");
                     Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
+                    if (rset.next()) {
                         DoctorName = rset.getString(1);
                     }
                     rset.close();
                     stmt.close();
                 } else {
-//                    out.println("Inside Get Doc Name empty");
                     DoctorName = "";
                 }
             } catch (Exception e) {
@@ -304,10 +316,19 @@ public class FloresvilleBundle extends HttpServlet {
 //                out.println(Query);
             }
 //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), " +
+                    "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                    "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), " +
+                    "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
+                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), " +
+                    "CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), " +
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-')," +
+                    "CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
+                    " from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 WorkersCompPolicy = rset.getInt(1);
                 MotorVehAccident = rset.getInt(2);
                 if (WorkersCompPolicy == 0) {
@@ -371,10 +392,13 @@ public class FloresvilleBundle extends HttpServlet {
 //                out.println("Error is PriInsurance: " + e.getMessage());
 //                out.println(Query);
             }
-            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
@@ -384,10 +408,16 @@ public class FloresvilleBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient = "";
                 } else {
@@ -498,6 +528,7 @@ public class FloresvilleBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             String HearAboutUsString = "";
             String HearAboutUsString2 = "";
             if (ReturnPatient.toUpperCase().equals("YES")) {
@@ -554,8 +585,7 @@ public class FloresvilleBundle extends HttpServlet {
             if ("".toUpperCase().equals("YES")) {
                 HearAboutUsString2 += "Others ";
             }
-            rset.close();
-            stmt.close();
+
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
@@ -564,7 +594,15 @@ public class FloresvilleBundle extends HttpServlet {
             } else {
                 inputFilePath = "/sftpdrive";
             }
-
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
             inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/PATIENTREGISTRATIONFORMFLORESVILLE.pdf";
 
 //        if (MotorVehAccident == 1) {
@@ -616,10 +654,11 @@ public class FloresvilleBundle extends HttpServlet {
             } else {
                 SignImages = null;
             }
-
-            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+            String filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader = new PdfReader(inputFilePath);
+            int pageCount = pdfReader.getNumberOfPages();
             final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
 //            final GenerateBarCode barCode = new GenerateBarCode();
 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
@@ -1028,7 +1067,7 @@ public class FloresvilleBundle extends HttpServlet {
                 if (i == 6) {
                     PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
                     if (SignImages != null) {
-                        SignImages.setAbsolutePosition(150, 140);
+                        SignImages.setAbsolutePosition(150, 130);
                         pdfContentByte.addImage(SignImages);
                     }
                 }
@@ -1054,7 +1093,16 @@ public class FloresvilleBundle extends HttpServlet {
 //        while ((bytes = fileInputStream.read()) != -1) {
 //            responseOutputStream.write(bytes);
 //        }
-
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -1074,6 +1122,69 @@ public class FloresvilleBundle extends HttpServlet {
             System.out.println(str);
         }
     }
+
+    void GETINPUTfloresville(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String SignedFrom = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            try {
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getNString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                    }
+                    if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                    }
+                    if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                    }
+
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+                } else {
+                    GETINPUTfloresville_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, VisitId, PatientRegId, SignedFrom);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private String AttachUHC_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {
         try {

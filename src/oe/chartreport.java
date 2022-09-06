@@ -4,7 +4,7 @@ import Parsehtm.Parsehtm;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
-import org.apache.xmlbeans.impl.util.Base64;
+import com.sun.xml.internal.messaging.saaj.util.Base64;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -33,352 +33,12 @@ import org.apache.commons.codec.binary.Base64;*/
 @SuppressWarnings("Duplicates")
 public class chartreport
         extends HttpServlet {
-    public String host = "http://ourenergyllc.com";
-
-    public static String getOnlyDigits(String s) {
-        Pattern pattern = Pattern.compile("[^0-9.]");
-        Matcher matcher = pattern.matcher(s);
-        String number = matcher.replaceAll("");
-        return number;
-    }
-
-    public static String getclientname(HashMap clientlist, int clientIndex) {
-        String clientname = null;
-        Set set = clientlist.entrySet();
-        Iterator it = set.iterator();
-        while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry) it.next();
-            // out.println(entry.getKey() + ":" + entry.getValue()+"\n");
-            if (entry.getKey().equals(clientIndex)) {
-                // out.println(entry.getKey() + ":" + entry.getValue());
-                clientname = entry.getValue().toString();
-            } /*
-             * else{
-             *
-             * clientname=Integer.toString(clientIndex); }
-             */
-        }
-
-        return clientname;
-    }
-
-    public static String filestatuslist(HashMap clientlist, int clientIndex, int indexptr) {
-        // String clientname=null;
-        StringBuffer listofstatus = new StringBuffer();
-        listofstatus.append("<select id=\"StatusAction\" onChange=\"updatestatus(" + indexptr + "\\" + clientlist.toString() + ")\">");
-
-
-        for (int i = 0; i < clientlist.size(); i++) {
-            if (i == indexptr) {
-                listofstatus.append("<option  value=" + i + " selected >" + clientlist.get(i) + "</option>");
-            } else {
-                listofstatus.append("<option  value=" + i + "  >" + clientlist.get(i) + "</option>");
-            }
-        }
-
-
-        return listofstatus.toString();
-    }
-
-    public static HashMap<Integer, String> Clientlist(String aa, Connection Conn) {
-
-        HashMap<Integer, String> hm = new HashMap<Integer, String>();
-
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String name = null;
-        try {
-            Query = "select id,name from clients where status=0 ";//and Id not in (9,10)" ;
-            hstmt = Conn.createStatement();
-
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                id = hrset.getInt(1);
-                name = hrset.getString(2);
-                hm.put(id, name);
-
-            }
-
-
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception e) {
-            return hm;
-        }
-    }
-
-    public static HashMap<Integer, String> Insurancelist(String aa, Connection Conn) {
-
-        HashMap<Integer, String> hm = new HashMap<Integer, String>();
-
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String name = null;
-        try {
-            Query = "select id,Name from Insurancelist where status=0";
-            hstmt = Conn.createStatement();
-
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                id = hrset.getInt(1);
-                name = hrset.getString(2);
-                hm.put(id, name);
-
-            }
-
-
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception e) {
-            return hm;
-        }
-    }
-
-    public static HashMap<Integer, String> claim_status_list(String aa, Connection Conn) {
-
-        HashMap<Integer, String> hm = new HashMap<Integer, String>();
-
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String name = null;
-        try {
-            Query = "select id,descname from claim_status_list where status=0";
-            hstmt = Conn.createStatement();
-
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                id = hrset.getInt(1);
-                name = hrset.getString(2);
-                hm.put(id, name);
-
-            }
-
-
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception e) {
-            return hm;
-        }
-    }
-
-    public static HashMap<Integer, String> claim_ppt_list(String aa, Connection Conn) {
-
-        HashMap<Integer, String> hm = new HashMap<Integer, String>();
-
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String name = null;
-        try {
-            Query = "select id,descname from claim_ppt_list where status=0";
-            hstmt = Conn.createStatement();
-
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                id = hrset.getInt(1);
-                name = hrset.getString(2);
-                hm.put(id, name);
-
-            }
-
-
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception e) {
-            return hm;
-        }
-    }
-
-    public static HashMap<Integer, String> Userlist(String aa, Connection Conn) {
-
-        HashMap<Integer, String> hm = new HashMap<Integer, String>();
-
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String name = null;
-        try {
-            Query = "select indexptr,username from sysusers where enabled='Y'";
-            hstmt = Conn.createStatement();
-
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                id = hrset.getInt(1);
-                name = hrset.getString(2);
-                hm.put(id, name);
-
-            }
-
-
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception e) {
-            return hm;
-        }
-    }
-
-    public static HashMap<Integer, String> statuslist(String aa, Connection Conn) {
-
-        HashMap<Integer, String> hm = new HashMap<Integer, String>();
-
-
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        int id = 0;
-        String name = null;
-        try {
-            Query = "select id,name from filestatuslist where status='0'";
-            hstmt = Conn.createStatement();
-
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                id = hrset.getInt(1);
-                name = hrset.getString(2);
-                hm.put(id, name);
-
-            }
-
-
-            hrset.close();
-            hstmt.close();
-            return hm;
-        } catch (Exception e) {
-            return hm;
-        }
-    }
-
-    public static String logging(int userindex, int filestatus, int indexptr, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        try {
-            hstmt = conn.createStatement();
-            Query = " insert into fileactivity(fileindex,created,userindex,filestatus) " +
-                    " values('" + indexptr + "',now()," + userindex + ",'" + filestatus + "') ";
-            hstmt.execute(Query);
-        } catch (Exception ee) {
-
-
-        }
-
-        return null;
-    }
-
-    public static String createnote(int userindex, String note, int indexptr, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        try {
-            hstmt = conn.createStatement();
-            Query = " insert into claim_note(note,userindex,createddate) " +
-                    " values('" + note + "','" + userindex + "',now()) ";
-            hstmt.execute(Query);
-        } catch (Exception ee) {
-
-
-        }
-
-        return null;
-    }
-
-    public static String markuser(int userindex, int filestatus, int indexptr, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        try {
-            hstmt = conn.createStatement();
-            Query = " update  filelogs_sftp set processby=" + userindex + " where processby=0 and id=" + indexptr;
-            hstmt.execute(Query);
-        } catch (Exception ee) {
-
-
-        }
-
-        return null;
-    }
-
-    public static boolean CheckDates(String FromDate, String ToDate, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        try {
-            Query = " select unix_timestamp('" + FromDate + "') - unix_timestamp('" + ToDate + "') ";
-            hstmt = conn.createStatement();
-            hrset = hstmt.executeQuery(Query);
-            hrset.next();
-            boolean Valid = hrset.getInt(1) <= 0;
-            hrset.close();
-            hstmt.close();
-            return Valid;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public static String getcount(String cid, String day, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        String found = "0";
-        try {
-            Query = "select count(*) from IVRLOG where customerid='" + cid + "' and parsedmsg in ('Sucess','Success') and substr(entrydate,1,10)='" + day + "'";
-            hstmt = conn.createStatement();
-            hrset = hstmt.executeQuery(Query);
-            hrset.next();
-            found = hrset.getString(1);
-            hrset.close();
-            hstmt.close();
-            return found;
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }
-
-    public static String attemps(String cid, String day, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        int Days = 0;
-        String found = "0";
-        try {
-            Query = "select count(*) from IVRLOG where customerid='" + cid + "' and parsedmsg='failed'  and substr(entrydate,1,10)='" + day + "'";
-            hstmt = conn.createStatement();
-            hrset = hstmt.executeQuery(Query);
-            hrset.next();
-            found = hrset.getString(1);
-            hrset.close();
-            hstmt.close();
-            return found;
-        } catch (Exception e) {
-            return e.getMessage();
-        }
-    }
-
     public void init(ServletConfig config)
             throws ServletException {
         super.init(config);
     }
+
+    public String host = "http://ourenergyllc.com";
 
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -500,6 +160,15 @@ public class chartreport
         out.flush();
         out.close();
     }
+
+
+    public static String getOnlyDigits(String s) {
+        Pattern pattern = Pattern.compile("[^0-9.]");
+        Matcher matcher = pattern.matcher(s);
+        String number = matcher.replaceAll("");
+        return number;
+    }
+
 
     public void download1(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
 
@@ -720,33 +389,24 @@ public class chartreport
         }
     }
 
-    public void openpdf(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
-        // String file = request.getParameter("file");
-
-        String FileName = request.getParameter("fname");
-        String path = request.getParameter("path");
-        String indexptr = request.getParameter("indexptr");
-        String RecordingPath = path + FileName;
-        String UserId = Services.GetCookie("UserId", request).trim();
-        String userindex = Services.GetCookie("userindex", request).trim();
-
-
-        try {
-
-            //  logging(Integer.parseInt(userindex),2, Integer.parseInt(indexptr) , conn);
-            // markuser(Integer.parseInt(userindex),2, Integer.parseInt(indexptr), conn);
-            //out.println(file);
-            String file = "http://54.80.137.178:83/oe/oe.chartreport?Action=download&fname=" + FileName + "&path=" + path + "&indexptr=" + indexptr;
-
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("file", file.toString());
-
-            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/openpdf.html");
-
-
-        } catch (Exception e) {
-            out.println("Unable to process request ..." + e.getMessage());
+    public static String getclientname(HashMap clientlist, int clientIndex) {
+        String clientname = null;
+        Set set = clientlist.entrySet();
+        Iterator it = set.iterator();
+        while (it.hasNext()) {
+            Map.Entry entry = (Map.Entry) it.next();
+            // out.println(entry.getKey() + ":" + entry.getValue()+"\n");
+            if (entry.getKey().equals(clientIndex)) {
+                // out.println(entry.getKey() + ":" + entry.getValue());
+                clientname = entry.getValue().toString();
+            } /*
+             * else{
+             *
+             * clientname=Integer.toString(clientIndex); }
+             */
         }
+
+        return clientname;
     }
 
     public void showchartlog(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
@@ -795,416 +455,52 @@ public class chartreport
         }
     }
 
-    public void Addinfo(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
-        StringBuffer Day = new StringBuffer();
-        StringBuffer Month = new StringBuffer();
-        StringBuffer Year = new StringBuffer();
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        String indexptr = request.getParameter("indexptr");
-        String mrn = request.getParameter("mrn");
-        String firstname = "";
-        String lastname = "";
-        String Acc = "";
-        String dosdate = "";
-        String filename = "";
-        String target = "";
-        String entrydate = "";
-        String clientid = "";
-        String ChargeMasterTableName = "";
-        StringBuffer Insurancelist = new StringBuffer();
-        StringBuffer claimstatuslist = new StringBuffer();
-        StringBuffer claimpptlist = new StringBuffer();
-        StringBuffer PatientStatus = new StringBuffer();
-        StringBuffer DiagnosisCodesList = new StringBuffer();
-        StringBuffer CPTCodesList = new StringBuffer();
-        String userindex = Services.GetCookie("userindex", request).trim();
-        String note = "";
+    public static String filestatuslist(HashMap clientlist, int clientIndex, int indexptr) {
+        // String clientname=null;
+        StringBuffer listofstatus = new StringBuffer();
+        listofstatus.append("<select id=\"StatusAction\" onChange=\"updatestatus(" + indexptr + "\\" + clientlist.toString() + ")\">");
 
-        String Phone = "";
-        String email = "";
-        String address = "";
-        String charges = "0";
-        String claimamount = "0";
-        String claimstatus = "0";
-        String patientstatus = "0";
-        String insurance = "0";
-        String chiofcomplaint = "";
-        String cmdref = "";
-        String Remarks = "";
-        String Mailed = "";
-        String editby = "";
-        String editentrydate = "";
-        String aa = "0";
 
-        try {
-            note = "Open Add info and load pdf";
-            createnote(Integer.parseInt(userindex), note, Integer.parseInt(indexptr), conn);
-            logging(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
-            markuser(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
-            Query = "select Id,target,entrydate,clientdirectory,filename,acc,dosdate,epowertime,processed,processby,"
-                    + "filestatus,liststatus,ifnull(firstname,'-'),ifnull(lastname,'-'),ifnull(mrn,'-') "
-                    + "from filelogs_sftp where Id=" + indexptr;
-            // out.println(Query);
-            hstmt = conn.createStatement();
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                firstname = hrset.getString(13);
-                lastname = hrset.getString(14);
-                Acc = hrset.getString(6);
-                dosdate = hrset.getString(7);
-                entrydate = hrset.getString(3);
-                target = hrset.getString(2);
-                mrn = hrset.getString(15);
-                filename = hrset.getString(5);
-                clientid = hrset.getString(4);
+        for (int i = 0; i < clientlist.size(); i++) {
+            if (i == indexptr) {
+                listofstatus.append("<option  value=" + i + " selected >" + clientlist.get(i) + "</option>");
+            } else {
+                listofstatus.append("<option  value=" + i + "  >" + clientlist.get(i) + "</option>");
             }
-            hrset.close();
-            hstmt.close();
-            // Insurancelist.append("<option class=Inner value=\"-1\"> All </option>");
-            // Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\">" + entry.getValue().toString() + "</option>");
-
-            Query = "select ifnull(phone,''),ifnull(email,''),ifnull(address,''),ifnull(claimamount,''),ifnull(charges,''),ifnull(dosdate,''),ifnull(entrydate,''),ifnull(claimstatus,''),ifnull(patientstatus,''),ifnull(insurance,''),"
-                    + "ifnull(chiofcomplaint,''),ifnull(cmdref,''),ifnull(Remarks,''),ifnull(LMailed,''),ifnull(createddate,''),createdby from claim_info_master where claimid=" + indexptr;
-
-            hstmt = conn.createStatement();
-            //  out.println(Query);
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                Phone = hrset.getString(1);
-                email = hrset.getString(2);
-                aa = "1";
-                address = hrset.getString(3);
-                claimamount = hrset.getString(4);
-                charges = hrset.getString(5);
-                //dosdate = hrset.getString(6) ;
-                editentrydate = hrset.getString(7);
-                claimstatus = hrset.getString(8);
-                patientstatus = hrset.getString(9);
-                insurance = hrset.getString(10);
-                chiofcomplaint = hrset.getString(11);
-                cmdref = hrset.getString(12);
-                Remarks = hrset.getString(13);
-                Mailed = hrset.getString(14);
-                editby = hrset.getString(16);
-
-                aa = "2";
-            }
-            hrset.close();
-            hstmt.close();
-
-            HashMap<Integer, String> hm = new HashMap<Integer, String>();
-            hm = Insurancelist("a", conn);
-            Set set = hm.entrySet();
-            Iterator it = set.iterator();
-            while (it.hasNext()) {
-                Map.Entry entry = (Map.Entry) it.next();
-                if (entry.getKey().equals(Integer.parseInt(insurance))) {
-                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\" selected >" + entry.getValue().toString() + "</option>");
-                } else {
-                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\"  >" + entry.getValue().toString() + "</option>");
-                }
-            }
-            HashMap<Integer, String> hm1 = new HashMap<Integer, String>();
-            hm1 = claim_ppt_list("a", conn);
-            Set set1 = hm1.entrySet();
-            Iterator it1 = set1.iterator();
-            while (it1.hasNext()) {
-                Map.Entry entry1 = (Map.Entry) it1.next();
-                if (entry1.getKey().equals(Integer.parseInt(patientstatus))) {
-                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\" selected>" + entry1.getValue().toString() + "</option>");
-                } else {
-                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\"  >" + entry1.getValue().toString() + "</option>");
-                }
-            }
-            HashMap<Integer, String> hm2 = new HashMap<Integer, String>();
-            hm2 = claim_status_list("a", conn);
-            Set set2 = hm2.entrySet();
-            Iterator it2 = set2.iterator();
-            while (it2.hasNext()) {
-                Map.Entry entry2 = (Map.Entry) it2.next();
-                if (entry2.getKey().equals(Integer.parseInt(claimstatus))) {
-                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\" selected>" + entry2.getValue().toString() + "</option>");
-                } else {
-                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\"  >" + entry2.getValue().toString() + "</option>");
-                }
-            }
-            aa = "3";
-            String textboxvalue = "<script>document.getElementById('Remarks').value = '" + Remarks + "';</script>";
-
-            Query = "Select Code, Description from oe.PatientDischargeStatus where Status = 1";
-            hstmt = conn.createStatement();
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
-            }
-            hrset.close();
-            ;
-            hstmt.close();
-
-//          Query = "Select Code, Description, CASE WHEN Status = 1 THEN 'Active' ELSE 'INACTIVE' END from oe.DiagnosisCodes where Status = 1";
-//          hstmt = conn.createStatement();
-//          for(hrset = hstmt.executeQuery(Query); hrset.next();)
-//          {
-//              DiagnosisCodesList.append("<tr onclick=\"GetDiagnosisCode('"+hrset.getString(1)+"')\">");
-//              DiagnosisCodesList.append("<td align=left >" + hrset.getString(1) + "</td>\n");
-//              DiagnosisCodesList.append("<td align=left >" + hrset.getString(2) + "</td>\n");
-//              DiagnosisCodesList.append("<td align=left>" + hrset.getString(3) + "</td>\n");
-//              DiagnosisCodesList.append("</tr>");
-//          }
-//          hrset.close();
-//          hstmt.close();
-//
-//          Query = "Select ChargeMasterTableName from oe.clients where Id = '"+clientid+"'";
-//          hstmt = conn.createStatement();
-//          hrset = hstmt.executeQuery(Query);
-//          if(hrset.next()){
-//              ChargeMasterTableName = hrset.getString(1);
-//          }
-//          hrset.close();
-//          hstmt.close();
-//
-//          Query = "Select Id, CPTCode, ShortDescription, Price from oe."+ChargeMasterTableName+" ";
-//          hstmt = conn.createStatement();
-//          for(hrset = hstmt.executeQuery(Query); hrset.next();)
-//          {
-//              CPTCodesList.append("<tr onclick=\"GetCPTCodes('"+hrset.getString(1)+"')\">");
-//              CPTCodesList.append("<td align=left >" + hrset.getString(2) + "</td>\n");
-//              CPTCodesList.append("<td align=left >" + hrset.getString(3) + "</td>\n");
-//              CPTCodesList.append("<td align=left>" + hrset.getString(4) + "</td>\n");
-//              CPTCodesList.append("</tr>");
-//          }
-//          hrset.close();
-//          hstmt.close();
-
-
-            Services.GetCalendar(Day, Month, Year);
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("firstname", firstname.toString());
-            Parser.SetField("indexptr", indexptr.toString());
-            Parser.SetField("lastname", lastname.toString());
-            Parser.SetField("Acc", Acc.toString());
-            Parser.SetField("dosdate", dosdate.toString());
-            Parser.SetField("entrydate", entrydate.toString());
-            Parser.SetField("target", target.toString());
-            Parser.SetField("mrn", mrn.toString());
-            Parser.SetField("textboxvalue", textboxvalue.toString());
-            Parser.SetField("filename", filename.toString());
-            Parser.SetField("Insurancelist", Insurancelist.toString());
-            Parser.SetField("dosdate", dosdate.toString());
-            Parser.SetField("editentrydate", editentrydate.toString());
-            Parser.SetField("Acc", Acc.toString());
-            aa = "4";
-            Parser.SetField("Phone", Phone.toString());
-            Parser.SetField("email", email.toString());
-            Parser.SetField("address", address.toString());
-            Parser.SetField("charges", charges.toString());
-            Parser.SetField("claimamount", claimamount.toString());
-            Parser.SetField("claimstatus", claimstatus.toString());
-            Parser.SetField("patientstatus", patientstatus.toString());
-            Parser.SetField("insurance", insurance.toString());
-            Parser.SetField("claimpptlist", claimpptlist.toString());
-            Parser.SetField("claimstatuslist", claimstatuslist.toString());
-            Parser.SetField("PatientStatus", PatientStatus.toString());
-//          Parser.SetField("DiagnosisCodesList",DiagnosisCodesList.toString());
-//          Parser.SetField("CPTCodesList",CPTCodesList.toString());
-            aa = "5";
-            Parser.SetField("chiofcomplaint", chiofcomplaint.toString());
-            Parser.SetField("cmdref", cmdref.toString());
-            Parser.SetField("Remarks", Remarks.toString());
-            Parser.SetField("Mailed", Mailed.toString());
-            Parser.SetField("clientid", clientid.toString());
-
-            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/Addinfo.html");
-        } catch (Exception e) {
-            out.println(aa + " Unable to process the request..." + e.getMessage());
         }
+
+
+        return listofstatus.toString();
     }
 
-    public void Addinfohl7(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
+    public static HashMap<Integer, String> Clientlist(String aa, Connection Conn) {
 
-        StringBuffer Day = new StringBuffer();
-        StringBuffer Month = new StringBuffer();
-        StringBuffer Year = new StringBuffer();
+        HashMap<Integer, String> hm = new HashMap<Integer, String>();
+
+
         Statement hstmt = null;
         ResultSet hrset = null;
         String Query = "";
-        String indexptr = request.getParameter("indexptr");
-        String mrn = request.getParameter("mrn");
-        String firstname = "";
-        String lastname = "";
-        String Acc = "";
-        String dosdate = "";
-        String filename = "";
-        String target = "";
-        String entrydate = "";
-        String clientid = "";
-        StringBuffer Insurancelist = new StringBuffer();
-        StringBuffer claimstatuslist = new StringBuffer();
-        StringBuffer claimpptlist = new StringBuffer();
-        String userindex = Services.GetCookie("userindex", request).trim();
-        String note = "";
-
-        String Phone = "";
-        String email = "";
-        String address = "";
-        String charges = "0";
-        String claimamount = "0";
-        String claimstatus = "0";
-        String patientstatus = "0";
-        String insurance = "0";
-        String chiofcomplaint = "";
-        String cmdref = "";
-        String Remarks = "";
-        String Mailed = "";
-        String editby = "";
-        String editentrydate = "";
-        String aa = "0";
-
+        int Days = 0;
+        int id = 0;
+        String name = null;
         try {
-            note = "Open Add info and load pdf";
-            createnote(Integer.parseInt(userindex), note, Integer.parseInt(indexptr), conn);
-            logging(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
-            markuser(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
-            Query = "select Id,target,entrydate,clientdirectory,filename,acc,dosdate,epowertime,processed,processby,"
-                    + "filestatus,liststatus,ifnull(firstname,'-'),ifnull(lastname,'-'),ifnull(mrn,'-') "
-                    + "from filelogs_sftp where Id=" + indexptr;
+            Query = "select id,name from clients where status=0 ";//and Id not in (9,10)" ;
+            hstmt = Conn.createStatement();
 
-
-            // out.println(Query);
-
-
-            hstmt = conn.createStatement();
             for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                firstname = hrset.getString(13);
-                lastname = hrset.getString(14);
-                Acc = hrset.getString(6);
-                dosdate = hrset.getString(7);
-                entrydate = hrset.getString(3);
-                target = hrset.getString(2);
-                mrn = hrset.getString(15);
-                filename = hrset.getString(5);
-                clientid = hrset.getString(4);
-            }
-            hrset.close();
-            hstmt.close();
-            // Insurancelist.append("<option class=Inner value=\"-1\"> All </option>");
-            // Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\">" + entry.getValue().toString() + "</option>");
-
-
-            Query = "select ifnull(phone,''),ifnull(email,''),ifnull(address,''),ifnull(claimamount,''),ifnull(charges,''),ifnull(dosdate,''),ifnull(entrydate,''),ifnull(claimstatus,''),ifnull(patientstatus,''),ifnull(insurance,''),"
-                    + "ifnull(chiofcomplaint,''),ifnull(cmdref,''),ifnull(Remarks,''),ifnull(LMailed,''),ifnull(createddate,''),createdby from claim_info_master where claimid=" + indexptr;
-
-            hstmt = conn.createStatement();
-            //  out.println(Query);
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                Phone = hrset.getString(1);
-                email = hrset.getString(2);
-                aa = "1";
-                address = hrset.getString(3);
-                claimamount = hrset.getString(4);
-                charges = hrset.getString(5);
-                //dosdate = hrset.getString(6) ;
-                editentrydate = hrset.getString(7);
-                claimstatus = hrset.getString(8);
-                patientstatus = hrset.getString(9);
-                insurance = hrset.getString(10);
-                chiofcomplaint = hrset.getString(11);
-                cmdref = hrset.getString(12);
-                Remarks = hrset.getString(13);
-                Mailed = hrset.getString(14);
-                editby = hrset.getString(16);
-
-                aa = "2";
+                id = hrset.getInt(1);
+                name = hrset.getString(2);
+                hm.put(id, name);
 
             }
 
 
             hrset.close();
             hstmt.close();
-
-            HashMap<Integer, String> hm = new HashMap<Integer, String>();
-            hm = Insurancelist("a", conn);
-            Set set = hm.entrySet();
-            Iterator it = set.iterator();
-            while (it.hasNext()) {
-                Map.Entry entry = (Map.Entry) it.next();
-                if (entry.getKey().equals(Integer.parseInt(insurance))) {
-                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\" selected >" + entry.getValue().toString() + "</option>");
-                } else {
-                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\"  >" + entry.getValue().toString() + "</option>");
-
-                }
-
-            }
-
-            HashMap<Integer, String> hm1 = new HashMap<Integer, String>();
-            hm1 = claim_ppt_list("a", conn);
-            Set set1 = hm1.entrySet();
-            Iterator it1 = set1.iterator();
-            while (it1.hasNext()) {
-                Map.Entry entry1 = (Map.Entry) it1.next();
-                if (entry1.getKey().equals(Integer.parseInt(patientstatus))) {
-                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\" selected>" + entry1.getValue().toString() + "</option>");
-                } else {
-                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\"  >" + entry1.getValue().toString() + "</option>");
-
-                }
-
-            }
-
-            HashMap<Integer, String> hm2 = new HashMap<Integer, String>();
-            hm2 = claim_status_list("a", conn);
-            Set set2 = hm2.entrySet();
-            Iterator it2 = set2.iterator();
-            while (it2.hasNext()) {
-                Map.Entry entry2 = (Map.Entry) it2.next();
-                if (entry2.getKey().equals(Integer.parseInt(claimstatus))) {
-                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\" selected>" + entry2.getValue().toString() + "</option>");
-                } else {
-                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\"  >" + entry2.getValue().toString() + "</option>");
-
-                }
-
-            }
-            aa = "3";
-            String textboxvalue = "<script>document.getElementById('Remarks').value = '" + Remarks + "';</script>";
-
-            Services.GetCalendar(Day, Month, Year);
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("firstname", firstname.toString());
-            Parser.SetField("indexptr", indexptr.toString());
-            Parser.SetField("lastname", lastname.toString());
-            Parser.SetField("Acc", Acc.toString());
-            Parser.SetField("dosdate", dosdate.toString());
-            Parser.SetField("entrydate", entrydate.toString());
-            Parser.SetField("target", target.toString());
-            Parser.SetField("mrn", mrn.toString());
-            Parser.SetField("textboxvalue", textboxvalue.toString());
-            Parser.SetField("filename", filename.toString());
-            Parser.SetField("Insurancelist", Insurancelist.toString());
-            Parser.SetField("dosdate", dosdate.toString());
-            Parser.SetField("editentrydate", editentrydate.toString());
-            Parser.SetField("Acc", Acc.toString());
-            aa = "4";
-            Parser.SetField("Phone", Phone.toString());
-            Parser.SetField("email", email.toString());
-            Parser.SetField("address", address.toString());
-            Parser.SetField("charges", charges.toString());
-            Parser.SetField("claimamount", claimamount.toString());
-            Parser.SetField("claimstatus", claimstatus.toString());
-            Parser.SetField("patientstatus", patientstatus.toString());
-            Parser.SetField("insurance", insurance.toString());
-            Parser.SetField("claimpptlist", claimpptlist.toString());
-            Parser.SetField("claimstatuslist", claimstatuslist.toString());
-            aa = "5";
-            Parser.SetField("chiofcomplaint", chiofcomplaint.toString());
-            Parser.SetField("cmdref", cmdref.toString());
-            Parser.SetField("Remarks", Remarks.toString());
-            Parser.SetField("Mailed", Mailed.toString());
-            Parser.SetField("clientid", clientid.toString());
-
-            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/Addinfohl7.html");
+            return hm;
         } catch (Exception e) {
-            out.println(aa + " Unable to process the request..." + e.getMessage());
+            return hm;
         }
     }
 
@@ -1486,6 +782,7 @@ public class chartreport
         }
     }
 
+
     public void showivrlogs_balance(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
 
         StringBuffer Day = new StringBuffer();
@@ -1521,6 +818,894 @@ public class chartreport
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showivrlogsum.html");
         } catch (Exception e) {
             out.println("Unable to process the request...");
+        }
+    }
+
+    public static HashMap<Integer, String> Insurancelist(String aa, Connection Conn) {
+
+        HashMap<Integer, String> hm = new HashMap<Integer, String>();
+
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String name = null;
+        try {
+            Query = "select id,Name from Insurancelist where status=0";
+            hstmt = Conn.createStatement();
+
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                id = hrset.getInt(1);
+                name = hrset.getString(2);
+                hm.put(id, name);
+
+            }
+
+
+            hrset.close();
+            hstmt.close();
+            return hm;
+        } catch (Exception e) {
+            return hm;
+        }
+    }
+
+    public static HashMap<Integer, String> claim_status_list(String aa, Connection Conn) {
+
+        HashMap<Integer, String> hm = new HashMap<Integer, String>();
+
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String name = null;
+        try {
+            Query = "select id,descname from claim_status_list where status=0";
+            hstmt = Conn.createStatement();
+
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                id = hrset.getInt(1);
+                name = hrset.getString(2);
+                hm.put(id, name);
+
+            }
+
+
+            hrset.close();
+            hstmt.close();
+            return hm;
+        } catch (Exception e) {
+            return hm;
+        }
+    }
+
+    public static HashMap<Integer, String> claim_ppt_list(String aa, Connection Conn) {
+
+        HashMap<Integer, String> hm = new HashMap<Integer, String>();
+
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String name = null;
+        try {
+            Query = "select id,descname from claim_ppt_list where status=0";
+            hstmt = Conn.createStatement();
+
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                id = hrset.getInt(1);
+                name = hrset.getString(2);
+                hm.put(id, name);
+
+            }
+
+
+            hrset.close();
+            hstmt.close();
+            return hm;
+        } catch (Exception e) {
+            return hm;
+        }
+    }
+
+    public static HashMap<Integer, String> Userlist(String aa, Connection Conn) {
+
+        HashMap<Integer, String> hm = new HashMap<Integer, String>();
+
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String name = null;
+        try {
+            Query = "select indexptr,username from sysusers where enabled='Y'";
+            hstmt = Conn.createStatement();
+
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                id = hrset.getInt(1);
+                name = hrset.getString(2);
+                hm.put(id, name);
+
+            }
+
+
+            hrset.close();
+            hstmt.close();
+            return hm;
+        } catch (Exception e) {
+            return hm;
+        }
+    }
+
+    public static HashMap<Integer, String> statuslist(String aa, Connection Conn) {
+
+        HashMap<Integer, String> hm = new HashMap<Integer, String>();
+
+
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        int id = 0;
+        String name = null;
+        try {
+            Query = "select id,name from filestatuslist where status='0'";
+            hstmt = Conn.createStatement();
+
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                id = hrset.getInt(1);
+                name = hrset.getString(2);
+                hm.put(id, name);
+
+            }
+
+
+            hrset.close();
+            hstmt.close();
+            return hm;
+        } catch (Exception e) {
+            return hm;
+        }
+    }
+
+    public static String logging(int userindex, int filestatus, int indexptr, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        try {
+            hstmt = conn.createStatement();
+            Query = " insert into fileactivity(fileindex,created,userindex,filestatus) " +
+                    " values('" + indexptr + "',now()," + userindex + ",'" + filestatus + "') ";
+            hstmt.execute(Query);
+        } catch (Exception ee) {
+
+
+        }
+
+        return null;
+    }
+
+    public static String createnote(int userindex, String note, int indexptr, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        try {
+            hstmt = conn.createStatement();
+            Query = " insert into claim_note(note,userindex,createddate) " +
+                    " values('" + note + "','" + userindex + "',now()) ";
+            hstmt.execute(Query);
+        } catch (Exception ee) {
+
+
+        }
+
+        return null;
+    }
+
+    public static String markuser(int userindex, int filestatus, int indexptr, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        try {
+            hstmt = conn.createStatement();
+            Query = " update  filelogs_sftp set processby=" + userindex + " where processby=0 and id=" + indexptr;
+            hstmt.execute(Query);
+        } catch (Exception ee) {
+
+
+        }
+
+        return null;
+    }
+
+    public static boolean CheckDates(String FromDate, String ToDate, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        try {
+            Query = " select unix_timestamp('" + FromDate + "') - unix_timestamp('" + ToDate + "') ";
+            hstmt = conn.createStatement();
+            hrset = hstmt.executeQuery(Query);
+            hrset.next();
+            boolean Valid = hrset.getInt(1) <= 0;
+            hrset.close();
+            hstmt.close();
+            return Valid;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static String getcount(String cid, String day, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        String found = "0";
+        try {
+            Query = "select count(*) from IVRLOG where customerid='" + cid + "' and parsedmsg in ('Sucess','Success') and substr(entrydate,1,10)='" + day + "'";
+            hstmt = conn.createStatement();
+            hrset = hstmt.executeQuery(Query);
+            hrset.next();
+            found = hrset.getString(1);
+            hrset.close();
+            hstmt.close();
+            return found;
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    public static String attemps(String cid, String day, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        int Days = 0;
+        String found = "0";
+        try {
+            Query = "select count(*) from IVRLOG where customerid='" + cid + "' and parsedmsg='failed'  and substr(entrydate,1,10)='" + day + "'";
+            hstmt = conn.createStatement();
+            hrset = hstmt.executeQuery(Query);
+            hrset.next();
+            found = hrset.getString(1);
+            hrset.close();
+            hstmt.close();
+            return found;
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    public void openpdf(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
+        // String file = request.getParameter("file");
+
+        String FileName = request.getParameter("fname");
+        String path = request.getParameter("path");
+        String indexptr = request.getParameter("indexptr");
+        String RecordingPath = path + FileName;
+        String UserId = Services.GetCookie("UserId", request).trim();
+        String userindex = Services.GetCookie("userindex", request).trim();
+
+
+        try {
+
+            //  logging(Integer.parseInt(userindex),2, Integer.parseInt(indexptr) , conn);
+            // markuser(Integer.parseInt(userindex),2, Integer.parseInt(indexptr), conn);
+            //out.println(file);
+            String file = "http://54.80.137.178:83/oe/oe.chartreport?Action=download&fname=" + FileName + "&path=" + path + "&indexptr=" + indexptr;
+
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("file", file);
+
+            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/openpdf.html");
+
+
+        } catch (Exception e) {
+            out.println("Unable to process request ..." + e.getMessage());
+        }
+    }
+
+    public void Addinfo(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
+        StringBuffer Day = new StringBuffer();
+        StringBuffer Month = new StringBuffer();
+        StringBuffer Year = new StringBuffer();
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        String indexptr = request.getParameter("indexptr");
+        String mrn = request.getParameter("mrn");
+        String firstname = "";
+        String lastname = "";
+        String Acc = "";
+        String dosdate = "";
+        String filename = "";
+        String target = "";
+        String entrydate = "";
+        String clientid = "";
+        String ChargeMasterTableName = "";
+        StringBuffer Insurancelist = new StringBuffer();
+        StringBuffer claimstatuslist = new StringBuffer();
+        StringBuffer claimpptlist = new StringBuffer();
+        StringBuffer PatientStatus = new StringBuffer();
+        StringBuffer DiagnosisCodesList = new StringBuffer();
+        StringBuffer CPTCodesList = new StringBuffer();
+        String userindex = Services.GetCookie("userindex", request).trim();
+        String note = "";
+
+        String Phone = "";
+        String email = "";
+        String address = "";
+        String charges = "0";
+        String claimamount = "0";
+        String claimstatus = "0";
+        String patientstatus = "0";
+        String insurance = "0";
+        String chiofcomplaint = "";
+        String cmdref = "";
+        String Remarks = "";
+        String Mailed = "";
+        String editby = "";
+        String editentrydate = "";
+        String aa = "0";
+
+        try {
+            note = "Open Add info and load pdf";
+            createnote(Integer.parseInt(userindex), note, Integer.parseInt(indexptr), conn);
+            logging(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
+            markuser(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
+            Query = "select Id,target,entrydate,clientdirectory,filename,acc,dosdate,epowertime,processed,processby,"
+                    + "filestatus,liststatus,ifnull(firstname,'-'),ifnull(lastname,'-'),ifnull(mrn,'-') "
+                    + "from filelogs_sftp where Id=" + indexptr;
+            // out.println(Query);
+            hstmt = conn.createStatement();
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                firstname = hrset.getString(13);
+                lastname = hrset.getString(14);
+                Acc = hrset.getString(6);
+                dosdate = hrset.getString(7);
+                entrydate = hrset.getString(3);
+                target = hrset.getString(2);
+                mrn = hrset.getString(15);
+                filename = hrset.getString(5);
+                clientid = hrset.getString(4);
+            }
+            hrset.close();
+            hstmt.close();
+            // Insurancelist.append("<option class=Inner value=\"-1\"> All </option>");
+            // Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\">" + entry.getValue().toString() + "</option>");
+
+            Query = "select ifnull(phone,''),ifnull(email,''),ifnull(address,''),ifnull(claimamount,''),ifnull(charges,''),ifnull(dosdate,''),ifnull(entrydate,''),ifnull(claimstatus,''),ifnull(patientstatus,''),ifnull(insurance,''),"
+                    + "ifnull(chiofcomplaint,''),ifnull(cmdref,''),ifnull(Remarks,''),ifnull(LMailed,''),ifnull(createddate,''),createdby from claim_info_master where claimid=" + indexptr;
+
+            hstmt = conn.createStatement();
+            //  out.println(Query);
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                Phone = hrset.getString(1);
+                email = hrset.getString(2);
+                aa = "1";
+                address = hrset.getString(3);
+                claimamount = hrset.getString(4);
+                charges = hrset.getString(5);
+                //dosdate = hrset.getString(6) ;
+                editentrydate = hrset.getString(7);
+                claimstatus = hrset.getString(8);
+                patientstatus = hrset.getString(9);
+                insurance = hrset.getString(10);
+                chiofcomplaint = hrset.getString(11);
+                cmdref = hrset.getString(12);
+                Remarks = hrset.getString(13);
+                Mailed = hrset.getString(14);
+                editby = hrset.getString(16);
+
+                aa = "2";
+            }
+            hrset.close();
+            hstmt.close();
+
+            HashMap<Integer, String> hm = new HashMap<Integer, String>();
+            hm = Insurancelist("a", conn);
+            Set set = hm.entrySet();
+            Iterator it = set.iterator();
+            while (it.hasNext()) {
+                Map.Entry entry = (Map.Entry) it.next();
+                if (entry.getKey().equals(Integer.parseInt(insurance))) {
+                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\" selected >" + entry.getValue().toString() + "</option>");
+                } else {
+                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\"  >" + entry.getValue().toString() + "</option>");
+                }
+            }
+            HashMap<Integer, String> hm1 = new HashMap<Integer, String>();
+            hm1 = claim_ppt_list("a", conn);
+            Set set1 = hm1.entrySet();
+            Iterator it1 = set1.iterator();
+            while (it1.hasNext()) {
+                Map.Entry entry1 = (Map.Entry) it1.next();
+                if (entry1.getKey().equals(Integer.parseInt(patientstatus))) {
+                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\" selected>" + entry1.getValue().toString() + "</option>");
+                } else {
+                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\"  >" + entry1.getValue().toString() + "</option>");
+                }
+            }
+            HashMap<Integer, String> hm2 = new HashMap<Integer, String>();
+            hm2 = claim_status_list("a", conn);
+            Set set2 = hm2.entrySet();
+            Iterator it2 = set2.iterator();
+            while (it2.hasNext()) {
+                Map.Entry entry2 = (Map.Entry) it2.next();
+                if (entry2.getKey().equals(Integer.parseInt(claimstatus))) {
+                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\" selected>" + entry2.getValue().toString() + "</option>");
+                } else {
+                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\"  >" + entry2.getValue().toString() + "</option>");
+                }
+            }
+            aa = "3";
+            String textboxvalue = "<script>document.getElementById('Remarks').value = '" + Remarks + "';</script>";
+
+            Query = "Select Code, Description from oe.PatientDischargeStatus where Status = 1";
+            hstmt = conn.createStatement();
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+            }
+            hrset.close();
+            hstmt.close();
+
+//          Query = "Select Code, Description, CASE WHEN Status = 1 THEN 'Active' ELSE 'INACTIVE' END from oe.DiagnosisCodes where Status = 1";
+//          hstmt = conn.createStatement();
+//          for(hrset = hstmt.executeQuery(Query); hrset.next();)
+//          {
+//              DiagnosisCodesList.append("<tr onclick=\"GetDiagnosisCode('"+hrset.getString(1)+"')\">");
+//              DiagnosisCodesList.append("<td align=left >" + hrset.getString(1) + "</td>\n");
+//              DiagnosisCodesList.append("<td align=left >" + hrset.getString(2) + "</td>\n");
+//              DiagnosisCodesList.append("<td align=left>" + hrset.getString(3) + "</td>\n");
+//              DiagnosisCodesList.append("</tr>");
+//          }
+//          hrset.close();
+//          hstmt.close();
+//
+//          Query = "Select ChargeMasterTableName from oe.clients where Id = '"+clientid+"'";
+//          hstmt = conn.createStatement();
+//          hrset = hstmt.executeQuery(Query);
+//          if(hrset.next()){
+//              ChargeMasterTableName = hrset.getString(1);
+//          }
+//          hrset.close();
+//          hstmt.close();
+//
+//          Query = "Select Id, CPTCode, ShortDescription, Price from oe."+ChargeMasterTableName+" ";
+//          hstmt = conn.createStatement();
+//          for(hrset = hstmt.executeQuery(Query); hrset.next();)
+//          {
+//              CPTCodesList.append("<tr onclick=\"GetCPTCodes('"+hrset.getString(1)+"')\">");
+//              CPTCodesList.append("<td align=left >" + hrset.getString(2) + "</td>\n");
+//              CPTCodesList.append("<td align=left >" + hrset.getString(3) + "</td>\n");
+//              CPTCodesList.append("<td align=left>" + hrset.getString(4) + "</td>\n");
+//              CPTCodesList.append("</tr>");
+//          }
+//          hrset.close();
+//          hstmt.close();
+
+
+            Services.GetCalendar(Day, Month, Year);
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("firstname", firstname);
+            Parser.SetField("indexptr", indexptr);
+            Parser.SetField("lastname", lastname);
+            Parser.SetField("Acc", Acc);
+            Parser.SetField("dosdate", dosdate);
+            Parser.SetField("entrydate", entrydate);
+            Parser.SetField("target", target);
+            Parser.SetField("mrn", mrn);
+            Parser.SetField("textboxvalue", textboxvalue);
+            Parser.SetField("filename", filename);
+            Parser.SetField("Insurancelist", Insurancelist.toString());
+            Parser.SetField("dosdate", dosdate);
+            Parser.SetField("editentrydate", editentrydate);
+            Parser.SetField("Acc", Acc);
+            aa = "4";
+            Parser.SetField("Phone", Phone);
+            Parser.SetField("email", email);
+            Parser.SetField("address", address);
+            Parser.SetField("charges", charges);
+            Parser.SetField("claimamount", claimamount);
+            Parser.SetField("claimstatus", claimstatus);
+            Parser.SetField("patientstatus", patientstatus);
+            Parser.SetField("insurance", insurance);
+            Parser.SetField("claimpptlist", claimpptlist.toString());
+            Parser.SetField("claimstatuslist", claimstatuslist.toString());
+            Parser.SetField("PatientStatus", PatientStatus.toString());
+//          Parser.SetField("DiagnosisCodesList",DiagnosisCodesList.toString());
+//          Parser.SetField("CPTCodesList",CPTCodesList.toString());
+            aa = "5";
+            Parser.SetField("chiofcomplaint", chiofcomplaint);
+            Parser.SetField("cmdref", cmdref);
+            Parser.SetField("Remarks", Remarks);
+            Parser.SetField("Mailed", Mailed);
+            Parser.SetField("clientid", clientid);
+
+            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/Addinfo.html");
+        } catch (Exception e) {
+            out.println(aa + " Unable to process the request..." + e.getMessage());
+        }
+    }
+
+    public void updatestatus(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        String indexptr = request.getParameter("indexptr");
+        String statusindex = request.getParameter("statusindex");
+        String UserId = Services.GetCookie("UserId", request).trim();
+        String userindex = Services.GetCookie("userindex", request).trim();
+        try {
+            hstmt = conn.createStatement();
+            Query = " Update oe.filelogs_sftp  " +
+                    " Set filestatus  = '" + statusindex.trim() + "'" +
+                    " , liststatus  = '" + statusindex.trim() + "'" +
+                    " Where id ='" + indexptr.trim() + "'";
+            hstmt.executeUpdate(Query);
+
+            hstmt.close();
+            logging(Integer.parseInt(userindex), Integer.parseInt(statusindex), Integer.parseInt(indexptr), conn);
+            markuser(Integer.parseInt(userindex), Integer.parseInt(statusindex), Integer.parseInt(indexptr), conn);
+            out.println("done");
+        } catch (Exception ee) {
+            out.println(ee.getMessage());
+        }
+
+    }
+
+    public void Addinfohl7(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
+
+        StringBuffer Day = new StringBuffer();
+        StringBuffer Month = new StringBuffer();
+        StringBuffer Year = new StringBuffer();
+        Statement hstmt = null;
+        ResultSet hrset = null;
+        String Query = "";
+        String indexptr = request.getParameter("indexptr");
+        String mrn = request.getParameter("mrn");
+        String firstname = "";
+        String lastname = "";
+        String Acc = "";
+        String dosdate = "";
+        String filename = "";
+        String target = "";
+        String entrydate = "";
+        String clientid = "";
+        StringBuffer Insurancelist = new StringBuffer();
+        StringBuffer claimstatuslist = new StringBuffer();
+        StringBuffer claimpptlist = new StringBuffer();
+        String userindex = Services.GetCookie("userindex", request).trim();
+        String note = "";
+
+        String Phone = "";
+        String email = "";
+        String address = "";
+        String charges = "0";
+        String claimamount = "0";
+        String claimstatus = "0";
+        String patientstatus = "0";
+        String insurance = "0";
+        String chiofcomplaint = "";
+        String cmdref = "";
+        String Remarks = "";
+        String Mailed = "";
+        String editby = "";
+        String editentrydate = "";
+        String aa = "0";
+
+        try {
+            note = "Open Add info and load pdf";
+            createnote(Integer.parseInt(userindex), note, Integer.parseInt(indexptr), conn);
+            logging(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
+            markuser(Integer.parseInt(userindex), 2, Integer.parseInt(indexptr), conn);
+            Query = "select Id,target,entrydate,clientdirectory,filename,acc,dosdate,epowertime,processed,processby,"
+                    + "filestatus,liststatus,ifnull(firstname,'-'),ifnull(lastname,'-'),ifnull(mrn,'-') "
+                    + "from filelogs_sftp where Id=" + indexptr;
+
+
+            // out.println(Query);
+
+
+            hstmt = conn.createStatement();
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                firstname = hrset.getString(13);
+                lastname = hrset.getString(14);
+                Acc = hrset.getString(6);
+                dosdate = hrset.getString(7);
+                entrydate = hrset.getString(3);
+                target = hrset.getString(2);
+                mrn = hrset.getString(15);
+                filename = hrset.getString(5);
+                clientid = hrset.getString(4);
+            }
+            hrset.close();
+            hstmt.close();
+            // Insurancelist.append("<option class=Inner value=\"-1\"> All </option>");
+            // Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\">" + entry.getValue().toString() + "</option>");
+
+
+            Query = "select ifnull(phone,''),ifnull(email,''),ifnull(address,''),ifnull(claimamount,''),ifnull(charges,''),ifnull(dosdate,''),ifnull(entrydate,''),ifnull(claimstatus,''),ifnull(patientstatus,''),ifnull(insurance,''),"
+                    + "ifnull(chiofcomplaint,''),ifnull(cmdref,''),ifnull(Remarks,''),ifnull(LMailed,''),ifnull(createddate,''),createdby from claim_info_master where claimid=" + indexptr;
+
+            hstmt = conn.createStatement();
+            //  out.println(Query);
+            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                Phone = hrset.getString(1);
+                email = hrset.getString(2);
+                aa = "1";
+                address = hrset.getString(3);
+                claimamount = hrset.getString(4);
+                charges = hrset.getString(5);
+                //dosdate = hrset.getString(6) ;
+                editentrydate = hrset.getString(7);
+                claimstatus = hrset.getString(8);
+                patientstatus = hrset.getString(9);
+                insurance = hrset.getString(10);
+                chiofcomplaint = hrset.getString(11);
+                cmdref = hrset.getString(12);
+                Remarks = hrset.getString(13);
+                Mailed = hrset.getString(14);
+                editby = hrset.getString(16);
+
+                aa = "2";
+
+            }
+
+
+            hrset.close();
+            hstmt.close();
+
+            HashMap<Integer, String> hm = new HashMap<Integer, String>();
+            hm = Insurancelist("a", conn);
+            Set set = hm.entrySet();
+            Iterator it = set.iterator();
+            while (it.hasNext()) {
+                Map.Entry entry = (Map.Entry) it.next();
+                if (entry.getKey().equals(Integer.parseInt(insurance))) {
+                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\" selected >" + entry.getValue().toString() + "</option>");
+                } else {
+                    Insurancelist.append("<option class=Inner value=\"" + entry.getKey() + "\"  >" + entry.getValue().toString() + "</option>");
+
+                }
+
+            }
+
+            HashMap<Integer, String> hm1 = new HashMap<Integer, String>();
+            hm1 = claim_ppt_list("a", conn);
+            Set set1 = hm1.entrySet();
+            Iterator it1 = set1.iterator();
+            while (it1.hasNext()) {
+                Map.Entry entry1 = (Map.Entry) it1.next();
+                if (entry1.getKey().equals(Integer.parseInt(patientstatus))) {
+                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\" selected>" + entry1.getValue().toString() + "</option>");
+                } else {
+                    claimpptlist.append("<option class=Inner value=\"" + entry1.getKey() + "\"  >" + entry1.getValue().toString() + "</option>");
+
+                }
+
+            }
+
+            HashMap<Integer, String> hm2 = new HashMap<Integer, String>();
+            hm2 = claim_status_list("a", conn);
+            Set set2 = hm2.entrySet();
+            Iterator it2 = set2.iterator();
+            while (it2.hasNext()) {
+                Map.Entry entry2 = (Map.Entry) it2.next();
+                if (entry2.getKey().equals(Integer.parseInt(claimstatus))) {
+                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\" selected>" + entry2.getValue().toString() + "</option>");
+                } else {
+                    claimstatuslist.append("<option class=Inner value=\"" + entry2.getKey() + "\"  >" + entry2.getValue().toString() + "</option>");
+
+                }
+
+            }
+            aa = "3";
+            String textboxvalue = "<script>document.getElementById('Remarks').value = '" + Remarks + "';</script>";
+
+            Services.GetCalendar(Day, Month, Year);
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("firstname", firstname);
+            Parser.SetField("indexptr", indexptr);
+            Parser.SetField("lastname", lastname);
+            Parser.SetField("Acc", Acc);
+            Parser.SetField("dosdate", dosdate);
+            Parser.SetField("entrydate", entrydate);
+            Parser.SetField("target", target);
+            Parser.SetField("mrn", mrn);
+            Parser.SetField("textboxvalue", textboxvalue);
+            Parser.SetField("filename", filename);
+            Parser.SetField("Insurancelist", Insurancelist.toString());
+            Parser.SetField("dosdate", dosdate);
+            Parser.SetField("editentrydate", editentrydate);
+            Parser.SetField("Acc", Acc);
+            aa = "4";
+            Parser.SetField("Phone", Phone);
+            Parser.SetField("email", email);
+            Parser.SetField("address", address);
+            Parser.SetField("charges", charges);
+            Parser.SetField("claimamount", claimamount);
+            Parser.SetField("claimstatus", claimstatus);
+            Parser.SetField("patientstatus", patientstatus);
+            Parser.SetField("insurance", insurance);
+            Parser.SetField("claimpptlist", claimpptlist.toString());
+            Parser.SetField("claimstatuslist", claimstatuslist.toString());
+            aa = "5";
+            Parser.SetField("chiofcomplaint", chiofcomplaint);
+            Parser.SetField("cmdref", cmdref);
+            Parser.SetField("Remarks", Remarks);
+            Parser.SetField("Mailed", Mailed);
+            Parser.SetField("clientid", clientid);
+
+            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/Addinfohl7.html");
+        } catch (Exception e) {
+            out.println(aa + " Unable to process the request..." + e.getMessage());
+        }
+    }
+
+
+    public void DashBoard(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, Connection conn2) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        Statement stmt1 = null;
+        ResultSet rset1 = null;
+        String Query1 = "";
+
+        int TotalCallsToday = 0;
+        int AnsweredCall = 0;
+        int MissedCalls = 0;
+        int OutboundCalls = 0;
+        int CallBack = 0;
+        int calltoday = 0;
+        int todaynotrancation = 0;
+        double todayamount = 0.0d;
+        int todayerror = 0;
+        int monthlynotrancation = 0;
+        int monthlyerror = 0;
+        double monthlyamount = 0.0d;
+        int monthlycall = 0;
+
+        String UserId = Services.GetCookie("UserId", request);
+        UserId = UserId.substring(1);
+        try {
+     /* Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
+      		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,10) =substr(now(),1,10) " +
+      		"union all " +
+      		" select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,10) =substr(now(),1,10)) a " ;
+
+
+      stmt = conn.createStatement();
+      rset = stmt.executeQuery(Query);
+      if (rset.next()) {
+    	  todaynotrancation = rset.getInt(1);
+    	  todayerror = rset.getInt(2);
+    	  todayamount = rset.getInt(3);
+
+      }
+      rset.close();
+      stmt.close();
+
+
+      Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
+		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,10) =substr(now(),1,10) " +
+		"union all " +
+		" select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,10) =substr(now(),1,10)) a " ;
+
+
+		stmt = conn.createStatement();
+		rset = stmt.executeQuery(Query);
+		if (rset.next()) {
+			  todaynotrancation =todaynotrancation+ rset.getInt(1);
+			  todayerror =todayerror+ rset.getInt(2);
+			  todayamount =todayamount+ rset.getInt(3);
+
+		}
+		rset.close();
+		stmt.close();
+
+        Query = "select count(*) from asteriskcdrdb.cdr where substr(calldate,1,10)=substr(now(),1,10) and dcontext='OEIVR'";
+
+        stmt = conn.createStatement();
+        rset = stmt.executeQuery(Query);
+        if (rset.next()) {
+
+      	calltoday = rset.getInt(1);
+
+
+        }
+        rset.close();
+        stmt.close();
+
+        // month
+        Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
+          		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,7) =substr(now(),1,7)\r\n" +
+          		"union all\r\n" +
+          		"select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,7) =substr(now(),1,7)) a\r\n" ;
+
+
+          stmt = conn.createStatement();
+          rset = stmt.executeQuery(Query);
+          if (rset.next()) {
+        	  monthlynotrancation = rset.getInt(1);
+        	  monthlyerror = rset.getInt(2);
+        	  monthlyamount = rset.getInt(3);
+
+          }
+          rset.close();
+          stmt.close();
+
+
+          Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
+    		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,7) =substr(now(),1,7)\r\n" +
+    		"union all\r\n" +
+    		"select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,7) =substr(now(),1,7)) a\r\n" ;
+
+
+    stmt = conn2.createStatement();
+    rset = stmt.executeQuery(Query);
+    if (rset.next()) {
+  	  monthlynotrancation =monthlynotrancation+ rset.getInt(1);
+  	  monthlyerror =monthlyerror+ rset.getInt(2);
+  	  monthlyamount =monthlyamount+ rset.getInt(3);
+
+    }
+    rset.close();
+    stmt.close();
+
+            Query = "select count(*) from asteriskcdrdb.cdr where substr(calldate,1,7)=substr(now(),1,7) and dcontext='OEIVR'";
+
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+
+            	monthlycall = rset.getInt(1);
+
+
+            }
+            rset.close();
+            stmt.close();
+
+           // String.format("%,d", todayamount);
+         // String.format("%,d", monthlyamount);
+              */
+            String pattern = "#,###.###";
+            DecimalFormat decimalFormat = new DecimalFormat(pattern);
+            decimalFormat.setGroupingSize(3);
+
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("calltoday", String.valueOf(calltoday));
+
+            Parser.SetField("todaynotrancation", String.valueOf(todaynotrancation));
+            Parser.SetField("todayamount", "$ " + String.valueOf(decimalFormat.format(todayamount)));
+            Parser.SetField("todayerror", String.valueOf(todayerror));
+
+            Parser.SetField("monthlynotrancation", String.valueOf(monthlynotrancation));
+            Parser.SetField("monthlyerror", String.valueOf(monthlyerror));
+            Parser.SetField("monthlyamount", "$ " + String.valueOf(decimalFormat.format(monthlyamount)));
+            Parser.SetField("monthlycall", String.valueOf(monthlycall));
+
+            Parser.SetField("TotalCallsToday", String.valueOf(TotalCallsToday));
+            Parser.SetField("AnsweredCall", String.valueOf(AnsweredCall));
+            Parser.SetField("MissedCalls", String.valueOf(MissedCalls));
+            Parser.SetField("OutboundCalls", String.valueOf(OutboundCalls));
+            Parser.SetField("CallBack", String.valueOf(CallBack));
+            // Parser.SetField("ExtensionDash", ExtensionDash.toString());
+            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Dashboards/GraphicalMainDashboard.html");
+        } catch (Exception var11) {
+            Services.DumException("DashBoard", "MainGraphicalDashboard ", request, var11);
+            out.println(var11.getMessage());
+            out.flush();
+            out.close();
         }
     }
 
@@ -1640,7 +1825,7 @@ public class chartreport
             CDRList.append("</table>\n");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", CDRList.toString());
-            Parser.SetField("Created", ForDate.toString());
+            Parser.SetField("Created", ForDate);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showchartReport.html");
         } catch (Exception e) {
             out.println(Stage + "Unable to process the request..." + e.getMessage());
@@ -1809,37 +1994,11 @@ public class chartreport
             CDRList.append("</table>\n");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", CDRList.toString());
-            Parser.SetField("Created", ForDate.toString());
+            Parser.SetField("Created", ForDate);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showchartReport.html");
         } catch (Exception e) {
             out.println(Stage + "Unable to process the request..." + e.getMessage());
         }
-    }
-
-    public void updatestatus(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn) {
-        Statement hstmt = null;
-        ResultSet hrset = null;
-        String Query = "";
-        String indexptr = request.getParameter("indexptr");
-        String statusindex = request.getParameter("statusindex");
-        String UserId = Services.GetCookie("UserId", request).trim();
-        String userindex = Services.GetCookie("userindex", request).trim();
-        try {
-            hstmt = conn.createStatement();
-            Query = " Update oe.filelogs_sftp  " +
-                    " Set filestatus  = '" + statusindex.trim() + "'" +
-                    " , liststatus  = '" + statusindex.trim() + "'" +
-                    " Where id ='" + indexptr.trim() + "'";
-            hstmt.executeUpdate(Query);
-
-            hstmt.close();
-            logging(Integer.parseInt(userindex), Integer.parseInt(statusindex), Integer.parseInt(indexptr), conn);
-            markuser(Integer.parseInt(userindex), Integer.parseInt(statusindex), Integer.parseInt(indexptr), conn);
-            out.println("done");
-        } catch (Exception ee) {
-            out.println(ee.getMessage());
-        }
-
     }
 
     public void showclaimdetails(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, Connection conn2) {
@@ -1974,166 +2133,10 @@ public class chartreport
             CDRList.append("</table>\n");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", CDRList.toString());
-            Parser.SetField("Created", ForDate.toString());
+            Parser.SetField("Created", ForDate);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showclaimdetails.html");
         } catch (Exception e) {
             out.println("Unable to process the request..." + e.getMessage());
-        }
-    }
-
-    public void DashBoard(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, Connection conn2) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        Statement stmt1 = null;
-        ResultSet rset1 = null;
-        String Query1 = "";
-
-        int TotalCallsToday = 0;
-        int AnsweredCall = 0;
-        int MissedCalls = 0;
-        int OutboundCalls = 0;
-        int CallBack = 0;
-        int calltoday = 0;
-        int todaynotrancation = 0;
-        double todayamount = 0.0d;
-        int todayerror = 0;
-        int monthlynotrancation = 0;
-        int monthlyerror = 0;
-        double monthlyamount = 0.0d;
-        int monthlycall = 0;
-
-        String UserId = Services.GetCookie("UserId", request);
-        UserId = UserId.substring(1);
-        try {
-     /* Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
-      		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,10) =substr(now(),1,10) " +
-      		"union all " +
-      		" select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,10) =substr(now(),1,10)) a " ;
-
-
-      stmt = conn.createStatement();
-      rset = stmt.executeQuery(Query);
-      if (rset.next()) {
-    	  todaynotrancation = rset.getInt(1);
-    	  todayerror = rset.getInt(2);
-    	  todayamount = rset.getInt(3);
-
-      }
-      rset.close();
-      stmt.close();
-
-
-      Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
-		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,10) =substr(now(),1,10) " +
-		"union all " +
-		" select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,10) =substr(now(),1,10)) a " ;
-
-
-		stmt = conn.createStatement();
-		rset = stmt.executeQuery(Query);
-		if (rset.next()) {
-			  todaynotrancation =todaynotrancation+ rset.getInt(1);
-			  todayerror =todayerror+ rset.getInt(2);
-			  todayamount =todayamount+ rset.getInt(3);
-
-		}
-		rset.close();
-		stmt.close();
-
-        Query = "select count(*) from asteriskcdrdb.cdr where substr(calldate,1,10)=substr(now(),1,10) and dcontext='OEIVR'";
-
-        stmt = conn.createStatement();
-        rset = stmt.executeQuery(Query);
-        if (rset.next()) {
-
-      	calltoday = rset.getInt(1);
-
-
-        }
-        rset.close();
-        stmt.close();
-
-        // month
-        Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
-          		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,7) =substr(now(),1,7)\r\n" +
-          		"union all\r\n" +
-          		"select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,7) =substr(now(),1,7)) a\r\n" ;
-
-
-          stmt = conn.createStatement();
-          rset = stmt.executeQuery(Query);
-          if (rset.next()) {
-        	  monthlynotrancation = rset.getInt(1);
-        	  monthlyerror = rset.getInt(2);
-        	  monthlyamount = rset.getInt(3);
-
-          }
-          rset.close();
-          stmt.close();
-
-
-          Query = "Select Sum(sucess), Sum(failed), Sum(Recievied) From \r\n" +
-    		"(select count(*) as sucess, 0 failed,sum(amount) Recievied from IVRLOG where parsedmsg in ('Sucess','Success') and substr(entrydate,1,7) =substr(now(),1,7)\r\n" +
-    		"union all\r\n" +
-    		"select 0 as sucess, count(*) failed,0 Recievied from IVRLOG where parsedmsg='failed' and substr(entrydate,1,7) =substr(now(),1,7)) a\r\n" ;
-
-
-    stmt = conn2.createStatement();
-    rset = stmt.executeQuery(Query);
-    if (rset.next()) {
-  	  monthlynotrancation =monthlynotrancation+ rset.getInt(1);
-  	  monthlyerror =monthlyerror+ rset.getInt(2);
-  	  monthlyamount =monthlyamount+ rset.getInt(3);
-
-    }
-    rset.close();
-    stmt.close();
-
-            Query = "select count(*) from asteriskcdrdb.cdr where substr(calldate,1,7)=substr(now(),1,7) and dcontext='OEIVR'";
-
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-
-            	monthlycall = rset.getInt(1);
-
-
-            }
-            rset.close();
-            stmt.close();
-
-           // String.format("%,d", todayamount);
-         // String.format("%,d", monthlyamount);
-              */
-            String pattern = "#,###.###";
-            DecimalFormat decimalFormat = new DecimalFormat(pattern);
-            decimalFormat.setGroupingSize(3);
-
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("calltoday", String.valueOf(calltoday));
-
-            Parser.SetField("todaynotrancation", String.valueOf(todaynotrancation));
-            Parser.SetField("todayamount", "$ " + String.valueOf(decimalFormat.format(todayamount)));
-            Parser.SetField("todayerror", String.valueOf(todayerror));
-
-            Parser.SetField("monthlynotrancation", String.valueOf(monthlynotrancation));
-            Parser.SetField("monthlyerror", String.valueOf(monthlyerror));
-            Parser.SetField("monthlyamount", "$ " + String.valueOf(decimalFormat.format(monthlyamount)));
-            Parser.SetField("monthlycall", String.valueOf(monthlycall));
-
-            Parser.SetField("TotalCallsToday", String.valueOf(TotalCallsToday));
-            Parser.SetField("AnsweredCall", String.valueOf(AnsweredCall));
-            Parser.SetField("MissedCalls", String.valueOf(MissedCalls));
-            Parser.SetField("OutboundCalls", String.valueOf(OutboundCalls));
-            Parser.SetField("CallBack", String.valueOf(CallBack));
-            // Parser.SetField("ExtensionDash", ExtensionDash.toString());
-            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Dashboards/GraphicalMainDashboard.html");
-        } catch (Exception var11) {
-            Services.DumException("DashBoard", "MainGraphicalDashboard ", request, var11);
-            out.println(var11.getMessage());
-            out.flush();
-            out.close();
         }
     }
 
@@ -2218,7 +2221,7 @@ public class chartreport
             CDRList.append("</table>\n");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", CDRList.toString());
-            Parser.SetField("Created", ForDate.toString());
+            Parser.SetField("Created", ForDate);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showivrReport_error.html");
         } catch (Exception e) {
             out.println("Unable to process the request..." + e.getMessage());
@@ -2328,7 +2331,7 @@ public class chartreport
             CDRList.append("</table>\n");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", CDRList.toString());
-            Parser.SetField("Created", ForDate.toString());
+            Parser.SetField("Created", ForDate);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showivrReport_balance.html");
         } catch (Exception e) {
             out.println("Unable to process the request..." + e.getMessage());
@@ -2395,7 +2398,7 @@ public class chartreport
             CDRList.append("</table>\n");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", CDRList.toString());
-            Parser.SetField("Created", ForDate.toString());
+            Parser.SetField("Created", ForDate);
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/showivrReportsum.html");
         } catch (Exception e) {
             out.println("Unable to process the request..." + e.getMessage());

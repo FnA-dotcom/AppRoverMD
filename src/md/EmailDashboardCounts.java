@@ -50,7 +50,7 @@ public class EmailDashboardCounts extends HttpServlet {
         String FontColor;
         PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
         Services supp = new Services();
-        int UserIndex = 0;
+        int UserIndex=0;
         String ActionID;
         ServletContext context = null;
         context = this.getServletContext();
@@ -58,6 +58,10 @@ public class EmailDashboardCounts extends HttpServlet {
         try {
 
             UtilityHelper helper = new UtilityHelper();
+
+
+
+
 
 
             ActionID = request.getParameter("ActionID").trim();
@@ -83,10 +87,11 @@ public class EmailDashboardCounts extends HttpServlet {
             }
             if (ActionID.equals("GetInput")) {
 //                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Management Dashboard", "View Management Dashboard", FacilityIndex);
-                this.GetInput(request, out, conn, context);
-            } else if (ActionID.equals("DateFilter")) {
+                this.GetInput(request, out, conn,context);
+            }
+            else if (ActionID.equals("DateFilter")) {
 //                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Management Dashboard", "View Management Dashboard", FacilityIndex);
-                this.DateFilter(request, out, conn, context);
+                this.DateFilter(request, out, conn,context);
             } else {
 
                 Parsehtm Parser = new Parsehtm(request);
@@ -171,12 +176,13 @@ public class EmailDashboardCounts extends HttpServlet {
 
         String PatientsCurrentWeekDaily = "";
 
-        int presentDayNumber = 0;
+        int presentDayNumber=0;
 
 
-        String[] LiveFacilities = {"victoria", "oe_2", "nacogdoches", "longview", "oddasa", "ER_Dallas", "frontlin_er", "richmond"};
+        String[] LiveFacilities = {"victoria", "oe_2", "nacogdoches", "longview",  "oddasa","ER_Dallas", "frontlin_er","richmond"};
 
-        double Patient_Differential = 0.0;
+        double Patient_Differential=0.0;
+
 
 
         try {
@@ -215,12 +221,13 @@ public class EmailDashboardCounts extends HttpServlet {
 //            presentDayNumber -=1;
 
 
-            for (int i = 0; i < LiveFacilities.length; i++) {
+
+            for (int i = 0; i < LiveFacilities.length ; i++) {
                 CDRList.append("<tr>\n");
 
 
                 //Getting Name of Facilities
-                Query = "Select Name from oe.clients where dbname='" + LiveFacilities[i] + "'";
+                Query = "Select Name from oe.clients where dbname='"+LiveFacilities[i]+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -228,38 +235,38 @@ public class EmailDashboardCounts extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
-                /*----------------------------------------------------------------------------------------------
-                 *                              TODAY
-                 * ---------------------------------------------------------------------------------------------
-                 */
+            /*----------------------------------------------------------------------------------------------
+             *                              TODAY
+             * ---------------------------------------------------------------------------------------------
+             */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit where CreatedDate >= '" + TODAY + " 00:00:00' and CreatedDate <= '" + TODAY + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + TODAY + " 00:00:00' and a.CreatedDate <= '" + TODAY + " 23:59:59' AND b.status=0";
+             Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + TODAY + " 23:59:59' AND b.status=0";
 
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    PatientCountOverAll_TODAY = rset.getInt(1);
-                    PatientCountOverAll_TODAY_TOTAL += rset.getInt(1);
-                    CDRList.append("<td style=\"border: 1px solid black;\" >" + PatientCountOverAll_TODAY + "</td>\n");
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientCountOverAll_TODAY = rset.getInt(1);
+                PatientCountOverAll_TODAY_TOTAL += rset.getInt(1);
+                CDRList.append("<td style=\"border: 1px solid black;\" >" + PatientCountOverAll_TODAY + "</td>\n");
 
-                }
-                rset.close();
-                stmt.close();
+            }
+            rset.close();
+            stmt.close();
 
-                /*----------------------------------------------------------------------------------------------
-                 *                              Yesterday
-                 * ---------------------------------------------------------------------------------------------
-                 */
+            /*----------------------------------------------------------------------------------------------
+             *                              Yesterday
+             * ---------------------------------------------------------------------------------------------
+             */
 
 //                Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + Yesterday + " 00:00:00' and CreatedDate <= '" + Yesterday + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + Yesterday + " 00:00:00' and a.CreatedDate <= '" + Yesterday + " 23:59:59' AND b.status=0";
+                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + Yesterday + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + Yesterday + " 23:59:59' AND b.status=0";
 
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
-                    PatientCountOverAll_YESTERDAY = rset.getInt(1);
-                    PatientCountOverAll_YESTERDAY_TOTAL += rset.getInt(1);
+                    PatientCountOverAll_YESTERDAY=rset.getInt(1);
+                    PatientCountOverAll_YESTERDAY_TOTAL+=rset.getInt(1);
                     CDRList.append("<td  style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
 
                 }
@@ -270,81 +277,84 @@ public class EmailDashboardCounts extends HttpServlet {
 
 
 
-                /*----------------------------------------------------------------------------------------------
-                 *                              WEEKLY
-                 * ---------------------------------------------------------------------------------------------
-                 */
+            /*----------------------------------------------------------------------------------------------
+             *                              WEEKLY
+             * ---------------------------------------------------------------------------------------------
+             */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + WEEK_START + " 00:00:00' and CreatedDate <= '" + WEEK_END + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + WEEK_START + " 00:00:00' and a.CreatedDate <= '" + WEEK_END + " 23:59:59' AND b.status=0";
+            Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + WEEK_START + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + WEEK_END + " 23:59:59' AND b.status=0";
 
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    PatientCountOverAll_WEEKLY = rset.getInt(1);
-                    PatientCountOverAll_WEEKLY_TOTAL += rset.getInt(1);
-                    CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
-                }
-                rset.close();
-                stmt.close();
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientCountOverAll_WEEKLY=rset.getInt(1);
+                PatientCountOverAll_WEEKLY_TOTAL+=rset.getInt(1);
+                CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
+            }
+            rset.close();
+            stmt.close();
 
-                /*----------------------------------------------------------------------------------------------
-                 *                              MONTHLY
-                 * ---------------------------------------------------------------------------------------------
-                 */
+            /*----------------------------------------------------------------------------------------------
+             *                              MONTHLY
+             * ---------------------------------------------------------------------------------------------
+             */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + MONTH_START + " 00:00:00' and CreatedDate <= '" + MONTH_END + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + MONTH_START + " 00:00:00' and a.CreatedDate <= '" + MONTH_END + " 23:59:59' AND b.status=0";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    PatientCountOverAll_MONTHLY = rset.getInt(1);
-                    PatientCountOverAll_MONTHLY_TOTAL += rset.getInt(1);
-                    CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
-                }
-                rset.close();
-                stmt.close();
+            Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND b.status=0";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientCountOverAll_MONTHLY =  rset.getInt(1);
+                PatientCountOverAll_MONTHLY_TOTAL +=  rset.getInt(1);
+                CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
+            }
+            rset.close();
+            stmt.close();
 
 
-                /*----------------------------------------------------------------------------------------------
-                 *                             LAST MONTH
-                 * ---------------------------------------------------------------------------------------------
-                 */
+            /*----------------------------------------------------------------------------------------------
+             *                             LAST MONTH
+             * ---------------------------------------------------------------------------------------------
+             */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + LAST_MONTH_START + " 00:00:00' and CreatedDate <= '" + LAST_MONTH_END + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + LAST_MONTH_START + " 00:00:00' and a.CreatedDate <= '" + LAST_MONTH_END + " 23:59:59' AND b.status=0";
+            Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + LAST_MONTH_START + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + LAST_MONTH_END + " 23:59:59' AND b.status=0";
 
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    PatientCountOverAll_LAST_MONTHLY = rset.getInt(1);
-                    PatientCountOverAll_LAST_MONTHLY_TOTAL += rset.getInt(1);
-                    CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
-                }
-                rset.close();
-                stmt.close();
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientCountOverAll_LAST_MONTHLY = rset.getInt(1);
+                PatientCountOverAll_LAST_MONTHLY_TOTAL += rset.getInt(1);
+                CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
+            }
+            rset.close();
+            stmt.close();
 
 
                 Patient_Differential = 0.0;
 
                 double Patient_difference = 0;
                 double AVG_difference = 0;
-                double PatientCountOverAll_MONTHLY_AVG = (double) PatientCountOverAll_MONTHLY / (double) presentDayNumber;
-                double PatientCountOverAll_LAST_MONTHLY_AVG = (double) PatientCountOverAll_LAST_MONTHLY / (double) 30;
+                double PatientCountOverAll_MONTHLY_AVG = (double)PatientCountOverAll_MONTHLY/(double)presentDayNumber;
+                double PatientCountOverAll_LAST_MONTHLY_AVG = (double)PatientCountOverAll_LAST_MONTHLY/(double)30;
 
-                if (PatientCountOverAll_LAST_MONTHLY_AVG == 0) {
+                if(PatientCountOverAll_LAST_MONTHLY_AVG==0){
                     CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill  blink_me\" style=\"font-size: 100%;border-style: double;\"> undefined </span> </td>\n");
-                } else {
-                    AVG_difference = ((PatientCountOverAll_MONTHLY_AVG / PatientCountOverAll_LAST_MONTHLY_AVG) * 100) - 100;
+                }else{
+                    AVG_difference = ((PatientCountOverAll_MONTHLY_AVG/PatientCountOverAll_LAST_MONTHLY_AVG)*100)-100;
 
-                    if (AVG_difference == 0) {
-                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill  blink_me\" style=\"font-size: 100%;border-style: double;\">  " + String.format("%,.0f", AVG_difference) + "%</span> </td>\n");
-                    } else if (AVG_difference > 0) {
+                    if(AVG_difference==0){
+                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill  blink_me\" style=\"font-size: 100%;border-style: double;\">  "+String.format("%,.0f", AVG_difference)+"%</span> </td>\n");
+                    }else if (AVG_difference>0){
                         CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill bg-success blink_me\" style=\"font-size: 100%;border-style: double;border-color: aquamarine;\"> +" + String.format("%,.0f", AVG_difference) + "% </span></td>\n");
-                    } else if (AVG_difference < 0) {
-                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill bg-danger blink_me\" style=\"font-size: 100%;border-style: double;border-color: #fa0b20;\"> " + String.format("%,.0f", AVG_difference) + "%</span> </td>\n");
+                    }
+                    else if (AVG_difference<0){
+                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill bg-danger blink_me\" style=\"font-size: 100%;border-style: double;border-color: #fa0b20;\"> "+String.format("%,.0f", AVG_difference)+"%</span> </td>\n");
                     }
                 }
+
+
 
 
 //                if(PatientCountOverAll_MONTHLY_AVG > PatientCountOverAll_LAST_MONTHLY_AVG){
@@ -376,7 +386,7 @@ public class EmailDashboardCounts extends HttpServlet {
 //                    }
 //                }
 
-                CDRList.append("<td style=\"border: 1px solid black;\"  >" + String.format("%,.2f", PatientCountOverAll_MONTHLY_AVG) + "</td>\n");
+                CDRList.append("<td style=\"border: 1px solid black;\"  >" + String.format("%,.2f", PatientCountOverAll_MONTHLY_AVG)  + "</td>\n");
 
                 CDRList.append("</tr>\n");
             }
@@ -391,6 +401,11 @@ public class EmailDashboardCounts extends HttpServlet {
             CDRList.append("<td > - </td>\n");
             CDRList.append("<td  > - </td>\n");
             CDRList.append("</tr>\n");
+
+
+
+
+
 
 
             final Parsehtm Parser = new Parsehtm(request);
@@ -447,6 +462,7 @@ public class EmailDashboardCounts extends HttpServlet {
         String Date = request.getParameter("Date");
 
 //        String Date = sdf.format(new Date(Date1));
+
 
 
         Statement stmt = null;
@@ -507,12 +523,13 @@ public class EmailDashboardCounts extends HttpServlet {
 
         String PatientsCurrentWeekDaily = "";
 
-        int presentDayNumber = 0;
+        int presentDayNumber=0;
 
 
-        String[] LiveFacilities = {"victoria", "oe_2", "nacogdoches", "longview", "oddasa", "ER_Dallas", "frontlin_er", "richmond"};
+        String[] LiveFacilities = {"victoria", "oe_2", "nacogdoches", "longview",  "oddasa","ER_Dallas", "frontlin_er","richmond"};
 
-        double Patient_Differential = 0.0;
+        double Patient_Differential=0.0;
+
 
 
         try {
@@ -521,15 +538,15 @@ public class EmailDashboardCounts extends HttpServlet {
              *                             Getting Time Variables
              * ---------------------------------------------------------------------------------------------
              */
-            Query = "Select DATE_FORMAT('" + Date + "','%Y-%m-%d'), " +
-                    "DATE_ADD(DATE_FORMAT('" + Date + "','%Y-%m-%d'), INTERVAL(1-DAYOFWEEK(DATE_FORMAT('" + Date + "','%Y-%m-%d'))) DAY), " +
-                    "DATE_ADD(DATE_ADD(DATE_FORMAT('" + Date + "','%Y-%m-%d'), INTERVAL(1-DAYOFWEEK(DATE_FORMAT('" + Date + "','%Y-%m-%d'))) DAY),INTERVAL 6 DAY), " +
-                    "DATE_SUB(LAST_DAY('" + Date + "'),INTERVAL DAY(LAST_DAY('" + Date + "'))- 1 DAY) AS 'FIRST DAY OF CURRENT MONTH', " +
-                    "LAST_DAY('" + Date + "')," +
-                    "DATE_SUB(LAST_DAY(DATE_FORMAT('" + Date + "','%Y-%m-%d') - INTERVAL 1 MONTH),INTERVAL DAY(LAST_DAY(DATE_FORMAT('" + Date + "','%Y-%m-%d') - INTERVAL 1 MONTH))- 1 DAY) AS 'FIRST DAY OF LAST MONTH'," +
-                    "LAST_DAY(DATE_FORMAT('" + Date + "','%Y-%m-%d') - INTERVAL 1 MONTH )," +
-                    " Date_format('" + Date + "','%d')," +
-                    "DATE_SUB('" + Date + "', INTERVAL 1 DAY) AS yesterday_date," +
+            Query = "Select DATE_FORMAT('"+Date+"','%Y-%m-%d'), " +
+                    "DATE_ADD(DATE_FORMAT('"+Date+"','%Y-%m-%d'), INTERVAL(1-DAYOFWEEK(DATE_FORMAT('"+Date+"','%Y-%m-%d'))) DAY), " +
+                    "DATE_ADD(DATE_ADD(DATE_FORMAT('"+Date+"','%Y-%m-%d'), INTERVAL(1-DAYOFWEEK(DATE_FORMAT('"+Date+"','%Y-%m-%d'))) DAY),INTERVAL 6 DAY), " +
+                    "DATE_SUB(LAST_DAY('"+Date+"'),INTERVAL DAY(LAST_DAY('"+Date+"'))- 1 DAY) AS 'FIRST DAY OF CURRENT MONTH', " +
+                    "LAST_DAY('"+Date+"')," +
+                    "DATE_SUB(LAST_DAY(DATE_FORMAT('"+Date+"','%Y-%m-%d') - INTERVAL 1 MONTH),INTERVAL DAY(LAST_DAY(DATE_FORMAT('"+Date+"','%Y-%m-%d') - INTERVAL 1 MONTH))- 1 DAY) AS 'FIRST DAY OF LAST MONTH'," +
+                    "LAST_DAY(DATE_FORMAT('"+Date+"','%Y-%m-%d') - INTERVAL 1 MONTH )," +
+                    " Date_format('"+Date+"','%d')," +
+                    "DATE_SUB('"+Date+"', INTERVAL 1 DAY) AS yesterday_date," +
                     "Now()";
 
 //            out.println("Query : " +Query);
@@ -546,29 +563,30 @@ public class EmailDashboardCounts extends HttpServlet {
                 LAST_MONTH_END = rset.getString(7);
                 presentDayNumber = rset.getInt(8);
                 Yesterday = rset.getString(9);
-                DateNow = rset.getString(10);
+                DateNow=rset.getString(10);
             }
             rset.close();
             stmt.close();
 
 //            presentDayNumber -=1;
 
-            if (TODAY == null) {
+            if(TODAY == null){
                 out.println("Invalid Date \n Please follow this format (yyyy-mm-dd)");
                 return;
             }
-            if (TODAY.compareTo(DateNow) > 0) {
-                out.println("Your given Date i.e " + Date + " is in Future  \nPlease enter PRESENT or PAST Date\nPlease follow this format (yyyy-mm-dd)");
+            if(TODAY.compareTo(DateNow)>0){
+                out.println("Your given Date i.e "+Date+" is in Future  \nPlease enter PRESENT or PAST Date\nPlease follow this format (yyyy-mm-dd)");
                 return;
             }
 
 
-            for (int i = 0; i < LiveFacilities.length; i++) {
+
+            for (int i = 0; i < LiveFacilities.length ; i++) {
                 CDRList.append("<tr>\n");
 
 
                 //Getting Name of Facilities
-                Query = "Select Name from oe.clients where dbname='" + LiveFacilities[i] + "'";
+                Query = "Select Name from oe.clients where dbname='"+LiveFacilities[i]+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -582,7 +600,7 @@ public class EmailDashboardCounts extends HttpServlet {
                  */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit where CreatedDate >= '" + TODAY + " 00:00:00' and CreatedDate <= '" + TODAY + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + TODAY + " 00:00:00' and a.CreatedDate <= '" + TODAY + " 23:59:59' AND b.status=0";
+                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + TODAY + " 23:59:59' AND b.status=0";
 
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -601,13 +619,13 @@ public class EmailDashboardCounts extends HttpServlet {
                  */
 
 //                Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + Yesterday + " 00:00:00' and CreatedDate <= '" + Yesterday + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + Yesterday + " 00:00:00' and a.CreatedDate <= '" + Yesterday + " 23:59:59' AND b.status=0";
+                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + Yesterday + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + Yesterday + " 23:59:59' AND b.status=0";
 
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
-                    PatientCountOverAll_YESTERDAY = rset.getInt(1);
-                    PatientCountOverAll_YESTERDAY_TOTAL += rset.getInt(1);
+                    PatientCountOverAll_YESTERDAY=rset.getInt(1);
+                    PatientCountOverAll_YESTERDAY_TOTAL+=rset.getInt(1);
                     CDRList.append("<td  style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
 
                 }
@@ -624,13 +642,13 @@ public class EmailDashboardCounts extends HttpServlet {
                  */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + WEEK_START + " 00:00:00' and CreatedDate <= '" + WEEK_END + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + WEEK_START + " 00:00:00' and a.CreatedDate <= '" + WEEK_END + " 23:59:59' AND b.status=0";
+                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + WEEK_START + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + WEEK_END + " 23:59:59' AND b.status=0";
 
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
-                    PatientCountOverAll_WEEKLY = rset.getInt(1);
-                    PatientCountOverAll_WEEKLY_TOTAL += rset.getInt(1);
+                    PatientCountOverAll_WEEKLY=rset.getInt(1);
+                    PatientCountOverAll_WEEKLY_TOTAL+=rset.getInt(1);
                     CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
                 }
                 rset.close();
@@ -642,12 +660,12 @@ public class EmailDashboardCounts extends HttpServlet {
                  */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + MONTH_START + " 00:00:00' and CreatedDate <= '" + MONTH_END + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + MONTH_START + " 00:00:00' and a.CreatedDate <= '" + MONTH_END + " 23:59:59' AND b.status=0";
+                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND b.status=0";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
-                    PatientCountOverAll_MONTHLY = rset.getInt(1);
-                    PatientCountOverAll_MONTHLY_TOTAL += rset.getInt(1);
+                    PatientCountOverAll_MONTHLY =  rset.getInt(1);
+                    PatientCountOverAll_MONTHLY_TOTAL +=  rset.getInt(1);
                     CDRList.append("<td style=\"border: 1px solid black;\" >" + rset.getInt(1) + "</td>\n");
                 }
                 rset.close();
@@ -660,7 +678,7 @@ public class EmailDashboardCounts extends HttpServlet {
                  */
 
 //            Query = "Select COUNT(*) from " + LiveFacilities[i]  + ".PatientVisit where CreatedDate >= '" + LAST_MONTH_START + " 00:00:00' and CreatedDate <= '" + LAST_MONTH_END + " 23:59:59'";
-                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN " + LiveFacilities[i] + ".PatientReg b ON a.PatientRegId=b.ID where a.CreatedDate >= '" + LAST_MONTH_START + " 00:00:00' and a.CreatedDate <= '" + LAST_MONTH_END + " 23:59:59' AND b.status=0";
+                Query = "Select COUNT(*) from " + LiveFacilities[i] + ".PatientVisit a INNER JOIN "+LiveFacilities[i]+".PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + LAST_MONTH_START + " 00:00:00' and DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + LAST_MONTH_END + " 23:59:59' AND b.status=0";
 
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -679,21 +697,22 @@ public class EmailDashboardCounts extends HttpServlet {
 //                }
                 double Patient_difference = 0;
                 double AVG_difference = 0;
-                double PatientCountOverAll_MONTHLY_AVG = (double) PatientCountOverAll_MONTHLY / (double) presentDayNumber;
-                double PatientCountOverAll_LAST_MONTHLY_AVG = (double) PatientCountOverAll_LAST_MONTHLY / (double) 30;
+                double PatientCountOverAll_MONTHLY_AVG = (double)PatientCountOverAll_MONTHLY/(double)presentDayNumber;
+                double PatientCountOverAll_LAST_MONTHLY_AVG = (double)PatientCountOverAll_LAST_MONTHLY/(double)30;
 
 
-                if (PatientCountOverAll_LAST_MONTHLY_AVG == 0) {
+                if(PatientCountOverAll_LAST_MONTHLY_AVG==0){
                     CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill  blink_me\" style=\"font-size: 100%;border-style: double;\"> undefined </span> </td>\n");
-                } else {
-                    AVG_difference = ((PatientCountOverAll_MONTHLY_AVG / PatientCountOverAll_LAST_MONTHLY_AVG) * 100) - 100;
+                }else{
+                    AVG_difference = ((PatientCountOverAll_MONTHLY_AVG/PatientCountOverAll_LAST_MONTHLY_AVG)*100)-100;
 
-                    if (AVG_difference == 0) {
-                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill  blink_me\" style=\"font-size: 100%;border-style: double;\">  " + String.format("%,.0f", AVG_difference) + "%</span> </td>\n");
-                    } else if (AVG_difference > 0) {
+                    if(AVG_difference==0){
+                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill  blink_me\" style=\"font-size: 100%;border-style: double;\">  "+String.format("%,.0f", AVG_difference)+"%</span> </td>\n");
+                    }else if (AVG_difference>0){
                         CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill bg-success blink_me\" style=\"font-size: 100%;border-style: double;border-color: aquamarine;\"> +" + String.format("%,.0f", AVG_difference) + "% </span></td>\n");
-                    } else if (AVG_difference < 0) {
-                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill bg-danger blink_me\" style=\"font-size: 100%;border-style: double;border-color: #fa0b20;\"> " + String.format("%,.0f", AVG_difference) + "%</span> </td>\n");
+                    }
+                    else if (AVG_difference<0){
+                        CDRList.append("<td  style=\"border: 1px solid black;\" > <span class=\"badge badge-pill bg-danger blink_me\" style=\"font-size: 100%;border-style: double;border-color: #fa0b20;\"> "+String.format("%,.0f", AVG_difference)+"%</span> </td>\n");
                     }
                 }
 
@@ -734,7 +753,7 @@ public class EmailDashboardCounts extends HttpServlet {
 //                out.println("PatientCountOverAll_LAST_MONTHLY_AVG =" + PatientCountOverAll_LAST_MONTHLY_AVG);
 //                out.println("PatientCountOverAll_MONTHLY_AVG =" + PatientCountOverAll_MONTHLY_AVG);
 
-                CDRList.append("<td style=\"border: 1px solid black;\"  >" + String.format("%,.2f", PatientCountOverAll_MONTHLY_AVG) + "</td>\n");
+                CDRList.append("<td style=\"border: 1px solid black;\"  >" + String.format("%,.2f", PatientCountOverAll_MONTHLY_AVG)  + "</td>\n");
 
                 CDRList.append("</tr>\n");
             }
@@ -749,6 +768,11 @@ public class EmailDashboardCounts extends HttpServlet {
             CDRList.append("<td > - </td>\n");
             CDRList.append("<td  > - </td>\n");
             CDRList.append("</tr>\n");
+
+
+
+
+
 
 
             final Parsehtm Parser = new Parsehtm(request);

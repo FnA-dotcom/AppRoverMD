@@ -8,17 +8,22 @@ import javax.servlet.http.HttpServletRequest;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Statement;
 
 @SuppressWarnings("Duplicates")
 public class SelfPaymentHelper {
+    private CallableStatement cStmt = null;
+    private ResultSet rset = null;
+    private String Query = "";
+    private Statement stmt = null;
     private UtilityHelper helper = new UtilityHelper();
 
     public int saveInitiateRequestPaymentPortal(HttpServletRequest request, Connection conn, ServletContext servletContext,
                                                 String SentEmail, int PatientMRN, int PatientRegIdx,
                                                 int webStatus, String CreatedDate, String SentBy, String dbName) {
-        CallableStatement cStmt = null;
-        ResultSet rset = null;
-        String Query = "";
+        cStmt = null;
+        rset = null;
+        Query = "";
         int Result;
         try {
             String UserIP = helper.getClientIp(request);
@@ -49,9 +54,9 @@ public class SelfPaymentHelper {
 
     public String[] getFacilityDetails(HttpServletRequest request, Connection conn, ServletContext servletContext,
                                        int facilityIndex) {
-        CallableStatement cStmt = null;
-        ResultSet rset = null;
-        String Query = "";
+        cStmt = null;
+        rset = null;
+        Query = "";
         String dbName = "";
         String facilityName = "";
         try {

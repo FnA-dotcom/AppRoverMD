@@ -24,8 +24,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+//import com.itextpdf.text.pdf.PdfWriter;
 @SuppressWarnings("Duplicates")
 public class SMS_Report extends HttpServlet {
+    private Connection conn = null;
+    private Statement stmt = null;
+    private ResultSet rset = null;
+    private String Query = "";
+
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -40,7 +46,7 @@ public class SMS_Report extends HttpServlet {
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
-        Connection conn = null;
+
         ServletContext context;
         context = getServletContext();
         PrintWriter out = new PrintWriter(response.getOutputStream());
@@ -90,7 +96,7 @@ public class SMS_Report extends HttpServlet {
 
                 case "GetReport":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Report SMS ", "Get Report SMS", FacilityIndex);
-                    GetReport(request, out, conn, context, UserIndex, DatabaseName, FacilityIndex, smsConfiguration, UserIndex);
+                    GetReport(request, out, conn, context, UserIndex, DatabaseName, FacilityIndex, smsConfiguration);
                     break;
 
 
@@ -124,12 +130,24 @@ public class SMS_Report extends HttpServlet {
 
 
     private void GetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper, TwilioSMSConfiguration smsConfiguration, int userIndex) throws FileNotFoundException {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+
+        Statement stmt0 = null;
+        ResultSet rset0 = null;
+        String Query0 = "";
+        int PatientCount = 0;
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         Date currentDate = new Date();
 
-        StringBuilder FacilityList = new StringBuilder();
+        StringBuffer CDRList = new StringBuffer();
 
-/*        try {
+
+        StringBuffer FacilityList = new StringBuffer();
+
+
+        try {
             Query = "Select Id, name from oe.clients where (status = 0 or status=1) AND (Id NOT IN (23,30,31,32,36,33)) ORDER BY name ASC";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -141,12 +159,10 @@ public class SMS_Report extends HttpServlet {
             rset.close();
         } catch (SQLException e) {
             e.printStackTrace();
-        }*/
-        try {
+        }
 
-            FacilityList = smsConfiguration.getFacilityList(request, conn, servletContext, userIndex);
-            //FacilityList.insert(0,"<option value='-1' >All</option>");
-       /*
+
+        try {
             try {
                 Query0 = "Select Id, IFNULL(dbname,''), status, name from oe.clients where status = 0 ";
                 stmt0 = conn.createStatement();
@@ -234,12 +250,12 @@ public class SMS_Report extends HttpServlet {
             rset0.close();
             stmt0.close();
 
-*/
+
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("from", String.valueOf(df.format(currentDate)));
             Parser.SetField("To", String.valueOf(df.format(currentDate)));
             Parser.SetField("FacilityList", String.valueOf(FacilityList));
-//            Parser.SetField("CDRList", String.valueOf(CDRList));
+            Parser.SetField("CDRList", String.valueOf(CDRList));
             Parser.SetField("Today", df.format(currentDate));
 
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Reports/SMS_Report.html");
@@ -254,12 +270,13 @@ public class SMS_Report extends HttpServlet {
         }
     }
 
-    private void GetReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, int UserId, String Database, int ClientId, TwilioSMSConfiguration smsConfiguration, int userIndex) {
+    void GetReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, int UserId, String Database, int ClientId, TwilioSMSConfiguration smsConfiguration) {
         String FromDate = request.getParameter("FromDate").trim();
         String ToDate = request.getParameter("ToDate").trim();
 
-        String[] Facility = (request.getParameter("Facility").equals("")) ? null : request.getParameter("Facility").trim().split("~");
-        //int Facility = Integer.parseInt(request.getParameter("Facility").trim());
+        String Facility = (request.getParameter("Facility") == null) ? "" : request.getParameter("Facility").trim();
+
+
         StringBuffer CDRList = new StringBuffer();
 
         Statement stmt = null;
@@ -273,13 +290,15 @@ public class SMS_Report extends HttpServlet {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         Date currentDate = new Date();
 
-        StringBuilder FacilityList = new StringBuilder();
+        StringBuffer FacilityList = new StringBuffer();
 
-        if (!((Facility != null ? Facility[0] : null) == null)) {
-            FacilityCheck = "AND Id=" + Facility[0] + ";";
+        if (!Facility.equals("")) {
+            FacilityCheck = "AND Id=" + Facility + ";";
+        } else {
+            FacilityCheck = ";";
         }
 
-/*        try {
+        try {
             Query = "Select Id, name from oe.clients where (status = 0 or status=1) AND (Id NOT IN (23,30,31,32,36,33)) ORDER BY name ASC";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -290,18 +309,13 @@ public class SMS_Report extends HttpServlet {
                 } else {
                     FacilityList.append("<option value='" + rset.getString(1) + "' >" + rset.getString(2) + "</option>");
                 }
+
             }
             stmt.close();
             rset.close();
         } catch (SQLException e) {
             e.printStackTrace();
-        }*/
-        if (Facility != null) {
-            if (Facility[0] != null) {
-                FacilityList = smsConfiguration.getFacilityListSelected(request, conn, servletContext, Integer.parseInt(Facility[0]));
-            }
-        } else
-            FacilityList = smsConfiguration.getFacilityList(request, conn, servletContext, userIndex);
+        }
         try {
 
             try {
@@ -320,7 +334,7 @@ public class SMS_Report extends HttpServlet {
                             " WHEN isSchedulerSent=1 THEN \"Sent\"   \n" +
                             " WHEN isSchedulerSent=0 THEN \"In-Process\"   \n" +
                             " WHEN isSchedulerSent=999 THEN \"Error\"" +
-                            "END, Priority, isSchedulerSent, IFNULL(ReasonFailure,'N/A')" +
+                            "END" +
                             " FROM " + rset0.getString(2) + ".SMS_Info " +
                             "where Status=0 " +
                             " AND " +
@@ -330,43 +344,22 @@ public class SMS_Report extends HttpServlet {
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     while (rset.next()) {
-                        if (rset.getInt(9) != 999) {
-                            CDRList.append("<tr>\n");
-                            CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");//MRN
-                            CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");//Name
-                            CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");//PhNumber
-                            CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//Sms
-                            CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");//SentAt
-                            CDRList.append("<td align=left>" + rset0.getString(4) + "</td>\n");//Facility
-                            //CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");//Priority
-                            CDRList.append("<td align=left>" + (rset.getInt(8) == 1 ? "Low" : rset.getInt(8) == 2 ? "Medium" : "High") + "</td>\n");//Priority
-                            //CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");//Status
-                            CDRList.append("<td align=left>" + (rset.getInt(8) == 3 ? "Sent" : (rset.getInt(8) == 1 || rset.getInt(8) == 2) ? rset.getString(7) : "N/A") + "</td>\n");//Status
-                            CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");//ReasonFailure
-                            CDRList.append("</tr>");
-                        } else {
-                            CDRList.append("<tr style=\"background-color:#FF7F7F\">\n");
-                            CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");//MRN
-                            CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");//Name
-                            CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");//PhNumber
-                            CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//Sms
-                            CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");//SentAt
-                            CDRList.append("<td align=left>" + rset0.getString(4) + "</td>\n");//Facility
-                            //CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");//Priority
-                            CDRList.append("<td align=left>" + (rset.getInt(8) == 1 ? "Low" : rset.getInt(8) == 2 ? "Medium" : "High") + "</td>\n");//Priority
-                            //CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");//Status
-                            CDRList.append("<td align=left>" + (rset.getInt(8) == 3 ? "Sent" : (rset.getInt(8) == 1 || rset.getInt(8) == 2) ? rset.getString(7) : "N/A") + "</td>\n");//Status
-                            CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");//ReasonFailure
-                            CDRList.append("</tr>");
-                        }
-
+                        CDRList.append("<tr>\n");
+                        CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");//MRN
+                        CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");//Name
+                        CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");//PhNumber
+                        CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//Sms
+                        CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");//SentAt
+                        CDRList.append("<td align=left>" + rset0.getString(4) + "</td>\n");//Facility
+                        CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");//Priority
+                        CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");//Status
+                        CDRList.append("</tr>");
                     }
                     rset.close();
                     stmt.close();
                 }
                 rset0.close();
                 stmt0.close();
-                System.out.println("!!");
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -385,44 +378,26 @@ public class SMS_Report extends HttpServlet {
                         " WHEN isSchedulerSent=1 THEN \"Sent\"   \n" +
                         " WHEN isSchedulerSent=0 THEN \"In-Process\"   \n" +
                         " WHEN isSchedulerSent=999 THEN \"Error\"" +
-                        "END, Priority, isSchedulerSent, IFNULL(ReasonFailure,'N/A') " +
+                        "END" +
                         " FROM oe.SMS_Info " +
                         "where Status=0 AND FacilityIdx=" + rset0.getString(1) + " \n" +
                         " AND " +
                         " SentAt between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59' " +
                         " ORDER BY SentAt Desc";
+                //out.println(Query);
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
-                    if (rset.getInt(9) != 999) {
-                        CDRList.append("<tr>\n");
-                        CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");//MRN
-                        CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");//Name
-                        CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");//PhNumber
-                        CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//Sms
-                        CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");//SentAt
-                        CDRList.append("<td align=left>" + rset0.getString(4) + "</td>\n");//Facility
-                        //CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");//Priority
-                        CDRList.append("<td align=left>" + (rset.getInt(8) == 1 ? "Low" : rset.getInt(8) == 2 ? "Medium" : "High") + "</td>\n");//Priority
-                        //CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");//Status
-                        CDRList.append("<td align=left>" + (rset.getInt(8) == 3 ? "Sent" : (rset.getInt(8) == 1 || rset.getInt(8) == 2) ? rset.getString(7) : "N/A") + "</td>\n");//Status
-                        CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");//ReasonFailure
-                        CDRList.append("</tr>");
-                    } else {
-                        CDRList.append("<tr style=\"background-color:#FF7F7F\">\n");
-                        CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");//MRN
-                        CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");//Name
-                        CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");//PhNumber
-                        CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//Sms
-                        CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");//SentAt
-                        CDRList.append("<td align=left>" + rset0.getString(4) + "</td>\n");//Facility
-                        //CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");//Priority
-                        CDRList.append("<td align=left>" + (rset.getInt(8) == 1 ? "Low" : rset.getInt(8) == 2 ? "Medium" : "High") + "</td>\n");//Priority
-                        //CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");//Status
-                        CDRList.append("<td align=left>" + (rset.getInt(8) == 3 ? "Sent" : (rset.getInt(8) == 1 || rset.getInt(8) == 2) ? rset.getString(7) : "N/A") + "</td>\n");//Status
-                        CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");//ReasonFailure
-                        CDRList.append("</tr>");
-                    }
+                    CDRList.append("<tr>\n");
+                    CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");//MRN
+                    CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");//Name
+                    CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");//PhNumber
+                    CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//Sms
+                    CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");//SentAt
+                    CDRList.append("<td align=left>" + rset0.getString(4) + "</td>\n");//Facility
+                    CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");//Priority
+                    CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");//Status
+                    CDRList.append("</tr>");
                 }
                 rset.close();
                 stmt.close();

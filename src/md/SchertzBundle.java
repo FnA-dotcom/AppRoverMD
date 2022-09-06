@@ -23,25 +23,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.InetAddress;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 @SuppressWarnings("Duplicates")
 public class SchertzBundle extends HttpServlet {
-/*    ResultSet rset;
-    String Query;
-    Statement stmt;
-    private Connection conn;*/
-/*
-    public SchertzBundle() {
-        this.conn = null;
-        this.rset = null;
-        this.Query = "";
-        this.stmt = null;
-    }*/
-
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -56,7 +41,6 @@ public class SchertzBundle extends HttpServlet {
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
-        String DirectoryName = "";
         Connection conn = null;
         ResultSet rset = null;
         String Query = null;
@@ -77,6 +61,8 @@ public class SchertzBundle extends HttpServlet {
             final String UserId = session.getAttribute("UserId").toString();
             final String DatabaseName = session.getAttribute("DatabaseName").toString();
             final int FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
+            final String DirectoryName = session.getAttribute("DirectoryName").toString();
+
             if (UserId.equals("")) {
                 final Parsehtm Parser = new Parsehtm(request);
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
@@ -92,14 +78,6 @@ public class SchertzBundle extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            Query = "Select dbname, IFNULL(DirectoryName,'') from oe.clients where Id = " + FacilityIndex;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                DirectoryName = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
 
             if (ActionID.equals("GETINPUTSchertz")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
@@ -122,7 +100,8 @@ public class SchertzBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTSchertz(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUTSchertz_inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, final int PatientVisitNumber, final int PatRegId,final String SignedFrom) {
+
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -227,13 +206,28 @@ public class SchertzBundle extends HttpServlet {
         final String Other = "";
         String Other_text = "";
         String ResultPdf = "";
+        String DirectoryNameTow = "";
+        String filename = "";
         String PriInsurerName = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
+        int VisitIndex = PatientVisitNumber;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+        final int ID = PatRegId;
         try {
+
+            if (SignedFrom.contains("REGISTRATION")) {
+                DirectoryNameTow = "REGISTRATION";
+            }
+
+            else if (SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            }
+
+            else if (SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -304,7 +298,7 @@ public class SchertzBundle extends HttpServlet {
 //                out.println(Query);
             }
 //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'),CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -354,7 +348,8 @@ public class SchertzBundle extends HttpServlet {
                     }
                     rset.close();
                     stmt.close();
-
+                }
+                    if(SelfPayChk != 0 &&  !SecondryInsurance.equals("-") || !SecondryInsurance.equals(" ") || SecondryInsurance != null) {
                     Query = "Select PayerName from oe_2.ProfessionalPayers where Id =" + SecondryInsurance;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -363,6 +358,7 @@ public class SchertzBundle extends HttpServlet {
                     }
                     rset.close();
                     stmt.close();
+
                 }
             } catch (Exception e) {
 //                out.println("Error is PriInsurance: " + e.getMessage());
@@ -611,10 +607,23 @@ public class SchertzBundle extends HttpServlet {
             } else {
                 SignImages = null;
             }
-            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+            filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
+
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+             int pageCount =  pdfReader.getNumberOfPages();
 //            final GenerateBarCode barCode = new GenerateBarCode();
 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
 //            final Image image = Image.getInstance(BarCodeFilePath);
@@ -1052,7 +1061,16 @@ public class SchertzBundle extends HttpServlet {
 //        while ((bytes = fileInputStream.read()) != -1) {
 //            responseOutputStream.write(bytes);
 //        }
-
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -1072,6 +1090,78 @@ public class SchertzBundle extends HttpServlet {
         }
     }
 
+    void GETINPUTSchertz(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String SignedFrom = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            try {
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom= rset.getNString(1);
+                }else{
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+                System.out.println("DIR NAME " + DirectoryName);
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " and VisitIndex="+VisitId+" ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")){
+                 	   outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                    }
+                    else if (filename.contains("VISIT")){
+                 	   outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                    }
+                    else if (filename.contains("EDIT")){
+                 	   outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                    }
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+
+                    System.out.println("GETINPUTSchertz runs");
+                } else {
+                	System.out.println("GETINPUTSchertz_inside runs");
+                	GETINPUTSchertz_inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName,VisitId,PatientRegId,SignedFrom);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+//            if(found>0){
+//                found+=1;
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }else{
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
     private String AttachUHC_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {
         try {
             FileOutputStream fos = new FileOutputStream(new File(outputFilePath));

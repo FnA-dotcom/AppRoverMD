@@ -12,8 +12,10 @@ import java.io.OutputStream;
 
 
 /**
- * How to Add Text To Existing PDF in java
- * Example Using iText library - core java tutorial
+ *
+ *  How to Add Text To Existing PDF in java
+ *  Example Using iText library - core java tutorial
+ *
  */
 public class AddTextToExistingPDF {
 
@@ -36,7 +38,7 @@ public class AddTextToExistingPDF {
             //getOverContent() allows you to write content on TOP of existing pdf content.
             //getUnderContent() allows you to write content on BELOW of existing pdf content.
 
-            if (i == 1) {
+            if( i == 1) {
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
                 pdfContentByte.beginText();
@@ -147,11 +149,12 @@ public class AddTextToExistingPDF {
             }
 
 
+
         }
 
         pdfStamper.close(); //close pdfStamper
 
-        System.out.println("Modified PDF created in >> " + outputFilePath);
+        System.out.println("Modified PDF created in >> "+ outputFilePath);
 
     }
 

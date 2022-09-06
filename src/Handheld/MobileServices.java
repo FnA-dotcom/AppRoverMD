@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,9 +26,9 @@ import java.util.HashMap;
 
 @SuppressWarnings("Duplicates")
 public class MobileServices extends HttpServlet {
-/*    private Statement stmt = null;
-    private   ResultSet rset = null;
-    private   String Query = "";
+    private Statement stmt = null;
+    private ResultSet rset = null;
+    private String Query = "";
     private PreparedStatement pStmt = null;
     private String LogString = null;
     private Connection conn = null;
@@ -38,12 +39,10 @@ public class MobileServices extends HttpServlet {
     private static final byte[] keyValue =
             new byte[]{'T', '#', '3', 'B', '3', '$', 'T',
                     '$', '3', 'C', 'r', '3', 't', 'K', '3', 'Q'};
-    private String userId;*/
+    private String userId;
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Connection conn = null;
-        ServletContext context = null;
         //For Printing
         PrintWriter out = new PrintWriter(response.getOutputStream());
         //For Printing JSON Objects
@@ -115,8 +114,8 @@ public class MobileServices extends HttpServlet {
 
     private String decrypt(String encrypted) {
         try {
-            IvParameterSpec iv = new IvParameterSpec("encryptionIntVec".getBytes("UTF-8"));
-            SecretKeySpec skeySpec = new SecretKeySpec("aesEncryptionKey".getBytes("UTF-8"), "AES");
+            IvParameterSpec iv = new IvParameterSpec("encryptionIntVec".getBytes(StandardCharsets.UTF_8));
+            SecretKeySpec skeySpec = new SecretKeySpec("aesEncryptionKey".getBytes(StandardCharsets.UTF_8), "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(2, skeySpec, iv);
             byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted));
@@ -128,10 +127,9 @@ public class MobileServices extends HttpServlet {
     }
 
     private void LoginHelper(HttpServletResponse response, HttpServletRequest request, Connection conn, UtilityHelper helper, ServletContext context) throws IOException {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        String userId = "";
+        stmt = null;
+        rset = null;
+        Query = "";
         String appVersion = "";
         String passwordEnc = "";
         int Found = 0;
@@ -145,7 +143,7 @@ public class MobileServices extends HttpServlet {
         JSONObject jsonObj = new JSONObject();
         //For Printing JSON Objects
         ServletOutputStream out = response.getOutputStream();
-        HashMap<Integer, String> myMap = new HashMap<Integer, String>();
+
         try {
             String UserIP = request.getRemoteAddr();
             String value = request.getParameter("value");
@@ -224,9 +222,9 @@ public class MobileServices extends HttpServlet {
     }
 
     private void MobileLogOut(HttpServletResponse response, HttpServletRequest request, Connection conn) throws IOException {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
+        stmt = null;
+        rset = null;
+        Query = " ";
         String UserId = request.getParameter("UserId").trim();
 
         //JSON Variables
@@ -256,8 +254,8 @@ public class MobileServices extends HttpServlet {
     }
 
     private String MobUserActivity(Connection conn, String UserId, String UserIP, String UserFlag) {
-        PreparedStatement pStmt = null;
-        String Query = "";
+        pStmt = null;
+        Query = "";
         String Message = "";
         try {
             pStmt = conn.prepareStatement(
@@ -278,10 +276,10 @@ public class MobileServices extends HttpServlet {
     }
 
     private void PasswordChange(HttpServletResponse response, HttpServletRequest request, Connection conn, UtilityHelper helper, ServletContext context) throws IOException {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        PreparedStatement pStmt = null;
+        stmt = null;
+        rset = null;
+        Query = "";
+        pStmt = null;
         String passwordEnc = "";
 
         //JSON Variables
@@ -364,10 +362,10 @@ public class MobileServices extends HttpServlet {
     }
 
     private void signPDFData(HttpServletResponse response, HttpServletRequest request, ServletOutputStream SOS, Connection conn, UtilityHelper helper, ServletContext context) throws IOException {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        PreparedStatement pStmt = null;
+        stmt = null;
+        rset = null;
+        Query = "";
+        pStmt = null;
         String passwordEnc = "";
 
         //JSON Variables
@@ -375,34 +373,38 @@ public class MobileServices extends HttpServlet {
         JSONObject jsonObj1 = new JSONObject();
         //For Printing JSON Objects
         ServletOutputStream out = response.getOutputStream();
-        String dbName = "";
+
         try {
             String UserIP = request.getRemoteAddr();
             String UserId = request.getParameter("UserId");
-            int facilityIdx = 0;
-            Query = "Select ClientIndex from oe.MobileUsers where ltrim(rtrim(UPPER(UserId))) = ltrim(rtrim(UPPER('" + UserId + "')))";
+            String clientId="";
+            String database="";
+            Query = "SELECT ClientIndex from oe.MobileUsers where Userid='"+UserId+"'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                facilityIdx = rset.getInt(1);
+            while(rset.next()){
+                clientId=rset.getString(1);
             }
             rset.close();
             stmt.close();
 
-            Query = "Select dbname from oe.clients where Id = " + facilityIdx;
+            Query = "SELECT dbname from oe.clients where id='"+clientId+"'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                dbName = rset.getString(1);
+            while(rset.next()){
+                database=rset.getString(1);
             }
             rset.close();
             stmt.close();
+
 
             Query = "SELECT a.UID,a.MRN,a.FacilityIndex,a.OutputPath,a.pageCount,a.FileName,a.PatientRegIdx,b.name," +
                     "CONCAT(IFNULL(c.Title,''),' ',IFNULL(c.FirstName,''),' ',IFNULL(c.MiddleInitial,''),' ',IFNULL(c.LastName,'')) " +
-                    "FROM " + dbName + ".RequestToMobile a " +
+//                    "FROM ER_Dallas.RequestToMobile a " +
+                    "FROM "+database+".RequestToMobile a " +
                     " STRAIGHT_JOIN oe.clients b ON a.FacilityIndex = b.Id " +
-                    " STRAIGHT_JOIN " + dbName + ".PatientReg c ON a.PatientRegIdx = c.ID " +
+//                    " STRAIGHT_JOIN ER_Dallas.PatientReg c ON a.PatientRegIdx = c.ID " +
+                    " STRAIGHT_JOIN "+database+".PatientReg c ON a.PatientRegIdx = c.ID " +
                     " WHERE a.Status = 0";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);

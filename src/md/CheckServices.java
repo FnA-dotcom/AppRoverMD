@@ -23,11 +23,6 @@ import java.text.DecimalFormat;
 
 @SuppressWarnings("Duplicates")
 public class CheckServices extends HttpServlet {
-/*
-    private Statement stmt = null;
-    private ResultSet rset = null;
-    private String Query = null;
-    private PreparedStatement pStmt = null;*/
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -81,17 +76,14 @@ public class CheckServices extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            switch (Action) {
-                case "initiateCheckPayment":
-                    initiateCheckPayment(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments);
-                    break;
-                default:
-                    helper.deleteUserSession(request, conn, session.getId());
-                    //Invalidating Session.
-                    session.invalidate();
-                    Parsehtm Parser = new Parsehtm(request);
-                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
-                    break;
+            if ("initiateCheckPayment".equals(Action)) {
+                initiateCheckPayment(request, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, payments);
+            } else {
+                helper.deleteUserSession(request, conn, session.getId());
+                //Invalidating Session.
+                session.invalidate();
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
             }
         } catch (Exception Ex) {
             helper.SendEmailWithAttachment("Error in Check Payment ** (handleRequest)", context, Ex, "CheckServices", "handleRequest", conn);
@@ -140,6 +132,12 @@ public class CheckServices extends HttpServlet {
         String facilityName = helper.getFacilityName(request, conn, servletContext, facilityIndex);
 
         try {
+            int checkCredentials = payments.checkAccountExists(request, conn, facilityIndex, servletContext);
+            if (checkCredentials == 0) {
+                out.println("11~No account found. Please contact System Administrator.");
+                return;
+            }
+
             if (PayMethod == 1 || PayMethod == 3) {
                 out.println("11~Please select Check Method!!");
                 return;
@@ -159,7 +157,7 @@ public class CheckServices extends HttpServlet {
             String ZipCode = PatientInfo[5];
 
 //            out.println("token " + token + "<br>");
-            String Response[] = checkPayment.performCheckPaymentAuth(facilityIndex, conn, token, checkAmount, PatientMRN, Name, PatientAddress, City, State, Country, ZipCode, "WEB");
+            String[] Response = checkPayment.performCheckPaymentAuth(facilityIndex, conn, token, checkAmount, PatientMRN, Name, PatientAddress, City, State, Country, ZipCode, "WEB");
 //            out.println("Auth Check " + RetRef + "<br>");
 //            System.out.println("ResponseText " + Response[0] + "<br> ");
 /*            System.out.println("Amount " + Response[1] + "<br> ");

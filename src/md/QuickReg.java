@@ -19,6 +19,7 @@ import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.HashMap;
 
@@ -1231,7 +1232,7 @@ public class QuickReg extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
-            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from " + Database + ".PatientReg where ID = " + PatientRegId;
+            Query = "Select CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) from " + Database + ".PatientReg where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -2877,7 +2878,7 @@ public class QuickReg extends HttpServlet {
             }
 
             String PatientName = null;
-            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from " + Database + ".PatientReg where ID = " + PatientRegId;
+            Query = "Select CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) from " + Database + ".PatientReg where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -2900,7 +2901,7 @@ public class QuickReg extends HttpServlet {
                 }
             }
             final Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully. Please Wait for Further Processing. " + Message + " <br> DATED: " + Date);
+            Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully. Please Wait for Further Processing. " + Message + " <br>DATED: " + Date);
             Parser.SetField("FormName", "QuickReg");
             Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientIndex + "");
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
@@ -2987,7 +2988,7 @@ public class QuickReg extends HttpServlet {
             responseJSON.put("StateCode", State);
             responseJSON.put("IsValidDOB", true);
             responseJSON.put("Zipcode", ZipCode);
-            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString((Object) responseJSON);
+            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJSON);
             final String BaseURL = "https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1";
             final String Mask = "";
             final URL url = new URL("https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1");
@@ -3000,7 +3001,7 @@ public class QuickReg extends HttpServlet {
             uc.setAllowUserInteraction(false);
             uc.setDoOutput(true);
             final OutputStream os = uc.getOutputStream();
-            os.write(Request.getBytes("UTF-8"));
+            os.write(Request.getBytes(StandardCharsets.UTF_8));
             os.close();
             uc.connect();
             final InputStream is = uc.getInputStream();

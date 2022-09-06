@@ -90,13 +90,13 @@ public class PatientReg99 extends HttpServlet {
                     System.out.println("1");
                     out.println("InValid Request!");
                     return;
-//                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") == 0) {
-                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
+                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") == 0) {
+//                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
                     System.out.println("2");
 
                     session = Createsession(UCID, request, context);
-//                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") != 0) {
-                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
+                } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") != 0) {
+//                } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
                     System.out.println("3");
 
                     out.println("InValid Request!");
@@ -360,7 +360,6 @@ public class PatientReg99 extends HttpServlet {
         }
     }
 
-
     void GetValues(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String Database, UtilityHelper helper, int facilityIndex) throws FileNotFoundException {
 
         String facilityName = "";
@@ -592,6 +591,14 @@ public class PatientReg99 extends HttpServlet {
         String PhoneNumberER = "";
         int LeaveMessageER = 0;
         String AddressER = "";
+        String PoxPositveChk = "";
+        String PoxExposedDate = "";
+        String RashesChk = "";
+        String AgeChk = "";
+        String AssistanceChk = "";
+        String FallenChk = "";
+        String UnsteadyChk = "";
+        String PoxSymChk = "";
         String CityER = "";
         String StateER = "";
         String CountryER = "";
@@ -626,6 +633,18 @@ public class PatientReg99 extends HttpServlet {
         int Attorney = 0;
         String Other_text = "";
         String Attorney_text = "";
+
+
+        int Youtube =0;
+        int Spotify =0;
+        int Instagram =0;
+
+        String Youtube_text = "";
+        String Spotify_text = "";
+        String Instagram_text = "";
+
+
+
         int SelfPayChk = 0;
         int FrVisitedBefore = 0;
         int FrFamiliyVisitedBefore = 0;
@@ -1305,6 +1324,45 @@ public class PatientReg99 extends HttpServlet {
                     }
                 }
 
+                if (valuemap.get("Youtube") == null) {
+                    Youtube = 0;
+                    Youtube_text = "";
+                } else {
+                    Youtube = 1;
+                    if (valuemap.get("Youtube_text").trim().equals(null) || valuemap.get("Youtube_text").trim().equals("")) {
+                        Youtube_text = "";
+                    } else {
+                        Youtube_text = valuemap.get("Youtube_text").trim();
+                    }
+                }
+
+
+                if (valuemap.get("Spotify") == null) {
+                    Spotify = 0;
+                    Spotify_text = "";
+                } else {
+                    Spotify = 1;
+                    if (valuemap.get("Spotify_text").trim().equals(null) || valuemap.get("Spotify_text").trim().equals("")) {
+                        Spotify_text = "";
+                    } else {
+                        Spotify_text = valuemap.get("Spotify_text").trim();
+                    }
+                }
+
+
+                if (valuemap.get("Instagram") == null) {
+                    Instagram = 0;
+                    Instagram_text = "";
+                } else {
+                    Instagram = 1;
+                    if (valuemap.get("Instagram_text").trim().equals(null) || valuemap.get("Instagram_text").trim().equals("")) {
+                        Instagram_text = "";
+                    } else {
+                        Instagram_text = valuemap.get("Instagram_text").trim();
+                    }
+                }
+
+
                 if (valuemap.get("FrVisitedBefore") == null) {
                     FrVisitedBefore = 0;
                 } else {
@@ -1350,6 +1408,54 @@ public class PatientReg99 extends HttpServlet {
                 } else {
                     FrTwitter = 1;
                 }
+
+
+
+                if (valuemap.get("PoxPositveChk") == null) {
+                    PoxPositveChk = "";
+                } else {
+                    PoxPositveChk = valuemap.get("PoxPositveChk").trim();
+                }
+                if (valuemap.get("PoxExposedDate") == null) {
+                    PoxExposedDate = "0000-00-00";
+                } else {
+                    PoxExposedDate = valuemap.get("PoxExposedDate").trim();
+                }
+                if (valuemap.get("RashesChk") == null) {
+                    RashesChk = "";
+                } else {
+                    RashesChk = valuemap.get("RashesChk").trim();
+                }
+                if (valuemap.get("AgeChk") == null) {
+                    AgeChk = "0";
+                } else {
+                    AgeChk = "1";
+                }
+                if (valuemap.get("AssistanceChk") == null) {
+                    AssistanceChk = "0";
+                } else {
+                    AssistanceChk = "1";
+                }
+                if (valuemap.get("FallenChk") == null) {
+                    FallenChk = "0";
+                } else {
+                    FallenChk ="1";
+                }
+                if (valuemap.get("UnsteadyChk") == null) {
+                    UnsteadyChk = "0";
+                } else {
+                    UnsteadyChk = "1";
+                }
+
+                if (valuemap.get("PoxSymChk") == null) {
+                    PoxSymChk = "0";
+                } else {
+                    PoxSymChk = "1";
+                }
+
+
+
+
                 if (valuemap.get("FrTV") == null) {
                     FrTV = 0;
                 } else {
@@ -1406,6 +1512,24 @@ public class PatientReg99 extends HttpServlet {
 
                     Filter_WB_SW_A = ",STDrelease,releaseRecord";
                     Filter_WB_SW_Q = ",?,?";
+
+
+                    System.out.println("In the Fallen Rist Alert Condition ");
+                    if (AssistanceChk.equals("1")  || FallenChk.equals("1")  || UnsteadyChk.equals("1")  || PoxSymChk.equals("1")  ) {
+                        String Alerts = "This Patient is a fall Risk";
+                        PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Alerts (ClientIndex,PatientRegId,MRN ,"
+                                + " Alerts,CreatedDate,CreatedBy) \n"
+                                + " VALUES (?,?,?,?,now(),?) ");
+                        MainReceipt.setInt(1, ClientIndex);
+                        MainReceipt.setString(2, String.valueOf(PatientRegId));
+                        MainReceipt.setString(3, String.valueOf(MRN));
+                        MainReceipt.setString(4, Alerts);
+                        MainReceipt.setString(5, UserId);
+                        MainReceipt.executeUpdate();
+                        MainReceipt.close();
+                    }
+
+
                 }
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData^^" + facilityName + " ##MES#002)", servletContext, ex, "PatientReg", "SaveData", conn);
@@ -1673,8 +1797,9 @@ public class PatientReg99 extends HttpServlet {
                                 "TravelHowLong,COVIDExposedChk,  SympFever,SympBodyAches ,SympSoreThroat,SympFatigue , SympRash,SympVomiting ," +
                                 "SympDiarrhea,SympCough,SympRunnyNose,SympNausea,SympFluSymptoms ,SympEyeConjunctivitis, Race, CovidExpWhen, " +
                                 "SpCarePhy,  SympHeadache, SympLossTaste, SympShortBreath, SympCongestion, AddInfoTextArea, VisitId, " +
-                                "GuarantorName, GuarantorDOB,  GuarantorNumber, GuarantorSSN, COVIDPositveChk, CovidPositiveDate) " +
-                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                "GuarantorName, GuarantorDOB,  GuarantorNumber, GuarantorSSN, COVIDPositveChk, CovidPositiveDate," +
+                                "  PoxPositveChk, PoxExposedDate, RashesChk, AgeChk, AssistanceChk, FallenChk, UnsteadyChk,PoxSymChk) " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setInt(2, MRN);
                 MainReceipt.setInt(3, TravellingChk);
@@ -1715,6 +1840,15 @@ public class PatientReg99 extends HttpServlet {
                     MainReceipt.setString(34, CovidPositiveDate);
                 else
                     MainReceipt.setNull(34, Types.DATE);
+
+                MainReceipt.setString(35, PoxPositveChk);
+                MainReceipt.setString(36, PoxExposedDate);
+                MainReceipt.setString(37, RashesChk);
+                MainReceipt.setString(38, AgeChk);
+                MainReceipt.setString(39, AssistanceChk);
+                MainReceipt.setString(40, FallenChk);
+                MainReceipt.setString(41, UnsteadyChk);
+                MainReceipt.setString(42, PoxSymChk);
                 //MainReceipt.setString(34, CovidPositiveDate);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
@@ -1922,13 +2056,22 @@ public class PatientReg99 extends HttpServlet {
                     return;
                 }
             } else {
+
+                String queryTextContainer = "";
+                String queryValueContainer = "";
+                if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+                    queryTextContainer = ",Instagram_text,Youtube_text,Spotify_text";
+                    queryValueContainer = ",?,?,?";
+                }
+
+
                 try {
                     PreparedStatement MainReceipt = conn.prepareStatement(
                             "INSERT INTO " + Database + ".RandomCheckInfo (PatientRegId,ReturnPatient,Google,MapSearch,Billboard,OnlineReview," +
                                     "TV,Website,BuildingSignDriveBy,Facebook,School,School_text,Twitter,Magazine,Magazine_text,Newspaper," +
                                     "Newspaper_text,FamilyFriend,FamilyFriend_text,UrgentCare,UrgentCare_text,CommunityEvent," +
-                                    "CommunityEvent_text,Work_text,Physician_text,Other_text,CreatedDate,VisitId,Attorney) " +
-                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?) ");
+                                    "CommunityEvent_text,Work_text,Physician_text,Other_text,CreatedDate,VisitId,Attorney"+queryTextContainer+") " +
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?"+queryValueContainer+") ");
                     MainReceipt.setInt(1, PatientRegId);
                     MainReceipt.setInt(2, ReturnPatient);
                     MainReceipt.setInt(3, Google);
@@ -1957,6 +2100,14 @@ public class PatientReg99 extends HttpServlet {
                     MainReceipt.setString(26, Other_text);
                     MainReceipt.setString(27, VisitId);
                     MainReceipt.setString(28, Attorney_text);
+
+                    if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+                        MainReceipt.setString(29, Instagram_text);
+                        MainReceipt.setString(30, Youtube_text);
+                        MainReceipt.setString(31, Spotify_text);
+                    }
+
+
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
                 } catch (Exception ex) {
@@ -17316,32 +17467,35 @@ public class PatientReg99 extends HttpServlet {
             Statement stmt = null;
             ResultSet rset = null;
             String Query = "";
+
             String FirstNameR = request.getParameter("FirstNameR").trim();
             String LastNameR = request.getParameter("LastNameR").trim();
             String DOBR = request.getParameter("DOBR").trim();
+            System.out.println("in the Check Repeat Patient");
+            System.out.println("String -->"+  request.getParameter("RequestType").trim());
+
+            System.out.println("tget request");
+            String RequestType = request.getParameter("RequestType").trim();
+//            String rqtype = request.getParameter("rqtype").trim();
+            System.out.println("tget gender");
             String genderR = request.getParameter("genderR").trim();
+            System.out.println("tget client index");
             int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
-
-
+            System.out.println("above querry");
             Query = "Select dbname from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next())
+            if (rset.next()) {
                 Database = rset.getString(1);
+            }
+
             rset.close();
             stmt.close();
-
             int PatientFound = 0;
             int PatRegIdx = 0;
             String FoundMRN = "";
             String FullName = "";
-            Query = " Select COUNT(*), IFNULL(MRN,0),CONCAT(FirstName,' ',LastName),Id AS PatRegIdx " +
-                    " from " + Database + ".PatientReg  " +
-                    "where Status = 0 and " +
-                    "ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstNameR.trim() + "')))  and " +
-                    "ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastNameR.trim() + "'))) and " +
-                    "ltrim(rtrim((DOB))) = '" + DOBR + "' AND " +
-                    "ltrim(rtrim((Gender))) = '" + genderR + "' ";
+            Query = " Select COUNT(*), IFNULL(MRN,0),CONCAT(FirstName,' ',LastName),Id AS PatRegIdx  from " + Database + ".PatientReg  where Status = 0 and ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstNameR.trim() + "')))  and ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastNameR.trim() + "'))) and ltrim(rtrim((DOB))) = '" + DOBR + "' AND ltrim(rtrim((Gender))) = '" + genderR + "' ";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -17350,24 +17504,26 @@ public class PatientReg99 extends HttpServlet {
                 FullName = rset.getString(3);
                 PatRegIdx = rset.getInt(4);
             }
+
             rset.close();
             stmt.close();
-
-            //out.println(PatientFound + "|" +FullName);
             Parsehtm Parser = new Parsehtm(request);
+            System.out.println("PatientFound  "+PatientFound);
             if (PatientFound > 0) {
                 Parser.SetField("FullName", FullName);
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("PatRegIdx", String.valueOf(PatRegIdx));
                 Parser.SetField("FoundMRN", FoundMRN);
-                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "MasterDef/ExistingPatient.html");
+                Parser.SetField("RequestType", RequestType);
+                Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/ExistingPatient.html");
             } else {
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
-                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "MasterDef/ExistingNotFoundPatient.html");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/ExistingNotFoundPatient.html");
             }
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (Exception var21) {
+            System.out.println(var21.getMessage());
         }
+
     }
 
     private void DisplayExistingPatient(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
@@ -17379,19 +17535,17 @@ public class PatientReg99 extends HttpServlet {
             int PatRegIdx = Integer.parseInt(request.getParameter("PatRegIdx").trim());
             int FoundMRN = Integer.parseInt(request.getParameter("FoundMRN").trim());
             String FullName = request.getParameter("FullName").trim();
-
             StringBuilder TestList = new StringBuilder();
             StringBuilder LocationList = new StringBuilder();
-
             Query = "Select dbname from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next())
+            if (rset.next()) {
                 Database = rset.getString(1);
+            }
+
             rset.close();
             stmt.close();
-
-
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FullName", FullName);
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
@@ -17399,12 +17553,13 @@ public class PatientReg99 extends HttpServlet {
             Parser.SetField("FoundMRN", String.valueOf(FoundMRN));
             Parser.SetField("TestList", TestList.toString());
             Parser.SetField("LocationList", LocationList.toString());
-            Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PRF_files/CovidRegExisting.html");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PRF_files/CovidRegExisting.html");
             out.close();
             out.flush();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (Exception var18) {
+            System.out.println(var18.getMessage());
         }
+
     }
 
 

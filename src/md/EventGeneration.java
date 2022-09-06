@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @SuppressWarnings("Duplicates")
 public class EventGeneration extends HttpServlet {
@@ -34,7 +36,10 @@ public class EventGeneration extends HttpServlet {
         response.setHeader("Expires", "-1"); // Proxies.
 //        //encoding is set to UTF-8
 //        request.setCharacterEncoding("UTF-8");
+
         try {
+
+
             PrintWriter writer = response.getWriter();
             String ActionID = request.getParameter("Response");
 
@@ -55,23 +60,31 @@ public class EventGeneration extends HttpServlet {
     private void ResponseDisplay(HttpServletRequest request, PrintWriter writer, Connection conn) {
 
         try {
+            writer.println("INSIDE");
+
             final HttpSession session = request.getSession(false);
             final String SessionId = session.getId();
             final long SessionInactive = session.getLastAccessedTime();
-
             Date d = new Date(SessionInactive);
             Format format = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
 
-            writer.write("data: " + SessionId + "|" + format.format(d));
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy MM dd HH:mm:ss");
+            LocalDateTime now = LocalDateTime.now();
+
+            writer.println("SessionId  "+SessionId);
+            writer.println("SessionInactive  "+format.format(d));
+
+
+            writer.println("now  "+dtf.format(now));
+
 //            writer.write("data: " + Online + "|" + LogOut + "|" + Offline + "|" + UnAssignedJobs + "|" + AssignedJobs + "|" + TotalTech + "|" + TotalTechStatus.toString() + "\n\n");
+//            writer.flush();
+//            writer.close();
         } catch (Exception Ex) {
-            writer.write("ERROR " + Ex.getMessage());
             System.out.println("ERROR SHOWN " + Ex.getMessage());
             System.out.flush();
             System.out.close();
-        } finally {
-            writer.flush();
-            writer.close();
+            return;
         }
     }
 }

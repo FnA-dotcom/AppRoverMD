@@ -85,7 +85,7 @@ public class payacount extends HttpServlet {
             if (ActionID.equals("paynow")) {
                 //supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Installment Plan Input", "Open Installment Plan Input Screem", ClientId);
                 this.paynow(request, out, conn, context, UserId, Database, ClientId);
-            } else {
+            }  else {
                 out.println("Under Development");
             }
             try {
@@ -95,7 +95,7 @@ public class payacount extends HttpServlet {
             out.flush();
             out.close();
         } catch (Exception e) {
-            out.println("Error in Handle: " + e.getMessage());
+            out.println("Error in Handle: "+e.getMessage());
         }
     }
 
@@ -119,7 +119,7 @@ public class payacount extends HttpServlet {
 //            final Parsehtm Parser = new Parsehtm(request);
 //            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/InstallmentPlanInput.html");
         } catch (Exception var11) {
-            out.println("Error : " + var11.getMessage());
+            out.println("Error : "+var11.getMessage());
         }
     }
 

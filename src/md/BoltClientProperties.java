@@ -1,10 +1,12 @@
 package md;
 
 
+
 import java.util.Properties;
 
 
-public class BoltClientProperties {
+public class BoltClientProperties
+{
     private String baseUrl;
     private String apiKey;
     private String merchantId;
@@ -66,142 +68,113 @@ public class BoltClientProperties {
     }
 
 
-    public String getBaseUrl() {
-        return this.baseUrl;
-    }
+    public String getBaseUrl() { return this.baseUrl; }
 
 
-    public String getApiKey() {
-        return this.apiKey;
-    }
+
+    public String getApiKey() { return this.apiKey; }
 
 
-    public String getMerchantId() {
-        return this.merchantId;
-    }
+
+    public String getMerchantId() { return this.merchantId; }
 
 
-    public String getHsn() {
-        return this.hsn;
-    }
+
+    public String getHsn() { return this.hsn; }
 
 
-    public boolean isForceConnect() {
-        return this.forceConnect;
-    }
+
+    public boolean isForceConnect() { return this.forceConnect; }
 
 
-    public boolean isReadCardDisplayAmount() {
-        return this.readCardDisplayAmount;
-    }
+
+    public boolean isReadCardDisplayAmount() { return this.readCardDisplayAmount; }
 
 
-    public boolean isReadCardIncludeSignature() {
-        return this.readCardIncludeSignature;
-    }
+
+    public boolean isReadCardIncludeSignature() { return this.readCardIncludeSignature; }
 
 
-    public boolean isReadCardIncludePin() {
-        return this.readCardIncludePin;
-    }
+
+    public boolean isReadCardIncludePin() { return this.readCardIncludePin; }
 
 
-    public boolean isReadCardBeep() {
-        return this.readCardBeep;
-    }
+
+    public boolean isReadCardBeep() { return this.readCardBeep; }
 
 
-    public String getReadCardAid() {
-        return this.readCardAid;
-    }
+
+    public String getReadCardAid() { return this.readCardAid; }
 
 
-    public boolean isReadManualIncludeSignature() {
-        return this.readManualIncludeSignature;
-    }
+
+    public boolean isReadManualIncludeSignature() { return this.readManualIncludeSignature; }
 
 
-    public boolean isReadManualIncludeExpirationDate() {
-        return this.readManualIncludeExpirationDate;
-    }
+
+    public boolean isReadManualIncludeExpirationDate() { return this.readManualIncludeExpirationDate; }
 
 
-    public boolean isReadManualBeep() {
-        return this.readManualBeep;
-    }
+
+    public boolean isReadManualBeep() { return this.readManualBeep; }
 
 
-    public boolean isAuthCardIncludeSignature() {
-        return this.authCardIncludeSignature;
-    }
+
+    public boolean isAuthCardIncludeSignature() { return this.authCardIncludeSignature; }
 
 
-    public boolean isAuthCardDisplayAmount() {
-        return this.authCardDisplayAmount;
-    }
+
+    public boolean isAuthCardDisplayAmount() { return this.authCardDisplayAmount; }
 
 
-    public boolean isAuthCardBeep() {
-        return this.authCardBeep;
-    }
+
+    public boolean isAuthCardBeep() { return this.authCardBeep; }
 
 
-    public String getAuthCardAuthMerchId() {
-        return this.authCardAuthMerchId;
-    }
+
+    public String getAuthCardAuthMerchId() { return this.authCardAuthMerchId; }
 
 
-    public String getAuthCardAid() {
-        return this.authCardAid;
-    }
+
+    public String getAuthCardAid() { return this.authCardAid; }
 
 
-    public boolean isAuthCardIncludeAvs() {
-        return this.authCardIncludeAvs;
-    }
+
+    public boolean isAuthCardIncludeAvs() { return this.authCardIncludeAvs; }
 
 
-    public boolean isAuthCardIncludePin() {
-        return this.authCardIncludePin;
-    }
+
+    public boolean isAuthCardIncludePin() { return this.authCardIncludePin; }
 
 
-    public boolean isAuthCardCapture() {
-        return this.authCardCapture;
-    }
+
+    public boolean isAuthCardCapture() { return this.authCardCapture; }
 
 
-    public boolean isAuthManualIncludeSignature() {
-        return this.authManualIncludeSignature;
-    }
+
+    public boolean isAuthManualIncludeSignature() { return this.authManualIncludeSignature; }
 
 
-    public boolean isAuthManualDisplayAmount() {
-        return this.authManualDisplayAmount;
-    }
+
+    public boolean isAuthManualDisplayAmount() { return this.authManualDisplayAmount; }
 
 
-    public boolean isAuthManualBeep() {
-        return this.authManualBeep;
-    }
+
+    public boolean isAuthManualBeep() { return this.authManualBeep; }
 
 
-    public String getAuthManualAuthMerchId() {
-        return this.authManualAuthMerchId;
-    }
+
+    public String getAuthManualAuthMerchId() { return this.authManualAuthMerchId; }
 
 
-    public boolean isAuthManualIncludeAvs() {
-        return this.authManualIncludeAvs;
-    }
+
+    public boolean isAuthManualIncludeAvs() { return this.authManualIncludeAvs; }
 
 
-    public boolean isAuthManualIncludeCvv() {
-        return this.authManualIncludeCvv;
-    }
+
+    public boolean isAuthManualIncludeCvv() { return this.authManualIncludeCvv; }
 
 
-    public boolean isAuthManualCapture() {
-        return this.authManualCapture;
-    }
+
+    public boolean isAuthManualCapture() { return this.authManualCapture; }
 }

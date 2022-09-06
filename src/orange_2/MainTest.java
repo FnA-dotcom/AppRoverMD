@@ -9,10 +9,10 @@ public class MainTest {
         String Date = "";
         String Time = "";
         int num = 12;
-        System.out.println(datetime.replaceAll("\\s+", ""));
+        System.out.println(datetime.replaceAll("\\s+",""));
         String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "Novermber", "December"};
         if (num >= 1 && num <= 12) {
-            System.out.format("The name of month number %d is %s\n", num, months[num - 1]);
+            System.out.format("The name of month number %d is %s\n", num, months[num-1]);
         }
 //        Date = datetime.substring(0,2) + "-" + datetime.substring(3,5) + "-" + datetime.substring(6,8);
 //        System.out.println(Date);

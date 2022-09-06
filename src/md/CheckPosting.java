@@ -29,12 +29,11 @@ import java.util.StringTokenizer;
 
 @SuppressWarnings("Duplicates")
 public class CheckPosting extends HttpServlet {
-/*    Integer ScreenIndex = 15;
+    Integer ScreenIndex = 15;
     private Connection conn = null;
     private Statement stmt = null;
     private ResultSet rset = null;
     private String Query = null;
-    */
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -55,7 +54,6 @@ public class CheckPosting extends HttpServlet {
         Services supp = new Services();
         UtilityHelper helper = new UtilityHelper();
         Payments payments = new Payments();
-        Connection conn = null;
         try {
             HttpSession session = request.getSession(false);
             boolean validSession = helper.checkSession(request, context, session, out);
@@ -164,9 +162,6 @@ public class CheckPosting extends HttpServlet {
 
 
     private void CheckPostInput(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, HttpServletResponse response, String UserId, String Database, int ClientId) {
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = null;
 
         StringBuffer ProfessionalPayersList = new StringBuffer();
         StringBuffer PatientList = new StringBuffer();
@@ -305,10 +300,6 @@ public class CheckPosting extends HttpServlet {
         double TotalAmount = 0.0D;
         double BalAmount = 0.0D;
 */
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = null;
-
         boolean FileFound = false;
         byte[] Data = null;
         String key = "";

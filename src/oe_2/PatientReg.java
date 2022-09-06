@@ -20,25 +20,26 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class PatientReg extends HttpServlet {
+public class PatientReg extends HttpServlet
+{
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
-
+    
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
+    
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
+    
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         final String UserId = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         final Services supp = new Services();
 
         ServletContext context = null;
@@ -46,23 +47,26 @@ public class PatientReg extends HttpServlet {
         conn = Services.getMysqlConn(context);
         if (ActionID.equals("GetValues")) {
             this.GetValues(request, out, conn, context);
-        } else if (ActionID.equals("SaveData")) {
+        }
+        else if (ActionID.equals("SaveData")) {
             this.SaveData(request, out, conn, context);
-        } else if (ActionID.equals("EditValues")) {
+        }
+        else if (ActionID.equals("EditValues")) {
             this.EditValues(request, out, conn, context);
-        } else if (ActionID.equals("EditSave")) {
+        }
+        else if (ActionID.equals("EditSave")) {
             this.EditSave(request, out, conn, context);
         }
 
         try {
             conn.close();
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
         out.flush();
         out.close();
     }
-
-    void GetValues(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext) {
+    
+    void GetValues(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext){
         try {
             Statement stmt = null;
             ResultSet rset = null;
@@ -80,7 +84,7 @@ public class PatientReg extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select Id from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+            Query = "Select Id from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('"+ClientId+"')))";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -109,36 +113,36 @@ public class PatientReg extends HttpServlet {
 //            out.println(ClientIndex);
 //            out.println(ClientId);
             final Parsehtm Parser = new Parsehtm(request);
-            if (ClientIndex == 8) {
+            if(ClientIndex == 8){
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormOrange.html");
-            } else if (ClientIndex == 9) {
+            }else if(ClientIndex == 9){
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormVictoria.html");
-            } else if (ClientIndex == 10) {
+            }else if(ClientIndex == 10) {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormOddasa.html");
-            } else if (ClientIndex == 12) {
+            }else if(ClientIndex == 12) {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormSAustin.html");
-            } else if (ClientIndex == 15) {
+            }else if(ClientIndex == 15) {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormSublime.html");
             }
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
-
+    
     void SaveData(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -241,216 +245,258 @@ public class PatientReg extends HttpServlet {
         try {
             if (request.getParameter("Title") == null) {
                 Title = "Mr";
-            } else {
+            }
+            else {
                 Title = request.getParameter("Title").trim();
             }
             if (request.getParameter("FirstName") == null) {
                 FirstName = "";
-            } else {
+            }
+            else {
                 FirstName = request.getParameter("FirstName").trim();
             }
             if (request.getParameter("LastName") == null) {
                 LastName = "Mr";
-            } else {
+            }
+            else {
                 LastName = request.getParameter("LastName").trim();
             }
             if (request.getParameter("MiddleInitial") == null) {
                 MiddleInitial = "";
-            } else {
+            }
+            else {
                 MiddleInitial = request.getParameter("MiddleInitial").trim();
             }
             if (request.getParameter("MaritalStatus") == null) {
                 MaritalStatus = "";
-            } else {
+            }
+            else {
                 MaritalStatus = request.getParameter("MaritalStatus").trim();
             }
             if (request.getParameter("DOB") == null) {
                 DOB = "0000-00-00";
-            } else {
+            }
+            else {
                 DOB = request.getParameter("DOB").trim();
             }
             if (request.getParameter("Age") == null) {
                 Age = "0";
-            } else {
+            }
+            else {
                 Age = request.getParameter("Age").trim();
             }
             if (request.getParameter("gender") == null) {
                 gender = "male";
-            } else {
+            }
+            else {
                 gender = request.getParameter("gender").trim();
             }
             if (request.getParameter("Email") == null) {
                 Email = "";
-            } else {
+            }
+            else {
                 Email = request.getParameter("Email").trim();
             }
             if (request.getParameter("PhNumber") == null) {
                 PhNumber = "0";
-            } else {
+            }
+            else {
                 PhNumber = request.getParameter("PhNumber").trim();
             }
             if (request.getParameter("Address") == null) {
                 Address = "";
-            } else {
+            }
+            else {
                 Address = request.getParameter("Address").trim();
             }
             if (request.getParameter("City") == null) {
                 City = "";
-            } else {
+            }
+            else {
                 City = request.getParameter("City").trim();
             }
             if (request.getParameter("State") == null) {
                 State = "";
-            } else {
+            }
+            else {
                 State = request.getParameter("State").trim();
             }
             if (request.getParameter("Country") == null) {
                 Country = "Mr";
-            } else {
+            }
+            else {
                 Country = request.getParameter("Country").trim();
             }
             if (request.getParameter("ZipCode") == null) {
                 ZipCode = "";
-            } else {
+            }
+            else {
                 ZipCode = request.getParameter("ZipCode").trim();
             }
             if (request.getParameter("SSN") == null) {
                 SSN = "";
-            } else {
+            }
+            else {
                 SSN = request.getParameter("SSN").trim();
             }
             if (request.getParameter("Occupation") == null) {
                 Occupation = "";
-            } else {
+            }
+            else {
                 Occupation = request.getParameter("Occupation").trim();
             }
             if (request.getParameter("Employer") == null) {
                 Employer = "";
-            } else {
+            }
+            else {
                 Employer = request.getParameter("Employer").trim();
             }
             if (request.getParameter("EmpContact") == null) {
                 EmpContact = "";
-            } else {
+            }
+            else {
                 EmpContact = request.getParameter("EmpContact").trim();
             }
             if (request.getParameter("PriCarePhy") == null) {
                 PriCarePhy = "";
-            } else {
+            }
+            else {
                 PriCarePhy = request.getParameter("PriCarePhy").trim();
             }
             if (request.getParameter("ReasonVisit") == null) {
                 ReasonVisit = "";
-            } else {
+            }
+            else {
                 ReasonVisit = request.getParameter("ReasonVisit").trim();
             }
             if (request.getParameter("SelfPayChk") == null) {
                 SelfPayChk = 0;
 //                System.out.println(SelfPayChk);
-            } else {
+            }
+            else {
                 SelfPayChk = 1;
 //                System.out.println(SelfPayChk);
                 if (request.getParameter("WorkersCompPolicy") == null) {
                     WorkersCompPolicy = 0;
-                } else {
+                }
+                else {
                     WorkersCompPolicy = Integer.parseInt(request.getParameter("WorkersCompPolicy").trim());
                 }
                 if (request.getParameter("MotorVehAccident") == null) {
                     MotorVehAccident = 0;
-                } else {
+                }
+                else {
                     MotorVehAccident = Integer.parseInt(request.getParameter("MotorVehAccident").trim());
                 }
                 if (request.getParameter("PriInsurance") == null) {
                     PriInsurance = "";
-                } else {
+                }
+                else {
                     PriInsurance = request.getParameter("PriInsurance").trim();
                 }
                 if (request.getParameter("MemId") == null) {
                     MemId = "";
-                } else {
+                }
+                else {
                     MemId = request.getParameter("MemId").trim();
                 }
                 if (request.getParameter("GrpNumber") == null) {
                     GrpNumber = "";
-                } else {
+                }
+                else {
                     GrpNumber = request.getParameter("GrpNumber").trim();
                 }
                 if (request.getParameter("PriInsuranceName") == null) {
                     PriInsuranceName = "";
-                } else {
+                }
+                else {
                     PriInsuranceName = request.getParameter("PriInsuranceName").trim();
                 }
                 if (request.getParameter("AddressIfDifferent") == null) {
                     AddressIfDifferent = "";
-                } else {
+                }
+                else {
                     AddressIfDifferent = request.getParameter("AddressIfDifferent").trim();
                 }
                 if (request.getParameter("PrimaryDOB") == null) {
                     PrimaryDOB = "";
-                } else {
+                }
+                else {
                     PrimaryDOB = request.getParameter("PrimaryDOB").trim();
                 }
                 if (request.getParameter("PrimarySSN") == null) {
                     PrimarySSN = "";
-                } else {
+                }
+                else {
                     PrimarySSN = request.getParameter("PrimarySSN").trim();
                 }
                 if (request.getParameter("PatientRelationtoPrimary") == null) {
                     PatientRelationtoPrimary = "0";
-                } else {
+                }
+                else {
                     PatientRelationtoPrimary = request.getParameter("PatientRelationtoPrimary").trim();
                 }
                 if (request.getParameter("PrimaryOccupation") == null) {
                     PrimaryOccupation = "";
-                } else {
+                }
+                else {
                     PrimaryOccupation = request.getParameter("PrimaryOccupation").trim();
                 }
                 if (request.getParameter("PrimaryEmployer") == null) {
                     PrimaryEmployer = "";
-                } else {
+                }
+                else {
                     PrimaryEmployer = request.getParameter("PrimaryEmployer").trim();
                 }
                 if (request.getParameter("EmployerAddress") == null) {
                     EmployerAddress = "";
-                } else {
+                }
+                else {
                     EmployerAddress = request.getParameter("EmployerAddress").trim();
                 }
                 if (request.getParameter("EmployerPhone") == null) {
                     EmployerPhone = "";
-                } else {
+                }
+                else {
                     EmployerPhone = request.getParameter("EmployerPhone").trim();
                 }
                 if (request.getParameter("SecondryInsurance") == null) {
                     SecondryInsurance = "0";
-                } else {
+                }
+                else {
                     SecondryInsurance = request.getParameter("SecondryInsurance").trim();
                 }
                 if (request.getParameter("SubscriberName") == null) {
                     SubscriberName = "";
-                } else {
+                }
+                else {
                     SubscriberName = request.getParameter("SubscriberName").trim();
                 }
                 if (request.getParameter("SubscriberDOB").equals(null) || request.getParameter("SubscriberDOB").equals("")) {
                     SubscriberDOB = "0000-00-00";
-                } else {
+                }
+                else {
                     SubscriberDOB = request.getParameter("SubscriberDOB").trim();
                 }
                 if (request.getParameter("MemberID_2") == null) {
                     MemberID_2 = "";
-                } else {
+                }
+                else {
                     MemberID_2 = request.getParameter("MemberID_2").trim();
                 }
                 if (request.getParameter("GroupNumber_2") == null) {
                     GroupNumber_2 = "";
-                } else {
+                }
+                else {
                     GroupNumber_2 = request.getParameter("GroupNumber_2").trim();
                 }
                 if (request.getParameter("PatientRelationshiptoSecondry") == null) {
                     PatientRelationshiptoSecondry = "";
-                } else {
+                }
+                else {
                     PatientRelationshiptoSecondry = request.getParameter("PatientRelationshiptoSecondry").trim();
                 }
-                if (ClientIndex == 10) {
+                if(ClientIndex == 10) {
                     AddmissionBundle = Integer.parseInt(request.getParameter("AddmissionBundle").trim());
                 }
             }
@@ -459,235 +505,280 @@ public class PatientReg extends HttpServlet {
 
             if (request.getParameter("NextofKinName") == null) {
                 NextofKinName = "";
-            } else {
+            }
+            else {
                 NextofKinName = request.getParameter("NextofKinName").trim();
             }
             if (request.getParameter("RelationToPatientER") == null) {
                 RelationToPatientER = "";
-            } else {
+            }
+            else {
                 RelationToPatientER = request.getParameter("RelationToPatientER").trim();
             }
             if (request.getParameter("PhoneNumberER") == null) {
                 PhoneNumberER = "";
-            } else {
+            }
+            else {
                 PhoneNumberER = request.getParameter("PhoneNumberER").trim();
             }
             if (request.getParameter("LeaveMessageER") == null) {
                 LeaveMessageER = 0;
-            } else {
+            }
+            else {
                 LeaveMessageER = Integer.parseInt(request.getParameter("LeaveMessageER").trim());
             }
             if (request.getParameter("AddressER") == null) {
                 AddressER = "";
-            } else {
+            }
+            else {
                 AddressER = request.getParameter("AddressER").trim();
             }
             if (request.getParameter("CityER") == null) {
                 CityER = "";
-            } else {
+            }
+            else {
                 CityER = request.getParameter("CityER").trim();
             }
             if (request.getParameter("StateER") == null) {
                 StateER = "";
-            } else {
+            }
+            else {
                 StateER = request.getParameter("StateER").trim();
             }
             if (request.getParameter("CountryER") == null) {
                 CountryER = "";
-            } else {
+            }
+            else {
                 CountryER = request.getParameter("CountryER").trim();
             }
             if (request.getParameter("ZipCodeER") == null) {
                 ZipCodeER = "";
-            } else {
+            }
+            else {
                 ZipCodeER = request.getParameter("ZipCodeER").trim();
             }
             if (request.getParameter("VerifyChkBox") == null) {
                 VerifyChkBox = 0;
-            } else {
+            }
+            else {
                 VerifyChkBox = 1;
             }
             if (request.getParameter("PatientSignConcent") == null) {
                 PatientSignConcent = "";
-            } else {
+            }
+            else {
                 PatientSignConcent = request.getParameter("PatientSignConcent").trim();
             }
             if (request.getParameter("DateConcent") == null) {
                 DateConcent = "0000-00-00";
-            } else {
+            }
+            else {
                 DateConcent = request.getParameter("DateConcent").trim();
             }
             if (request.getParameter("WitnessConcent") == null) {
                 WitnessConcent = "";
-            } else {
+            }
+            else {
                 WitnessConcent = request.getParameter("WitnessConcent").trim();
             }
             if (request.getParameter("PatientBehalfConcent") == null) {
                 PatientBehalfConcent = "";
-            } else {
+            }
+            else {
                 PatientBehalfConcent = request.getParameter("PatientBehalfConcent").trim();
             }
             if (request.getParameter("RelativeSignConcent") == null) {
                 RelativeSignConcent = "";
-            } else {
+            }
+            else {
                 RelativeSignConcent = request.getParameter("RelativeSignConcent").trim();
             }
             if (request.getParameter("DateConcent2") == null) {
                 DateConcent2 = "0000-00-00";
-            } else {
+            }
+            else {
                 DateConcent2 = request.getParameter("DateConcent2").trim();
             }
             if (request.getParameter("WitnessConcent2") == null) {
                 WitnessConcent2 = "";
-            } else {
+            }
+            else {
                 WitnessConcent2 = request.getParameter("WitnessConcent2").trim();
             }
             if (request.getParameter("ReturnPatient") == null) {
                 ReturnPatient = 0;
-            } else {
+            }
+            else {
                 ReturnPatient = 1;
             }
             if (request.getParameter("Google") == null) {
                 Google = 0;
-            } else {
+            }
+            else {
                 Google = 1;
             }
             if (request.getParameter("MapSearch") == null) {
                 MapSearch = 0;
-            } else {
+            }
+            else {
                 MapSearch = 1;
             }
             if (request.getParameter("Billboard") == null) {
                 Billboard = 0;
-            } else {
+            }
+            else {
                 Billboard = 1;
             }
             if (request.getParameter("OnlineReview") == null) {
                 OnlineReview = 0;
-            } else {
+            }
+            else {
                 OnlineReview = 1;
             }
             if (request.getParameter("TV") == null) {
                 TV = 0;
-            } else {
+            }
+            else {
                 TV = 2;
             }
             if (request.getParameter("Website") == null) {
                 Website = 0;
-            } else {
+            }
+            else {
                 Website = 1;
             }
             if (request.getParameter("BuildingSignDriveBy") == null) {
                 BuildingSignDriveBy = 0;
-            } else {
+            }
+            else {
                 BuildingSignDriveBy = 1;
             }
             if (request.getParameter("Facebook") == null) {
                 Facebook = 0;
-            } else {
+            }
+            else {
                 Facebook = 1;
             }
             if (request.getParameter("School") == null) {
                 School = 0;
                 School_text = "-";
-            } else {
+            }
+            else {
                 School = 1;
                 if (request.getParameter("School_text").trim().equals(null) || request.getParameter("School_text").trim().equals("")) {
                     School_text = "-";
-                } else {
+                }
+                else {
                     School_text = request.getParameter("School_text").trim();
                 }
             }
             if (request.getParameter("Twitter") == null) {
                 Twitter = 0;
-            } else {
+            }
+            else {
                 Twitter = 1;
             }
             if (request.getParameter("Magazine") == null) {
                 Magazine = 0;
                 Magazine_text = "";
-            } else {
+            }
+            else {
                 Magazine = 1;
                 if (request.getParameter("Magazine_text").trim().equals(null) || request.getParameter("Magazine_text").trim().equals("")) {
                     Magazine_text = "";
-                } else {
+                }
+                else {
                     Magazine_text = request.getParameter("Magazine_text").trim();
                 }
             }
             if (request.getParameter("Newspaper") == null) {
                 Newspaper = 0;
                 Newspaper_text = "";
-            } else {
+            }
+            else {
                 Newspaper = 1;
                 if (request.getParameter("Newspaper_text").trim().equals(null) || request.getParameter("Newspaper_text").trim().equals("")) {
                     Newspaper_text = "";
-                } else {
+                }
+                else {
                     Newspaper_text = request.getParameter("Newspaper_text").trim();
                 }
             }
             if (request.getParameter("FamilyFriend") == null) {
                 FamilyFriend = 0;
                 FamilyFriend_text = "";
-            } else {
+            }
+            else {
                 FamilyFriend = 1;
                 if (request.getParameter("FamilyFriend_text").trim().equals(null) || request.getParameter("FamilyFriend_text").trim().equals("")) {
                     FamilyFriend_text = "";
-                } else {
+                }
+                else {
                     FamilyFriend_text = request.getParameter("FamilyFriend_text").trim();
                 }
             }
             if (request.getParameter("UrgentCare") == null) {
                 UrgentCare = 0;
                 UrgentCare_text = "";
-            } else {
+            }
+            else {
                 UrgentCare = 1;
                 if (request.getParameter("UrgentCare_text").trim().equals(null) || request.getParameter("UrgentCare_text").trim().equals("")) {
                     UrgentCare_text = "";
-                } else {
+                }
+                else {
                     UrgentCare_text = request.getParameter("UrgentCare_text").trim();
                 }
             }
             if (request.getParameter("CommunityEvent") == null) {
                 CommunityEvent = 0;
                 CommunityEvent_text = "";
-            } else {
+            }
+            else {
                 CommunityEvent = 1;
                 if (request.getParameter("CommunityEvent_text").trim().equals(null) || request.getParameter("CommunityEvent_text").trim().equals("")) {
                     CommunityEvent_text = "";
-                } else {
+                }
+                else {
                     CommunityEvent_text = request.getParameter("CommunityEvent_text").trim();
                 }
             }
             if (request.getParameter("Work") == null) {
                 Work = 0;
                 Work_text = "";
-            } else {
+            }
+            else {
                 Work = 1;
                 if (request.getParameter("Work_text").trim().equals(null) || request.getParameter("Work_text").trim().equals("")) {
                     Work_text = "";
-                } else {
+                }
+                else {
                     Work_text = request.getParameter("Work_text").trim();
                 }
             }
             if (request.getParameter("Physician") == null) {
                 Physician = 0;
                 Physician_text = "";
-            } else {
+            }
+            else {
                 Physician = 1;
                 if (request.getParameter("Physician_text").trim().equals(null) || request.getParameter("Physician_text").trim().equals("")) {
                     Physician_text = "";
-                } else {
+                }
+                else {
                     Physician_text = request.getParameter("Physician_text").trim();
                 }
             }
             if (request.getParameter("Other") == null) {
                 Other = 0;
                 Other_text = "";
-            } else {
+            }
+            else {
                 Other = 1;
                 if (request.getParameter("Other_text").trim().equals(null) || request.getParameter("Other_text").trim().equals("")) {
                     Other_text = "";
-                } else {
+                }
+                else {
                     Other_text = request.getParameter("Other_text").trim();
                 }
             }
@@ -709,7 +800,7 @@ public class PatientReg extends HttpServlet {
 //                    Database = "oddasa"; //oddasa
 //                }
 
-                Query = "Select MAX(MRN) + 1  from " + Database + ".PatientReg ";
+                Query = "Select MAX(MRN) + 1  from "+Database+".PatientReg ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -718,12 +809,12 @@ public class PatientReg extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                if (MRN == 0) {
+                if(MRN  == 0){
                     MRN = 310001;
                 }
 
-                if (ClientIndex == 9) {
-                    Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
+                if(ClientIndex == 9){
+                    Query = "Select MRN from "+Database+".PatientReg order by ID desc limit 1 ";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -733,35 +824,39 @@ public class PatientReg extends HttpServlet {
                     stmt.close();
                     if (String.valueOf(MRN).length() == 0) {
                         MRN = 310001;
-                    } else if (String.valueOf(MRN).length() == 4) {
+                    }else if(String.valueOf(MRN).length() == 4){
                         MRN = 310001;
-                    } else if (String.valueOf(MRN).length() == 8) {
+                    }else if(String.valueOf(MRN).length() == 8){
                         MRN = 310001;
-                    } else if (String.valueOf(MRN).length() == 6) {
+                    }
+                    else if(String.valueOf(MRN).length() == 6) {
                         MRN = MRN + 1;
                     }
                 }
 
 
-                if (ClientIndex == 8) {
-                    ExtendedMRN = "1008" + MRN;
-                } else if (ClientIndex == 9) {
-                    ExtendedMRN = "1009" + MRN;
-                } else if (ClientIndex == 10) {
-                    ExtendedMRN = "1010" + MRN;
-                } else if (ClientIndex == 11) {
-                    ExtendedMRN = "1011" + MRN;
-                } else if (ClientIndex == 12) {
-                    ExtendedMRN = "1012" + MRN;
-                } else if (ClientIndex == 15) {
-                    ExtendedMRN = "1015" + MRN;
+
+
+                if(ClientIndex == 8){
+                    ExtendedMRN = "1008"+MRN;
+                }else if(ClientIndex == 9){
+                    ExtendedMRN = "1009"+MRN;
+                }else if(ClientIndex == 10){
+                    ExtendedMRN = "1010"+MRN;
+                }else if(ClientIndex == 11){
+                    ExtendedMRN = "1011"+MRN;
+                }else if(ClientIndex == 12){
+                    ExtendedMRN = "1012"+MRN;
+                }else if(ClientIndex == 15){
+                    ExtendedMRN = "1015"+MRN;
                 }
                 out.println(MRN);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 1:" + e.getMessage() + Query);
             }
             try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName ,MiddleInitial,DOB,Age,Gender ,Email,PhNumber ,Address,City ,State,Country,ZipCode,SSN,Occupation ,Employer ,EmpContact,PriCarePhy,ReasonVisit,SelfPayChk,CreatedDate,Title, MaritalStatus,CreatedBy, MRN, Status, DateofService, ExtendedMRN) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,now(),?) ");
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".PatientReg (ClientIndex,FirstName,LastName ,MiddleInitial,DOB,Age,Gender ,Email,PhNumber ,Address,City ,State,Country,ZipCode,SSN,Occupation ,Employer ,EmpContact,PriCarePhy,ReasonVisit,SelfPayChk,CreatedDate,Title, MaritalStatus,CreatedBy, MRN, Status, DateofService, ExtendedMRN) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,now(),?) ");
                 MainReceipt.setInt(1, ClientIndex);
                 MainReceipt.setString(2, FirstName);
                 MainReceipt.setString(3, LastName);
@@ -790,12 +885,13 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(26, ExtendedMRN);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 2- Insertion PatientReg Table :" + e.getMessage());
                 return;
             }
             try {
-                Query = "Select max(ID) from " + Database + ".PatientReg ";
+                Query = "Select max(ID) from "+Database+".PatientReg ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -803,38 +899,39 @@ public class PatientReg extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 3- :" + e.getMessage());
             }
 
-            try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService,CreatedDate,CreatedBy) \nVALUES (?,?,?,1,NULL,now(),now(),?) ");
+            try{
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService,CreatedDate,CreatedBy) \nVALUES (?,?,?,1,NULL,now(),now(),?) ");
                 MainReceipt.setInt(1, MRN);
                 MainReceipt.setInt(2, PatientRegId);
                 MainReceipt.setString(3, ReasonVisit);
                 MainReceipt.setString(4, "OutPatient");
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }catch(Exception e){
                 out.println("Error 3.1 Insertion in table PatientVisit- :" + e.getMessage());
             }
 
             try {
                 if (SelfPayChk == 1) {
 
-                    if (ClientIndex == 10) {
-                        try {
-                            final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".PatientAdmissionBundle(PatientRegId,AdmissionBundle,CreatedDate) \nVALUES (?,?,now()) ");
+                    if(ClientIndex == 10){
+                        try{
+                            final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".PatientAdmissionBundle(PatientRegId,AdmissionBundle,CreatedDate) \nVALUES (?,?,now()) ");
                             MainReceipt.setInt(1, PatientRegId);
                             MainReceipt.setInt(2, AddmissionBundle);
                             MainReceipt.executeUpdate();
                             MainReceipt.close();
-                        } catch (Exception e) {
-                            System.out.println("Error in PatientAdmissionBundle Table:-- " + e.getMessage());
+                        }catch(Exception e){
+                            System.out.println("Error in PatientAdmissionBundle Table:-- "+e.getMessage());
                         }
                     }
 
-                    final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".InsuranceInfo(PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance,MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary,PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberName,SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                    final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".InsuranceInfo(PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance,MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary,PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberName,SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                     MainReceipt.setInt(1, PatientRegId);
                     MainReceipt.setInt(2, WorkersCompPolicy);
                     MainReceipt.setInt(3, MotorVehAccident);
@@ -859,12 +956,13 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 4- Insertion InsuranceInfo Table :" + e.getMessage());
                 return;
             }
             try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".EmergencyInfo (PatientRegId,NextofKinName,RelationToPatient,PhoneNumber,LeaveMessage,Address,City,State,Country,ZipCode,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,now()) ");
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".EmergencyInfo (PatientRegId,NextofKinName,RelationToPatient,PhoneNumber,LeaveMessage,Address,City,State,Country,ZipCode,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,now()) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setString(2, NextofKinName);
                 MainReceipt.setString(3, RelationToPatientER);
@@ -877,12 +975,13 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(10, ZipCodeER);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 5- Insertion EmergencyInfo Table :" + e.getMessage());
                 return;
             }
             try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".ConcentToTreatmentInfo (PatientRegId,PatientSign,Date,Witness,PatientBehalfSign,RelativeSign,Date2,Witness2,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,now()) ");
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".ConcentToTreatmentInfo (PatientRegId,PatientSign,Date,Witness,PatientBehalfSign,RelativeSign,Date2,Witness2,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,now()) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setString(2, PatientSignConcent);
                 MainReceipt.setString(3, DateConcent);
@@ -893,12 +992,13 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(8, WitnessConcent2);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 6- Insertion ConcentToTreatmentInfo Table :" + e.getMessage());
                 return;
             }
             try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".RandomCheckInfo (PatientRegId,ReturnPatient,Google,MapSearch,Billboard,OnlineReview,TV,Website,BuildingSignDriveBy,Facebook,School,School_text,Twitter,Magazine,Magazine_text,Newspaper,Newspaper_text,FamilyFriend,FamilyFriend_text,UrgentCare,UrgentCare_text,CommunityEvent,CommunityEvent_text,Work_text,Physician_text,Other_text,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".RandomCheckInfo (PatientRegId,ReturnPatient,Google,MapSearch,Billboard,OnlineReview,TV,Website,BuildingSignDriveBy,Facebook,School,School_text,Twitter,Magazine,Magazine_text,Newspaper,Newspaper_text,FamilyFriend,FamilyFriend_text,UrgentCare,UrgentCare_text,CommunityEvent,CommunityEvent_text,Work_text,Physician_text,Other_text,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setInt(2, ReturnPatient);
                 MainReceipt.setInt(3, Google);
@@ -927,11 +1027,12 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(26, Other_text);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 7- Insertion RandomCheckInfo Table :" + e.getMessage());
                 return;
             }
-            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from " + Database + ".PatientReg where ID = " + PatientRegId;
+            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from "+Database+".PatientReg where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -951,7 +1052,8 @@ public class PatientReg extends HttpServlet {
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("PatientName", String.valueOf(PatientName));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Message_Success.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
@@ -960,7 +1062,7 @@ public class PatientReg extends HttpServlet {
             out.println(str);
         }
     }
-
+    
     void EditValues(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -970,11 +1072,11 @@ public class PatientReg extends HttpServlet {
         int PatientRegId = 0;
         final String MRN = request.getParameter("MRN").trim();
         int ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
-        if (ClientId == 8) {
+        if(ClientId == 8){
             Database = "oe_2";//orange
-        } else if (ClientId == 9) {
+        }else if(ClientId == 9){
             Database = "victoria";//victoria
-        } else if (ClientId == 10) {
+        }else if(ClientId == 10){
             Database = "oddasa";//oddasa
         }
         String Title = "";
@@ -1083,7 +1185,7 @@ public class PatientReg extends HttpServlet {
         final StringBuffer LeaveMessageERBuffYes = new StringBuffer();
         final StringBuffer LeaveMessageERBuffNo = new StringBuffer();
         try {
-            Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(ZipCode,'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(ID,0), ClientIndex, DATE_FORMAT(CreatedDate, '%d-%m-%Y'), IFNULL(Country,'-')  From " + Database + ".PatientReg Where MRN =" + MRN;
+            Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(ZipCode,'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(ID,0), ClientIndex, DATE_FORMAT(CreatedDate, '%d-%m-%Y'), IFNULL(Country,'-')  From "+Database+".PatientReg Where MRN =" + MRN;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1115,39 +1217,42 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = "Select Title from " + Database + ".Title";
+            Query = "Select Title from "+Database+".Title";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             TitleBuff.append("<option value='-1'>Select Title</option>");
             while (rset.next()) {
                 if (Title.equals(rset.getString(1))) {
                     TitleBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(1) + "</option>");
-                } else {
+                }
+                else {
                     TitleBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(1) + "</option>");
                 }
             }
             rset.close();
             stmt.close();
-            Query = "Select Country from " + Database + ".Country";
+            Query = "Select Country from "+Database+".Country";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             CountryBuff.append("<option value='-1'>Select Country</option>");
             while (rset.next()) {
                 if (Country.equals(rset.getString(1))) {
                     CountryBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(1) + "</option>");
-                } else {
+                }
+                else {
                     CountryBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(1) + "</option>");
                 }
             }
             rset.close();
             stmt.close();
-            Query = "Select MaritalStatus from " + Database + ".MaritalStatus";
+            Query = "Select MaritalStatus from "+Database+".MaritalStatus";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
                 if (MaritalStatus.equals(rset.getString(1))) {
                     MaritalStatusBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(1) + "</option>");
-                } else {
+                }
+                else {
                     MaritalStatusBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(1) + "</option>");
                 }
             }
@@ -1156,17 +1261,19 @@ public class PatientReg extends HttpServlet {
             if (gender.equals("male")) {
                 genderBuffMale.append("<input type=\"radio\" name=\"gender\" id=\"genderM\" value=\"male\" checked> Male<br>");
                 genderBuffFemale.append("<input type=\"radio\" name=\"gender\" id=\"genderN\" value=\"female\"> Female<br>");
-            } else {
+            }
+            else {
                 genderBuffMale.append("<input type=\"radio\" name=\"gender\" id=\"genderM\" value=\"male\" > Male<br>");
                 genderBuffFemale.append("<input type=\"radio\" name=\"gender\" id=\"genderN\" value=\"female\" checked> Female<br>");
             }
             if (SelfPayChk == 1) {
                 SelfPayChkBuff.append("<input type=\"checkbox\" id=\"SelfPayChk\" name=\"SelfPayChk\"  checked />");
-            } else {
+            }
+            else {
                 SelfPayChkBuff.append("<input type=\"checkbox\" id=\"SelfPayChk\" name=\"SelfPayChk\"  />");
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%Y-%m-%d'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%Y-%m-%d'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + PatientRegId;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%Y-%m-%d'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%Y-%m-%d'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from "+Database+".InsuranceInfo  where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1175,14 +1282,16 @@ public class PatientReg extends HttpServlet {
                     if (WorkersCompPolicy == 0) {
                         WorkersCompPolicyBuffNo.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyN\" value=\"0\" checked> No<br>");
                         WorkersCompPolicyBuffYes.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyY\" value=\"1\" > Yes<br>");
-                    } else {
+                    }
+                    else {
                         WorkersCompPolicyBuffYes.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyY\" value=\"1\" checked > Yes<br>");
                         WorkersCompPolicyBuffNo.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyN\" value=\"0\" > No<br>");
                     }
                     if (MotorVehAccident == 0) {
                         MotorVehAccidentBuffNo.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentN\" value=\"0\" checked> No<br>");
                         MotorVehAccidentBuffYes.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentY\" value=\"1\" > Yes<br>");
-                    } else {
+                    }
+                    else {
                         MotorVehAccidentBuffYes.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentY\" value=\"1\" checked> Yes<br>");
                         MotorVehAccidentBuffNo.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentN\" value=\"0\" > No<br>");
                     }
@@ -1208,7 +1317,7 @@ public class PatientReg extends HttpServlet {
                 rset.close();
                 stmt.close();
             }
-            Query = "Select PatientRelation from " + Database + ".PatientRelation";
+            Query = "Select PatientRelation from "+Database+".PatientRelation";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1219,7 +1328,7 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = "Select PatientRelation from " + Database + ".PatientRelation";
+            Query = "Select PatientRelation from "+Database+".PatientRelation";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1230,7 +1339,7 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'),  IFNULL(LeaveMessage,0), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(Country,'-'), IFNULL(ZipCode,'-')  from " + Database + ".EmergencyInfo where PatientRegId = " + PatientRegId;
+            Query = " Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'),  IFNULL(LeaveMessage,0), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(Country,'-'), IFNULL(ZipCode,'-')  from "+Database+".EmergencyInfo where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1241,7 +1350,8 @@ public class PatientReg extends HttpServlet {
                 if (LeaveMessageER == 0) {
                     LeaveMessageERBuffNo.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERN\" value=\"0\" checked> No<br>");
                     LeaveMessageERBuffYes.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERY\" value=\"1\" > Yes<br>");
-                } else {
+                }
+                else {
                     LeaveMessageERBuffYes.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERY\" value=\"1\" checked> Yes<br>");
                     LeaveMessageERBuffNo.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERN\" value=\"0\" > No<br>");
                 }
@@ -1253,20 +1363,21 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = "Select Country from " + Database + ".Country";
+            Query = "Select Country from "+Database+".Country";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             CountryBuffER.append("<option value='-1'>Select Country</option>");
             while (rset.next()) {
                 if (CountryER.equals(rset.getString(1))) {
                     CountryBuffER.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(1) + "</option>");
-                } else {
+                }
+                else {
                     CountryBuffER.append("<option value=" + rset.getString(1) + ">" + rset.getString(1) + "</option>");
                 }
             }
             rset.close();
             stmt.close();
-            Query = " Select IFNULL(PatientSign,'-'), DATE_FORMAT(Date,'%Y-%m-%d'), IFNULL(Witness,'-'), IFNULL(PatientBehalfSign,'-'), IFNULL(RelativeSign,'-'), DATE_FORMAT(Date2,'%Y-%m-%d'), IFNULL(Witness2,'-') from " + Database + ".ConcentToTreatmentInfo  Where PatientRegId = " + PatientRegId;
+            Query = " Select IFNULL(PatientSign,'-'), DATE_FORMAT(Date,'%Y-%m-%d'), IFNULL(Witness,'-'), IFNULL(PatientBehalfSign,'-'), IFNULL(RelativeSign,'-'), DATE_FORMAT(Date2,'%Y-%m-%d'), IFNULL(Witness2,'-') from "+Database+".ConcentToTreatmentInfo  Where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -1280,99 +1391,115 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  Work_text, Physician_text, Other_text from " + Database + ".RandomCheckInfo where PatientRegId = " + PatientRegId;
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  Work_text, Physician_text, Other_text from "+Database+".RandomCheckInfo where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient.append("<input type=\"checkbox\" id=\"ReturnPatient\" name=\"ReturnPatient\">");
-                } else {
+                }
+                else {
                     ReturnPatient.append("<input type=\"checkbox\" id=\"ReturnPatient\" name=\"ReturnPatient\" checked>");
                 }
                 if (rset.getInt(2) == 0) {
                     Google.append("<input type=\"checkbox\" id=\"Google\" name=\"Google\">");
-                } else {
+                }
+                else {
                     Google.append("<input type=\"checkbox\" id=\"Google\" name=\"Google\" checked>");
                 }
                 if (rset.getInt(3) == 0) {
                     MapSearch.append("<input type=\"checkbox\" id=\"MapSearch\" name=\"MapSearch\">");
-                } else {
+                }
+                else {
                     MapSearch.append("<input type=\"checkbox\" id=\"MapSearch\" name=\"MapSearch\" checked>");
                 }
                 if (rset.getInt(4) == 0) {
                     Billboard.append("<input type=\"checkbox\" id=\"Billboard\" name=\"Billboard\">");
-                } else {
+                }
+                else {
                     Billboard.append("<input type=\"checkbox\" id=\"Billboard\" name=\"Billboard\" checked>");
                 }
                 if (rset.getInt(5) == 0) {
                     OnlineReview.append("<input type=\"checkbox\" id=\"OnlineReview\" name=\"OnlineReview\">");
-                } else {
+                }
+                else {
                     OnlineReview.append("<input type=\"checkbox\" id=\"OnlineReview\" name=\"OnlineReview\" checked>");
                 }
                 if (rset.getInt(6) == 0) {
                     TV.append("<input type=\"checkbox\" id=\"TV\" name=\"TV\">");
-                } else {
+                }
+                else {
                     TV.append("<input type=\"checkbox\" id=\"TV\" name=\"TV\"> checked");
                 }
                 if (rset.getInt(7) == 0) {
                     Website.append("<input type=\"checkbox\" id=\"Website\" name=\"Website\">");
-                } else {
+                }
+                else {
                     Website.append("<input type=\"checkbox\" id=\"Website\" name=\"Website\" checked>");
                 }
                 if (rset.getInt(8) == 0) {
                     BuildingSignDriveBy.append("<input type=\"checkbox\" id=\"BuildingSignDriveBy\" name=\"BuildingSignDriveBy\">");
-                } else {
+                }
+                else {
                     BuildingSignDriveBy.append("<input type=\"checkbox\" id=\"BuildingSignDriveBy\" name=\"BuildingSignDriveBy\" checked>");
                 }
                 if (rset.getInt(9) == 0) {
                     Facebook.append("<input type=\"checkbox\" id=\"Facebook\" name=\"Facebook\">");
-                } else {
+                }
+                else {
                     Facebook.append("<input type=\"checkbox\" id=\"Facebook\" name=\"Facebook\" checked>");
                 }
                 if (rset.getInt(10) == 0) {
                     School.append("<input type=\"checkbox\" id=\"School\" name=\"School\">");
                     School_text = "";
-                } else {
+                }
+                else {
                     School.append("<input type=\"checkbox\" id=\"School\" name=\"School\" checked>");
                     School_text = rset.getString(11);
                 }
                 if (rset.getInt(12) == 0) {
                     Twitter.append("<input type=\"checkbox\" id=\"Twitter\" name=\"Twitter\">");
-                } else {
+                }
+                else {
                     Twitter.append("<input type=\"checkbox\" id=\"Twitter\" name=\"Twitter\" checked>");
                 }
                 if (rset.getInt(13) == 0) {
                     Magazine.append("<input type=\"checkbox\" id=\"Magazine\" name=\"Magazine\">");
                     Magazine_text = "";
-                } else {
+                }
+                else {
                     Magazine.append("<input type=\"checkbox\" id=\"Magazine\" name=\"Magazine\" checked>");
                     Magazine_text = rset.getString(14);
                 }
                 if (rset.getInt(15) == 0) {
                     Newspaper.append("<input type=\"checkbox\" id=\"Newspaper\" name=\"Newspaper\">");
                     Newspaper_text = "";
-                } else {
+                }
+                else {
                     Newspaper.append("<input type=\"checkbox\" id=\"Newspaper\" name=\"Newspaper\" checked>");
                     Newspaper_text = rset.getString(16);
                 }
                 if (rset.getInt(17) == 0) {
                     FamilyFriend.append("<input type=\"checkbox\" id=\"FamilyFriend\" name=\"FamilyFriend\">");
                     FamilyFriend_text = "";
-                } else {
+                }
+                else {
                     FamilyFriend.append("<input type=\"checkbox\" id=\"FamilyFriend\" name=\"FamilyFriend\" checked>");
                     FamilyFriend_text = rset.getString(18);
                 }
                 if (rset.getInt(19) == 0) {
                     UrgentCare.append("<input type=\"checkbox\" id=\"UrgentCare\" name=\"UrgentCare\">");
                     UrgentCare_text = "";
-                } else {
+                }
+                else {
                     UrgentCare.append("<input type=\"checkbox\" id=\"UrgentCare\" name=\"UrgentCare\" checked>");
                     UrgentCare_text = rset.getString(20);
                 }
                 if (rset.getInt(21) == 0) {
                     CommunityEvent.append("<input type=\"checkbox\" id=\"CommunityEvent\">");
                     CommunityEvent_text = "";
-                } else {
+                }
+                else {
                     CommunityEvent.append("<input type=\"checkbox\" id=\"CommunityEvent\" checked>");
                     CommunityEvent_text = rset.getString(22);
                 }
@@ -1380,7 +1507,8 @@ public class PatientReg extends HttpServlet {
                     System.out.println("Physician_text IF condition");
                     Work_text = "";
                     Work_textBuff.append("<input type=\"checkbox\" id=\"Work\" name=\"Work\">");
-                } else {
+                }
+                else {
                     System.out.println("Physician_text Else condition");
                     Work_textBuff.append("<input type=\"checkbox\" id=\"Work\" name=\"Work\" checked>");
                     Work_text = rset.getString(23);
@@ -1389,7 +1517,8 @@ public class PatientReg extends HttpServlet {
                     System.out.println("Physician_text IF condition");
                     Physician_text = "";
                     Physician_textBuff.append("<input type=\"checkbox\" id=\"Physician\" name=\"Physician\">");
-                } else {
+                }
+                else {
                     System.out.println("Physician_text else condition");
                     Physician_text = rset.getString(24);
                     Physician_textBuff.append("<input type=\"checkbox\" id=\"Physician\" name=\"Physician\" checked>");
@@ -1398,7 +1527,8 @@ public class PatientReg extends HttpServlet {
                     System.out.println("OtherText IF condition");
                     Other_text = "";
                     Other_textBuff.append("<input type=\"checkbox\" id=\"Other\" name=\"Other\">");
-                } else {
+                }
+                else {
                     System.out.println("OtherText else condition");
                     Other_text = rset.getString(25);
                     Other_textBuff.append("<input type=\"checkbox\" id=\"Other\" name=\"Other\" checked>");
@@ -1406,7 +1536,7 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from " + Database + ".PatientReg where ID = " + PatientRegId;
+            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from "+Database+".PatientReg where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -1515,14 +1645,15 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("Other_textBuff", String.valueOf(Other_textBuff));
             Parser.SetField("Other_text", String.valueOf(Other_text));
             Parser.SetField("MRN", String.valueOf(MRN));
-            if (ClientId == 8) {
+            if(ClientId == 8){
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/Edit/PatientRegForm_EditOrange.html");
-            } else if (ClientId == 9) {
+            }else if(ClientId == 9){
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/Edit/PatientRegForm_EditVictoria.html");
-            } else if (ClientId == 10) {
+            }else if(ClientId == 10) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/Edit/PatientRegForm_EditOddasa.html");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
@@ -1531,7 +1662,7 @@ public class PatientReg extends HttpServlet {
             out.println(str);
         }
     }
-
+    
     void EditSave(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext) {
         Statement stmt = null;
         ResultSet rset = null;
@@ -1633,450 +1764,538 @@ public class PatientReg extends HttpServlet {
         try {
             if (request.getParameter("Title").trim().equals(null) || request.getParameter("Title").trim().equals("")) {
                 Title = "Mr";
-            } else {
+            }
+            else {
                 Title = request.getParameter("Title").trim();
             }
             if (request.getParameter("FirstName").trim().equals(null) || request.getParameter("FirstName").trim().equals("")) {
                 FirstName = "";
-            } else {
+            }
+            else {
                 FirstName = request.getParameter("FirstName").trim();
             }
             if (request.getParameter("LastName").trim().equals(null) || request.getParameter("LastName").trim().equals("")) {
                 LastName = "Mr";
-            } else {
+            }
+            else {
                 LastName = request.getParameter("LastName").trim();
             }
             if (request.getParameter("MiddleInitial").trim().equals(null) || request.getParameter("MiddleInitial").trim().equals("")) {
                 MiddleInitial = "";
-            } else {
+            }
+            else {
                 MiddleInitial = request.getParameter("MiddleInitial").trim();
             }
             if (request.getParameter("MaritalStatus").trim().equals(null) || request.getParameter("MaritalStatus").trim().equals("")) {
                 MaritalStatus = "";
-            } else {
+            }
+            else {
                 MaritalStatus = request.getParameter("MaritalStatus").trim();
             }
             if (request.getParameter("DOB").trim().equals(null) || request.getParameter("DOB").trim().equals("")) {
                 DOB = "";
-            } else {
+            }
+            else {
                 DOB = request.getParameter("DOB").trim();
             }
             if (request.getParameter("Age").trim().equals(null) || request.getParameter("Age").trim().equals("")) {
                 Age = "0";
-            } else {
+            }
+            else {
                 Age = request.getParameter("Age").trim();
             }
             if (request.getParameter("gender").trim().equals(null) || request.getParameter("gender").trim().equals("")) {
                 gender = "male";
-            } else {
+            }
+            else {
                 gender = request.getParameter("gender").trim();
             }
             if (request.getParameter("Email").trim().equals(null) || request.getParameter("Email").trim().equals("")) {
                 Email = "";
-            } else {
+            }
+            else {
                 Email = request.getParameter("Email").trim();
             }
             if (request.getParameter("PhNumber").trim().equals(null) || request.getParameter("PhNumber").trim().equals("")) {
                 PhNumber = "0";
-            } else {
+            }
+            else {
                 PhNumber = request.getParameter("PhNumber").trim();
             }
             if (request.getParameter("Address").trim().equals(null) || request.getParameter("Address").trim().equals("")) {
                 Address = "";
-            } else {
+            }
+            else {
                 Address = request.getParameter("Address").trim();
             }
             if (request.getParameter("City").trim().equals(null) || request.getParameter("City").trim().equals("")) {
                 City = "";
-            } else {
+            }
+            else {
                 City = request.getParameter("City").trim();
             }
             if (request.getParameter("State").trim().equals(null) || request.getParameter("State").trim().equals("")) {
                 State = "";
-            } else {
+            }
+            else {
                 State = request.getParameter("State").trim();
             }
             if (request.getParameter("Country").trim().equals(null) || request.getParameter("Country").trim().equals("")) {
                 Country = "Mr";
-            } else {
+            }
+            else {
                 Country = request.getParameter("Country").trim();
             }
             if (request.getParameter("ZipCode").trim().equals(null) || request.getParameter("ZipCode").trim().equals("")) {
                 ZipCode = "";
-            } else {
+            }
+            else {
                 ZipCode = request.getParameter("ZipCode").trim();
             }
             if (request.getParameter("SSN").trim().equals(null) || request.getParameter("SSN").trim().equals("")) {
                 SSN = "";
-            } else {
+            }
+            else {
                 SSN = request.getParameter("SSN").trim();
             }
             if (request.getParameter("Occupation").trim().equals(null) || request.getParameter("Occupation").trim().equals("")) {
                 Occupation = "";
-            } else {
+            }
+            else {
                 Occupation = request.getParameter("Occupation").trim();
             }
             if (request.getParameter("Employer").trim().equals(null) || request.getParameter("Employer").trim().equals("")) {
                 Employer = "";
-            } else {
+            }
+            else {
                 Employer = request.getParameter("Employer").trim();
             }
             if (request.getParameter("EmpContact").trim().equals(null) || request.getParameter("EmpContact").trim().equals("")) {
                 EmpContact = "";
-            } else {
+            }
+            else {
                 EmpContact = request.getParameter("EmpContact").trim();
             }
             if (request.getParameter("PriCarePhy").trim().equals(null) || request.getParameter("PriCarePhy").trim().equals("")) {
                 PriCarePhy = "";
-            } else {
+            }
+            else {
                 PriCarePhy = request.getParameter("PriCarePhy").trim();
             }
             if (request.getParameter("ReasonVisit").trim().equals(null) || request.getParameter("ReasonVisit").trim().equals("")) {
                 ReasonVisit = "";
-            } else {
+            }
+            else {
                 ReasonVisit = request.getParameter("ReasonVisit").trim();
             }
             if (request.getParameter("COVIDStatus_Chk").trim().equals(null) || request.getParameter("COVIDStatus_Chk").trim().equals("")) {
                 COVIDStatus = "0";
-            } else {
+            }
+            else {
                 COVIDStatus = request.getParameter("COVIDStatus_Chk").trim();
             }
             if (request.getParameter("SelfPayChk") == null) {
                 SelfPayChk = 0;
-            } else {
+            }
+            else {
                 SelfPayChk = 1;
                 if (request.getParameter("WorkersCompPolicy").trim().equals(null) || request.getParameter("WorkersCompPolicy").trim().equals("")) {
                     WorkersCompPolicy = 0;
-                } else {
+                }
+                else {
                     WorkersCompPolicy = Integer.parseInt(request.getParameter("WorkersCompPolicy").trim());
                 }
                 if (request.getParameter("MotorVehAccident").trim().equals(null) || request.getParameter("MotorVehAccident").trim().equals("")) {
                     MotorVehAccident = 0;
-                } else {
+                }
+                else {
                     MotorVehAccident = Integer.parseInt(request.getParameter("MotorVehAccident").trim());
                 }
                 if (request.getParameter("PriInsurance").trim().equals(null) || request.getParameter("PriInsurance").trim().equals("")) {
                     PriInsurance = "";
-                } else {
+                }
+                else {
                     PriInsurance = request.getParameter("PriInsurance").trim();
                 }
                 if (request.getParameter("MemId").trim().equals(null) || request.getParameter("MemId").trim().equals("")) {
                     MemId = "";
-                } else {
+                }
+                else {
                     MemId = request.getParameter("MemId").trim();
                 }
                 if (request.getParameter("GrpNumber").trim().equals(null) || request.getParameter("GrpNumber").trim().equals("")) {
                     GrpNumber = "";
-                } else {
+                }
+                else {
                     GrpNumber = request.getParameter("GrpNumber").trim();
                 }
                 if (request.getParameter("PriInsuranceName").trim().equals(null) || request.getParameter("PriInsuranceName").trim().equals("")) {
                     PriInsuranceName = "";
-                } else {
+                }
+                else {
                     PriInsuranceName = request.getParameter("PriInsuranceName").trim();
                 }
                 if (request.getParameter("AddressIfDifferent").trim().equals(null) || request.getParameter("AddressIfDifferent").trim().equals("")) {
                     AddressIfDifferent = "";
-                } else {
+                }
+                else {
                     AddressIfDifferent = request.getParameter("AddressIfDifferent").trim();
                 }
                 if (request.getParameter("PrimaryDOB").trim().equals(null) || request.getParameter("PrimaryDOB").trim().equals("")) {
                     PrimaryDOB = "";
-                } else {
+                }
+                else {
                     PrimaryDOB = request.getParameter("PrimaryDOB").trim();
                 }
                 if (request.getParameter("PrimarySSN").trim().equals(null) || request.getParameter("PrimarySSN").trim().equals("")) {
                     PrimarySSN = "";
-                } else {
+                }
+                else {
                     PrimarySSN = request.getParameter("PrimarySSN").trim();
                 }
                 if (request.getParameter("PatientRelationtoPrimary").trim().equals(null) || request.getParameter("PatientRelationtoPrimary").trim().equals("")) {
                     PatientRelationtoPrimary = "0";
-                } else {
+                }
+                else {
                     PatientRelationtoPrimary = request.getParameter("PatientRelationtoPrimary").trim();
                 }
                 if (request.getParameter("PrimaryOccupation").trim().equals(null) || request.getParameter("PrimaryOccupation").trim().equals("")) {
                     PrimaryOccupation = "";
-                } else {
+                }
+                else {
                     PrimaryOccupation = request.getParameter("PrimaryOccupation").trim();
                 }
                 if (request.getParameter("PrimaryEmployer").trim().equals(null) || request.getParameter("PrimaryEmployer").trim().equals("")) {
                     PrimaryEmployer = "";
-                } else {
+                }
+                else {
                     PrimaryEmployer = request.getParameter("PrimaryEmployer").trim();
                 }
                 if (request.getParameter("EmployerAddress").trim().equals(null) || request.getParameter("EmployerAddress").trim().equals("")) {
                     EmployerAddress = "";
-                } else {
+                }
+                else {
                     EmployerAddress = request.getParameter("EmployerAddress").trim();
                 }
                 if (request.getParameter("EmployerPhone").trim().equals(null) || request.getParameter("EmployerPhone").trim().equals("")) {
                     EmployerPhone = "";
-                } else {
+                }
+                else {
                     EmployerPhone = request.getParameter("EmployerPhone").trim();
                 }
                 if (request.getParameter("SecondryInsurance").trim().equals(null) || request.getParameter("SecondryInsurance").trim().equals("")) {
                     SecondryInsurance = "0";
-                } else {
+                }
+                else {
                     SecondryInsurance = request.getParameter("SecondryInsurance").trim();
                 }
                 if (request.getParameter("SubscriberName").trim().equals(null) || request.getParameter("SubscriberName").trim().equals("")) {
                     SubscriberName = "";
-                } else {
+                }
+                else {
                     SubscriberName = request.getParameter("SubscriberName").trim();
                 }
                 if (request.getParameter("SubscriberDOB").trim().equals(null) || request.getParameter("SubscriberDOB").trim().equals("")) {
                     SubscriberDOB = "0000-00-00";
-                } else {
+                }
+                else {
                     SubscriberDOB = request.getParameter("SubscriberDOB").trim();
                 }
                 if (request.getParameter("MemberID_2").trim().equals(null) || request.getParameter("MemberID_2").trim().equals("")) {
                     MemberID_2 = "";
-                } else {
+                }
+                else {
                     MemberID_2 = request.getParameter("MemberID_2").trim();
                 }
                 if (request.getParameter("GroupNumber_2").trim().equals(null) || request.getParameter("GroupNumber_2").trim().equals("")) {
                     GroupNumber_2 = "";
-                } else {
+                }
+                else {
                     GroupNumber_2 = request.getParameter("GroupNumber_2").trim();
                 }
                 if (request.getParameter("PatientRelationshiptoSecondry").trim().equals(null) || request.getParameter("PatientRelationshiptoSecondry").trim().equals("")) {
                     PatientRelationshiptoSecondry = "";
-                } else {
+                }
+                else {
                     PatientRelationshiptoSecondry = request.getParameter("PatientRelationshiptoSecondry").trim();
                 }
             }
             if (request.getParameter("NextofKinName").trim().equals(null) || request.getParameter("NextofKinName").trim().equals("")) {
                 NextofKinName = "";
-            } else {
+            }
+            else {
                 NextofKinName = request.getParameter("NextofKinName").trim();
             }
             if (request.getParameter("RelationToPatientER").trim().equals(null) || request.getParameter("RelationToPatientER").trim().equals("")) {
                 RelationToPatientER = "";
-            } else {
+            }
+            else {
                 RelationToPatientER = request.getParameter("RelationToPatientER").trim();
             }
             if (request.getParameter("PhoneNumberER").trim().equals(null) || request.getParameter("PhoneNumberER").trim().equals("")) {
                 PhoneNumberER = "";
-            } else {
+            }
+            else {
                 PhoneNumberER = request.getParameter("PhoneNumberER").trim();
             }
             if (request.getParameter("LeaveMessageER").trim().equals(null) || request.getParameter("LeaveMessageER").trim().equals("")) {
                 LeaveMessageER = 0;
-            } else {
+            }
+            else {
                 LeaveMessageER = Integer.parseInt(request.getParameter("LeaveMessageER").trim());
             }
             if (request.getParameter("AddressER").trim().equals(null) || request.getParameter("AddressER").trim().equals("")) {
                 AddressER = "";
-            } else {
+            }
+            else {
                 AddressER = request.getParameter("AddressER").trim();
             }
             if (request.getParameter("CityER").trim().equals(null) || request.getParameter("CityER").trim().equals("")) {
                 CityER = "";
-            } else {
+            }
+            else {
                 CityER = request.getParameter("CityER").trim();
             }
             if (request.getParameter("StateER").trim().equals(null) || request.getParameter("StateER").trim().equals("")) {
                 StateER = "";
-            } else {
+            }
+            else {
                 StateER = request.getParameter("StateER").trim();
             }
             if (request.getParameter("CountryER").trim().equals(null) || request.getParameter("CountryER").trim().equals("")) {
                 CountryER = "";
-            } else {
+            }
+            else {
                 CountryER = request.getParameter("CountryER").trim();
             }
             if (request.getParameter("ZipCodeER").trim().equals(null) || request.getParameter("ZipCodeER").trim().equals("")) {
                 ZipCodeER = "";
-            } else {
+            }
+            else {
                 ZipCodeER = request.getParameter("ZipCodeER").trim();
             }
             if (request.getParameter("VerifyChkBox").trim().equals(null) || request.getParameter("VerifyChkBox").trim().equals("")) {
                 VerifyChkBox = 0;
-            } else {
+            }
+            else {
                 VerifyChkBox = 1;
             }
             if (request.getParameter("PatientSignConcent").trim().equals(null) || request.getParameter("PatientSignConcent").trim().equals("")) {
                 PatientSignConcent = "";
-            } else {
+            }
+            else {
                 PatientSignConcent = request.getParameter("PatientSignConcent").trim();
             }
             if (request.getParameter("DateConcent").trim().equals(null) || request.getParameter("DateConcent").trim().equals("")) {
                 DateConcent = "";
-            } else {
+            }
+            else {
                 DateConcent = request.getParameter("DateConcent").trim();
             }
             if (request.getParameter("WitnessConcent").trim().equals(null) || request.getParameter("WitnessConcent").trim().equals("")) {
                 WitnessConcent = "";
-            } else {
+            }
+            else {
                 WitnessConcent = request.getParameter("WitnessConcent").trim();
             }
             if (request.getParameter("PatientBehalfConcent").trim().equals(null) || request.getParameter("PatientBehalfConcent").trim().equals("")) {
                 PatientBehalfConcent = "";
-            } else {
+            }
+            else {
                 PatientBehalfConcent = request.getParameter("PatientBehalfConcent").trim();
             }
             if (request.getParameter("RelativeSignConcent").trim().equals(null) || request.getParameter("RelativeSignConcent").trim().equals("")) {
                 RelativeSignConcent = "";
-            } else {
+            }
+            else {
                 RelativeSignConcent = request.getParameter("RelativeSignConcent").trim();
             }
             if (request.getParameter("DateConcent2").trim().equals(null) || request.getParameter("DateConcent2").trim().equals("")) {
                 DateConcent2 = "";
-            } else {
+            }
+            else {
                 DateConcent2 = request.getParameter("DateConcent2").trim();
             }
             if (request.getParameter("WitnessConcent2").trim().equals(null) || request.getParameter("WitnessConcent2").trim().equals("")) {
                 WitnessConcent2 = "";
-            } else {
+            }
+            else {
                 WitnessConcent2 = request.getParameter("WitnessConcent2").trim();
             }
             if (request.getParameter("ReturnPatient") == null) {
                 ReturnPatient = 0;
-            } else {
+            }
+            else {
                 ReturnPatient = 1;
             }
             if (request.getParameter("Google") == null) {
                 Google = 0;
-            } else {
+            }
+            else {
                 Google = 1;
             }
             if (request.getParameter("MapSearch") == null) {
                 MapSearch = 0;
-            } else {
+            }
+            else {
                 MapSearch = 1;
             }
             if (request.getParameter("Billboard") == null) {
                 Billboard = 0;
-            } else {
+            }
+            else {
                 Billboard = 1;
             }
             if (request.getParameter("OnlineReview") == null) {
                 OnlineReview = 0;
-            } else {
+            }
+            else {
                 OnlineReview = 1;
             }
             if (request.getParameter("TV") == null) {
                 TV = 0;
-            } else {
+            }
+            else {
                 TV = 2;
             }
             if (request.getParameter("Website") == null) {
                 Website = 0;
-            } else {
+            }
+            else {
                 Website = 1;
             }
             if (request.getParameter("BuildingSignDriveBy") == null) {
                 BuildingSignDriveBy = 0;
-            } else {
+            }
+            else {
                 BuildingSignDriveBy = 1;
             }
             if (request.getParameter("Facebook") == null) {
                 Facebook = 0;
-            } else {
+            }
+            else {
                 Facebook = 1;
             }
             if (request.getParameter("School") == null) {
                 School = 0;
                 School_text = "-";
-            } else {
+            }
+            else {
                 School = 1;
                 if (request.getParameter("School_text").trim().equals(null) || request.getParameter("School_text").trim().equals("")) {
                     School_text = "-";
-                } else {
+                }
+                else {
                     School_text = request.getParameter("School_text").trim();
                 }
             }
             if (request.getParameter("Twitter") == null) {
                 Twitter = 0;
-            } else {
+            }
+            else {
                 Twitter = 1;
             }
             if (request.getParameter("Magazine") == null) {
                 Magazine = 0;
                 Magazine_text = "";
-            } else {
+            }
+            else {
                 Magazine = 1;
                 if (request.getParameter("Magazine_text").trim().equals(null) || request.getParameter("Magazine_text").trim().equals("")) {
                     Magazine_text = "";
-                } else {
+                }
+                else {
                     Magazine_text = request.getParameter("Magazine_text").trim();
                 }
             }
             if (request.getParameter("Newspaper") == null) {
                 Newspaper = 0;
                 Newspaper_text = "";
-            } else {
+            }
+            else {
                 Newspaper = 1;
                 if (request.getParameter("Newspaper_text").trim().equals(null) || request.getParameter("Newspaper_text").trim().equals("")) {
                     Newspaper_text = "";
-                } else {
+                }
+                else {
                     Newspaper_text = request.getParameter("Newspaper_text").trim();
                 }
             }
             if (request.getParameter("FamilyFriend") == null) {
                 FamilyFriend = 0;
                 FamilyFriend_text = "";
-            } else {
+            }
+            else {
                 FamilyFriend = 1;
                 if (request.getParameter("FamilyFriend_text").trim().equals(null) || request.getParameter("FamilyFriend_text").trim().equals("")) {
                     FamilyFriend_text = "";
-                } else {
+                }
+                else {
                     FamilyFriend_text = request.getParameter("FamilyFriend_text").trim();
                 }
             }
             if (request.getParameter("UrgentCare") == null) {
                 UrgentCare = 0;
                 UrgentCare_text = "";
-            } else {
+            }
+            else {
                 UrgentCare = 1;
                 if (request.getParameter("UrgentCare_text").trim().equals(null) || request.getParameter("UrgentCare_text").trim().equals("")) {
                     UrgentCare_text = "";
-                } else {
+                }
+                else {
                     UrgentCare_text = request.getParameter("UrgentCare_text").trim();
                 }
             }
             if (request.getParameter("CommunityEvent") == null) {
                 CommunityEvent = 0;
                 CommunityEvent_text = "";
-            } else {
+            }
+            else {
                 CommunityEvent = 1;
                 if (request.getParameter("CommunityEvent_text").trim().equals(null) || request.getParameter("CommunityEvent_text").trim().equals("")) {
                     CommunityEvent_text = "";
-                } else {
+                }
+                else {
                     CommunityEvent_text = request.getParameter("CommunityEvent_text").trim();
                 }
             }
             if (request.getParameter("Work") == null) {
                 Work = 0;
                 Work_text = "";
-            } else {
+            }
+            else {
                 Work = 1;
                 if (request.getParameter("Work_text").trim().equals(null) || request.getParameter("Work_text").trim().equals("")) {
                     Work_text = "";
-                } else {
+                }
+                else {
                     Work_text = request.getParameter("Work_text").trim();
                 }
             }
             if (request.getParameter("Physician") == null) {
                 Physician = 0;
                 Physician_text = "";
-            } else {
+            }
+            else {
                 Physician = 1;
                 if (request.getParameter("Physician_text").trim().equals(null) || request.getParameter("Physician_text").trim().equals("")) {
                     Physician_text = "";
-                } else {
+                }
+                else {
                     Physician_text = request.getParameter("Physician_text").trim();
                 }
             }
             if (request.getParameter("Other") == null) {
                 Other = 0;
                 Other_text = "";
-            } else {
+            }
+            else {
                 Other = 1;
                 if (request.getParameter("Other_text").trim().equals(null) || request.getParameter("Other_text").trim().equals("")) {
                     Other_text = "";
-                } else {
+                }
+                else {
                     Other_text = request.getParameter("Other_text").trim();
                 }
             }
@@ -2089,7 +2308,8 @@ public class PatientReg extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error in getting PatineReg Data get:--" + e.getMessage() + Query);
             }
             try {
@@ -2097,7 +2317,8 @@ public class PatientReg extends HttpServlet {
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error in Updating PatientReg Table:-" + e.getMessage());
             }
             try {
@@ -2107,7 +2328,8 @@ public class PatientReg extends HttpServlet {
                     stmt.executeUpdate(Query);
                     stmt.close();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error in Updating Insurance info Table :--" + e.getMessage());
             }
             try {
@@ -2115,7 +2337,8 @@ public class PatientReg extends HttpServlet {
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error in Updating Emergency Info Table:-- " + e.getMessage());
             }
             try {
@@ -2123,7 +2346,8 @@ public class PatientReg extends HttpServlet {
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error in Updating ConcentToTreatmentInfo Table:-- " + e.getMessage());
             }
             try {
@@ -2131,13 +2355,15 @@ public class PatientReg extends HttpServlet {
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error in Updating RandomCheckInfo Table:-- " + e.getMessage());
             }
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("PatientName", String.valueOf(PatientName));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Message_Success.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println("Error in Updating:-" + e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
@@ -2146,6 +2372,8 @@ public class PatientReg extends HttpServlet {
             out.println(str);
         }
     }
+
+
 
 
 }

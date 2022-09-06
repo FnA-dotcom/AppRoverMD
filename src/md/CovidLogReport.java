@@ -20,19 +20,23 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class CovidLogReport extends HttpServlet {
-    public void init(ServletConfig config) throws ServletException {
+/*    private Statement stmt = null;
+    private ResultSet rset = null;
+    private String Query = "";*/
+//
+    public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        handleRequest(request, response);
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
     }
 
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        handleRequest(request, response);
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
     }
 
-    public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         ResultSet rset = null;
         Statement stmt = null;
@@ -42,15 +46,18 @@ public class CovidLogReport extends HttpServlet {
         String Database = "";
         String Query = "";
         int ClientId = 0;
-        String ActionID = request.getParameter("ActionID").trim();
+        final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
-        Services supp = new Services();
+        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final Services supp = new Services();
         ServletContext context = null;
-        context = getServletContext();
+        context = this.getServletContext();
         UtilityHelper helper = new UtilityHelper();
         conn = Services.getMysqlConn(context);
+        
         HttpSession session = request.getSession(false);
+     
+
         boolean validSession = helper.checkSession(request, context, session, out);
         if (!validSession) {
             out.flush();
@@ -63,16 +70,19 @@ public class CovidLogReport extends HttpServlet {
         try {
             if (ActionID.equals("GetReport")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Covid Log report", "Open frontlin_er Covid Log Report Screen", ClientId);
-                GetReport(request, out, conn, context, UserId, Database, ClientId, helper);
-            } else if (ActionID.equals("GetCovidFilterReport")) {
+                this.GetReport(request, out, conn, context, UserId, Database, ClientId, helper);
+            
+    
+            }else if (ActionID.equals("GetCovidFilterReport")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get Covid Log report", "Open frontlin_er Covid Log Report Screen", ClientId);
-                GetCovidFilterReport(request, out, conn, context, UserId, Database, ClientId, helper);
-            } else {
+               this.GetCovidFilterReport(request, out, conn, context, UserId, Database, ClientId, helper);
+            }
+            else {
                 out.println("Under Development");
             }
             try {
                 conn.close();
-            } catch (Exception exception) {
+            } catch (Exception ex) {
             }
             out.flush();
             out.close();
@@ -81,39 +91,99 @@ public class CovidLogReport extends HttpServlet {
         }
     }
 
-    void GetReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper) {
+
+    void GetReport(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId, UtilityHelper helper) {
         SupportiveMethods suppMethods = new SupportiveMethods();
+
         StringBuffer CDRList = new StringBuffer();
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
+   
         int SNo = 1;
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = new Date();
-        String today = formatter.format(date);
+    	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    	Date date = new Date();
+String today= formatter.format(date);
+if(ClientId == 27 || ClientId == 29) {
         try {
-            Query = " SELECT\r\n\tIFNULL(a.FirstName, ''),\r\n\tIFNULL(a.LastName, ''),\r\n\tIFNULL(\r\n\t\tDATE_FORMAT(a.DOB, '%m/%d/%Y'),\"\"),\r\n\t\r\n\tCASE\r\nWHEN b.CovidStatus = 0 THEN\r\n\t\"NEGATIVE\"\r\nWHEN b.CovidStatus = 1 THEN\r\n\t\"POSITIVE\"\r\nWHEN b.CovidStatus = - 1 THEN\r\n\t\"SUSPECTED\"\r\nELSE\r\n\t\"UNEXAMINED\"\r\nEND,\r\n IFNULL(\r\n\tDATE_FORMAT(b.CovidTestDate, '%m/%d/%Y'),\r\n\t''\r\n),\r\n IFNULL(d.PayerName, '')\r\nFROM\r\n\t" + Database + ".PatientReg a\r\nLEFT JOIN " + Database + ".Patient_AdditionalInfo b ON a.ID = b.PatientRegId\r\nLEFT JOIN " + Database + ".InsuranceInfo c ON a.ID = c.PatientRegId\r\nLEFT JOIN " + Database + ".ProfessionalPayers d ON c.PriInsuranceName = d.Id\r\nwhere a.status = 0 and b.CovidTestDate = '" + today + "' order by b.CovidTestDate DESC";
+
+     
+  
+            
+//        	  CDRList.append("<div class=\"table-responsive\">");  
+//            CDRList.append("<table	id=\"complex_header\" class=\"table table-striped table-bordered display\" style=\"width:100%\">");            
+//            CDRList.append("<thead  style=\"color:black;\" >");
+//            CDRList.append("<tr>");
+//            CDRList.append("<td align=left>First Name</td>");
+//            CDRList.append("<td align=left>Last Name</td>");
+//            CDRList.append("<td align=left>Date of Birth</td>");
+//            CDRList.append("<td align=left>Covid Test Date</td>");
+//            CDRList.append("<td align=left>Covid Status</td>");
+//            CDRList.append("<td align=left>Insurrance</td>");
+//            CDRList.append("</tr>"); 
+//            CDRList.append("</thead>");
+//            CDRList.append("<tbody  style=\"color:black;\">");
+            
+            
+            Query=    " SELECT\r\n"
+            		+ "	IFNULL(a.FirstName, ''),\r\n"
+            		+ "	IFNULL(a.LastName, ''),\r\n"
+            		+ "	IFNULL(\r\n"
+            		+ "		DATE_FORMAT(a.DOB, '%m/%d/%Y'),\"\"),\r\n"
+            		+ "	\r\n"
+            		+ "	CASE\r\n"
+            		+ "WHEN b.CovidStatus = 0 THEN\r\n"
+            		+ "	\"NEGATIVE\"\r\n"
+            		+ "WHEN b.CovidStatus = 1 THEN\r\n"
+            		+ "	\"POSITIVE\"\r\n"
+            		+ "WHEN b.CovidStatus = - 1 THEN\r\n"
+            		+ "	\"SUSPECTED\"\r\n"
+            		+ "ELSE\r\n"
+            		+ "	\"UNEXAMINED\"\r\n"
+            		+ "END,\r\n"
+            		+ " IFNULL(\r\n"
+            		+ "	DATE_FORMAT(b.CovidTestDate, '%m/%d/%Y'),\r\n"
+            		+ "	''\r\n"
+            		+ "),\r\n"
+            		+ " IFNULL(d.PayerName, '')\r\n"
+            		+ "FROM\r\n"
+            		+ "	"+Database+".PatientReg a\r\n"
+            		+ "LEFT JOIN "+Database+".Patient_AdditionalInfo b ON a.ID = b.PatientRegId\r\n"
+            		+ "LEFT JOIN "+Database+".InsuranceInfo c ON a.ID = c.PatientRegId\r\n"
+            		+ "LEFT JOIN "+Database+".ProfessionalPayers d ON c.PriInsuranceName = d.Id\r\n"
+            		+ "where a.status = 0 and b.CovidTestDate = '"+today+"' order by b.CovidTestDate DESC";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
+
+//            CDRList.append("</thead >");            
             while (rset.next()) {
-                CDRList.append("<tr>");
-                CDRList.append("<td align=left>" + SNo + "</td>\n");
-                CDRList.append("<td align=left>" + rset.getString(1) + "</td>");
-                CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
-                CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");
-                CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
-                CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
-                CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
-                CDRList.append("</tr>");
-                SNo++;
+                
+                    CDRList.append("<tr>");
+                    CDRList.append("<td align=left>" + SNo + "</td>\n");
+                    CDRList.append("<td align=left>" + rset.getString(1) + "</td>");
+                    CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
+                    CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");
+                    CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
+                    CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
+                    CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
+                    CDRList.append("</tr>");
+                    SNo++;
             }
             rset.close();
             stmt.close();
+
+                   
+//        
+//            CDRList.append("</tbody >");
+//            CDRList.append("</table >");
+//            CDRList.append("</div >");
+      
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("CDRList", String.valueOf(CDRList));
             Parser.SetField("today", String.valueOf(today));
             Parser.SetField("searchdatefrom", String.valueOf(today));
             Parser.SetField("searchdateto", String.valueOf(today));
+
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ReportCovidStatus.html");
         } catch (Exception e) {
             out.println("0|");
@@ -124,13 +194,16 @@ public class CovidLogReport extends HttpServlet {
                 Parser.SetField("FormName", "PatientUpdateInfo");
                 Parser.SetField("ActionID", "GetReport");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-            } catch (Exception exception) {
+            } catch (Exception e2) {
             }
+//
         }
+}
     }
 
-    void GetCovidFilterReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, UtilityHelper helper) {
+    void GetCovidFilterReport(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId, UtilityHelper helper) {
         SupportiveMethods suppMethods = new SupportiveMethods();
+    
         StringBuffer CDRList = new StringBuffer();
         int SNo = 1;
         Statement stmt = null;
@@ -138,33 +211,77 @@ public class CovidLogReport extends HttpServlet {
         String Query = "";
         String FromDate = request.getParameter("FromDate").trim();
         String ToDate = request.getParameter("ToDate").trim();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = new Date();
-        String today = formatter.format(date);
+//        String CovidStatus = request.getParameter("CovidStatus").trim();
+    	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    	Date date = new Date();
+String today= formatter.format(date);
+if(ClientId == 27 || ClientId == 29) {
         try {
-            Query = "SELECT\r\n\tIFNULL(a.FirstName, \"\"),\r\n\tIFNULL(a.LastName, \"\"),\r\n\tIFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),\"\"),\r\n\r\nCASE \r\nWHEN b.CovidStatus = 0 THEN 'NEGATIVE'\r\nWHEN b.CovidStatus = 1 THEN 'POSITIVE'\r\nWHEN b.CovidStatus = -1 THEN 'SUSPECTED'\r\nELSE 'UNEXAMINED' END,\r\n\tIFNULL(DATE_FORMAT(b.CovidTestDate, '%m/%d/%Y'),\"\"),\r\n\tIFNULL(d.PayerName, \"\")\r\nFROM\r\n\t" + Database + ".PatientReg a\r\nLEFT JOIN " + Database + ".Patient_AdditionalInfo b\r\nON a.ID = b.PatientRegId\r\nLEFT JOIN " + Database + ".InsuranceInfo c \r\nON a.ID = c.PatientRegId\r\nLEFT JOIN " + Database + ".ProfessionalPayers d\r\nON   d.Id = c.PriInsuranceName where a.Status=0 AND b.CovidTestDate BETWEEN '" + FromDate + "' AND '" + ToDate + "' order by b.CovidTestDate DESC";
+//        	 CDRList.append("<div class=\"table-responsive\">"); 
+//        	    CDRList.append("<table	id=\"complex_header\" class=\"table table-striped table-bordered display\" style=\"width:100%\">");            
+//                CDRList.append("<thead  style=\"color:black;\" >");
+//        
+//            CDRList.append("<tr>");
+//            CDRList.append("<td align=left>First Name</td>");
+//            CDRList.append("<td align=left>Last Name</td>");
+//            CDRList.append("<td align=left>Date of Birth</td>");
+//            CDRList.append("<td align=left>Covid Test Date</td>");
+//            CDRList.append("<td align=left>Covid Status</td>");
+//            CDRList.append("<td align=left>Insurrance</td>");
+//            CDRList.append("</tr>");
+//            CDRList.append("</thead >");
+//            CDRList.append("<tbody  style=\"color:black;\">");
+            Query = "SELECT\r\n"
+            		+ "	IFNULL(a.FirstName, \"\"),\r\n"
+            		+ "	IFNULL(a.LastName, \"\"),\r\n"
+            		+ "	IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),\"\"),\r\n"
+            		+ "\r\n"
+            		+ "CASE \r\n"
+            		+ "WHEN b.CovidStatus = 0 THEN 'NEGATIVE'\r\n"
+            		+ "WHEN b.CovidStatus = 1 THEN 'POSITIVE'\r\n"
+            		+ "WHEN b.CovidStatus = -1 THEN 'SUSPECTED'\r\n"
+            		+ "ELSE 'UNEXAMINED' END,\r\n"
+            		+ "	IFNULL(DATE_FORMAT(b.CovidTestDate, '%m/%d/%Y'),\"\"),\r\n"
+            		+ "	IFNULL(d.PayerName, \"\")\r\n"
+            		+ "FROM\r\n"
+            		+ "	"+Database+".PatientReg a\r\n"
+            		+ "LEFT JOIN "+Database+".Patient_AdditionalInfo b\r\n"
+            		+ "ON a.ID = b.PatientRegId\r\n"
+            		+ "LEFT JOIN "+Database+".InsuranceInfo c \r\n"
+            		+ "ON a.ID = c.PatientRegId\r\n"
+            		+ "LEFT JOIN "+Database+".ProfessionalPayers d\r\n"
+            		+ "ON   d.Id = c.PriInsuranceName where a.Status=0 AND b.CovidTestDate BETWEEN '"+FromDate+"' AND '"+ToDate+"' order by b.CovidTestDate DESC";
+            //out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
+
             while (rset.next()) {
                 CDRList.append("<tr>");
                 CDRList.append("<td align=left>" + SNo + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(1) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(3) + "</td>\n");
-                CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");//PhNumber
                 CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(6) + "</td>\n");
+        
+    
                 CDRList.append("</tr>");
                 SNo++;
             }
             rset.close();
-            stmt.close();
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("CDRList", String.valueOf(CDRList));
-            Parser.SetField("today", String.valueOf(today));
-            Parser.SetField("searchdatefrom", String.valueOf(FromDate));
-            Parser.SetField("searchdateto", String.valueOf(ToDate));
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ReportCovidStatus.html");
+
+           stmt.close();
+           
+           Parsehtm Parser = new Parsehtm(request);
+           Parser.SetField("CDRList", String.valueOf(CDRList));
+           Parser.SetField("today", String.valueOf(today));
+           Parser.SetField("searchdatefrom", String.valueOf(FromDate));
+           Parser.SetField("searchdateto", String.valueOf(ToDate));
+           Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ReportCovidStatus.html");
+//            CDRList.append("</tbody >");
+//            CDRList.append("</table >");
+//  out.println("CDRList");
         } catch (Exception e) {
             out.println("0|");
             try {
@@ -174,9 +291,12 @@ public class CovidLogReport extends HttpServlet {
                 Parser.SetField("FormName", "PatientUpdateInfo");
                 Parser.SetField("ActionID", "GetCovidFilterReport");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-            } catch (Exception exception) {
+            } catch (Exception e2) {
             }
+//
         }
-    }
 }
+    
+    }
 
+    }

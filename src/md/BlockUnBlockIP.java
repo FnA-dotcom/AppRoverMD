@@ -21,8 +21,9 @@ import java.sql.*;
 @SuppressWarnings("Duplicates")
 public class BlockUnBlockIP extends HttpServlet {
 
+    private Connection conn = null;
     Integer ScreenIndex = 33;
-//    private Connection conn = null;
+
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -42,14 +43,12 @@ public class BlockUnBlockIP extends HttpServlet {
         String DatabaseName = "";
         PrintWriter out = new PrintWriter(response.getOutputStream());
         Services supp = new Services();
-        Connection conn = null;
 
         String ActionID;
         ServletContext context = null;
         context = this.getServletContext();
         UtilityHelper helper = new UtilityHelper();
-        int UserIndex = 0;
-        int UserType = 0;
+        int UserIndex=0;
         try {
             HttpSession session = request.getSession(false);
 
@@ -66,7 +65,6 @@ public class BlockUnBlockIP extends HttpServlet {
                 DatabaseName = session.getAttribute("DatabaseName").toString();
                 FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
                 UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
-                UserType = Integer.parseInt(session.getAttribute("UserType").toString());
 
                 if (UserId.equals("")) {
                     Parsehtm Parser = new Parsehtm(request);
@@ -80,7 +78,7 @@ public class BlockUnBlockIP extends HttpServlet {
             ActionID = request.getParameter("ActionID").trim();
             conn = Services.getMysqlConn(context);
 
-/*            if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, this.ScreenIndex)) {
+            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
 //                out.println("You are not Authorized to access this page");
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Message", "You are not Authorized to access this page");
@@ -89,26 +87,22 @@ public class BlockUnBlockIP extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
 //                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Error404.html");
                 return;
-            }*/
+            }
             if (conn == null) {
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Error", "Unable to connect. Our team is looking into it!");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            switch (ActionID) {
-                case "GetInput":
-                    GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex, UserType);
-                    break;
-                case "BlockIP":
-                    BlockIP(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "UnblockIP":
-                    UnblockIP(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                default:
-                    out.println("Under Development");
-                    break;
+            if (ActionID.equals("GetInput")) {
+                GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+            }else if (ActionID.equals("BlockIP")) {
+                BlockIP(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+            }
+            else if (ActionID.equals("UnblockIP")) {
+                UnblockIP(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+            }else {
+                out.println("Under Development");
             }
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
@@ -132,7 +126,7 @@ public class BlockUnBlockIP extends HttpServlet {
         }
     }
 
-    void GetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int facilityIdx, int userType) {
+    void GetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = null;
@@ -141,15 +135,11 @@ public class BlockUnBlockIP extends HttpServlet {
 
 
         try {
-            if (userType == 4)
-                Query = "SELECT ID,IP FROM oe.BLOCKED_IPS where status = 1 AND facilityIdx = " + facilityIdx;
-            else
-                Query = "SELECT ID,IP FROM oe.BLOCKED_IPS where status = 1 ";
-
-
+            Query = "SELECT ID,IP " +
+                    "FROM oe.BLOCKED_IPS where status = 1";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next()){
                 CDRList.append("<tr>\n");
                 CDRList.append("<td align=left>" + rset.getString(2) + "</td>\n");
                 CDRList.append("<td align=left><button type=\"button\" class=\"waves-effect waves-light btn btn-outline btn-rounded btn-info\" onclick=\"UnblockIP(" + rset.getString(1) + ");\">Unblock IP</button></td>");
@@ -167,7 +157,7 @@ public class BlockUnBlockIP extends HttpServlet {
     }
 
 
-    void BlockIP(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int facilityIdx) {
+    void BlockIP(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
         try {
             String IP = request.getParameter("IP").trim();
             Statement stmt = null;
@@ -175,32 +165,31 @@ public class BlockUnBlockIP extends HttpServlet {
             String Query = null;
 
 
-            int null_data_found = 0;
+
+            int null_data_found=0;
 
 
-            Query = "SELECT COUNT(*) FROM oe.BLOCKED_IPS where IP='" + IP + "'";
+            Query = "SELECT COUNT(*) FROM oe.BLOCKED_IPS where IP='"+IP+"'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
 
-            if (rset.next()) {
+            while(rset.next()){
                 null_data_found = rset.getInt(1);
             }
             rset.close();
             stmt.close();
 
 
-            if (null_data_found == 0) {
+            if(null_data_found == 0){
                 PreparedStatement MainReceipt = conn.prepareStatement(
-                        "INSERT INTO oe.BLOCKED_IPS (IP,Status,FacilityIdx,CreatedBy,CreatedDate) " +
-                                "VALUE(?,'1',?,?,NOW())");
+                        "INSERT INTO oe.BLOCKED_IPS (IP,Status) VALUE(?,'1')");
 
                 MainReceipt.setString(1, IP);
-                MainReceipt.setInt(2, facilityIdx);
-                MainReceipt.setString(3, UserId);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
                 out.println("1");
-            } else {
+            }
+            else{
                 out.println("0~IP exists");
             }
         } catch (Exception e) {
@@ -212,7 +201,7 @@ public class BlockUnBlockIP extends HttpServlet {
         try {
             String ID = request.getParameter("ID").trim();
 
-            PreparedStatement MainReceipt = conn.prepareStatement("UPDATE  oe.BLOCKED_IPS  SET Status = '0' WHERE ID = '" + ID + "'");
+            PreparedStatement MainReceipt = conn.prepareStatement("UPDATE  oe.BLOCKED_IPS  SET Status = '0' WHERE ID = '"+ID+"'");
             MainReceipt.executeUpdate();
             MainReceipt.close();
 

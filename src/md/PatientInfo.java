@@ -28,14 +28,11 @@ import java.util.Date;
 public class PatientInfo extends HttpServlet {
     public static String msgfinal;
     public static String msgresponse;
-
+    private Connection conn = null;
     static {
         PatientInfo.msgfinal = null;
         PatientInfo.msgresponse = null;
     }
-
-    public ServletContext context = null;
-    private Connection conn = null;
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -48,6 +45,8 @@ public class PatientInfo extends HttpServlet {
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
+
+    public ServletContext context = null;
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
@@ -90,6 +89,8 @@ public class PatientInfo extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
+//            out.println("OUTSIDE SWITCH");
+//            out.println("ActionID -> "+ActionID);
             switch (ActionID) {
                 case "sendToEPD":
                     sendToEPD(request, out, conn, context, DatabaseName, FacilityIndex, helper);
@@ -130,6 +131,7 @@ public class PatientInfo extends HttpServlet {
         final ResultSet hrset = null;
         String Query = "";
         int ID = Integer.parseInt(request.getParameter("ID").trim());
+
         String Title = "";
         String FirstName = "";
         String LastName = "";
@@ -160,7 +162,7 @@ public class PatientInfo extends HttpServlet {
             Query = "Select Title, FirstName, MiddleInitial, LastName, MaritalStatus, MRN, DOB, Age, Gender, Email, PhNumber, " +
                     "Address, City, State, Country,  ZipCode, SSN, Occupation, Employer, EmpContact, PriCarePhy, ReasonVisit, SelfPayChk, " +
                     "CreatedDate, Address2 from " + Database + ".PatientReg where ID = " + ID;
-//            System.out.println(Query);
+out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -191,6 +193,8 @@ public class PatientInfo extends HttpServlet {
             }
             rset.close();
             stmt.close();
+            out.println("ID :"+FirstName);
+
 
             final Date dNow = new Date(System.currentTimeMillis() - 7200000L);
             final SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -204,12 +208,15 @@ public class PatientInfo extends HttpServlet {
             }
 
             msg = "MSH|^~\\&||665|ADT|3344|" + MSH7 + "||ADT^A04|" + MSH7 + "|P|2.3\r\n" + "EVN|A04|20200707020302|||XXX^^^^^^^^488 \r\n" + "PID|1||" + MRN + "||" + FirstName + "^" + LastName + "^" + MiddleInitial + "||" + DOB + "|" + gender + "||W|" + Address + "^^" + City + "^" + State + "^" + ZipCode + "|" + PhNumber + "|" + PhNumber + "||ENGLISH|M|001||" + SSN + "|||||||||||N \r\n" + "PV1||3^E/R^02|||||194501^TOWNSHEND^PETE|194502^DALTREY^ROGER|194506^ROGERS^PAUL|E|||||||194501^TOWNSHEND^PETE|3||BB1||||||||||||||||G|||||||||\r\n" + "IN1|1|SELF-PAY^SELF PAY|SELF PAY|SELF PAY||PFO Sequence 99 Self P|||||||||4";
-            String CurrDate = helper.getCurrDate(request, conn);
+            String CurrDate = helper.getCurrDate(request,conn);
             int Result = helper.saveRequestEPD(request, msg, Integer.parseInt(MRN), CurrDate, ClientId, conn, servletContext);
+            out.println("ID :"+Result);
             if (Result == 1)
-                out.println("1");
+                out.println("1|");
             else
-                out.println("0");
+                out.println("0|");
+
+
 
 
             //            if(!MaritalStatus.equals("")) {
@@ -331,7 +338,7 @@ public class PatientInfo extends HttpServlet {
             stmt.close();
 
             Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Message", "Please find Patient MRN " + MRN + " in EPD. ");
+            Parser.SetField("Message", "Please find Patient MRN " + MRN+" in EPD. ");
             Parser.SetField("StatusReport", String.valueOf(StatusReport));
             Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Forms/EPDStatusReport.html");
         } catch (Exception e) {

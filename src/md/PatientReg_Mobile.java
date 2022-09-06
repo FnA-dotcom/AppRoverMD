@@ -1,5 +1,6 @@
 package md;
 
+
 import Handheld.UtilityHelper;
 import Parsehtm.Parsehtm;
 import com.itextpdf.text.BaseColor;
@@ -21,13 +22,12 @@ import java.util.Calendar;
 
 @SuppressWarnings("Duplicates")
 public class PatientReg_Mobile extends HttpServlet {
-/*    CallableStatement cStmt = null;
+    CallableStatement cStmt = null;
     ResultSet rset = null;
     String Query = "";
     Statement stmt = null;
     PreparedStatement pStmt = null;
     private Connection conn = null;
-    */
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -46,7 +46,7 @@ public class PatientReg_Mobile extends HttpServlet {
         String UserId = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         final Services supp = new Services();
         ServletContext context = null;
         context = this.getServletContext();
@@ -88,7 +88,7 @@ public class PatientReg_Mobile extends HttpServlet {
         context = this.getServletContext();
         switch (ActionID) {
             case "GetValues":
-                GetValues(request, out, conn, context, Database, helper);
+                this.GetValues(request, out, conn, context, Database, helper);
                 break;
             case "SaveData":
                 this.SaveData(request, response, out, conn, context, Database, helper, DirectoryName);
@@ -125,24 +125,21 @@ public class PatientReg_Mobile extends HttpServlet {
             StringBuffer Day = new StringBuffer();
             StringBuffer Year = new StringBuffer();
             StringBuffer ProfessionalPayersList = new StringBuffer();
-            StringBuilder transactionType = new StringBuilder();
-
             int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
             Query = "Select Date_format(now(),'%Y-%m-%d')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            while (rset.next()) {
                 Date = rset.getString(1);
             }
             rset.close();
             stmt.close();
 
-            Query = "Select PRF_name,dbname from oe.clients where Id = " + ClientIndex;
+            Query = "Select PRF_name from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            while (rset.next()) {
                 PRF_name = rset.getString(1);
-                Database = rset.getString(2).trim();
             }
             rset.close();
             stmt.close();
@@ -161,8 +158,7 @@ public class PatientReg_Mobile extends HttpServlet {
             stmt.close();
 
             //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id not in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId ";//where PayerName not like '%Texas%'";
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) " +
-                    "from oe_2.ProfessionalPayers where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";//where PayerName not like '%Texas%'";
+            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";//where PayerName not like '%Texas%'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -195,27 +191,6 @@ public class PatientReg_Mobile extends HttpServlet {
                 }
             }
 
-
-/*            if (ClientIndex == 27 || ClientIndex == 29) {
-                transactionType.append("<div class=\"form-row\">");
-                transactionType.append("<div class=\"col-md-2\">");
-                transactionType.append("<div class=\"form-group\">");
-                transactionType.append("<label><font color=\"black\">Transaction Type * </font></label>");
-                transactionType.append("<select class=\"form-control\" id=\"TransactionType\" name=\"TransactionType\" style=\"color:black;\">");
-                Query = "SELECT Id, TransactionType FROM " + Database + ".TransactionTypes ORDER BY TransactionType";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    transactionType.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + "</option>");
-                }
-                rset.close();
-                stmt.close();
-                transactionType.append("</select>");
-                transactionType.append("</div>\t");
-                transactionType.append("</div>\t");
-                transactionType.append("</div>\t");
-            }*/
-
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("Date", String.valueOf(Date));
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
@@ -225,9 +200,6 @@ public class PatientReg_Mobile extends HttpServlet {
             Parser.SetField("Month", String.valueOf(Month));
             Parser.SetField("Day", String.valueOf(Day));
             Parser.SetField("Year", String.valueOf(Year));
-/*            if (ClientIndex == 27 || ClientIndex == 29) {
-                Parser.SetField("transactionType", String.valueOf(transactionType));
-            }*/
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PRF_files/PatientRegForm_Facilities_Mobile.html");
 
 //         if(ClientIndex == 8){
@@ -242,11 +214,10 @@ public class PatientReg_Mobile extends HttpServlet {
 //             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormOddasa.html");
 //         }
         } catch (Exception ex) {
-            out.println(ex.getMessage());
         }
     }
 
-    void SaveData(final HttpServletRequest request, HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext servletContext, String Database, UtilityHelper helper, String directoryName) throws FileNotFoundException {
+    void SaveData(final HttpServletRequest request, HttpServletResponse response, final PrintWriter out, final Connection conn, final ServletContext servletContext, String Database, UtilityHelper helper, String directoryName) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -399,19 +370,12 @@ public class PatientReg_Mobile extends HttpServlet {
         String releaseRecord = "";
         String Filter_WB_SW_A = "";
         String Filter_WB_SW_Q = "";
-        //String TransactionType = "0";
+
 
         String facilityName = helper.getFacilityName(request, conn, servletContext, ClientIndex);
         try {
 
             try {
-/*                if (ClientIndex == 27 || ClientIndex == 29) {
-                    if (request.getParameter("TransactionType") == null) {
-                        TransactionType = "0";
-                    } else {
-                        TransactionType = request.getParameter("TransactionType").trim();
-                    }
-                }*/
                 if (request.getParameter("Title") == null) {
                     Title = "Mr";
                 } else {
@@ -1097,7 +1061,7 @@ public class PatientReg_Mobile extends HttpServlet {
                     FrFriendFamily = request.getParameter("FrFriendFamily").trim();
                 }
 
-                if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+                if(ClientIndex == 41 || ClientIndex == 42 ){
                     if (request.getParameter("releaseRecord") == null) {
                         releaseRecord = "0";
                     } else {
@@ -1112,13 +1076,6 @@ public class PatientReg_Mobile extends HttpServlet {
                     Filter_WB_SW_A = ",STDrelease,releaseRecord";
                     Filter_WB_SW_Q = ",?,?";
                 }
-/*                else {
-                    if (ClientIndex == 27 || ClientIndex == 29) {
-                        Filter_WB_SW_A = ",TransactionTypeIdx";
-                        Filter_WB_SW_Q = ",?";
-                    }
-
-                }*/
 
             } catch (Exception e) {
                 helper.SendEmailWithAttachment("Error in PatientReg_Mobile ** (SaveData^^" + facilityName + " ##MES#001)", servletContext, e, "PatientReg_Mobile", "SaveData", conn);
@@ -1236,8 +1193,8 @@ public class PatientReg_Mobile extends HttpServlet {
                         "INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName ,MiddleInitial,DOB,Age,Gender ,Email,PhNumber ," +
                                 "Address,City ,State,Country,ZipCode,SSN,Occupation ,Employer ,EmpContact,PriCarePhy,ReasonVisit," +
                                 "SelfPayChk,CreatedDate,Title, MaritalStatus,CreatedBy, MRN, Status, DateofService, ExtendedMRN, County, Ethnicity, Address2, StreetAddress2, " +
-                                " EnterBy, EnterIP,RegisterFrom,ViewDate" + Filter_WB_SW_A + ") " +
-                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,?,?,?,?,?,?,?,?,?,NOW()" + Filter_WB_SW_Q + ") ");
+                                " EnterBy, EnterIP,RegisterFrom,ViewDate"+Filter_WB_SW_A+") " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,?,?,?,?,?,?,?,?,?,NOW()"+Filter_WB_SW_Q+") ");
                 MainReceipt.setInt(1, ClientIndex);
                 MainReceipt.setString(2, FirstName);
                 MainReceipt.setString(3, LastName);
@@ -1272,15 +1229,10 @@ public class PatientReg_Mobile extends HttpServlet {
                 MainReceipt.setString(32, UserId);
                 MainReceipt.setString(33, ClientIp);
                 MainReceipt.setString(34, "Mobile Registration");
-                if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+                if (ClientIndex == 41 || ClientIndex == 42) {
                     MainReceipt.setString(35, STDrelease);
                     MainReceipt.setString(36, releaseRecord);
                 }
-/*                else {
-                    if (ClientIndex == 27 || ClientIndex == 29) {
-                        MainReceipt.setString(35, TransactionType);
-                    }
-                }*/
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
             } catch (Exception ex) {
@@ -1707,26 +1659,15 @@ public class PatientReg_Mobile extends HttpServlet {
         FirstName = request.getParameter("FirstName").trim();
         LastName = request.getParameter("LastName").trim();
         DOB = request.getParameter("DOB").trim();
-        int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
         //DOB = String.valueOf(String.valueOf(DOB.substring(6, 10))) + "-" + DOB.substring(0, 2) + "-" + DOB.substring(3, 5);
 
         try {
-            Query = "Select dbname from oe.clients where ltrim(rtrim(UPPER(Id))) =  ltrim(rtrim(UPPER('" + ClientIndex + "')))";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                Database = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
-
             int PatientFound = 0;
             String FoundMRN = "";
-            Query = " SELECT COUNT(*), IFNULL(MRN,0) FROM " + Database + ".PatientReg " +
-                    " WHERE Status = 0 AND " +
-                    " ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstName.trim() + "'))) AND " +
-                    " ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastName.trim() + "'))) AND " +
-                    " DOB = '" + DOB + "'";
+            Query = " Select COUNT(*), IFNULL(MRN,0) from " + Database + ".PatientReg " +
+                    " where Status = 0 and ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstName.trim() + "'))) " +
+                    " and ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastName.trim() + "'))) and DOB = '" + DOB + "'";
+            //out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {

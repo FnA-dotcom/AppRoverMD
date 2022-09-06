@@ -16,10 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DecimalFormat;
 
 @SuppressWarnings("Duplicates")
@@ -61,7 +58,7 @@ public class TransactionReport extends HttpServlet {
             UserId = session.getAttribute("UserId").toString();
             DatabaseName = session.getAttribute("DatabaseName").toString();
             FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
-            //int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
+            int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
 
             if (UserId.equals("")) {
                 Parsehtm Parser = new Parsehtm(request);
@@ -96,7 +93,7 @@ public class TransactionReport extends HttpServlet {
                     break;
                 case "TransactionReport":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Transaction Report", "Get Transaction Report", FacilityIndex);
-                    showReport(request, response, out, conn, context, UserId, DatabaseName, helper, FacilityIndex);
+                    showReport(request, response, out, conn, context, UserId, DatabaseName, helper, FacilityIndex, UserIndex);
                     break;
                 case "PatientTransaction":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Transaction Report", "Get Transaction Report", FacilityIndex);
@@ -181,7 +178,7 @@ public class TransactionReport extends HttpServlet {
         }
     }
 
-    private void showReport(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, UtilityHelper helper, int ClientId) {
+    private void showReport(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, UtilityHelper helper, int ClientId, int userIndex) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query2 = "";
@@ -201,7 +198,26 @@ public class TransactionReport extends HttpServlet {
         String RetRef = "N/A";
         String ResponseText = "N/A";
         String AccountNo = "N/A";
+        String filter = "";
+        Boolean isAdmin = false;
+
         try {
+
+            PreparedStatement ps = conn.prepareStatement("SELECT IsAdmin FROM oe.UserRights WHERE SysUserID=?");
+            ps.setInt(1, userIndex);
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) == 1) {
+                    isAdmin = true;
+                }
+            }
+            rset.close();
+            ps.close();
+
+            if (!isAdmin) {
+                filter = " AND c.InvoiceCreatedBy='" + UserId + "'";
+            }
+
             if (SearchBy == 1) {
                 PatientId = request.getParameter("PatientId").trim();
                 String[] parts = PatientId.split("\\,");
@@ -236,7 +252,7 @@ public class TransactionReport extends HttpServlet {
                         "FROM " + Database + ".PaymentReceiptInfo a " +
                         "LEFT JOIN " + Database + ".PatientReg b on a.PatientMRN = b.MRN " +
                         "LEFT JOIN " + Database + ".InvoiceMaster c on a.InvoiceNo = c.InvoiceNo  " +
-                        "WHERE a.PatientMRN = '" + MRN + "' AND c.Status = 0 AND b.status=0 AND c.InvoiceCreatedBy='" + UserId + "' ORDER BY a.CreatedDate DESC ";
+                        "WHERE a.PatientMRN = '" + MRN + "' AND c.Status = 0 AND b.status=0 " + filter + " ORDER BY a.CreatedDate DESC ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -335,12 +351,11 @@ public class TransactionReport extends HttpServlet {
                         "FROM " + Database + ".PaymentReceiptInfo a " +
                         "LEFT JOIN " + Database + ".PatientReg b on a.PatientMRN = b.MRN " +
                         "LEFT JOIN " + Database + ".InvoiceMaster c on a.InvoiceNo = c.InvoiceNo " +
-                        "WHERE a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59'  AND c.Status = 0 AND b.status=0  AND c.InvoiceCreatedBy='" + UserId + "'" +
+                        "WHERE a.CreatedDate between '" + FromDate + " 00:00:00' and '" + ToDate + " 23:59:59'  AND c.Status = 0 AND b.status=0  " + filter +
                         " ORDER BY a.CreatedDate DESC ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
-
                     RetRef = "N/A";
                     ResponseText = "N/A";
                     AccountNo = "N/A";
@@ -417,6 +432,7 @@ public class TransactionReport extends HttpServlet {
             Parser.SetField("PatientInvoiceList", String.valueOf(PatientInvoiceList));
             Parser.SetField("TransactionList", String.valueOf(TransactionList));
             Parser.SetField("UserId", String.valueOf(UserId));
+            Parser.SetField("ClientId", String.valueOf(ClientId));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/TransactionReport.html");
         } catch (Exception Ex) {
             helper.SendEmailWithAttachment("Error in Transaction Report ** (showReport)", servletContext, Ex, "TransactionReport", "showReport", conn);
@@ -554,4 +570,3 @@ public class TransactionReport extends HttpServlet {
 
 
 }
-

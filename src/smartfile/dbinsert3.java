@@ -19,6 +19,10 @@ import java.util.Date;
 
 public class dbinsert3 {
 
+    private static File destdir;
+    private static ArrayList<String> AhomelistOfFiles = new ArrayList<String>();
+    private static ArrayList<String> AremotelistOfFiles = new ArrayList<String>();
+    private static ArrayList<String> AdblistOfFiles = new ArrayList<String>();
     static String PatientName = "";
     static String MRN = "";
     static String DOB = "";
@@ -28,10 +32,6 @@ public class dbinsert3 {
     static String firstname = "";
     static String lastname = "";
     static String printabledate = "";
-    private static File destdir;
-    private static ArrayList<String> AhomelistOfFiles = new ArrayList<String>();
-    private static ArrayList<String> AremotelistOfFiles = new ArrayList<String>();
-    private static ArrayList<String> AdblistOfFiles = new ArrayList<String>();
 
     public static void main(String[] args) {
         // TODO Auto-generated method stub

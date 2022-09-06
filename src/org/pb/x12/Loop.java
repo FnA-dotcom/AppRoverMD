@@ -25,492 +25,519 @@ import java.util.List;
  * transaction. The building block of an X12 transaction is an element. Some
  * elements may be made of sub elements. Elements combine to form segments.
  * Segments are grouped as loops. And a set of loops form an X12 transaction.
- *
+ * 
  * @author Prasad Balan
+ * 
  */
 
 public class Loop implements Iterable<Segment> {
-    private static final long serialVersionUID = 1L;
-    private Context context;
-    private String name;
-    private List<Segment> segments = new ArrayList<Segment>();
-    private List<Loop> loops = new ArrayList<Loop>();
-    private Loop parent;
-    private int depth; // used to debug
+	private static final long serialVersionUID = 1L;
+	private Context context;
+	private String name;
+	private List<Segment> segments = new ArrayList<Segment>();
+	private List<Loop> loops = new ArrayList<Loop>();
+	private Loop parent;
+	private int depth; // used to debug
 
-    /**
-     * The constructor takes a context object.
-     *
-     * @param c a Context object
-     */
-    public Loop(Context c, String name) {
-        this.context = c;
-        this.name = name;
-        this.parent = null;
-    }
+	/**
+	 * The constructor takes a context object.
+	 * 
+	 * @param c
+	 *            a Context object
+	 */
+	public Loop(Context c, String name) {
+		this.context = c;
+		this.name = name;
+		this.parent = null;
+	}
 
-    /**
-     * Creates an empty instance of <code>Loop</code> and adds the loop as a
-     * child to the current Loop. The returned instance can be used to add
-     * segments to the child loop.
-     *
-     * @param name name of the loop
-     * @return a new child Loop object
-     */
-    public Loop addChild(String name) {
-        Loop l = new Loop(this.context, name);
-        l.setParent(this);
-        l.depth = this.depth + 1; // debug
-        loops.add(l);
-        return l;
-    }
+	/**
+	 * Creates an empty instance of <code>Loop</code> and adds the loop as a
+	 * child to the current Loop. The returned instance can be used to add
+	 * segments to the child loop.
+	 * 
+	 * @param name
+	 *            name of the loop
+	 * @return a new child Loop object
+	 */
+	public Loop addChild(String name) {
+		Loop l = new Loop(this.context, name);
+		l.setParent(this);
+		l.depth = this.depth + 1; // debug
+		loops.add(l);
+		return l;
+	}
 
-    /**
-     * Inserts <code>Loop</code> as a child loop at the specified position.
-     *
-     * @param index position at which to add the loop.
-     */
-    public void addChild(int index, Loop loop) {
-        loop.setParent(this);
-        loop.depth = this.depth + 1; // debug
-        loops.add(index, loop);
-    }
+	/**
+	 * Inserts <code>Loop</code> as a child loop at the specified position.
+	 * 
+	 * @param index
+	 *            position at which to add the loop.
+	 */
+	public void addChild(int index, Loop loop) {
+		loop.setParent(this);
+		loop.depth = this.depth + 1; // debug
+		loops.add(index, loop);
+	}
 
-    /**
-     * Creates an empty instance of <code>Segment</code> and adds the segment to
-     * current Loop. The returned instance can be used to add elements to the
-     * segment.
-     *
-     * @return a new Segment object
-     */
-    public Segment addSegment() {
-        Segment s = new Segment(this.context);
-        segments.add(s);
-        return s;
-    }
+	/**
+	 * Creates an empty instance of <code>Segment</code> and adds the segment to
+	 * current Loop. The returned instance can be used to add elements to the
+	 * segment.
+	 * 
+	 * @return a new Segment object
+	 */
+	public Segment addSegment() {
+		Segment s = new Segment(this.context);
+		segments.add(s);
+		return s;
+	}
 
-    /**
-     * Takes a <code>String</code> representation of segment, creates a
-     * <code>Segment</code> object and adds the segment to the current Loop.
-     *
-     * @param segment <code>String</code> representation of the Segment.
-     * @return a new Segment object
-     */
-    public Segment addSegment(String segment) {
-        Segment s = new Segment(this.context);
-        String[] elements = segment.split("\\" + context.getElementSeparator());
-        s.addElements(elements);
-        segments.add(s);
-        return s;
-    }
+	/**
+	 * Takes a <code>String</code> representation of segment, creates a
+	 * <code>Segment</code> object and adds the segment to the current Loop.
+	 * 
+	 * @param segment
+	 *            <code>String</code> representation of the Segment.
+	 * @return a new Segment object
+	 */
+	public Segment addSegment(String segment) {
+		Segment s = new Segment(this.context);
+		String[] elements = segment.split("\\" + context.getElementSeparator());
+		s.addElements(elements);
+		segments.add(s);
+		return s;
+	}
 
-    /**
-     * Adds <code>Segment</code> at the end of the current Loop
-     *
-     * @param segment <code>Segment</code>
-     */
-    public void addSegment(Segment segment) {
-        segments.add(segment);
-    }
+	/**
+	 * Adds <code>Segment</code> at the end of the current Loop
+	 * 
+	 * @param segment
+	 *            <code>Segment</code>
+	 */
+	public void addSegment(Segment segment) {
+		segments.add(segment);
+	}
 
-    /**
-     * Creates an empty instance of <code>Segment</code> and adds the segment at
-     * the specified position in the current Loop. The returned instance can be
-     * used to add elements to the segment.
-     *
-     * @param index position at which to add the segment.
-     * @return a new Segment object
-     */
-    public Segment addSegment(int index) {
-        Segment s = new Segment(this.context);
-        segments.add(index, s);
-        return s;
-    }
+	/**
+	 * Creates an empty instance of <code>Segment</code> and adds the segment at
+	 * the specified position in the current Loop. The returned instance can be
+	 * used to add elements to the segment.
+	 * 
+	 * @param index
+	 *            position at which to add the segment.
+	 * @return a new Segment object
+	 */
+	public Segment addSegment(int index) {
+		Segment s = new Segment(this.context);
+		segments.add(index, s);
+		return s;
+	}
 
-    /**
-     * Takes a <code>String</code> representation of segment, creates a
-     * <code>Segment</code> object and adds the segment at the specified
-     * position in the current Loop.
-     *
-     * @param index   position to add the segment.
-     * @param segment <code>String</code> representation of the segment.
-     * @return a new Segment object
-     */
-    public Segment addSegment(int index, String segment) {
-        Segment s = new Segment(this.context);
-        String[] elements = segment.split("\\" + context.getElementSeparator());
-        s.addElements(elements);
-        segments.add(index, s);
-        return s;
-    }
+	/**
+	 * Takes a <code>String</code> representation of segment, creates a
+	 * <code>Segment</code> object and adds the segment at the specified
+	 * position in the current Loop.
+	 * 
+	 * @param index
+	 *            position to add the segment.
+	 * @param segment
+	 *            <code>String</code> representation of the segment.
+	 * @return a new Segment object
+	 */
+	public Segment addSegment(int index, String segment) {
+		Segment s = new Segment(this.context);
+		String[] elements = segment.split("\\" + context.getElementSeparator());
+		s.addElements(elements);
+		segments.add(index, s);
+		return s;
+	}
 
-    /**
-     * Adds <code>Segment</code> at the specified position in current Loop.
-     *
-     * @param index   position to add the segment.
-     * @param segment <code>String</code> representation of the segment.
-     */
-    public void addSegment(int index, Segment segment) {
-        segments.add(index, segment);
-    }
+	/**
+	 * Adds <code>Segment</code> at the specified position in current Loop.
+	 * 
+	 * @param index
+	 *            position to add the segment.
+	 * @param segment
+	 *            <code>String</code> representation of the segment.
+	 */
+	public void addSegment(int index, Segment segment) {
+		segments.add(index, segment);
+	}
 
-    /**
-     * Creates an empty instance of <code>Loop</code> and inserts the loop as a
-     * child loop at the specified position. The returned instance can be used
-     * to add segments to the child loop.
-     *
-     * @param index position at which to add the loop
-     * @param name  name of the loop
-     * @return a new child Loop object
-     */
-    public Loop addChild(int index, String name) {
-        Loop l = new Loop(this.context, name);
-        l.setParent(this);
-        l.depth = this.depth + 1; // debug
-        loops.add(index, l);
-        return l;
-    }
+	/**
+	 * Creates an empty instance of <code>Loop</code> and inserts the loop as a
+	 * child loop at the specified position. The returned instance can be used
+	 * to add segments to the child loop.
+	 * 
+	 * @param index
+	 *            position at which to add the loop
+	 * @param name
+	 *            name of the loop
+	 * @return a new child Loop object
+	 */
+	public Loop addChild(int index, String name) {
+		Loop l = new Loop(this.context, name);
+		l.setParent(this);
+		l.depth = this.depth + 1; // debug
+		loops.add(index, l);
+		return l;
+	}
 
-    /**
-     * Checks if the Loop contains the specified child Loop. It will check the
-     * complete child hierarchy.
-     *
-     * @param name name of a child loop
-     * @return boolean
-     */
-    public boolean hasLoop(String name) {
-        for (Loop l : this.childList()) {
-            if (name.equals(l.getName())) {
-                return true;
-            }
-            if (l.hasLoop(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
+	/**
+	 * Checks if the Loop contains the specified child Loop. It will check the
+	 * complete child hierarchy.
+	 * 
+	 * @param name
+	 *            name of a child loop
+	 * @return boolean
+	 */
+	public boolean hasLoop(String name) {
+		for (Loop l : this.childList()) {
+			if (name.equals(l.getName())) {
+				return true;
+			}
+			if (l.hasLoop(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Get the loop in the X12 transaction It will check the complete child
-     * hierarchy.
-     *
-     * @param name name of a loop
-     * @return List<Loop>
-     */
-    public List<Loop> findLoop(String name) {
-        List<Loop> foundLoops = new ArrayList<Loop>();
-        for (Loop l : this.childList()) {
-            if (name.equals(l.getName())) {
-                foundLoops.add(l);
-            }
-            List<Loop> moreLoops = l.findLoop(name);
-            if (moreLoops.size() > 0) {
-                foundLoops.addAll(moreLoops);
-            }
-        }
-        return foundLoops;
-    }
+	/**
+	 * Get the loop in the X12 transaction It will check the complete child
+	 * hierarchy.
+	 * 
+	 * @param name
+	 *            name of a loop
+	 * @return List<Loop>
+	 */
+	public List<Loop> findLoop(String name) {
+		List<Loop> foundLoops = new ArrayList<Loop>();
+		for (Loop l : this.childList()) {
+			if (name.equals(l.getName())) {
+				foundLoops.add(l);
+			}
+			List<Loop> moreLoops = l.findLoop(name);
+			if (moreLoops.size() > 0) {
+				foundLoops.addAll(moreLoops);
+			}
+		}
+		return foundLoops;
+	}
 
-    /**
-     * Get the segment in the X12 transaction It will check the current loop and
-     * the complete child hierarchy.
-     *
-     * @param name name of a segment
-     * @return List<Segment>
-     */
-    public List<Segment> findSegment(String name) {
-        List<Segment> foundSegments = new ArrayList<Segment>();
-        for (Segment s : this.segments) {
-            if (name.equals(s.getElement(0))) {
-                foundSegments.add(s);
-            }
-        }
-        for (Loop l : this.childList()) {
-            List<Segment> moreSegments = l.findSegment(name);
-            if (moreSegments.size() > 0) {
-                foundSegments.addAll(moreSegments);
-            }
-        }
-        return foundSegments;
-    }
+	/**
+	 * Get the segment in the X12 transaction It will check the current loop and
+	 * the complete child hierarchy.
+	 * 
+	 * @param name
+	 *            name of a segment
+	 * @return List<Segment>
+	 */
+	public List<Segment> findSegment(String name) {
+		List<Segment> foundSegments = new ArrayList<Segment>();
+		for (Segment s : this.segments) {
+			if (name.equals(s.getElement(0))) {
+				foundSegments.add(s);
+			}
+		}
+		for (Loop l : this.childList()) {
+			List<Segment> moreSegments = l.findSegment(name);
+			if (moreSegments.size() > 0) {
+				foundSegments.addAll(moreSegments);
+			}
+		}
+		return foundSegments;
+	}
 
-    /**
-     * Returns the context of the X12 transaction.
-     *
-     * @return Context object
-     */
-    public Context getContext() {
-        return context;
-    }
+	/**
+	 * Returns the context of the X12 transaction.
+	 * 
+	 * @return Context object
+	 */
+	public Context getContext() {
+		return context;
+	}
 
-    /**
-     * Sets the context of the current transaction.
-     *
-     * @param context
-     */
-    public void setContext(Context context) {
-        this.context = context;
-    }
+	/**
+	 * Sets the context of the current transaction.
+	 *
+	 * @param context
+	 */
+	public void setContext(Context context) {
+		this.context = context;
+	}
 
-    /**
-     * Returns the <code>Loop<code> at the specified position.
-     *
-     * @param index
-     * @return Loop at the specified index
-     */
-    public Loop getLoop(int index) {
-        return loops.get(index);
-    }
+	/**
+	 * Returns the <code>Loop<code> at the specified position.
+	 *
+	 * @param index
+	 * @return Loop at the specified index
+	 */
+	public Loop getLoop(int index) {
+		return loops.get(index);
+	}
 
-    /**
-     * Returns the loops
-     *
-     * @return List<Loop>
-     */
-    public List<Loop> getLoops() {
-        return this.loops;
-    }
+	/**
+	 * Returns the loops
+	 *
+	 * @return List<Loop>
+	 */
+	public List<Loop> getLoops() {
+		return this.loops;
+	}
 
-    /**
-     * @return Parent Loop
-     */
-    public Loop getParent() {
-        return parent;
-    }
+	/**
+	 *
+	 * @return Parent Loop
+	 */
+	public Loop getParent() {
+		return parent;
+	}
 
-    /**
-     * @param parent
-     */
-    public void setParent(Loop parent) {
-        this.parent = parent;
-    }
+	/**
+	 *
+	 * @param parent
+	 */
+	public void setParent(Loop parent) {
+		this.parent = parent;
+	}
+	
+	/**
+	 * Returns the <code>Segment<code> at the specified position.
+	 *
+	 * @param index
+	 * @return Segment at the specified index
+	 */
+	public Segment getSegment(int index) {
+		return segments.get(index);
+	}
 
-    /**
-     * Returns the <code>Segment<code> at the specified position.
-     *
-     * @param index
-     * @return Segment at the specified index
-     */
-    public Segment getSegment(int index) {
-        return segments.get(index);
-    }
+	/**
+	 * Returns the segments in the current loop.
+	 *
+	 * @return List<Segment>
+	 */
+	public List<Segment> getSegments() {
+		return this.segments;
+	}
 
-    /**
-     * Returns the segments in the current loop.
-     *
-     * @return List<Segment>
-     */
-    public List<Segment> getSegments() {
-        return this.segments;
-    }
+	/**
+	 * Returns the name of the current Loop.
+	 *
+	 * @return String
+	 */
+	public String getName() {
+		return name;
+	}
+		
+	/**
+	 * Sets the name of the current Loop
+	 *
+	 * @param name
+	 *            <code>String</code>
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+		
+	/**
+	 * Returns and <code>Iterator</code> to the segments in the loop.
+	 *
+	 * @return Iterator<Segment>
+	 */
+	@Override
+	public Iterator<Segment> iterator() {
+		return segments.iterator();
+	}
 
-    /**
-     * Returns the name of the current Loop.
-     *
-     * @return String
-     */
-    public String getName() {
-        return name;
-    }
+	/**
+	 * Removes the loop at the specified position in this list.
+	 *
+	 * @param index
+	 * @return
+	 */
+	public Loop removeLoop(int index) {
+		return loops.remove(index);
+	}
 
-    /**
-     * Sets the name of the current Loop
-     *
-     * @param name <code>String</code>
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
+	/**
+	 * Removes the segment at the specified position in this list.
+	 *
+	 * @param index
+	 * @return
+	 */
+	public Segment removeSegment(int index) {
+		return segments.remove(index);
+	}
 
-    /**
-     * Returns and <code>Iterator</code> to the segments in the loop.
-     *
-     * @return Iterator<Segment>
-     */
-    @Override
-    public Iterator<Segment> iterator() {
-        return segments.iterator();
-    }
+	/**
+	 * Returns <code>List<Loop></code> of child Loops
+	 *
+	 * @return List<Loop>
+	 */
+	public List<Loop> childList() {
+		return this.loops;
+	}
 
-    /**
-     * Removes the loop at the specified position in this list.
-     *
-     * @param index
-     * @return
-     */
-    public Loop removeLoop(int index) {
-        return loops.remove(index);
-    }
+	/**
+	 * Returns number of segments in Loop and child loops
+	 *
+	 * @return size
+	 */
+	public int size() {
+		int size = 0;
+		size = this.segments.size();
+		for (Loop l : this.childList()) {
+			size += l.size();
+		}
+		return size;
+	}
 
-    /**
-     * Removes the segment at the specified position in this list.
-     *
-     * @param index
-     * @return
-     */
-    public Segment removeSegment(int index) {
-        return segments.remove(index);
-    }
+	/**
+	 * Creates a new <code>Loop</code> and replaces the child loop at the
+	 * specified position. The returned instance can be used to add segments to
+	 * the child loop.
+	 *
+	 * @param name
+	 *            name of the loop
+	 * @param index
+	 *            position at which to add the loop.
+	 * @return a new child Loop object
+	 */
+	public Loop setChild(int index, String name) {
+		Loop l = new Loop(this.context, name);
+		l.setParent(this);
+		l.depth = this.depth + 1; // debug
+		loops.set(index, l);
+		return l;
+	}
+		
+	/**
+	 * Replaces child <code>Loop</code> at the specified position.
+	 *
+	 * @param index
+	 *            position at which to add the loop.
+	 * @param loop
+	 *            Loop to add
+	 */
+	public void setChild(int index, Loop loop) {
+		loop.setParent(this);
+		loop.depth = this.depth + 1; // debug
+		loops.set(index, loop);
+	}
 
-    /**
-     * Returns <code>List<Loop></code> of child Loops
-     *
-     * @return List<Loop>
-     */
-    public List<Loop> childList() {
-        return this.loops;
-    }
+	/**
+	 * Creates an empty instance of <code>Segment</code> and replaces the
+	 * segment at specified position in the X12 transaction. The returned
+	 * instance can be used to add elements to the segment.
+	 *
+	 * @param index
+	 *            position at which to add the segment.
+	 * @return a new Segment object
+	 */
+	public Segment setSegment(int index) {
+		Segment s = new Segment(this.context);
+		segments.set(index, s);
+		return s;
+	}
 
-    /**
-     * Returns number of segments in Loop and child loops
-     *
-     * @return size
-     */
-    public int size() {
-        int size = 0;
-        size = this.segments.size();
-        for (Loop l : this.childList()) {
-            size += l.size();
-        }
-        return size;
-    }
+	/**
+	 * Takes a <code>String</code> representation of segment, creates a
+	 * <code>Segment</code> object and replaces the segment at the specified
+	 * position in the X12 transaction.
+	 *
+	 * @param index
+	 *            position of the segment to be replaced.
+	 * @param segment
+	 *            <code>String</code> representation of the Segment.
+	 * @return a new Segment object
+	 */
+	public Segment setSegment(int index, String segment) {
+		Segment s = new Segment(this.context);
+		String[] elements = segment.split("\\" + context.getElementSeparator());
+		s.addElements(elements);
+		segments.set(index, s);
+		return s;
+	}
 
-    /**
-     * Creates a new <code>Loop</code> and replaces the child loop at the
-     * specified position. The returned instance can be used to add segments to
-     * the child loop.
-     *
-     * @param name  name of the loop
-     * @param index position at which to add the loop.
-     * @return a new child Loop object
-     */
-    public Loop setChild(int index, String name) {
-        Loop l = new Loop(this.context, name);
-        l.setParent(this);
-        l.depth = this.depth + 1; // debug
-        loops.set(index, l);
-        return l;
-    }
+	/**
+	 * Replaces
+	 * <code>Segment<code> at the specified position in X12 transaction.
+	 *
+	 * @param index
+	 *            position of the segment to be replaced.
+	 * @param segment
+	 *            <code>Segment</code>
+	 */
+	public void setSegment(int index, Segment segment) {
+		segments.set(index, segment);
+	}
 
-    /**
-     * Replaces child <code>Loop</code> at the specified position.
-     *
-     * @param index position at which to add the loop.
-     * @param loop  Loop to add
-     */
-    public void setChild(int index, Loop loop) {
-        loop.setParent(this);
-        loop.depth = this.depth + 1; // debug
-        loops.set(index, loop);
-    }
+	/**
+	 * Returns the Loop in X12 <code>String</code> format. This method is used
+	 * to convert the X12 object into a X12 transaction.
+	 * 
+	 * @return String
+	 */
+	public String toString() {
+		return this.toString(false);
+	}
+ 
+	/**
+	 * Returns the Loop in X12 <code>String</code> format. This method is used
+	 * to convert the X12 object into a X12 transaction.
+	 * 
+	 * @param bRemoveTrailingEmptyElements
+	 * @return
+	 */
+	public String toString(boolean bRemoveTrailingEmptyElements) {
+		StringBuilder dump = new StringBuilder();
+		for (Segment s : this.segments) {
+			dump.append(s.toString(bRemoveTrailingEmptyElements));
+			dump.append(context.getSegmentSeparator());
+		}
+		for (Loop l : this.childList()) {
+			dump.append(l.toString(bRemoveTrailingEmptyElements));
+		}
+		return dump.toString();
+	}
 
-    /**
-     * Creates an empty instance of <code>Segment</code> and replaces the
-     * segment at specified position in the X12 transaction. The returned
-     * instance can be used to add elements to the segment.
-     *
-     * @param index position at which to add the segment.
-     * @return a new Segment object
-     */
-    public Segment setSegment(int index) {
-        Segment s = new Segment(this.context);
-        segments.set(index, s);
-        return s;
-    }
+	/**
+	 * Returns the Loop in XML <code>String</code> format. This method is used
+	 * to convert the X12 object into a XML string.
+	 * 
+	 * @return XML String
+	 */
+	public String toXML() {
+		return this.toXML(false);
+	}
 
-    /**
-     * Takes a <code>String</code> representation of segment, creates a
-     * <code>Segment</code> object and replaces the segment at the specified
-     * position in the X12 transaction.
-     *
-     * @param index   position of the segment to be replaced.
-     * @param segment <code>String</code> representation of the Segment.
-     * @return a new Segment object
-     */
-    public Segment setSegment(int index, String segment) {
-        Segment s = new Segment(this.context);
-        String[] elements = segment.split("\\" + context.getElementSeparator());
-        s.addElements(elements);
-        segments.set(index, s);
-        return s;
-    }
+	/**
+	 * Returns the Loop in XML <code>String</code> format. This method is used
+	 * to convert the X12 object into a XML string.
+	 * 
+	 * @param bRemoveTrailingEmptyElements
+	 * @return
+	 */
+	public String toXML(boolean bRemoveTrailingEmptyElements) {
+		StringBuilder dump = new StringBuilder();
+		dump.append("<LOOP NAME=\"").append(this.name).append("\">");
+		for (Segment s : this.segments) {
+			dump.append(s.toXML(bRemoveTrailingEmptyElements));
+		}
+		for (Loop l : this.childList()) {
+			dump.append(l.toXML(bRemoveTrailingEmptyElements));
+		}
+		dump.append("</LOOP>");
+		return dump.toString();
+	}
 
-    /**
-     * Replaces
-     * <code>Segment<code> at the specified position in X12 transaction.
-     *
-     * @param index   position of the segment to be replaced.
-     * @param segment <code>Segment</code>
-     */
-    public void setSegment(int index, Segment segment) {
-        segments.set(index, segment);
-    }
-
-    /**
-     * Returns the Loop in X12 <code>String</code> format. This method is used
-     * to convert the X12 object into a X12 transaction.
-     *
-     * @return String
-     */
-    public String toString() {
-        return this.toString(false);
-    }
-
-    /**
-     * Returns the Loop in X12 <code>String</code> format. This method is used
-     * to convert the X12 object into a X12 transaction.
-     *
-     * @param bRemoveTrailingEmptyElements
-     * @return
-     */
-    public String toString(boolean bRemoveTrailingEmptyElements) {
-        StringBuilder dump = new StringBuilder();
-        for (Segment s : this.segments) {
-            dump.append(s.toString(bRemoveTrailingEmptyElements));
-            dump.append(context.getSegmentSeparator());
-        }
-        for (Loop l : this.childList()) {
-            dump.append(l.toString(bRemoveTrailingEmptyElements));
-        }
-        return dump.toString();
-    }
-
-    /**
-     * Returns the Loop in XML <code>String</code> format. This method is used
-     * to convert the X12 object into a XML string.
-     *
-     * @return XML String
-     */
-    public String toXML() {
-        return this.toXML(false);
-    }
-
-    /**
-     * Returns the Loop in XML <code>String</code> format. This method is used
-     * to convert the X12 object into a XML string.
-     *
-     * @param bRemoveTrailingEmptyElements
-     * @return
-     */
-    public String toXML(boolean bRemoveTrailingEmptyElements) {
-        StringBuilder dump = new StringBuilder();
-        dump.append("<LOOP NAME=\"").append(this.name).append("\">");
-        for (Segment s : this.segments) {
-            dump.append(s.toXML(bRemoveTrailingEmptyElements));
-        }
-        for (Loop l : this.childList()) {
-            dump.append(l.toXML(bRemoveTrailingEmptyElements));
-        }
-        dump.append("</LOOP>");
-        return dump.toString();
-    }
-
-    /**
-     * Generally not used. Mostly for debugging.
-     *
-     * @return depth
-     */
-    public int getDepth() {
-        return depth;
-    }
+	/**
+	 * Generally not used. Mostly for debugging. 
+	 * @return depth
+	 */
+	public int getDepth() {
+		return depth;
+	}
 }

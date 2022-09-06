@@ -28,16 +28,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.*;
 
 @SuppressWarnings("Duplicates")
 public class PatientReg2 extends HttpServlet {
-
-    public static int getAge(LocalDate dob) {
-        LocalDate curDate = LocalDate.now();
-        return Period.between(dob, curDate).getYears();
-    }
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -109,7 +103,7 @@ public class PatientReg2 extends HttpServlet {
             String Date = "";
             final String PRFName = "";
             int ClientIndex = 0;
-            final StringBuffer ProfessionalPayersList = new StringBuffer();
+            final StringBuilder ProfessionalPayersList = new StringBuilder();
             final StringBuffer Month = new StringBuffer();
             final StringBuffer Day = new StringBuffer();
             final StringBuffer Year = new StringBuffer();
@@ -117,19 +111,21 @@ public class PatientReg2 extends HttpServlet {
             Query = "Select Date_format(now(),'%Y-%m-%d')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 Date = rset.getString(1);
             }
             rset.close();
             stmt.close();
+
             Query = "Select Id from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 ClientIndex = rset.getInt(1);
             }
             rset.close();
             stmt.close();
+
             Query = "Select Id, PayerId, PayerName from oe_2.ProfessionalPayers where PayerName like '%Texas%'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -139,6 +135,7 @@ public class PatientReg2 extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             Query = "Select Id, PayerId, PayerName from oe_2.ProfessionalPayers where PayerName not like '%Texas%'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -147,6 +144,7 @@ public class PatientReg2 extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             final String[] month = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
             final int day = 1;
             final int year = Calendar.getInstance().get(1);
@@ -476,9 +474,6 @@ public class PatientReg2 extends HttpServlet {
         int VisitId = 0;
         try {
 
-//                        "INSERT INTO oe.EligibilityInquiry (PatientMRN,DateofService,TraceId ,PolicyStatus,strmsg, " +
-//                                "Name, DateofBirth, Gender, InsuranceNum, GediPayerId, CreatedBy, CreatedDate,ResponseType) " +
-//                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,now(),?) ");
             PreparedStatement ps = conn.prepareStatement("Select Id, dbname,DirectoryName from oe.clients where ltrim(rtrim(UPPER(name))) = ?");
             ps.setString(1, ClientId.trim().toUpperCase());
 
@@ -2181,8 +2176,21 @@ public class PatientReg2 extends HttpServlet {
                 stmt.executeUpdate(Query);
                 stmt.close();
             }
-            if (ClientId.equals("Victoria-ER")) {
-                String temp = SaveBundle_Victoria(request, out, conn, response, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION");
+            if (ClientId.equals("Victoria-ER") || ClientId.equals("ER-Dallas")) {
+                String temp="";
+                DownloadBundle dbundle = new DownloadBundle();
+
+              switch (ClientId){
+                  case "Victoria-ER":
+                       temp = SaveBundle_Victoria(request, out, conn, response, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION");
+                      break;
+                  case "ER-Dallas":
+                      temp = dbundle.GETINPUTERDallas_BundleCreate(request, out, conn, servletContext, response, ClientId, Database, ClientIndex, DirectoryName,"REGISTRATION",PatientRegId,helper);
+                  default:
+                      System.out.println("ClientId =>"+ClientId);
+                      break;
+              }
+
 //                System.out.println("temp " + temp);
 //                .print();
                 String[] arr = temp.split("~");
@@ -2534,9 +2542,6 @@ public class PatientReg2 extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                if (!DOB.equals("")) {
-                    Age = String.valueOf(getAge(LocalDate.parse(DOB)));
-                }
 
                 if (IDFront == null) {
                     IDFront = "/md/images_/Placeholders/doc-preview.jpg";
@@ -3702,7 +3707,7 @@ public class PatientReg2 extends HttpServlet {
             Parser.SetField("LastName", String.valueOf(LastName));
             Parser.SetField("MiddleInitial", String.valueOf(MiddleInitial));
             Parser.SetField("DOB", String.valueOf(DOB));
-            Parser.SetField("Age", String.valueOf(Age));
+            Parser.SetField("Age", String.valueOf(helper.getAge(LocalDate.parse(DOB))));
             Parser.SetField("GenderBuffer", String.valueOf(GenderBuffer));
             Parser.SetField("Email", String.valueOf(Email));
             Parser.SetField("MaritalStatusBuffer", String.valueOf(MaritalStatusBuffer));
@@ -5390,7 +5395,7 @@ public class PatientReg2 extends HttpServlet {
                 pStmt.setString(2, LastName.toUpperCase());
                 pStmt.setString(3, MiddleInitial.toUpperCase());
                 pStmt.setString(4, DOB);
-                pStmt.setString(5, Age);
+                pStmt.setString(5, null);
                 pStmt.setString(6, gender);
                 pStmt.setString(7, Email);
                 pStmt.setString(8, AreaCode + PhNumber);
@@ -6164,7 +6169,7 @@ public class PatientReg2 extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
-            if (ClientId == 9) {
+            if (ClientId == 9 || ClientId == 28 ) {
                 int found = 0;
                 Query = "Select Count(*) from " + Database + ".SignRequest where PatientRegId = " + PatientRegId + "";
                 stmt = conn.createStatement();
@@ -6191,7 +6196,7 @@ public class PatientReg2 extends HttpServlet {
                 }
 
 
-                Query = "Select DirectoryName from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+                Query = "Select DirectoryName from oe.clients where Id ="+ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 String DirectoryName = null;
@@ -6201,7 +6206,20 @@ public class PatientReg2 extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                String temp = SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, "EDIT");
+                DownloadBundle dbundle = new DownloadBundle();
+                String userid="";
+                String temp="";
+                switch (ClientId){
+                    case 9:
+                        temp = SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, "EDIT");
+                        break;
+                    case 28:
+                        temp = dbundle.GETINPUTERDallas_BundleCreate(request, out, conn, servletContext, response, facilityName, Database, ClientId, DirectoryName,"EDIT",PatientRegId,helper);
+                    default:
+                        System.out.println("ClientId =>"+ClientId);
+                        break;
+                }
+//                String temp = SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, "EDIT");
 //                System.out.println("temp " + temp);
 //                .print();
                 String[] arr = temp.split("~");
@@ -6635,12 +6653,24 @@ public class PatientReg2 extends HttpServlet {
         final String Country = "";
         String MRN = "";
         int ClientIndex = 0;
+        int VisitIndex = 0;
         String ClientName = "";
         String DOS = "";
+        String DirectoryNameTow = "";
         String DoctorId = null;
-        String DOBForAge = null;
         final String DoctorName = null;
         try {
+
+            Query = "Select id FROM "+Database+".PatientVisit where PatientRegId = "+ID+" ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+            }
+            rset.close();
+            stmt.close();
+
+
             PreparedStatement ps = conn.prepareStatement("select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')");
             rset = ps.executeQuery();
             if (rset.next()) {
@@ -6651,18 +6681,11 @@ public class PatientReg2 extends HttpServlet {
             rset.close();
             ps.close();
             try {
-                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), " +
-                        "IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  " +
-                        "IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
-                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
-                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
-                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
-                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), " +
-                        "IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')   " +
-                        "From " + Database + ".PatientReg Where ID = ?");
+                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = ?");
                 ps.setInt(1, ID);
                 rset = ps.executeQuery();
-                if (rset.next()) {
+                while (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -6689,15 +6712,9 @@ public class PatientReg2 extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
-                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 ps.close();
-
-                if (!DOB.equals("")) {
-                    Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
-                }
-
                 ps = conn.prepareStatement("Select name from oe.clients where Id = ?");
                 ps.setInt(1, ClientId);
                 rset = ps.executeQuery();
@@ -6710,15 +6727,10 @@ public class PatientReg2 extends HttpServlet {
                 out.println("Error In PateintReg:--" + e.getMessage());
                 out.println(Query);
             }
-            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation," +
-                    "EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState," +
-                    "PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber," +
-                    "GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode," +
-                    "CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk " +
-                    "from " + Database + ".PatientReg_Details where PatientRegId = ? ");
+            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation,EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState,PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber,GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode,CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk from " + Database + ".PatientReg_Details where PatientRegId = ? ");
             ps.setInt(1, ID);
             rset = ps.executeQuery();
-            if (rset.next()) {
+            while (rset.next()) {
                 Ethnicity = rset.getString(1);
                 Ethnicity_OthersText = rset.getString(2);
                 EmployementChk = rset.getString(3);
@@ -6750,19 +6762,7 @@ public class PatientReg2 extends HttpServlet {
             ps.close();
             if (WorkersCompPolicyChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), " +
-                            "IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), " +
-                            "IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), " +
-                            "IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), " +
-                            "IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), " +
-                            "IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), " +
-                            "IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), " +
-                            "IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), " +
-                            "IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), " +
-                            "IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), " +
-                            "IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), " +
-                            "IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') " +
-                            "from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -6807,24 +6807,7 @@ public class PatientReg2 extends HttpServlet {
             }
             if (MotorVehicleAccidentChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), " +
-                            "IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), " +
-                            "IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), " +
-                            "IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), " +
-                            "IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), " +
-                            "IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), " +
-                            "IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), " +
-                            "IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), " +
-                            "IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), " +
-                            "IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), " +
-                            "IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), " +
-                            "IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), " +
-                            "IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,'')," +
-                            "IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'') " +
-                            "from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,''),IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'') from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -6872,17 +6855,7 @@ public class PatientReg2 extends HttpServlet {
             }
             if (HealthInsuranceChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(GovtFundedInsurancePlanChk,'0'), IFNULL(GFIPMedicare,'0'), " +
-                            "IFNULL(GFIPMedicaid,'0'), IFNULL(GFIPCHIP,'0'), IFNULL(GFIPTricare,'0'), IFNULL(GFIPVHA,'0'), " +
-                            "IFNULL(GFIPIndianHealth,'0'), IFNULL(InsuranceSubPatient,''), IFNULL(InsuranceSubGuarantor,''), " +
-                            "IFNULL(InsuranceSubOther,''), IFNULL(HIPrimaryInsurance,''), IFNULL(HISubscriberFirstName,''), " +
-                            "IFNULL(HISubscriberLastName,''), IFNULL(HISubscriberDOB,''), IFNULL(HISubscriberSSN,''), " +
-                            "IFNULL(HISubscriberRelationtoPatient,''), IFNULL(HISubscriberGroupNo,''), " +
-                            "IFNULL(HISubscriberPolicyNo,''), IFNULL(SecondHealthInsuranceChk,''), IFNULL(SHISecondaryName,''), " +
-                            "IFNULL(SHISubscriberFirstName,''), IFNULL(SHISubscriberLastName,''), " +
-                            "IFNULL(SHISubscriberRelationtoPatient,''), IFNULL(SHISubscriberGroupNo,''), " +
-                            "IFNULL(SHISubscriberPolicyNo,'')  " +
-                            "from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(GovtFundedInsurancePlanChk,'0'), IFNULL(GFIPMedicare,'0'), IFNULL(GFIPMedicaid,'0'), IFNULL(GFIPCHIP,'0'), IFNULL(GFIPTricare,'0'), IFNULL(GFIPVHA,'0'), IFNULL(GFIPIndianHealth,'0'), IFNULL(InsuranceSubPatient,''), IFNULL(InsuranceSubGuarantor,''), IFNULL(InsuranceSubOther,''), IFNULL(HIPrimaryInsurance,''), IFNULL(HISubscriberFirstName,''), IFNULL(HISubscriberLastName,''), IFNULL(HISubscriberDOB,''), IFNULL(HISubscriberSSN,''), IFNULL(HISubscriberRelationtoPatient,''), IFNULL(HISubscriberGroupNo,''), IFNULL(HISubscriberPolicyNo,''), IFNULL(SecondHealthInsuranceChk,''), IFNULL(SHISecondaryName,''), IFNULL(SHISubscriberFirstName,''), IFNULL(SHISubscriberLastName,''), IFNULL(SHISubscriberRelationtoPatient,''), IFNULL(SHISubscriberGroupNo,''), IFNULL(SHISubscriberPolicyNo,'')  from " + Database + ".Patient_HealthInsuranceInfo where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -8392,11 +8365,25 @@ public class PatientReg2 extends HttpServlet {
             stmt.close();
             rset.close();
             String filename = null;
+            System.out.println("Signed form Contains -->  "+SignedFrom);
+            if (SignedFrom.contains("REGISTRATIONSIGNED") || SignedFrom.contains("REGISTRATION")){
 
+                DirectoryNameTow = "REGISTRATION";
+            }
+
+            if (SignedFrom.contains("VISITSIGNED")|| SignedFrom.contains("VISIT")){
+                System.out.println("VISITSIGNED");
+                DirectoryNameTow = "VISIT";
+            }
+
+            if (SignedFrom.contains("EDITSIGNED")|| SignedFrom.contains("EDIT")){
+                System.out.println("EDITSIGNED");
+                DirectoryNameTow = "EDIT";
+            }
             filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
 
 
-            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/Victoria/" + filename;
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/Victoria/" + DirectoryNameTow +"/"+ filename;
             final OutputStream fos3 = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader3 = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper3 = new PdfStamper(pdfReader3, fos3);
@@ -8921,37 +8908,7 @@ public class PatientReg2 extends HttpServlet {
             pdfReader2.close();
             pdfReader3.close();
 
-//            if (SignedFrom.contains("SIGNED")) {
-            PreparedStatement MainReceipt = conn.prepareStatement(
-                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount)" +
-                            " VALUES (? ,? ,? ,now(),?) ");
-            MainReceipt.setString(1, MRN);
-            MainReceipt.setInt(2, ID);
-            MainReceipt.setString(3, filename);
-            MainReceipt.setInt(4, pdfReader3.getNumberOfPages());
-            MainReceipt.executeUpdate();
-            MainReceipt.close();
-//            }
 
-//
-//            Parsehtm Parser = new Parsehtm(request);
-//            Parser.SetField("outputFilePath", outputFilePath);
-////            Parser.SetField("imagelist", String.valueOf(imagelist));
-//            Parser.SetField("pageCount", String.valueOf(pageCount));
-//            Parser.SetField("PatientRegId", String.valueOf(ID));
-//            Parser.SetField("FileName", FirstNameNoSpaces + LastNameNoSpace + ID + "_.pdf");
-//            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
-
-//            final File pdfFile = new File(outputFilePath);
-//            response.setContentType("application/pdf");
-//            response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf");
-//            response.setContentLength((int) pdfFile.length());
-//            final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-//            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-//            int bytes;
-//            while ((bytes = fileInputStream.read()) != -1) {
-//                responseOutputStream.write(bytes);
-//            }
             File File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/WC_QUESTIONNAIRE_" + ClientId + "_" + MRN + ".pdf");
             File.delete();
             File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/WC_MVA_AUTHORIZATIONTODISCLOSEMEDICALINFORMATION_" + ClientId + "_" + MRN + ".pdf");
@@ -8979,7 +8936,17 @@ public class PatientReg2 extends HttpServlet {
             File = new File("/sftpdrive/AdmissionBundlePdf/Victoria/Result_" + ClientId + "_" + MRN + ".pdf");
             File.delete();
 
-
+            PreparedStatement pst = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            pst.setString(1, MRN);
+            pst.setInt(2, ID);
+            pst.setString(3, filename);
+            pst.setInt(4, pageCount);
+            pst.setInt(5, VisitIndex );
+            System.out.println("Query "+pst);
+            pst.executeUpdate();
+            pst.close();
             return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
         } catch (Exception e) {
             UtilityHelper helper = new UtilityHelper();
@@ -10671,7 +10638,7 @@ public class PatientReg2 extends HttpServlet {
                 MainReceipt.setString(3, LastName.toUpperCase());
                 MainReceipt.setString(4, MiddleInitial.toUpperCase());
                 MainReceipt.setString(5, DOB);
-                MainReceipt.setString(6, Age);
+                MainReceipt.setString(6, null);
                 MainReceipt.setString(7, gender.toUpperCase());
                 MainReceipt.setString(8, Email);
                 MainReceipt.setString(9, String.valueOf(String.valueOf(AreaCode)) + PhNumber);

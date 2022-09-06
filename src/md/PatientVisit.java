@@ -17,10 +17,9 @@ import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Locale;
@@ -30,11 +29,6 @@ import java.util.Locale;
 public class PatientVisit extends HttpServlet {
     //    private Connection conn = null;
     Integer ScreenIndex = 11;
-
-    public static int getAge(LocalDate dob) {
-        LocalDate curDate = LocalDate.now();
-        return Period.between(dob, curDate).getYears();
-    }
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -518,21 +512,21 @@ public class PatientVisit extends HttpServlet {
         ResultSet rset = null;
         String Query = "";
         int VisitNumber = 0;
+        String WEB = "";
         String MRN = "";
         int PatientRegId = 0;
         String NewDateofService = "";
         int NewDoctorId = 0;
         String NewReasonVisit = "";
-        String WEB = "";
         int VisitId = 0;
         try {
             MRN = request.getParameter("MRN").trim();
+            String RequestType = request.getParameter("RequestType").trim();
             PatientRegId = Integer.parseInt(request.getParameter("PatientRegId").trim());
             NewDateofService = request.getParameter("NewDateofService").trim();
 //            System.out.println("Patient DOS : " + NewDateofService);
             NewDoctorId = Integer.parseInt(request.getParameter("NewDoctorId").trim());
             NewReasonVisit = request.getParameter("ReasonVisit").trim();
-            String RequestType = request.getParameter("RequestType").trim();
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm", Locale.US);
             LocalDateTime NDOS = LocalDateTime.parse(NewDateofService, formatter);
@@ -649,7 +643,9 @@ public class PatientVisit extends HttpServlet {
                 stmt.executeUpdate(Query);
                 stmt.close();
             }
-            if (ClientId == 9) {
+
+            if (ClientId == 8 || ClientId == 9 || ClientId == 19 || ClientId == 25 || ClientId == 27 || ClientId == 28 || ClientId == 29 || ClientId == 39 || ClientId == 40 ||
+                    ClientId == 41 || ClientId == 42 || ClientId == 43) {
                 int found = 0;
                 Query = "Select Count(*) from " + Database + ".SignRequest where PatientRegId = " + PatientRegId + "";
                 stmt = conn.createStatement();
@@ -673,8 +669,7 @@ public class PatientVisit extends HttpServlet {
                     stmt.executeUpdate(Query);
                     stmt.close();
                 }
-
-                Query = "Select DirectoryName from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+                Query = "Select DirectoryName from oe.clients where ltrim(rtrim(UPPER(Id))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 String DirectoryName = null;
@@ -685,15 +680,59 @@ public class PatientVisit extends HttpServlet {
                 stmt.close();
 
                 PatientReg2 ptr2 = new PatientReg2();
-                String temp = ptr2.SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, "VISIT");
-                // System.out.println("temp " + temp);
-//                .print();
+                PatientReg ptr = new PatientReg();
+                DownloadBundle dbundle = new DownloadBundle();
+                String temp = "";
+
+                switch (ClientId) {
+                    case 8:
+                        DownloadBundle orangebndle = new DownloadBundle();
+                        temp = orangebndle.GETINPUT_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT",helper);
+                        break;
+                    case 9:
+                        temp = ptr2.SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, "VISIT");
+                        break;
+                    case 19:
+                        temp = ptr.SaveBundle_HopeER(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 39:
+                        temp = ptr.GETINPUTSchertz(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT");
+                        break;
+                    case 25:
+                        SanMarcosBundle smbundle = new SanMarcosBundle();
+                        temp = smbundle.GETINPUTSanMarcos_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT", helper);
+                        break;
+                    case 27:
+                    case 29:
+                        FrontlineBundle obj1 = new FrontlineBundle();
+                        temp = obj1.GETINPUTFrontLine_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT", helper);
+                        break;
+
+                    case 28:
+                        temp = dbundle.GETINPUTERDallas_BundleCreate(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName,"VISIT",PatientRegId,helper);
+                        break;
+                    case 40:
+                        temp = ptr.GETINPUTfloresville(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT");
+                        break;
+                    case 41:
+                        temp = ptr.GETINPUTwillowbrook(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT", helper);
+                        break;
+                    case 42:
+                        temp = ptr.GETINPUTsummerwood(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT", helper);
+                        break;
+                    case 43:
+                        temp = ptr.GETINPUTheights(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, "VISIT", helper);
+                        break;
+                    default:
+                        out.println("Under Development!!!");
+                        break;
+                }
                 String[] arr = temp.split("~");
                 String FileName = arr[2];
                 String outputFilePath = arr[1];
                 String pageCount = arr[0];
+
                 Parsehtm Parser = new Parsehtm(request);
-//                Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully " + Message + ". Please walk to the front door and Press the buzzer.  DATED: " + Date);
                 Parser.SetField("Message", "New Visit has been Created For the MRN : " + MRN + Message + " Please wait for further processing.");
                 Parser.SetField("MRN", "DONE");
                 Parser.SetField("FormName", "PatientReg");
@@ -705,7 +744,7 @@ public class PatientVisit extends HttpServlet {
                 Parser.SetField("ClientIndex", String.valueOf(ClientId));
                 Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageVictoria.html");
             } else {
-                if(RequestType.equals("GetValues")){
+                if (RequestType.equals("GetValues")) {
                     //redirection in case of external patient
                     Parsehtm Parser = new Parsehtm(request);
                     PreparedStatement ps = conn.prepareStatement("SELECT website from oe.ClientsWebsite where clientID=?");
@@ -718,7 +757,7 @@ public class PatientVisit extends HttpServlet {
                     ps.close();
                     rset.close();
 
-                    Parser.SetField("Message", "New Visit has been Created For the MRN : " + MRN );
+                    Parser.SetField("Message", "New Visit has been Created For the MRN : " + MRN);
                     Parser.SetField("WEB", WEB);
                     Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_SumWill.html");
                     return;
@@ -729,19 +768,8 @@ public class PatientVisit extends HttpServlet {
                 Parser.SetField("Message", "New Visit has been Created For the MRN : " + MRN + Message);
                 Parser.SetField("FormName", String.valueOf("PatientUpdateInfo"));
                 Parser.SetField("ActionID", String.valueOf("GetInput&ID=" + PatientRegId));
-//      Parser.SetField("SearchBy", String.valueOf("3"));
-//      Parser.SetField("MRN", String.valueOf(MRN));
-//      Parser.GenerateHtml(out, "/sftpdrive/opt/Htmls/orange_2/Exception/Success.html");
                 Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message.html");
             }
-
-//      out.println("<!DOCTYPE html><html><body><p style=\"color:gray;\">New Visit has been Created For the MRN : "+MRN+"</p>");
-//      //  out.println("<br>Request has been send to ERM , Find Patient MRN "+MRN);
-//      out.println("<br><p style=\"color:gray;\"> Please press Back and do the necessary Updates </p>");
-//      //out.println("<br><p style=\"color:gray;\"> If you can not found Patient in ViewPatient Option Please Search Here again and do the necessary Updates <br> Thank You!</p>");
-//      out.println("<br><input class=\"btn btn-primary\" type=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
-//      final Parsehtm Parser = new Parsehtm(request);
-//      Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/SearchPatient.html");
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in PatientVisit ** MAIN CATCH (SaveVisit^^ MES#006 - PatRegId --> " + PatientRegId + ")", servletContext, e, "PatientVisit", "SaveVisit", conn);
             Services.DumException("SaveVisit", "PatientVisit ", request, e);
@@ -791,14 +819,6 @@ public class PatientVisit extends HttpServlet {
         } catch (Exception e) {
             helper.SendEmailWithAttachment("Error in PatientVisit ** MAIN CATCH (ReasonVisits^^ MES#000-0001)", servletContext, e, "PatientVisit", "ReasonVisits", conn);
             Services.DumException("ReasonVisits", "PatientVisit ", request, e);
-
-/*            out.println("1");
-            out.println(Query);
-            System.out.println("Error in Getting Reasons:--" + e.getStackTrace());
-            String str = "";
-            for (int i = 0; i < (e.getStackTrace()).length; i++)
-                str = str + e.getStackTrace()[i] + "<br>";
-            out.println(str);*/
         }
     }
 
@@ -826,7 +846,10 @@ public class PatientVisit extends HttpServlet {
         String County = "";
         String reply = "";
         try {
-            Query = "Select IFNULL(FirstName,''), IFNULL(MiddleInitial,''), IFNULL(LastName,''), IFNULL(Email, ''), IFNULL(PhNumber,0),  IFNULL(DOB,'0000-00-00'), IFNULL(Gender,'M'), IFNULL(City,''),IFNULL(Address,''), IFNULL(State,'TX'), IFNULL(ZipCode,''), IFNULL(County,'')  from victoria.PatientReg where ID = " + PatientRegId;
+            Query = "Select IFNULL(FirstName,''), IFNULL(MiddleInitial,''), IFNULL(LastName,''), IFNULL(Email, ''), " +
+                    "IFNULL(PhNumber,0),  IFNULL(DOB,'0000-00-00'), IFNULL(Gender,'M'), IFNULL(City,''),IFNULL(Address,''), " +
+                    "IFNULL(State,'TX'), IFNULL(ZipCode,''), IFNULL(County,'')  " +
+                    "from victoria.PatientReg where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -849,7 +872,8 @@ public class PatientVisit extends HttpServlet {
             Services.DumException("PatientReg2", "InsertCOVIDRegError in Getting Data from PatientReg table", request, e, this.getServletContext());
         }
         try {
-            Query = "Select IFNULL(Ethnicity,''), IFNULL(Race,'') from victoria.PatientReg_Details where PatientRegId = " + PatientRegId;
+            Query = "Select IFNULL(Ethnicity,''), IFNULL(Race,'') from victoria.PatientReg_Details " +
+                    "where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -866,27 +890,39 @@ public class PatientVisit extends HttpServlet {
         } else {
             Gender = "F";
         }
-        if (Ethnicity.equals("1")) {
-            Ethnicity = "H";
-        } else if (Ethnicity.equals("2")) {
-            Ethnicity = "NH";
-        } else if (Ethnicity.equals("3")) {
-            Ethnicity = "U";
-        } else {
-            Ethnicity = "U";
+        switch (Ethnicity) {
+            case "1":
+                Ethnicity = "H";
+                break;
+            case "2":
+                Ethnicity = "NH";
+                break;
+            case "3":
+                Ethnicity = "U";
+                break;
+            default:
+                Ethnicity = "U";
+                break;
         }
-        if (Race.equals("1")) {
-            Race = "A";
-        } else if (Race.equals("2")) {
-            Race = "B";
-        } else if (Race.equals("3")) {
-            Race = "W";
-        } else if (Race.equals("4")) {
-            Race = "O";
-        } else if (Race.equals("5")) {
-            Race = "U";
-        } else {
-            Race = "U";
+        switch (Race) {
+            case "1":
+                Race = "A";
+                break;
+            case "2":
+                Race = "B";
+                break;
+            case "3":
+                Race = "W";
+                break;
+            case "4":
+                Race = "O";
+                break;
+            case "5":
+                Race = "U";
+                break;
+            default:
+                Race = "U";
+                break;
         }
         if (MiddleInitial.length() > 1) {
             MiddleInitial = MiddleInitial.substring(0, 1);
@@ -914,7 +950,7 @@ public class PatientVisit extends HttpServlet {
             responseJSON.put("StateCode", State);
             responseJSON.put("IsValidDOB", true);
             responseJSON.put("Zipcode", ZipCode);
-            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString((Object) responseJSON);
+            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJSON);
 
             final String BaseURL = "https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1";
             final String Mask = "";
@@ -928,7 +964,7 @@ public class PatientVisit extends HttpServlet {
             uc.setAllowUserInteraction(false);
             uc.setDoOutput(true);
             final OutputStream os = uc.getOutputStream();
-            os.write(Request.getBytes("UTF-8"));
+            os.write(Request.getBytes(StandardCharsets.UTF_8));
             os.close();
             uc.connect();
             final InputStream is = uc.getInputStream();

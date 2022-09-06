@@ -24,10 +24,6 @@ public class DailyVisitsCountSMS {
     public static void main(String[] args) throws Exception {
         String Query1 = "";
         String TODAY = "";
-        String YesterdayDate = "";
-        String CurrDateTime = "";
-        String MONTH_START = "";
-        String MONTH_END = "";
         String smsBody = "";
 
         int PatientCountOverAll_TODAY_Schertz = 0;
@@ -39,14 +35,6 @@ public class DailyVisitsCountSMS {
         int PatientCountSelfPay_TODAY_Schertz = 0;
         int PatientCountSelfPay_TODAY_Floresville = 0;
 
-        int PatientCountOverAll_MONTHLY_Schertz = 0;
-        int PatientCountOverAll_MONTHLY_Floresville = 0;
-
-        int PatientCountOverAll_MONTHLYInsured_Schertz = 0;
-        int PatientCountOverAll_MONTHLYInsured_Floresville = 0;
-
-        int PatientCountOverAll_MONTHLYSelfPay_Schertz = 0;
-        int PatientCountOverAll_MONTHLYSelfPay_Floresville = 0;
         Statement stmt1 = null;
         ResultSet rset1 = null;
         Date dt1 = new Date();
@@ -68,25 +56,17 @@ public class DailyVisitsCountSMS {
 //            filewriter.write("\r\n Scheduler Time starts at " + new Date().toString() + "\r\n");
             conn = getConnection();
 
-            Query = "Select DATE_FORMAT(NOW(),'%Y-%m-%d')," +
-                    "DATE_SUB(CURDATE(), INTERVAL 1 DAY) AS yesterday_date," +
-                    "DATE_FORMAT(NOW(),'%d-%b-%Y %H:%m:%s')," +
-                    "DATE_SUB(LAST_DAY(NOW()),INTERVAL DAY(LAST_DAY(NOW()))- 1 DAY) AS 'FIRST DAY OF CURRENT MONTH'," +
-                    "LAST_DAY(NOW()) ";
+            Query = "Select DATE_FORMAT(NOW(),'%Y-%m-%d')";
             stmt = conn != null ? conn.createStatement() : null;
             rset = stmt != null ? stmt.executeQuery(Query) : null;
             if (rset.next()) {
                 TODAY = rset.getString(1);
-                YesterdayDate = rset.getString(2);
-                CurrDateTime = rset.getString(3);
-                MONTH_START = rset.getString(4);
-                MONTH_END = rset.getString(5);
             }
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from schertz.PatientVisit a " +
-                    "INNER JOIN schertz.PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' " +
+
+            Query = "Select COUNT(*) from schertz.PatientVisit a INNER JOIN schertz.PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' " +
                     " AND DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + TODAY + " 23:59:59' AND b.status=0";
             stmt = conn != null ? conn.createStatement() : null;
             rset = stmt != null ? stmt.executeQuery(Query) : null;
@@ -96,8 +76,7 @@ public class DailyVisitsCountSMS {
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from floresville.PatientVisit a " +
-                    "INNER JOIN floresville.PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' " +
+            Query = "Select COUNT(*) from floresville.PatientVisit a INNER JOIN floresville.PatientReg b ON a.PatientRegId=b.ID where DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + TODAY + " 00:00:00' " +
                     " AND DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + TODAY + " 23:59:59' AND b.status=0";
             stmt = conn != null ? conn.createStatement() : null;
             rset = stmt != null ? stmt.executeQuery(Query) : null;
@@ -107,10 +86,7 @@ public class DailyVisitsCountSMS {
             rset.close();
             stmt.close();
 
-            //******************************************************************************
-
-            Query = "Select COUNT(*) from schertz.PatientReg " +
-                    " LEFT JOIN schertz.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
+            Query = "Select COUNT(*) from schertz.PatientReg LEFT JOIN schertz.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
                     "where PatientReg.Status = 0 " +
                     " AND PatientReg.SelfPayChk = 1 " +
                     " AND PatientVisit.DateOfService >= '" + TODAY + " 00:00:00' " +
@@ -123,8 +99,7 @@ public class DailyVisitsCountSMS {
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from floresville.PatientReg " +
-                    "LEFT JOIN floresville.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
+            Query = "Select COUNT(*) from floresville.PatientReg LEFT JOIN floresville.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
                     "where PatientReg.Status = 0 " +
                     " AND PatientReg.SelfPayChk = 1 " +
                     " AND PatientVisit.DateOfService >= '" + TODAY + " 00:00:00' " +
@@ -138,8 +113,7 @@ public class DailyVisitsCountSMS {
             stmt.close();
 
 
-            Query = "Select COUNT(*) from schertz.PatientReg " +
-                    "LEFT JOIN schertz.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
+            Query = "Select COUNT(*) from schertz.PatientReg LEFT JOIN schertz.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
                     "where PatientReg.Status = 0 " +
                     " AND PatientReg.SelfPayChk = 0 " +
                     " AND PatientVisit.DateOfService >= '" + TODAY + " 00:00:00' " +
@@ -152,8 +126,7 @@ public class DailyVisitsCountSMS {
             rset.close();
             stmt.close();
 
-            Query = "Select COUNT(*) from floresville.PatientReg " +
-                    "LEFT JOIN floresville.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
+            Query = "Select COUNT(*) from floresville.PatientReg LEFT JOIN floresville.PatientVisit ON PatientReg.ID=PatientVisit.PatientRegId \n" +
                     "where PatientReg.Status = 0 " +
                     " AND PatientReg.SelfPayChk = 0 " +
                     " AND PatientVisit.DateOfService >= '" + TODAY + " 00:00:00' " +
@@ -166,122 +139,9 @@ public class DailyVisitsCountSMS {
             rset.close();
             stmt.close();
 
-            //************************ TOTAL MONTHLY COUNTS ************************
-            Query = "Select COUNT(*) from schertz.PatientVisit a " +
-                    "INNER JOIN schertz.PatientReg b ON a.PatientRegId=b.ID " +
-                    "where " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND " +
-                    "b.status=0";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientCountOverAll_MONTHLY_Schertz = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-
-            Query = "Select COUNT(*) from floresville.PatientVisit a " +
-                    "INNER JOIN floresville.PatientReg b ON a.PatientRegId=b.ID " +
-                    "where " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND " +
-                    "b.status=0";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientCountOverAll_MONTHLY_Floresville = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-            //***********************************************************************//
-
-            //************************ TOTAL MONTHLY INSURED COUNTS ************************
-            Query = "Select COUNT(*) from schertz.PatientVisit a " +
-                    "INNER JOIN schertz.PatientReg b ON a.PatientRegId=b.ID " +
-                    "where " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND " +
-                    "b.status=0 AND b.SelfPayChk = 1";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientCountOverAll_MONTHLYInsured_Schertz = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-
-            Query = "Select COUNT(*) from floresville.PatientVisit a " +
-                    "INNER JOIN floresville.PatientReg b ON a.PatientRegId=b.ID " +
-                    "where " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND " +
-                    "b.status=0 AND b.SelfPayChk = 1";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientCountOverAll_MONTHLYInsured_Floresville = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-            //***********************************************************************
-
-            //************************ TOTAL MONTHLY INSURED COUNTS ************************
-            Query = "Select COUNT(*) from schertz.PatientVisit a " +
-                    "INNER JOIN schertz.PatientReg b ON a.PatientRegId=b.ID " +
-                    "where " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND " +
-                    "b.status=0 AND b.SelfPayChk = 0";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientCountOverAll_MONTHLYSelfPay_Schertz = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-
-            Query = "Select COUNT(*) from floresville.PatientVisit a " +
-                    "INNER JOIN floresville.PatientReg b ON a.PatientRegId=b.ID " +
-                    "where " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') >= '" + MONTH_START + " 00:00:00' and " +
-                    "DATE_FORMAT(a.DateOfService,'%Y-%m-%d %h:%i:%s') <= '" + MONTH_END + " 23:59:59' AND " +
-                    "b.status=0 AND b.SelfPayChk = 0";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientCountOverAll_MONTHLYSelfPay_Floresville = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-            //***********************************************************************
-
-/*
-            smsBody = "************* TODAY COUNT "+TODAY+" *************     \n" +
-                      "Facility    ||    Total    ||    Insured    ||    SelfPay     \n" +
+            smsBody = "Facility    ||    Total    ||    Insured    ||    SelfPay     \n" +
                       "Schertz     ||     " + PatientCountOverAll_TODAY_Schertz + "      ||       " + PatientCountInsured_TODAY_Schertz + "      ||       " + PatientCountSelfPay_TODAY_Schertz + "       \n" +
                       "Floresville ||     " + PatientCountOverAll_TODAY_Floresville + "      ||       " + PatientCountInsured_TODAY_Floresville + "      ||       " + PatientCountSelfPay_TODAY_Floresville + "       \n";
-*/
-//            System.out.println("PatientCountOverAll_MONTHLY_Schertz --> " + PatientCountOverAll_MONTHLY_Schertz);
-//            System.out.println("PatientCountOverAll_MONTHLYInsured_Schertz  --> " + PatientCountOverAll_MONTHLYInsured_Schertz);
-//            System.out.println("PatientCountOverAll_MONTHLYSelfPay_Schertz --> " + PatientCountOverAll_MONTHLYSelfPay_Schertz);
-//            System.out.println("PatientCountInsured_TODAY_Schertz --> " + PatientCountInsured_TODAY_Schertz);
-//            System.out.println("PatientCountSelfPay_TODAY_Schertz --> " + PatientCountSelfPay_TODAY_Schertz);
-//            System.out.println("PatientCountOverAll_TODAY_Schertz --> " + PatientCountOverAll_TODAY_Schertz);
-
-            smsBody = "**" + TODAY + "**\n" +
-                    "------------\n" +
-                    "**Schertz(T:" + PatientCountOverAll_MONTHLY_Schertz + "|I:" + PatientCountOverAll_MONTHLYInsured_Schertz + "|S:" + PatientCountOverAll_MONTHLYSelfPay_Schertz + ")**\n" +
-                    "Insured   " + PatientCountInsured_TODAY_Schertz + "\n" +
-                    "SelfPay   " + PatientCountSelfPay_TODAY_Schertz + "\n" +
-                    "Total       " + PatientCountOverAll_TODAY_Schertz + "\n" +
-                    "------------\n" +
-                    "**Floresv(T:" + PatientCountOverAll_MONTHLY_Floresville + "|I:" + PatientCountOverAll_MONTHLYInsured_Floresville + "|S:" + PatientCountOverAll_MONTHLYSelfPay_Floresville + ")**\n" +
-                    "Insured   " + PatientCountInsured_TODAY_Floresville + "\n" +
-                    "SelfPay   " + PatientCountSelfPay_TODAY_Floresville + "\n" +
-                    "Total       " + PatientCountOverAll_TODAY_Floresville + "\n" +
-                    "------------\n" +
-                    " " + CurrDateTime + " \n";
 ////            Query = "Select Id, IFNULL(dbname,''), status from oe.clients where Id not in (23,32,33,36)  ";
 //            Query = "Select Id, IFNULL(dbname,''), status from oe.clients where status = 0  ";
 
@@ -292,24 +152,21 @@ public class DailyVisitsCountSMS {
 //            Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
             Twilio.init(AuthFactor[0], AuthFactor[1]);
             Message message = Message.creator(
-//                    new com.twilio.type.PhoneNumber("+17084154105"), // Fawad
-                            new com.twilio.type.PhoneNumber("+14372344164"), // Ali
-//                    new com.twilio.type.PhoneNumber("+14694980033"), // to ME
-                            new com.twilio.type.PhoneNumber("+19724981837"), // from
-                            smsBody)
+                    new com.twilio.type.PhoneNumber("+17084154105"), // to
+//                    new com.twilio.type.PhoneNumber("+14694980033"), // to
+                    new com.twilio.type.PhoneNumber("+19724981837"), // from
+                    smsBody)
                     .create();
 
-/*            System.out.println("Error Code --> " + message.getErrorCode());
-
+            System.out.println("Error Code --> " + message.getErrorCode());
+            System.out.println("Get Body --> \n" + message.getBody());
             System.out.println("get Error Message --> " + message.getErrorMessage());
             System.out.println("Price --> " + message.getPrice());
             System.out.println("Price --> " + message.getDateCreated());
             System.out.println("Price --> " + message.getDateSent());
             System.out.println("Price --> " + message.getDateUpdated());
-            System.out.println("Status --> " + message.getStatus());*/
-            System.out.println("Get Body --> \n" + message.getBody());
-            System.out.println("Date Sent At --> " + message.getDateSent());
             System.out.println("Status --> " + message.getStatus());
+
             System.out.println("Message Sent...!");
         } catch (Exception e) {
 //            updateErrorIsScheduler(conn, smsIdx, dbName);
@@ -404,7 +261,7 @@ public class DailyVisitsCountSMS {
         }
     }
 
-    private static String[] getTwilioAuthorization(Connection conn) {
+    private static  String[] getTwilioAuthorization( Connection conn) {
         CallableStatement cStmt = null;
         rset = null;
         Query = "";

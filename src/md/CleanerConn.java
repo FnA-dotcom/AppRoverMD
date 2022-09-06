@@ -19,9 +19,9 @@ public class CleanerConn {
         String Query = "";
         String Query1 = "";
 
-/*        String connect_string = "jdbc:mysql://database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=rovermdadmin&password=atyu!ioujy1986&characterEncoding=utf8";
-        String DRIVER = "com.mysql.jdbc.Driver";
-//        String DRIVER = "com.mysql.cj.jdbc.Driver";
+        String connect_string = "jdbc:mysql://rovermd-01-master.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=rovermdadmin&password=atyu!ioujy1986&characterEncoding=utf8";
+        //        String DRIVER = "com.mysql.jdbc.Driver";
+        String DRIVER = "com.mysql.cj.jdbc.Driver";
         try {
             Class.forName(DRIVER).newInstance();
             conn = DriverManager.getConnection(connect_string);
@@ -30,8 +30,8 @@ public class CleanerConn {
             System.out.println("Exception excp conn: " + var11.getMessage());
             DumpException("DB Conn Error ", "exp", var11);
             return;
-        }*/
-        conn = getConnection();
+        }
+        //conn = getConnection();
         if (conn == null) {
             System.out.println("UNABLE TO CONNECT TO DB!!");
             return;
@@ -104,17 +104,5 @@ public class CleanerConn {
             printwriter.close();
         } catch (Exception localException) {
         }
-    }
-
-    private static Connection getConnection() {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-//            return DriverManager.getConnection("jdbc:mysql://rovermd-01-master.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=webserver873849&password=Asljdpiwoeurj!!3498&autoReconnect=true");
-            return DriverManager.getConnection("jdbc:mysql://database-1.cvsodt2nhyzz.us-east-1.rds.amazonaws.com:33309/oe?user=rovermdadmin&password=atyu!ioujy1986&autoReconnect=true");
-        } catch (Exception e) {
-            System.out.println(e);
-            DumpException("Connection Error", "exp", e);
-        }
-        return null;
     }
 }

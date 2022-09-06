@@ -342,7 +342,7 @@ public class UserManagement extends HttpServlet {
 
             PreparedStatement ps = conn.prepareStatement(
                     "SELECT Count(*) FROM oe.sysusers WHERE userid='" + userId + "'");
-//            System.out.println("Query : " + ps.toString());
+            System.out.println("Query : " + ps.toString());
             rset = ps.executeQuery();
             if (rset.next()) {
                 if (rset.getInt(1) > 0) {
@@ -361,7 +361,7 @@ public class UserManagement extends HttpServlet {
             clientId = request.getParameter("clientId");
 
             ps = conn.prepareStatement("SELECT name FROM oe.clients WHERE id=" + clientId);
-//            System.out.println("Query : " + ps.toString());
+            System.out.println("Query : " + ps.toString());
             rset = ps.executeQuery();
             if (rset.next()) {
                 Company = rset.getString(1);
@@ -371,10 +371,7 @@ public class UserManagement extends HttpServlet {
 
 
             PreparedStatement MainReceipt = conn.prepareStatement(
-                    "INSERT INTO oe.sysusers (userid,firstname,lastname,password,username," +
-                            "companyname,usertype,create_date,enabled,email,clientid,status," +
-                            "MaxRetryAllowed,PRetry,LoginCount,isPwdChanged) " +
-                            "VALUE(?,?,?,?,?,?,?,now(),'Y',?,?,0,5,0,1,0)");
+                    "INSERT INTO oe.sysusers (userid,firstname,lastname,password,username,companyname,usertype,create_date,enabled,email,clientid,status,MaxRetryAllowed,PRetry,LoginCount) VALUE(?,?,?,?,?,?,?,now(),'Y',?,?,0,5,0,1)");
 
             MainReceipt.setString(1, userId);
             MainReceipt.setString(2, firstname);
@@ -390,7 +387,7 @@ public class UserManagement extends HttpServlet {
 
 
             ps = conn.prepareStatement("SELECT indexptr FROM oe.sysusers where userid ='" + userId + "'");
-//            System.out.println("Query : " + ps.toString());
+            System.out.println("Query : " + ps.toString());
             rset = ps.executeQuery();
             if (rset.next()) employeeID = rset.getString(1);
 
@@ -426,7 +423,7 @@ public class UserManagement extends HttpServlet {
 
             PreparedStatement ps = conn.prepareStatement(
                     "SELECT Count(*) FROM oe.sysusers WHERE userid='" + userId + "'");
-//            System.out.println("Query : " + ps.toString());
+            System.out.println("Query : " + ps.toString());
             rset = ps.executeQuery();
             if (rset.next()) {
                 if (rset.getInt(1) > 0) {
@@ -445,7 +442,7 @@ public class UserManagement extends HttpServlet {
             clientId = request.getParameter("clientId");
 
             ps = conn.prepareStatement("SELECT name FROM oe.clients WHERE id=" + clientId);
-//            System.out.println("Query : " + ps.toString());
+            System.out.println("Query : " + ps.toString());
             rset = ps.executeQuery();
             if (rset.next()) {
                 Company = rset.getString(1);
@@ -472,7 +469,7 @@ public class UserManagement extends HttpServlet {
 
 
             ps = conn.prepareStatement("SELECT indexptr FROM oe.sysusers where userid ='" + userId + "'");
-//            System.out.println("Query : " + ps.toString());
+            System.out.println("Query : " + ps.toString());
             rset = ps.executeQuery();
             if (rset.next()) employeeID = rset.getString(1);
 
@@ -597,7 +594,7 @@ public class UserManagement extends HttpServlet {
             Query = "UPDATE oe.sysusers SET userid='" + userId + "',firstname='" + firstname + "',lastname='" + lastname + "'," +
                     "password='" + passwordEnc + "',username='" + username + "',companyname='" + Company + "',usertype='" + user_type + "'," +
                     "create_date=now(),email='" + email + "',clientid='" + clientId + "' WHERE indexptr='" + idxptr + "'";
-//            System.out.println("Update Query " + Query);
+            System.out.println("Update Query " + Query);
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
 
@@ -654,7 +651,7 @@ public class UserManagement extends HttpServlet {
 
             if (Company.equals("")) {
                 PreparedStatement ps = conn.prepareStatement("SELECT name FROM oe.clients WHERE id=" + clientId);
-//                System.out.println("Query : " + ps.toString());
+                System.out.println("Query : " + ps.toString());
                 rset = ps.executeQuery();
                 if (rset.next()) {
                     Company = rset.getString(1);
@@ -666,7 +663,7 @@ public class UserManagement extends HttpServlet {
             Query = "UPDATE oe.sysusers SET userid='" + userId + "',firstname='" + firstname + "',lastname='" + lastname + "'," +
                     "password='" + passwordEnc + "',username='" + username + "',companyname='" + Company + "',usertype='" + user_type + "'," +
                     "create_date=now(),email='" + email + "',clientid='" + clientId + "',RoleIdx='" + roleIdx + "' WHERE indexptr='" + idxptr + "'";
-//            System.out.println("Update Query ROLES " + Query);
+            System.out.println("Update Query ROLES " + Query);
             stmt = conn.createStatement();
             stmt.executeUpdate(Query);
 

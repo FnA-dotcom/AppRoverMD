@@ -13,18 +13,15 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Hashtable;
 
 @SuppressWarnings("Duplicates")
 public class ForcedPasswordChanged extends HttpServlet {
-    Integer ScreenIndex = 30;
-    String Query = "";
-    Statement stmt = null;
-    ResultSet rset = null;
     private Connection conn = null;
+    Integer ScreenIndex = 30;
+
+
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -53,8 +50,32 @@ public class ForcedPasswordChanged extends HttpServlet {
             HttpSession session = request.getSession(false);
             UtilityHelper helper = new UtilityHelper();
 
+//            boolean validSession = helper.checkSession(request, context, session, out);
+//            if (!validSession) {
+//                out.flush();
+//                out.close();
+//                return;
+//            }
+//
+//            UserId = session.getAttribute("UserId").toString();
+//            DatabaseName = session.getAttribute("DatabaseName").toString();
+//            FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
+//            int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
+
+
             Action = request.getParameter("ActionID");
             conn = Services.GetConnection(context, 1);
+
+//            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
+////                out.println("You are not Authorized to access this page");
+//                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("Message", "You are not Authorized to access this page");
+//                Parser.SetField("FormName", "ManagementDashboard");
+//                Parser.SetField("ActionID", "GetInput");
+//                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
+//                return;
+//            }
+
             if (conn == null) {
                 out.println("connection is null");
                 Parsehtm Parser = new Parsehtm(request);
@@ -64,10 +85,10 @@ public class ForcedPasswordChanged extends HttpServlet {
             }
             switch (Action) {
                 case "GetInput":
-                    GetInput(request, out, conn, context, helper);
+                    GetInput(request, out, conn, context,  helper);
                     break;
                 case "saveChangePassword":
-                    this.saveChangePassword(request, out, conn, context, helper);
+                    this.saveChangePassword(request, out, conn, context,  helper);
                     break;
                 default:
                     helper.deleteUserSession(request, conn, session.getId());
@@ -108,52 +129,40 @@ public class ForcedPasswordChanged extends HttpServlet {
         }
     }
 
-    private void saveChangePassword(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, UtilityHelper helper) {
+    private void saveChangePassword(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext,  UtilityHelper helper) {
         String CurrPassword = request.getParameter("CurrPassword").trim();
         String NewPassword = request.getParameter("NewPassword").trim();
         String NewRPassword = request.getParameter("NewRPassword").trim();
-        String UserId = request.getParameter("userID").trim();
         String passwordEnc = "";
-        int facilityIndex = 0;
-        stmt = null;
-        rset = null;
-        Query = "";
         try {
-            passwordEnc = FacilityLogin.encrypt(CurrPassword);
-            String[] UserDetails = helper.loginUserDetails(request, conn, UserId, servletContext);
-            if (!passwordEnc.equals(UserDetails[4])) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("UserName", UserDetails[0]);
-                Parser.SetField("UserId", UserId);
-                Parser.SetField("Error", "Current Password Does not Match!!");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ChangePwdForce.html");
-                return;
-            }
+            passwordEnc = FacilityLogin_old.encrypt(CurrPassword);
 
-            if (!NewPassword.equals(NewRPassword)) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("UserName", UserDetails[0]);
-                Parser.SetField("UserId", UserId);
-                Parser.SetField("Error", "Password Mismatch, Please Enter Again ...!!!");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ChangePwdForce.html");
-                return;
-            }
-            NewPassword = FacilityLogin.encrypt(NewPassword);
+//            String[] UserDetails = helper.loginUserDetails(request, conn, UserId, servletContext);
+//            if (!passwordEnc.equals(UserDetails[4])) {
+//                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("UserName", UserDetails[0]);
+//                Parser.SetField("ClientName", UserDetails[3]);
+//                Parser.SetField("Error", "Current Password Does not Match!!");
+//                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ChangePasswordInput.html");
+//                return;
+//            }
+//
+//            if (!NewPassword.equals(NewRPassword)) {
+//                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("UserName", UserDetails[0]);
+//                Parser.SetField("ClientName", UserDetails[3]);
+//                Parser.SetField("Error", "Password Mismatch, Please Enter Again ...!!!");
+//                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/ChangePasswordInput.html");
+//                return;
+//            }
+            NewPassword = FacilityLogin_old.encrypt(NewPassword);
+//            helper.updateUserPassword(request, conn, facilityIndex, NewPassword, servletContext);
 
-            //helper.updateUserPassword(request, conn, facilityIndex, NewPassword, servletContext);
-            stmt = conn.createStatement();
-            Query = "Update oe.sysusers set password = '" + NewPassword + "', PChangeDate = NOW(), " +
-                    "LoginCount = LoginCount + 1, MaxRetryAllowed = 5, PRetry = 0 " +
-                    "where ltrim(rtrim(UPPER(userid))) = ltrim(rtrim(UPPER('" + UserId + "')))";
-            stmt.executeUpdate(Query);
-            stmt.close();
-
-            //helper.UpdateLoginCount(request, UserId, conn, servletContext);
             Parsehtm Parser = new Parsehtm(request);
-//            Parser.SetField("Message", "Password has been changed successfully. Please Re-Login");
-//            Parser.SetField("FormName", "ChangePassword");
-            Parser.SetField("Error", "Password has been changed successfully. Please Re-Login");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "FacilityLogin.html");
+            Parser.SetField("Message", "Password has been changed successfully. Please Re-Login");
+            Parser.SetField("FormName", "ChangePassword");
+            Parser.SetField("ActionID", "GetInput");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Message.html");
 
             HttpSession session = request.getSession(false);
             session.removeAttribute("UserId");

@@ -27,24 +27,29 @@ import java.sql.Statement;
 import java.util.HashMap;
 
 public class QuickReg_NewMRN
-        extends HttpServlet {
+        extends HttpServlet
+{
     public void init(ServletConfig config)
-            throws ServletException {
+            throws ServletException
+    {
         super.init(config);
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
+            throws IOException, ServletException
+    {
         handleRequest(request, response);
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
+            throws IOException, ServletException
+    {
         handleRequest(request, response);
     }
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException
+    {
         Statement stmt = null;
         ResultSet rset = null;
         Connection conn = null;
@@ -61,7 +66,7 @@ public class QuickReg_NewMRN
         context = getServletContext();
         conn = Services.getMysqlConn(context);
 
-        try {
+        try{
             Cookie[] cookies = request.getCookies();
             Zone = UserId = Passwd = "";
             int checkCookie = 0;
@@ -73,7 +78,7 @@ public class QuickReg_NewMRN
                 }
             }
 
-            Query = "Select ClientId from oe.sysusers where ltrim(rtrim(UPPER(UserId))) = ltrim(rtrim(UPPER('" + UserId + "')))";
+            Query = "Select ClientId from oe.sysusers where ltrim(rtrim(UPPER(UserId))) = ltrim(rtrim(UPPER('"+UserId+"')))";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -82,7 +87,7 @@ public class QuickReg_NewMRN
             rset.close();
             stmt.close();
 
-            Query = "Select dbname from oe.clients where Id = " + ClientId;
+            Query = "Select dbname from oe.clients where Id = "+ClientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -97,7 +102,7 @@ public class QuickReg_NewMRN
 //            }else if(ClientId == 10){
 //                Database = "oddasa";
 //            }
-        } catch (Exception e) {
+        }catch(Exception e){
             out.println(e.getMessage());
         }
 
@@ -107,7 +112,7 @@ public class QuickReg_NewMRN
         } else if (ActionID.equals("SaveData")) {
             supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "QuickReg_NewMRN Option", "Save the data From Quick Reg Option", ClientId);
             SaveData(request, out, conn, context, UserId, response);
-        } else if (ActionID.equals("AddressVerification")) {
+        }else if (ActionID.equals("AddressVerification")) {
             supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Address Verification API Called", "Address Verify and Get the Response back on run time", ClientId);
             AddressVerification(request, response, out, conn);
         } else if (ActionID.equals("EditValues")) {
@@ -117,16 +122,19 @@ public class QuickReg_NewMRN
         } else if (ActionID.equals("Victoria_2")) {
             Victoria_2(request, out, conn, context, UserId);
         }
-        try {
+        try
+        {
             conn.close();
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
         out.flush();
         out.close();
     }
 
-    void GetValues(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId) {
-        try {
+    void GetValues(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId)
+    {
+        try
+        {
             SupportiveMethods suppMethods = new SupportiveMethods();
             StringBuffer LeftSideBarMenu = new StringBuffer();
             StringBuffer Header = new StringBuffer();
@@ -160,7 +168,8 @@ public class QuickReg_NewMRN
             stmt.close();
 
 
-            Query = "Select Id, PayerId, PayerName from " + Database + ".ProfessionalPayers where PayerName like '%Texas%'";
+
+            Query = "Select Id, PayerId, PayerName from "+Database+".ProfessionalPayers where PayerName like '%Texas%'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             ProfessionalPayersList.append("<option class=Inner value='-1'>Select Insurance</option>");
@@ -170,7 +179,7 @@ public class QuickReg_NewMRN
             rset.close();
             stmt.close();
 
-            Query = "Select Id, PayerId, PayerName from " + Database + ".ProfessionalPayers where PayerName not like '%Texas%'";
+            Query = "Select Id, PayerId, PayerName from "+Database+".ProfessionalPayers where PayerName not like '%Texas%'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -179,7 +188,7 @@ public class QuickReg_NewMRN
             rset.close();
             stmt.close();
 
-            Query = "Select Id, CONCAT(DoctorsLastName, ' , ', DoctorsFirstName) from " + Database + ".DoctorsList";
+            Query = "Select Id, CONCAT(DoctorsLastName, ' , ', DoctorsFirstName) from "+ Database+".DoctorsList";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -191,7 +200,8 @@ public class QuickReg_NewMRN
             LeftSideBarMenu = suppMethods.LeftSideBarMenu(request, out, conn, servletContext, UserId, Database, ClientIndex);
             Footer = suppMethods.Footer(request, out, conn, servletContext, UserId, Database, ClientIndex);
             Parsehtm Parser = new Parsehtm(request);
-            if (ClientIndex == 8) {
+            if (ClientIndex == 8)
+            {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
@@ -200,7 +210,9 @@ public class QuickReg_NewMRN
                 Parser.SetField("Footer", String.valueOf(Footer));
                 Parser.SetField("DoctorList", String.valueOf(DoctorList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/QuickPatientRegFormOrange.html");
-            } else if (ClientIndex == 9) {
+            }
+            else if (ClientIndex == 9)
+            {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
@@ -209,7 +221,9 @@ public class QuickReg_NewMRN
                 Parser.SetField("Footer", String.valueOf(Footer));
                 Parser.SetField("DoctorList", String.valueOf(DoctorList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/QuickPatientRegFormVictoria.html");
-            } else if (ClientIndex == 10) {
+            }
+            else if (ClientIndex == 10)
+            {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
@@ -218,7 +232,9 @@ public class QuickReg_NewMRN
                 Parser.SetField("Footer", String.valueOf(Footer));
                 Parser.SetField("DoctorList", String.valueOf(DoctorList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/QuickPatientRegFormOddasa.html");
-            } else if (ClientIndex == 12) {
+            }
+            else if (ClientIndex == 12)
+            {
                 Parser.SetField("Date", String.valueOf(Date));
                 Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
                 Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
@@ -228,11 +244,12 @@ public class QuickReg_NewMRN
                 Parser.SetField("DoctorList", String.valueOf(DoctorList));
                 Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/QuickPatientRegFormSAustin.html");
             }
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
 
-    void SaveData(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, HttpServletResponse response) {
+    void SaveData(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, HttpServletResponse response)
+    {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -332,7 +349,8 @@ public class QuickReg_NewMRN
         int MRN = 0;
         String ExtendedMRN = "0";
 
-        try {
+        try
+        {
             try {
                 if ((request.getParameter("Title") == null)) {
                     Title = "Mr";
@@ -359,7 +377,7 @@ public class QuickReg_NewMRN
                 } else {
                     MaritalStatus = request.getParameter("MaritalStatus").trim();
                 }
-                if ((request.getParameter("DOB") == null)) {
+                if ((request.getParameter("DOB")== null)) {
                     DOB = "0000-00-00";
                 } else {
                     DOB = request.getParameter("DOB").trim();
@@ -414,37 +432,37 @@ public class QuickReg_NewMRN
                 } else {
                     SSN = request.getParameter("SSN").trim();
                 }
-                if ((request.getParameter("Occupation") == null)) {
+                if ((request.getParameter("Occupation")== null)) {
                     Occupation = "";
                 } else {
                     Occupation = request.getParameter("Occupation").trim();
                 }
-                if ((request.getParameter("Employer") == null)) {
+                if ((request.getParameter("Employer")== null)) {
                     Employer = "";
                 } else {
                     Employer = request.getParameter("Employer").trim();
                 }
-                if ((request.getParameter("EmpContact") == null)) {
+                if ((request.getParameter("EmpContact")== null)) {
                     EmpContact = "";
                 } else {
                     EmpContact = request.getParameter("EmpContact").trim();
                 }
-                if ((request.getParameter("PriCarePhy") == null)) {
+                if ((request.getParameter("PriCarePhy")== null)) {
                     PriCarePhy = "";
                 } else {
                     PriCarePhy = request.getParameter("PriCarePhy").trim();
                 }
-                if ((request.getParameter("ReasonVisit") == null)) {
+                if ((request.getParameter("ReasonVisit")== null)) {
                     ReasonVisit = "";
                 } else {
                     ReasonVisit = request.getParameter("ReasonVisit").trim();
                 }
-                if ((request.getParameter("ReasonVisit") == null)) {
+                if ((request.getParameter("ReasonVisit")== null)) {
                     ReasonVisit = "";
                 } else {
                     ReasonVisit = request.getParameter("ReasonVisit").trim();
                 }
-                if ((request.getParameter("DoctorName") == null)) {
+                if ((request.getParameter("DoctorName")== null)) {
                     DoctorsId = 0;
                 } else {
                     DoctorsId = Integer.parseInt(request.getParameter("DoctorName").trim());
@@ -554,17 +572,17 @@ public class QuickReg_NewMRN
                         PatientRelationshiptoSecondry = request.getParameter("PatientRelationshiptoSecondry").trim();
                     }
                 }
-                if ((request.getParameter("NextofKinName") == null)) {
+                if ((request.getParameter("NextofKinName")== null)) {
                     NextofKinName = "";
                 } else {
                     NextofKinName = request.getParameter("NextofKinName").trim();
                 }
-                if ((request.getParameter("RelationToPatientER") == null)) {
+                if ((request.getParameter("RelationToPatientER")== null)) {
                     RelationToPatientER = "";
                 } else {
                     RelationToPatientER = request.getParameter("RelationToPatientER").trim();
                 }
-                if ((request.getParameter("PhoneNumberER") == null)) {
+                if ((request.getParameter("PhoneNumberER")== null)) {
                     PhoneNumberER = "";
                 } else {
                     PhoneNumberER = request.getParameter("PhoneNumberER").trim();
@@ -574,57 +592,57 @@ public class QuickReg_NewMRN
                 } else {
                     LeaveMessageER = Integer.parseInt(request.getParameter("LeaveMessageER").trim());
                 }
-                if ((request.getParameter("AddressER") == null)) {
+                if ((request.getParameter("AddressER")== null)) {
                     AddressER = "";
                 } else {
                     AddressER = request.getParameter("AddressER").trim();
                 }
-                if ((request.getParameter("CityER") == null)) {
+                if ((request.getParameter("CityER")== null)) {
                     CityER = "";
                 } else {
                     CityER = request.getParameter("CityER").trim();
                 }
-                if ((request.getParameter("StateER") == null)) {
+                if ((request.getParameter("StateER")== null)) {
                     StateER = "";
                 } else {
                     StateER = request.getParameter("StateER").trim();
                 }
-                if ((request.getParameter("CountryER") == null)) {
+                if ((request.getParameter("CountryER")== null)) {
                     CountryER = "";
                 } else {
                     CountryER = request.getParameter("CountryER").trim();
                 }
-                if ((request.getParameter("ZipCodeER") == null)) {
+                if ((request.getParameter("ZipCodeER")== null)) {
                     ZipCodeER = "";
                 } else {
                     ZipCodeER = request.getParameter("ZipCodeER").trim();
                 }
-                if ((request.getParameter("VerifyChkBox") == null)) {
+                if ((request.getParameter("VerifyChkBox")== null)) {
                     VerifyChkBox = 0;
                 } else {
                     VerifyChkBox = 1;
                 }
-                if ((request.getParameter("PatientSignConcent") == null)) {
+                if ((request.getParameter("PatientSignConcent")== null)) {
                     PatientSignConcent = "";
                 } else {
                     PatientSignConcent = request.getParameter("PatientSignConcent").trim();
                 }
-                if ((request.getParameter("DateConcent") == null)) {
+                if ((request.getParameter("DateConcent")== null)) {
                     DateConcent = "0000-00-00";
                 } else {
                     DateConcent = request.getParameter("DateConcent").trim();
                 }
-                if ((request.getParameter("WitnessConcent") == null)) {
+                if ((request.getParameter("WitnessConcent")== null)) {
                     WitnessConcent = "";
                 } else {
                     WitnessConcent = request.getParameter("WitnessConcent").trim();
                 }
-                if ((request.getParameter("PatientBehalfConcent") == null)) {
+                if ((request.getParameter("PatientBehalfConcent")== null)) {
                     PatientBehalfConcent = "";
                 } else {
                     PatientBehalfConcent = request.getParameter("PatientBehalfConcent").trim();
                 }
-                if ((request.getParameter("RelativeSignConcent") == null)) {
+                if ((request.getParameter("RelativeSignConcent")== null)) {
                     RelativeSignConcent = "";
                 } else {
                     RelativeSignConcent = request.getParameter("RelativeSignConcent").trim();
@@ -634,7 +652,7 @@ public class QuickReg_NewMRN
                 } else {
                     DateConcent2 = request.getParameter("DateConcent2").trim();
                 }
-                if ((request.getParameter("WitnessConcent2") == null)) {
+                if ((request.getParameter("WitnessConcent2")== null)) {
                     WitnessConcent2 = "";
                 } else {
                     WitnessConcent2 = request.getParameter("WitnessConcent2").trim();
@@ -689,7 +707,7 @@ public class QuickReg_NewMRN
                     School_text = "-";
                 } else {
                     School = 1;
-                    if ((request.getParameter("School_text") == null)) {
+                    if ((request.getParameter("School_text")== null) ) {
                         School_text = "-";
                     } else {
                         School_text = request.getParameter("School_text").trim();
@@ -705,7 +723,7 @@ public class QuickReg_NewMRN
                     Magazine_text = "";
                 } else {
                     Magazine = 1;
-                    if ((request.getParameter("Magazine_text") == null)) {
+                    if ((request.getParameter("Magazine_text")== null)) {
                         Magazine_text = "";
                     } else {
                         Magazine_text = request.getParameter("Magazine_text").trim();
@@ -716,7 +734,7 @@ public class QuickReg_NewMRN
                     Newspaper_text = "";
                 } else {
                     Newspaper = 1;
-                    if ((request.getParameter("Newspaper_text") == null)) {
+                    if ((request.getParameter("Newspaper_text")== null)) {
                         Newspaper_text = "";
                     } else {
                         Newspaper_text = request.getParameter("Newspaper_text").trim();
@@ -727,7 +745,7 @@ public class QuickReg_NewMRN
                     FamilyFriend_text = "";
                 } else {
                     FamilyFriend = 1;
-                    if ((request.getParameter("FamilyFriend_text") == null)) {
+                    if ((request.getParameter("FamilyFriend_text")== null)) {
                         FamilyFriend_text = "";
                     } else {
                         FamilyFriend_text = request.getParameter("FamilyFriend_text").trim();
@@ -738,7 +756,7 @@ public class QuickReg_NewMRN
                     UrgentCare_text = "";
                 } else {
                     UrgentCare = 1;
-                    if ((request.getParameter("UrgentCare_text") == null)) {
+                    if ((request.getParameter("UrgentCare_text")== null)) {
                         UrgentCare_text = "";
                     } else {
                         UrgentCare_text = request.getParameter("UrgentCare_text").trim();
@@ -749,7 +767,7 @@ public class QuickReg_NewMRN
                     CommunityEvent_text = "";
                 } else {
                     CommunityEvent = 1;
-                    if ((request.getParameter("CommunityEvent_text") == null)) {
+                    if ((request.getParameter("CommunityEvent_text")== null)) {
                         CommunityEvent_text = "";
                     } else {
                         CommunityEvent_text = request.getParameter("CommunityEvent_text").trim();
@@ -760,7 +778,7 @@ public class QuickReg_NewMRN
                     Work_text = "";
                 } else {
                     Work = 1;
-                    if ((request.getParameter("Work_text").trim() == null)) {
+                    if ((request.getParameter("Work_text").trim()== null)) {
                         Work_text = "";
                     } else {
                         Work_text = request.getParameter("Work_text").trim();
@@ -771,7 +789,7 @@ public class QuickReg_NewMRN
                     Physician_text = "";
                 } else {
                     Physician = 1;
-                    if ((request.getParameter("Physician_text") == null)) {
+                    if ((request.getParameter("Physician_text")== null)) {
                         Physician_text = "";
                     } else {
                         Physician_text = request.getParameter("Physician_text").trim();
@@ -782,14 +800,14 @@ public class QuickReg_NewMRN
                     Other_text = "";
                 } else {
                     Other = 1;
-                    if ((request.getParameter("Other_text") == null)) {
+                    if ((request.getParameter("Other_text")== null)) {
                         Other_text = "";
                     } else {
                         Other_text = request.getParameter("Other_text").trim();
                     }
                 }
 
-            } catch (Exception e) {
+            }catch(Exception e){
                 out.println(e.getMessage());
                 String str = "";
                 for (int i = 0; i < e.getStackTrace().length; i++) {
@@ -797,7 +815,8 @@ public class QuickReg_NewMRN
                 }
                 out.println(str);
             }
-            try {
+            try
+            {
                 Query = "Select Id, dbname from oe.clients where ltrim(rtrim(UPPER(name))) =  ltrim(rtrim(UPPER('" + ClientId + "')))";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -825,14 +844,14 @@ public class QuickReg_NewMRN
                 rset.close();
                 stmt.close();
 
-                if (MRN == 0) {
+                if(MRN  == 0){
                     MRN = 310000001;
-                } else if (String.valueOf(MRN).length() == 6) {
+                }else if(String.valueOf(MRN).length() == 6){
                     MRN = 310000001;
                 }
                 //out.println(MRN);
-                if (ClientIndex == 9) {
-                    Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
+                if(ClientIndex == 9){
+                    Query = "Select MRN from "+Database+".PatientReg order by ID desc limit 1 ";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -843,33 +862,38 @@ public class QuickReg_NewMRN
 
                     if (String.valueOf(MRN).length() == 0) {
                         MRN = 310000001;
-                    } else if (String.valueOf(MRN).length() == 4) {
+                    }else if(String.valueOf(MRN).length() == 4){
                         MRN = 310000001;
-                    } else if (String.valueOf(MRN).length() == 8) {
+                    }else if(String.valueOf(MRN).length() == 8){
                         MRN = 310000001;
-                    } else if (String.valueOf(MRN).length() == 6) {
+                    }else if(String.valueOf(MRN).length() == 6) {
                         MRN = 310000001;
-                    } else if (String.valueOf(MRN).length() == 9) {
+                    }else if(String.valueOf(MRN).length() == 9){
                         MRN = MRN + 1;
                     }
                 }
 
 
-                if (ClientIndex == 8) {
-                    ExtendedMRN = "1008" + MRN;
-                } else if (ClientIndex == 9) {
-                    ExtendedMRN = "1009" + MRN;
-                } else if (ClientIndex == 10) {
-                    ExtendedMRN = "1010" + MRN;
-                } else if (ClientIndex == 11) {
-                    ExtendedMRN = "1011" + MRN;
-                } else if (ClientIndex == 12) {
-                    ExtendedMRN = "1012" + MRN;
+
+
+                if(ClientIndex == 8){
+                    ExtendedMRN = "1008"+MRN;
+                }else if(ClientIndex == 9){
+                    ExtendedMRN = "1009"+MRN;
+                }else if(ClientIndex == 10){
+                    ExtendedMRN = "1010"+MRN;
+                }else if(ClientIndex == 11){
+                    ExtendedMRN = "1011"+MRN;
+                }else if(ClientIndex == 12){
+                    ExtendedMRN = "1012"+MRN;
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 1:" + e.getMessage() + Query);
             }
-            try {
+            try
+            {
                 PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName ,MiddleInitial,DOB,Age,Gender ,Email,PhNumber ,Address,City ,State,Country,ZipCode,SSN,Occupation ,Employer ,EmpContact,PriCarePhy,ReasonVisit,SelfPayChk,CreatedDate,Title, MaritalStatus,CreatedBy, MRN, Status, DoctorsName, DateofService, ExtendedMRN) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,?, now(),?) ");
                 MainReceipt.setInt(1, ClientIndex);
                 MainReceipt.setString(2, FirstName);
@@ -900,11 +924,14 @@ public class QuickReg_NewMRN
                 MainReceipt.setString(27, ExtendedMRN);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 2- Insertion PatientReg Table :" + e.getMessage());
                 return;
             }
-            try {
+            try
+            {
                 Query = "Select max(ID) from " + Database + ".PatientReg ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -913,25 +940,29 @@ public class QuickReg_NewMRN
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 3- :" + e.getMessage());
             }
 
 
-            try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService,CreatedDate,CreatedBy) \nVALUES (?,?,?,1,NULL,now(),now(),?) ");
+            try{
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService,CreatedDate,CreatedBy) \nVALUES (?,?,?,1,NULL,now(),now(),?) ");
                 MainReceipt.setInt(1, MRN);
                 MainReceipt.setInt(2, PatientRegId);
                 MainReceipt.setString(3, ReasonVisit);
                 MainReceipt.setString(4, "Out Patient");
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }catch(Exception e){
                 out.println("Error 3.1 Insertion in table PatientVisit- :" + e.getMessage());
             }
 
-            try {
-                if (SelfPayChk == 1) {
+            try
+            {
+                if (SelfPayChk == 1)
+                {
                     PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".InsuranceInfo(PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance,MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary,PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberName,SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                     MainReceipt.setInt(1, PatientRegId);
                     MainReceipt.setInt(2, WorkersCompPolicy);
@@ -957,11 +988,14 @@ public class QuickReg_NewMRN
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 4- Insertion InsuranceInfo Table :" + e.getMessage());
                 return;
             }
-            try {
+            try
+            {
                 PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".EmergencyInfo (PatientRegId,NextofKinName,RelationToPatient,PhoneNumber,LeaveMessage,Address,City,State,Country,ZipCode,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,now()) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setString(2, NextofKinName);
@@ -975,11 +1009,14 @@ public class QuickReg_NewMRN
                 MainReceipt.setString(10, ZipCodeER);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 5- Insertion EmergencyInfo Table :" + e.getMessage());
                 return;
             }
-            try {
+            try
+            {
                 PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".ConcentToTreatmentInfo (PatientRegId,PatientSign,Date,Witness,PatientBehalfSign,RelativeSign,Date2,Witness2,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,now()) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setString(2, PatientSignConcent);
@@ -991,11 +1028,14 @@ public class QuickReg_NewMRN
                 MainReceipt.setString(8, WitnessConcent2);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 6- Insertion ConcentToTreatmentInfo Table :" + e.getMessage());
                 return;
             }
-            try {
+            try
+            {
                 PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".RandomCheckInfo (PatientRegId,ReturnPatient,Google,MapSearch,Billboard,OnlineReview,TV,Website,BuildingSignDriveBy,Facebook,School,School_text,Twitter,Magazine,Magazine_text,Newspaper,Newspaper_text,FamilyFriend,FamilyFriend_text,UrgentCare,UrgentCare_text,CommunityEvent,CommunityEvent_text,Work_text,Physician_text,Other_text,CreatedDate) \nVALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setInt(2, ReturnPatient);
@@ -1025,7 +1065,9 @@ public class QuickReg_NewMRN
                 MainReceipt.setString(26, Other_text);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error 7- Insertion RandomCheckInfo Table :" + e.getMessage());
                 return;
             }
@@ -1048,7 +1090,7 @@ public class QuickReg_NewMRN
             stmt.close();
 
             String Message = "";
-            if (ClientIndex == 9) {
+            if(ClientIndex == 9) {
                 //out.println("Inside Here Reason CLInt Index = "+ClientIndex);
                 ReasonVisit = ReasonVisit.replaceAll(" ", "");
                 //out.println("ReasonVisit: "+ReasonVisit.toUpperCase());
@@ -1056,19 +1098,21 @@ public class QuickReg_NewMRN
                     //out.println("Inside COVID IF");
                     //Here Run Covid API Form here
                     String InsertCOVIDRegReply = InsertCOVIDReg(request, response, out, conn, String.valueOf(PatientRegId));
-                    if (Integer.parseInt(InsertCOVIDRegReply) > 0) {
+                    if(Integer.parseInt(InsertCOVIDRegReply) > 0){
                         Message = "COVID Form Also Registered Successfully.";
                     }
                     //out.println("Reply from the Function :---" + InsertCOVIDRegReply);
                 }
             }
             Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully. Please Wait for Further Processing. " + Message + " <br>DATED: " + Date);
+            Parser.SetField("Message", "Thank You "+String.valueOf(PatientName) + " We Have Registered You Successfully. Please Wait for Further Processing. "+Message+" <br>DATED: "+ Date);
             Parser.SetField("FormName", String.valueOf("QuickReg_NewMRN"));
             Parser.SetField("ActionID", String.valueOf("GetValues"));
             Parser.SetField("ClientId", String.valueOf(ClientId));
             Parser.GenerateHtml(out, "/opt/Htmls/orange_2/Exception/Message.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; i++) {
@@ -1078,7 +1122,8 @@ public class QuickReg_NewMRN
         }
     }
 
-    void EditValues(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId) {
+    void EditValues(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId)
+    {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -1199,11 +1244,13 @@ public class QuickReg_NewMRN
         StringBuffer CountryBuffER = new StringBuffer();
         StringBuffer LeaveMessageERBuffYes = new StringBuffer();
         StringBuffer LeaveMessageERBuffNo = new StringBuffer();
-        try {
+        try
+        {
             Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(ZipCode,'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(ID,0), ClientIndex, DATE_FORMAT(CreatedDate, '%d-%m-%Y'), IFNULL(Country,'-')  From " + Database + ".PatientReg Where MRN =" + MRN;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next())
+            {
                 LastName = rset.getString(1).trim();
                 FirstName = rset.getString(2).trim();
                 MiddleInitial = rset.getString(3).trim();
@@ -1270,10 +1317,13 @@ public class QuickReg_NewMRN
             }
             rset.close();
             stmt.close();
-            if (gender.equals("male")) {
+            if (gender.equals("male"))
+            {
                 genderBuffMale.append("<input type=\"radio\" name=\"gender\" id=\"genderM\" value=\"male\" checked> Male<br>");
                 genderBuffFemale.append("<input type=\"radio\" name=\"gender\" id=\"genderN\" value=\"female\"> Female<br>");
-            } else {
+            }
+            else
+            {
                 genderBuffMale.append("<input type=\"radio\" name=\"gender\" id=\"genderM\" value=\"male\" > Male<br>");
                 genderBuffFemale.append("<input type=\"radio\" name=\"gender\" id=\"genderN\" value=\"female\" checked> Female<br>");
             }
@@ -1282,24 +1332,32 @@ public class QuickReg_NewMRN
             } else {
                 SelfPayChkBuff.append("<input type=\"checkbox\" id=\"SelfPayChk\" name=\"SelfPayChk\"  />");
             }
-            if (SelfPayChk == 1) {
+            if (SelfPayChk == 1)
+            {
                 Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%Y-%m-%d'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%Y-%m-%d'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                while (rset.next())
+                {
                     WorkersCompPolicy = rset.getInt(1);
                     MotorVehAccident = rset.getInt(2);
-                    if (WorkersCompPolicy == 0) {
+                    if (WorkersCompPolicy == 0)
+                    {
                         WorkersCompPolicyBuffNo.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyN\" value=\"0\" checked> No<br>");
                         WorkersCompPolicyBuffYes.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyY\" value=\"1\" > Yes<br>");
-                    } else {
+                    }
+                    else
+                    {
                         WorkersCompPolicyBuffYes.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyY\" value=\"1\" checked > Yes<br>");
                         WorkersCompPolicyBuffNo.append("<input type=\"radio\" name=\"WorkersCompPolicy\" id=\"WorkersCompPolicyN\" value=\"0\" > No<br>");
                     }
-                    if (MotorVehAccident == 0) {
+                    if (MotorVehAccident == 0)
+                    {
                         MotorVehAccidentBuffNo.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentN\" value=\"0\" checked> No<br>");
                         MotorVehAccidentBuffYes.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentY\" value=\"1\" > Yes<br>");
-                    } else {
+                    }
+                    else
+                    {
                         MotorVehAccidentBuffYes.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentY\" value=\"1\" checked> Yes<br>");
                         MotorVehAccidentBuffNo.append("<input type=\"radio\" name=\"MotorVehAccident\" id=\"MotorVehAccidentN\" value=\"0\" > No<br>");
                     }
@@ -1328,7 +1386,8 @@ public class QuickReg_NewMRN
             Query = "Select PatientRelation from " + Database + ".PatientRelation";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next())
+            {
                 if (PatientRelationtoPrimary.equals(rset.getString(1))) {
                     PatientRelationtoPrimaryBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(1) + "</option>");
                 }
@@ -1339,7 +1398,8 @@ public class QuickReg_NewMRN
             Query = "Select PatientRelation from " + Database + ".PatientRelation";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next())
+            {
                 if (PatientRelationshiptoSecondry.equals(rset.getString(1))) {
                     PatientRelationshiptoSecondryBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(1) + "</option>");
                 }
@@ -1350,15 +1410,19 @@ public class QuickReg_NewMRN
             Query = " Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'),  IFNULL(LeaveMessage,0), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(Country,'-'), IFNULL(ZipCode,'-')  from " + Database + ".EmergencyInfo where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next())
+            {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
                 LeaveMessageER = rset.getInt(4);
-                if (LeaveMessageER == 0) {
+                if (LeaveMessageER == 0)
+                {
                     LeaveMessageERBuffNo.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERN\" value=\"0\" checked> No<br>");
                     LeaveMessageERBuffYes.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERY\" value=\"1\" > Yes<br>");
-                } else {
+                }
+                else
+                {
                     LeaveMessageERBuffYes.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERY\" value=\"1\" checked> Yes<br>");
                     LeaveMessageERBuffNo.append("<input type=\"radio\" name=\"LeaveMessageER\" id=\"LeaveMessageERN\" value=\"0\" > No<br>");
                 }
@@ -1386,7 +1450,8 @@ public class QuickReg_NewMRN
             Query = " Select IFNULL(PatientSign,'-'), DATE_FORMAT(Date,'%Y-%m-%d'), IFNULL(Witness,'-'), IFNULL(PatientBehalfSign,'-'), IFNULL(RelativeSign,'-'), DATE_FORMAT(Date2,'%Y-%m-%d'), IFNULL(Witness2,'-') from " + Database + ".ConcentToTreatmentInfo  Where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next())
+            {
                 PatientSignConcent = rset.getString(1);
                 DateConcent = rset.getString(2);
                 WitnessConcent = rset.getString(3);
@@ -1400,7 +1465,8 @@ public class QuickReg_NewMRN
             Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  Work_text, Physician_text, Other_text from " + Database + ".RandomCheckInfo where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next())
+            {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient.append("<input type=\"checkbox\" id=\"ReturnPatient\" name=\"ReturnPatient\">");
                 } else {
@@ -1446,10 +1512,13 @@ public class QuickReg_NewMRN
                 } else {
                     Facebook.append("<input type=\"checkbox\" id=\"Facebook\" name=\"Facebook\" checked>");
                 }
-                if (rset.getInt(10) == 0) {
+                if (rset.getInt(10) == 0)
+                {
                     School.append("<input type=\"checkbox\" id=\"School\" name=\"School\">");
                     School_text = "";
-                } else {
+                }
+                else
+                {
                     School.append("<input type=\"checkbox\" id=\"School\" name=\"School\" checked>");
                     School_text = rset.getString(11);
                 }
@@ -1458,64 +1527,88 @@ public class QuickReg_NewMRN
                 } else {
                     Twitter.append("<input type=\"checkbox\" id=\"Twitter\" name=\"Twitter\" checked>");
                 }
-                if (rset.getInt(13) == 0) {
+                if (rset.getInt(13) == 0)
+                {
                     Magazine.append("<input type=\"checkbox\" id=\"Magazine\" name=\"Magazine\">");
                     Magazine_text = "";
-                } else {
+                }
+                else
+                {
                     Magazine.append("<input type=\"checkbox\" id=\"Magazine\" name=\"Magazine\" checked>");
                     Magazine_text = rset.getString(14);
                 }
-                if (rset.getInt(15) == 0) {
+                if (rset.getInt(15) == 0)
+                {
                     Newspaper.append("<input type=\"checkbox\" id=\"Newspaper\" name=\"Newspaper\">");
                     Newspaper_text = "";
-                } else {
+                }
+                else
+                {
                     Newspaper.append("<input type=\"checkbox\" id=\"Newspaper\" name=\"Newspaper\" checked>");
                     Newspaper_text = rset.getString(16);
                 }
-                if (rset.getInt(17) == 0) {
+                if (rset.getInt(17) == 0)
+                {
                     FamilyFriend.append("<input type=\"checkbox\" id=\"FamilyFriend\" name=\"FamilyFriend\">");
                     FamilyFriend_text = "";
-                } else {
+                }
+                else
+                {
                     FamilyFriend.append("<input type=\"checkbox\" id=\"FamilyFriend\" name=\"FamilyFriend\" checked>");
                     FamilyFriend_text = rset.getString(18);
                 }
-                if (rset.getInt(19) == 0) {
+                if (rset.getInt(19) == 0)
+                {
                     UrgentCare.append("<input type=\"checkbox\" id=\"UrgentCare\" name=\"UrgentCare\">");
                     UrgentCare_text = "";
-                } else {
+                }
+                else
+                {
                     UrgentCare.append("<input type=\"checkbox\" id=\"UrgentCare\" name=\"UrgentCare\" checked>");
                     UrgentCare_text = rset.getString(20);
                 }
-                if (rset.getInt(21) == 0) {
+                if (rset.getInt(21) == 0)
+                {
                     CommunityEvent.append("<input type=\"checkbox\" id=\"CommunityEvent\">");
                     CommunityEvent_text = "";
-                } else {
+                }
+                else
+                {
                     CommunityEvent.append("<input type=\"checkbox\" id=\"CommunityEvent\" checked>");
                     CommunityEvent_text = rset.getString(22);
                 }
-                if ((rset.getString(23) == "") || (rset.getString(23) == null) || (rset.getString(23).equals(""))) {
+                if ((rset.getString(23) == "") || (rset.getString(23) == null) || (rset.getString(23).equals("")))
+                {
                     System.out.println("Physician_text IF condition");
                     Work_text = "";
                     Work_textBuff.append("<input type=\"checkbox\" id=\"Work\" name=\"Work\">");
-                } else {
+                }
+                else
+                {
                     System.out.println("Physician_text Else condition");
                     Work_textBuff.append("<input type=\"checkbox\" id=\"Work\" name=\"Work\" checked>");
                     Work_text = rset.getString(23);
                 }
-                if ((rset.getString(24) == "") || (rset.getString(24) == null) || (rset.getString(24).equals(""))) {
+                if ((rset.getString(24) == "") || (rset.getString(24) == null) || (rset.getString(24).equals("")))
+                {
                     System.out.println("Physician_text IF condition");
                     Physician_text = "";
                     Physician_textBuff.append("<input type=\"checkbox\" id=\"Physician\" name=\"Physician\">");
-                } else {
+                }
+                else
+                {
                     System.out.println("Physician_text else condition");
                     Physician_text = rset.getString(24);
                     Physician_textBuff.append("<input type=\"checkbox\" id=\"Physician\" name=\"Physician\" checked>");
                 }
-                if ((rset.getString(25) == "") || (rset.getString(25) == null) || (rset.getString(25).equals(""))) {
+                if ((rset.getString(25) == "") || (rset.getString(25) == null) || (rset.getString(25).equals("")))
+                {
                     System.out.println("OtherText IF condition");
                     Other_text = "";
                     Other_textBuff.append("<input type=\"checkbox\" id=\"Other\" name=\"Other\">");
-                } else {
+                }
+                else
+                {
                     System.out.println("OtherText else condition");
                     Other_text = rset.getString(25);
                     Other_textBuff.append("<input type=\"checkbox\" id=\"Other\" name=\"Other\" checked>");
@@ -1639,7 +1732,9 @@ public class QuickReg_NewMRN
             } else if (ClientId == 10) {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/Edit/PatientRegForm_EditOddasa.html");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.out.println(e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; i++) {
@@ -1649,7 +1744,8 @@ public class QuickReg_NewMRN
         }
     }
 
-    void EditSave(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId) {
+    void EditSave(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId)
+    {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -1747,7 +1843,8 @@ public class QuickReg_NewMRN
         String PatientName = "";
         int ID = 0;
         String COVIDStatus = "0";
-        try {
+        try
+        {
             if ((request.getParameter("Title").trim().equals(null)) || (request.getParameter("Title").trim().equals(""))) {
                 Title = "Mr";
             } else {
@@ -1858,9 +1955,12 @@ public class QuickReg_NewMRN
             } else {
                 COVIDStatus = request.getParameter("COVIDStatus_Chk").trim();
             }
-            if (request.getParameter("SelfPayChk") == null) {
+            if (request.getParameter("SelfPayChk") == null)
+            {
                 SelfPayChk = 0;
-            } else {
+            }
+            else
+            {
                 SelfPayChk = 1;
                 if ((request.getParameter("WorkersCompPolicy").trim().equals(null)) || (request.getParameter("WorkersCompPolicy").trim().equals(""))) {
                     WorkersCompPolicy = 0;
@@ -2093,10 +2193,13 @@ public class QuickReg_NewMRN
             } else {
                 Facebook = 1;
             }
-            if (request.getParameter("School") == null) {
+            if (request.getParameter("School") == null)
+            {
                 School = 0;
                 School_text = "-";
-            } else {
+            }
+            else
+            {
                 School = 1;
                 if ((request.getParameter("School_text").trim().equals(null)) || (request.getParameter("School_text").trim().equals(""))) {
                     School_text = "-";
@@ -2109,10 +2212,13 @@ public class QuickReg_NewMRN
             } else {
                 Twitter = 1;
             }
-            if (request.getParameter("Magazine") == null) {
+            if (request.getParameter("Magazine") == null)
+            {
                 Magazine = 0;
                 Magazine_text = "";
-            } else {
+            }
+            else
+            {
                 Magazine = 1;
                 if ((request.getParameter("Magazine_text").trim().equals(null)) || (request.getParameter("Magazine_text").trim().equals(""))) {
                     Magazine_text = "";
@@ -2120,10 +2226,13 @@ public class QuickReg_NewMRN
                     Magazine_text = request.getParameter("Magazine_text").trim();
                 }
             }
-            if (request.getParameter("Newspaper") == null) {
+            if (request.getParameter("Newspaper") == null)
+            {
                 Newspaper = 0;
                 Newspaper_text = "";
-            } else {
+            }
+            else
+            {
                 Newspaper = 1;
                 if ((request.getParameter("Newspaper_text").trim().equals(null)) || (request.getParameter("Newspaper_text").trim().equals(""))) {
                     Newspaper_text = "";
@@ -2131,10 +2240,13 @@ public class QuickReg_NewMRN
                     Newspaper_text = request.getParameter("Newspaper_text").trim();
                 }
             }
-            if (request.getParameter("FamilyFriend") == null) {
+            if (request.getParameter("FamilyFriend") == null)
+            {
                 FamilyFriend = 0;
                 FamilyFriend_text = "";
-            } else {
+            }
+            else
+            {
                 FamilyFriend = 1;
                 if ((request.getParameter("FamilyFriend_text").trim().equals(null)) || (request.getParameter("FamilyFriend_text").trim().equals(""))) {
                     FamilyFriend_text = "";
@@ -2142,10 +2254,13 @@ public class QuickReg_NewMRN
                     FamilyFriend_text = request.getParameter("FamilyFriend_text").trim();
                 }
             }
-            if (request.getParameter("UrgentCare") == null) {
+            if (request.getParameter("UrgentCare") == null)
+            {
                 UrgentCare = 0;
                 UrgentCare_text = "";
-            } else {
+            }
+            else
+            {
                 UrgentCare = 1;
                 if ((request.getParameter("UrgentCare_text").trim().equals(null)) || (request.getParameter("UrgentCare_text").trim().equals(""))) {
                     UrgentCare_text = "";
@@ -2153,10 +2268,13 @@ public class QuickReg_NewMRN
                     UrgentCare_text = request.getParameter("UrgentCare_text").trim();
                 }
             }
-            if (request.getParameter("CommunityEvent") == null) {
+            if (request.getParameter("CommunityEvent") == null)
+            {
                 CommunityEvent = 0;
                 CommunityEvent_text = "";
-            } else {
+            }
+            else
+            {
                 CommunityEvent = 1;
                 if ((request.getParameter("CommunityEvent_text").trim().equals(null)) || (request.getParameter("CommunityEvent_text").trim().equals(""))) {
                     CommunityEvent_text = "";
@@ -2164,10 +2282,13 @@ public class QuickReg_NewMRN
                     CommunityEvent_text = request.getParameter("CommunityEvent_text").trim();
                 }
             }
-            if (request.getParameter("Work") == null) {
+            if (request.getParameter("Work") == null)
+            {
                 Work = 0;
                 Work_text = "";
-            } else {
+            }
+            else
+            {
                 Work = 1;
                 if ((request.getParameter("Work_text").trim().equals(null)) || (request.getParameter("Work_text").trim().equals(""))) {
                     Work_text = "";
@@ -2175,10 +2296,13 @@ public class QuickReg_NewMRN
                     Work_text = request.getParameter("Work_text").trim();
                 }
             }
-            if (request.getParameter("Physician") == null) {
+            if (request.getParameter("Physician") == null)
+            {
                 Physician = 0;
                 Physician_text = "";
-            } else {
+            }
+            else
+            {
                 Physician = 1;
                 if ((request.getParameter("Physician_text").trim().equals(null)) || (request.getParameter("Physician_text").trim().equals(""))) {
                     Physician_text = "";
@@ -2186,10 +2310,13 @@ public class QuickReg_NewMRN
                     Physician_text = request.getParameter("Physician_text").trim();
                 }
             }
-            if (request.getParameter("Other") == null) {
+            if (request.getParameter("Other") == null)
+            {
                 Other = 0;
                 Other_text = "";
-            } else {
+            }
+            else
+            {
                 Other = 1;
                 if ((request.getParameter("Other_text").trim().equals(null)) || (request.getParameter("Other_text").trim().equals(""))) {
                     Other_text = "";
@@ -2197,7 +2324,8 @@ public class QuickReg_NewMRN
                     Other_text = request.getParameter("Other_text").trim();
                 }
             }
-            try {
+            try
+            {
                 Query = "Select ID from oe_2.PatientReg where MRN = " + MRN;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -2206,55 +2334,75 @@ public class QuickReg_NewMRN
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error in getting PatineReg Data get:--" + e.getMessage() + Query);
             }
-            try {
+            try
+            {
                 Query = "UPDATE oe_2.PatientReg SET Title ='" + Title + "', FirstName = '" + FirstName + "', LastName = '" + LastName + "', MiddleInitial = '" + MiddleInitial + "', " + " DOB = '" + DOB + "', Age = '" + Age + "', Gender = '" + gender + "', Email = '" + Email + "', PhNumber = '" + PhNumber + "', Address = '" + Address + "', City = '" + City + "', " + " State = '" + State + "', Country = '" + Country + "', ZipCode = '" + ZipCode + "', SSN = '" + SSN + "', Occupation = '" + Occupation + "', Employer = '" + Employer + "', " + " EmpContact = '" + EmpContact + "', PriCarePhy = '" + PriCarePhy + "', ReasonVisit = '" + ReasonVisit + "', SelfPayChk = '" + SelfPayChk + "', MaritalStatus = '" + MaritalStatus + "', " + " COVIDStatus = '" + COVIDStatus + "' WHERE ID = " + ID;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error in Updating PatientReg Table:-" + e.getMessage());
             }
-            try {
-                if (SelfPayChk == 1) {
+            try
+            {
+                if (SelfPayChk == 1)
+                {
                     Query = "UPDATE oe_2.InsuranceInfo SET WorkersCompPolicy = " + WorkersCompPolicy + ", MotorVehAccident = " + MotorVehAccident + ", PriInsurance = '" + PriInsurance + "', " + " MemId = '" + MemId + "', GrpNumber = '" + GrpNumber + "', PriInsuranceName = '" + PriInsuranceName + "', AddressIfDifferent = '" + AddressIfDifferent + "', " + " PrimaryDOB = '" + PrimaryDOB + "', PrimarySSN = '" + PrimarySSN + "', PatientRelationtoPrimary = '" + PatientRelationtoPrimary + "', PrimaryOccupation = '" + PrimaryOccupation + "', " + " PrimaryEmployer = '" + PrimaryEmployer + "', EmployerAddress = '" + EmployerAddress + "', EmployerPhone = '" + EmployerPhone + "', SecondryInsurance = '" + SecondryInsurance + "', " + " SubscriberName = '" + SubscriberName + "', SubscriberDOB = '" + SubscriberDOB + "', MemberID_2 = '" + MemberID_2 + "', GroupNumber_2 = '" + GroupNumber_2 + "', " + " PatientRelationshiptoSecondry = '" + PatientRelationshiptoSecondry + "' WHERE PatientRegId = " + ID;
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
                     stmt.close();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error in Updating Insurance info Table :--" + e.getMessage());
             }
-            try {
+            try
+            {
                 Query = "Update oe_2.EmergencyInfo set NextofKinName = '" + NextofKinName + "', RelationToPatient = '" + RelationToPatientER + "', PhoneNumber = '" + PhoneNumberER + "', " + " LeaveMessage = " + LeaveMessageER + ", Address = '" + AddressER + "', City = '" + CityER + "', State = '" + StateER + "', Country = '" + CountryER + "', ZipCode = '" + ZipCodeER + "' " + " where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error in Updating Emergency Info Table:-- " + e.getMessage());
             }
-            try {
+            try
+            {
                 Query = "Update oe_2.ConcentToTreatmentInfo set PatientSign = '" + PatientSignConcent + "', Date = '" + DateConcent + "', Witness = '" + WitnessConcent + "', " + " PatientBehalfSign = '" + PatientBehalfConcent + "', RelativeSign = '" + RelativeSignConcent + "', Date2 = '" + DateConcent2 + "', Witness2 = '" + WitnessConcent2 + "' " + "Where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error in Updating ConcentToTreatmentInfo Table:-- " + e.getMessage());
             }
-            try {
+            try
+            {
                 Query = "Update oe_2.RandomCheckInfo set ReturnPatient = " + ReturnPatient + ", Google = " + Google + ", MapSearch = " + MapSearch + ", Billboard = " + Billboard + ", " + " OnlineReview = " + OnlineReview + ", TV = " + TV + ", Website = " + Website + ", BuildingSignDriveBy = " + BuildingSignDriveBy + ", Facebook = " + Facebook + ", " + " School = " + School + ", School_text = '" + School_text + "', Twitter = " + Twitter + ", Magazine = " + Magazine + ", Magazine_text = '" + Magazine_text + "', " + " Newspaper = " + Newspaper + ", Newspaper_text = '" + Newspaper_text + "', FamilyFriend = " + FamilyFriend + ", FamilyFriend_text = '" + FamilyFriend_text + "', " + " UrgentCare = " + UrgentCare + ", UrgentCare_text = '" + UrgentCare_text + "', CommunityEvent = " + CommunityEvent + ", CommunityEvent_text = '" + CommunityEvent_text + "', " + " Work_text = '" + Work_text + "', Physician_text = '" + Physician_text + "', Other_text = '" + Other_text + "' where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 out.println("Error in Updating RandomCheckInfo Table:-- " + e.getMessage());
             }
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("PatientName", String.valueOf(""));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Message_Success.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             out.println("Error in Updating:-" + e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; i++) {
@@ -2264,8 +2412,10 @@ public class QuickReg_NewMRN
         }
     }
 
-    void Victoria_2(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId) {
-        try {
+    void Victoria_2(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId)
+    {
+        try
+        {
             Statement stmt = null;
             ResultSet rset = null;
             String Query = "";
@@ -2285,8 +2435,8 @@ public class QuickReg_NewMRN
             Parser.SetField("Date", String.valueOf(Date));
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
             Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PatientRegFormVictoria_2.html");
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
 
 
@@ -2297,18 +2447,17 @@ public class QuickReg_NewMRN
         City = request.getParameter("City").trim();
         State = request.getParameter("State").trim();
 
-        Address1 = Address1.replaceAll(" ", "+");
-        Address2 = Address2.replaceAll(" ", "+");
+        Address1 = Address1.replaceAll(" ","+");
+        Address2 = Address2.replaceAll(" ","+");
         City = City.replaceAll(" ", "+");
-        State = State.replaceAll(" ", "+");
+        State = State.replaceAll(" ","+");
 
         System.out.println("Address1: " + Address1);
         System.out.println("Address2: " + Address2);
         System.out.println("State: " + City);
         System.out.println("City: " + State);
 
-        String Request = "";
-        String BaseURL = "";
+        String Request = "";String BaseURL = "";
         HashMap<String, Object> responseJSON = new HashMap();
         ObjectMapper jsonMapper = new ObjectMapper();
         String reply = "";
@@ -2316,10 +2465,10 @@ public class QuickReg_NewMRN
 //            BaseURL = "https://us-street.api.smartystreets.com/street-address?auth-id=54b83338-fab4-a0cd-36ec-4f977eb48ac8&auth-token=qZS2anMGvDT73p3z7D7C" +
 //                    "&street=17154+Butte+Creek+Rd,Suite+250&city=Houston&state=TX&candidates=10";
             BaseURL = "https://us-street.api.smartystreets.com/street-address?auth-id=54b83338-fab4-a0cd-36ec-4f977eb48ac8&auth-token=qZS2anMGvDT73p3z7D7C" +
-                    "&street=" + Address1 + Address2 + "&city=" + City + "&state=" + State + "&candidates=10";
+                    "&street="+Address1+Address2+"&city="+City+"&state="+State+"&candidates=10";
 
             //out.print("Request: "+Request);
-            System.out.println("BaseURL: " + BaseURL);
+            System.out.println("BaseURL: "+BaseURL);
 
             URL url = new URL(BaseURL);
             URLConnection uc = url.openConnection();
@@ -2327,7 +2476,7 @@ public class QuickReg_NewMRN
             uc.setConnectTimeout(17 * 1000);
             uc.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             uc.setRequestProperty("Accept", "application/json");
-            uc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
+            uc.setRequestProperty("User-Agent","Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
             uc.setAllowUserInteraction(false);
             uc.setDoOutput(true);
 
@@ -2344,10 +2493,10 @@ public class QuickReg_NewMRN
             is.read(response1);
             reply = new String(response1);
             reply = reply.trim();
-            System.out.println("reply:--" + reply);
+            System.out.println("reply:--"+reply);
 
             JSONObject jsonObject = new JSONArray(reply).getJSONObject(0);
-            if (jsonObject.length() > 0) {
+            if(jsonObject.length() > 0){
                 String Delivery_lineAddress = jsonObject.get("delivery_line_1").toString();
 
                 String city_name = jsonObject.getJSONObject("components").getString("city_name");
@@ -2362,7 +2511,7 @@ public class QuickReg_NewMRN
 //                System.out.println("state_abbreviation : "+state_abbreviation);
 //                System.out.println("zipcode : "+zipcode);
 //                System.out.println("county_name : "+county_name);
-                out.println(Delivery_lineAddress + "|" + city_name + "|" + state_abbreviation + "|" + zipcode + "|" + county_name);
+                out.println(Delivery_lineAddress +"|"+ city_name +"|"+ state_abbreviation +"|"+ zipcode +"|"+ county_name);
             }
 
         } catch (Exception e) {
@@ -2379,7 +2528,7 @@ public class QuickReg_NewMRN
 
     }
 
-    private String InsertCOVIDReg(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String PatientRegId) throws JsonProcessingException {
+    private String InsertCOVIDReg(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn,  String PatientRegId) throws JsonProcessingException {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -2399,9 +2548,9 @@ public class QuickReg_NewMRN
         String ZipCode = "";
         String reply = "";
 
-        try {
+        try{
             Query = "Select IFNULL(FirstName,''), IFNULL(MiddleInitial,''), IFNULL(LastName,''), IFNULL(Email, ''), IFNULL(PhNumber,0), IFNULL(DOB,'0000-00-00'), " +
-                    "IFNULL(Gender,'M'), IFNULL(City,''),IFNULL(Address,''), IFNULL(State,'TX'), IFNULL(ZipCode,'') from victoria.PatientReg where ID = " + PatientRegId;
+                    "IFNULL(Gender,'M'), IFNULL(City,''),IFNULL(Address,''), IFNULL(State,'TX'), IFNULL(ZipCode,'') from victoria.PatientReg where ID = "+ PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -2421,13 +2570,13 @@ public class QuickReg_NewMRN
             rset.close();
             stmt.close();
 
-        } catch (Exception e) {
+        }catch(Exception e){
             out.println("Error in Getting Data from PatientReg table" + e.getMessage());
         }
 
-        if (Gender.equals("male")) {
+        if(Gender.equals("male")){
             Gender = "M";
-        } else {
+        }else {
             Gender = "F";
         }
 
@@ -2445,7 +2594,7 @@ public class QuickReg_NewMRN
             responseJSON.put("City", City);//"Houston"
             responseJSON.put("County", "Unknown");
             responseJSON.put("Street", Address);//"17154 Butte Creek Rd, Suite# 250"
-            responseJSON.put("StateCode", State);//"TX"
+            responseJSON.put("StateCode", State );//"TX"
             responseJSON.put("IsValidDOB", true);
             responseJSON.put("Zipcode", ZipCode);
 
@@ -2457,7 +2606,7 @@ public class QuickReg_NewMRN
             String BaseURL = "https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1";
             String Mask = "";
             //out.print("Request: "+Request);
-            //out.println("BaseURL: "+BaseURL);
+			//out.println("BaseURL: "+BaseURL);
 
             URL url = new URL(BaseURL);
             URLConnection uc = url.openConnection();
@@ -2465,7 +2614,7 @@ public class QuickReg_NewMRN
             uc.setConnectTimeout(17 * 1000);
             uc.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
             uc.setRequestProperty("Accept", "application/json");
-            uc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
+            uc.setRequestProperty("User-Agent","Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
             uc.setAllowUserInteraction(false);
             uc.setDoOutput(true);
 
@@ -2485,14 +2634,15 @@ public class QuickReg_NewMRN
             //out.println("reply:--"+reply);
 
         } catch (Exception e) {
-            System.out.println("Error in Sending Data API COVID VICTORIA: " + e.getMessage());
-            out.println("Error in Sending Data API COVID VICTORIA: " + e.getMessage());
+            System.out.println("Error in Sending Data API COVID VICTORIA: "+e.getMessage());
+            out.println("Error in Sending Data API COVID VICTORIA: "+e.getMessage());
             out.flush();
             out.close();
         }
 
         return reply;
     }
+
 
 
 }

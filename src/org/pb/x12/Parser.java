@@ -22,9 +22,7 @@ import java.io.InputStream;
 
 
 public interface Parser {
-    EDI parse(File source) throws FormatException, IOException;
-
-    EDI parse(String source) throws FormatException;
-
-    EDI parse(InputStream source) throws FormatException, IOException;
+	EDI parse(File source) throws FormatException, IOException;
+	EDI parse(String source) throws FormatException;
+	EDI parse(InputStream source) throws FormatException, IOException;
 }

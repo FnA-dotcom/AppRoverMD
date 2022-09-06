@@ -25,51 +25,12 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Properties;
 
 @SuppressWarnings("Duplicates")
 public class UtilityHelper extends HttpServlet {
-
-    //***************************************************************************************************************//
-    public static void doLogMethodMessage(ServletContext servletcontext, String Method, String Message) {
-        try {
-            String FileName = GetLogPath(servletcontext) + GetExceptionFileName();
-            Date dt = new Date();
-            FileWriter fr = new FileWriter(FileName, true);
-            fr.write(dt.toString() + " -- " + Method + " -- " + Message + "\r\n");
-            fr.write("\r\n");
-            fr.flush();
-            fr.close();
-        } catch (Exception e) {
-        }
-    }
-
-    private static String GetExceptionFileName() {
-        // File Name consist of Date
-        // Format YYYY_MM_DD.log
-        int temp = 0;
-
-        try {
-            Date dt = GetDate();
-            NumberFormat nf = new DecimalFormat("#00");
-            return nf.format(dt.getYear() + 1900) + "_" + nf.format(dt.getMonth() + 1) + "_" + nf.format(dt.getDate()) + ".log";
-        } catch (Exception e) {
-            return "invalid filename " + e.getMessage();
-        }
-    }
-
-    private static String GetLogPath(ServletContext servletContext) {
-        return servletContext.getInitParameter("general_messages_path");
-    }
-
-    private static Date GetDate() {
-        try {
-            return new Date();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     /**
      * Initialize global variables
@@ -103,6 +64,7 @@ public class UtilityHelper extends HttpServlet {
         out.println("</body></html>");
         out.close();
     }
+
 
     String AppVersion(HttpServletRequest request, Connection conn, ServletContext servletContext) {
         CallableStatement cStmt = null;
@@ -188,26 +150,10 @@ public class UtilityHelper extends HttpServlet {
                 MerchantId = rset.getString(4);
                 Currency = rset.getString(5);
             }
-
-/*            System.out.println(" EndPoint " + EndPoint);
-            System.out.println(" UserName " + UserName);
-            System.out.println(" Password " + Password);
-            System.out.println(" MerchantId " + MerchantId);
-            System.out.println(" Currency " + Currency);*/
-
         } catch (Exception Ex) {
             //Services.MobileExceptionDumps("UtilityHelper", "getAuthConnect -- SP -- 003 ", request, Ex, servletContext);
             return new String[]{"Exception Message: " + Ex.getMessage()};
         }
-/*        finally {
-            if (rset != null) {
-                rset.close();
-            }
-            if (cStmt != null) {
-                cStmt.close();
-            }
-            conn.close();
-        }*/
         return new String[]{EndPoint, UserName, Password, MerchantId, Currency};
     }
 
@@ -267,6 +213,34 @@ public class UtilityHelper extends HttpServlet {
             Result = "-1";
         }
         return Result;
+    }
+
+    //***************************************************************************************************************//
+    public static void doLogMethodMessage(ServletContext servletcontext, String Method, String Message) {
+        try {
+            String FileName = GetLogPath(servletcontext) + GetExceptionFileName();
+            Date dt = new Date();
+            FileWriter fr = new FileWriter(FileName, true);
+            fr.write(dt.toString() + " -- " + Method + " -- " + Message + "\r\n");
+            fr.write("\r\n");
+            fr.flush();
+            fr.close();
+        } catch (Exception e) {
+        }
+    }
+
+    private static String GetExceptionFileName() {
+        // File Name consist of Date
+        // Format YYYY_MM_DD.log
+        int temp = 0;
+
+        try {
+            Date dt = GetDate();
+            NumberFormat nf = new DecimalFormat("#00");
+            return nf.format(dt.getYear() + 1900) + "_" + nf.format(dt.getMonth() + 1) + "_" + nf.format(dt.getDate()) + ".log";
+        } catch (Exception e) {
+            return "invalid filename " + e.getMessage();
+        }
     }
 
     public Object[] getLoginInfo(HttpServletRequest request, String userId, String password, Connection conn, ServletContext servletContext) {
@@ -509,25 +483,6 @@ public class UtilityHelper extends HttpServlet {
         return CurrDate;
     }
 
-/*    public void updateUserPassword(HttpServletRequest request, Connection conn, int FacilityIndex, String updatedPassword, ServletContext servletContext) {
-        cStmt = null;
-        rset = null;
-        Query = "";
-
-        try {
-            Query = "{CALL SP_UPDATE_PasswordUsers(?,?)}";
-            cStmt = conn.prepareCall(Query);
-            cStmt.setInt(1, FacilityIndex);
-            cStmt.setString(2, updatedPassword);
-            rset = cStmt.executeQuery();
-            rset.close();
-            cStmt.close();
-
-        } catch (Exception Ex) {
-            Services.DumException("UtilityHelper", "updateUserPassword -- SP -- 012 ", request, Ex, this.getServletContext());
-        }
-    }*/
-
     public void updateWrongEntriesNoOfTries(HttpServletRequest request, Connection conn, String userId, ServletContext servletContext) {
         CallableStatement cStmt = null;
         ResultSet rset = null;
@@ -578,6 +533,25 @@ public class UtilityHelper extends HttpServlet {
         }
         return new String[]{UserName, UserIdx, String.valueOf(FacilityIndex), ClientName, CurrPassword, menu};
     }
+
+/*    public void updateUserPassword(HttpServletRequest request, Connection conn, int FacilityIndex, String updatedPassword, ServletContext servletContext) {
+        cStmt = null;
+        rset = null;
+        Query = "";
+
+        try {
+            Query = "{CALL SP_UPDATE_PasswordUsers(?,?)}";
+            cStmt = conn.prepareCall(Query);
+            cStmt.setInt(1, FacilityIndex);
+            cStmt.setString(2, updatedPassword);
+            rset = cStmt.executeQuery();
+            rset.close();
+            cStmt.close();
+
+        } catch (Exception Ex) {
+            Services.DumException("UtilityHelper", "updateUserPassword -- SP -- 012 ", request, Ex, this.getServletContext());
+        }
+    }*/
 
     public void captureWebLogActivity(HttpServletRequest request, String userId, int FacilityIndex, String WebAction, Connection conn, ServletContext servletContext) {
         CallableStatement cStmt = null;
@@ -807,253 +781,16 @@ public class UtilityHelper extends HttpServlet {
         return found > 0;
     }
 
-    public int SendEmail(String eSection, String eSubject, String eBody, String Email, Connection conn, ServletContext servletContext) {
-        String HostName = "";
-        String EmailUserId = "";
-        String EmailPassword = "";
-        String SMTP = "";
-        String Port = "";
-        String Authentication = "";
-        CallableStatement cStmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
-        try {
-            Query = "{CALL SP_GET_CredentialsEmail()}";
-            cStmt = conn.prepareCall(Query);
-            rset = cStmt.executeQuery();
-            if (rset.next()) {
-                HostName = rset.getString(1);
-                EmailUserId = rset.getString(2);
-                EmailPassword = rset.getString(3);
-                SMTP = rset.getString(4);
-                Port = rset.getString(5);
-                Authentication = rset.getString(6);
-            }
-            rset.close();
-            cStmt.close();
-
-/*            Properties props = new Properties();
-            props.put("mail.transport.protocol", "smtp");
-            props.put("mail.smtp.host", HostName);
-            props.put("mail.smtp.port", Port);
-            props.put("mail.smtp.auth", "true");*/
-
-            System.out.println("*****************************************");
-            System.out.println("HostName " + HostName);
-            System.out.println("EmailUserId " + EmailUserId);
-            System.out.println("EmailPassword " + EmailPassword);
-            System.out.println("SMTP " + SMTP);
-            System.out.println("Port " + Port);
-            System.out.println("Authentication " + Authentication);
-            System.out.println("*****************************************");
-
-            System.out.println("Sending an Email....");
-            Properties props = new Properties();
-            props.put("mail.transport.protocol", SMTP);
-            props.put("mail.smtp.host", HostName);
-            props.put("mail.smtp.port", Port);
-            props.put("mail.smtp.auth", Authentication);
-            final String user = EmailUserId;//change accordingly
-            final String password = EmailPassword;//change accordingly
-            Session session = Session.getDefaultInstance(props,
-                    new Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(user, password);
-                        }
-                    });
-            //session.setDebug(true);
-            MimeMessage message = new MimeMessage(session);
-            message.setContent(eBody, "text/html");
-
-            message.setFrom(new InternetAddress("App Rover <no-reply@rovermd.com>"));
-            // Set To: header field of the header.
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
-            message.setSentDate(new Date());
-            // Set Subject: header field
-            message.setSubject(eSubject);
-            //Setting the email priority high
-            //message.addHeader("X-Priority", "1");
-
-            Transport transport = session.getTransport("smtp");
-            transport.connect();
-            transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-            transport.close();
-            System.out.println("1");
-        } catch (Exception var18) {
-            System.out.println("Error while Generating Email!!!");
-            System.out.println(var18.getMessage());
-        }
-        return 1;
-    }
-/*    public int SendEmail(String eSection, String eSubject, String eBody, String Email) {
-        //String Email1 = "alert@rovermd.com";
-        String SMTP_HOST_NAME = "smtp.ionos.com";
-        String Port = "587";
-        Properties props = new Properties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.host", SMTP_HOST_NAME);
-        props.put("mail.smtp.port", Port);
-        props.put("mail.smtp.auth", "true");
-        try {
-
-            //Sending a HTML file in Email's
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
-
-            Authenticator auth = new SMTPAuthenticator();
-            Session mailSession = Session.getInstance(props, auth);
-            //mailSession.setDebug(true);
-            Transport transport = mailSession.getTransport();
-
-            MimeMessage message = new MimeMessage(mailSession);
-            //message.setContent(Body, "text/html");
-            message.setContent(writer.toString(), "text/html");
-            message.setSubject(eSubject);
-            message.setFrom(new InternetAddress("App Rover <no-reply@rovermd.com>"));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
-            //message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email2));
-            message.setSentDate(new Date());
-            transport.connect();
-            transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-            transport.close();
-            System.out.println("1");
-        } catch (Exception var18) {
-            System.out.println("Error while Generating Email!!!");
-            System.out.println(var18.getMessage());
-        }
-
-        return 1;
-    }*/
-
-    public int SendEmailRoverLab(String eSection, String eSubject, String link, String Email, Connection conn, ServletContext servletContext, int MRN, String name, String facilityIndex) {
-        String HostName = "";
-        String EmailUserId = "";
-        String EmailPassword = "";
-        String SMTP = "";
-        String Port = "";
-        String Authentication = "";
-        CallableStatement cStmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
-        try {
-            Query = "{CALL SP_GET_CredentialsEmail()}";
-            cStmt = conn.prepareCall(Query);
-            rset = cStmt.executeQuery();
-            if (rset.next()) {
-                HostName = rset.getString(1);
-                EmailUserId = rset.getString(2);
-                EmailPassword = rset.getString(3);
-                SMTP = rset.getString(4);
-                Port = rset.getString(5);
-                Authentication = rset.getString(6);
-            }
-            rset.close();
-            cStmt.close();
-
-/*            Properties props = new Properties();
-            props.put("mail.transport.protocol", "smtp");
-            props.put("mail.smtp.host", HostName);
-            props.put("mail.smtp.port", Port);
-            props.put("mail.smtp.auth", "true");*/
-
-            System.out.println("*****************************************");
-            System.out.println("HostName " + HostName);
-            System.out.println("EmailUserId " + EmailUserId);
-            System.out.println("EmailPassword " + EmailPassword);
-            System.out.println("SMTP " + SMTP);
-            System.out.println("Port " + Port);
-            System.out.println("Authentication " + Authentication);
-            System.out.println("*****************************************");
-
-            System.out.println("Sending an Email....");
-            Properties props = new Properties();
-            props.put("mail.transport.protocol", SMTP);
-            props.put("mail.smtp.host", HostName);
-            props.put("mail.smtp.port", Port);
-            props.put("mail.smtp.auth", Authentication);
-            final String user = EmailUserId;//change accordingly
-            final String password = EmailPassword;//change accordingly
-            Session session = Session.getDefaultInstance(props,
-                    new Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(user, password);
-                        }
-                    });
-            //session.setDebug(true);
-            System.out.println("MRN " + MRN);
-            StringWriter writer = new StringWriter();
-            //
-            IOUtils.copy(new FileInputStream(new File(emailHtmlFilePath + "LabRegistration.html")), writer);
-            //writer.toString().replace("mrn",String.valueOf(MRN));
-            System.out.println("LINK *** " + link);
-
-            MimeMessage message = new MimeMessage(session);
-            //message.setContent(eBody, "text/html");
-            message.setContent(writer.toString().replace("mrn", String.valueOf(MRN) + ":" + facilityIndex), "text/html");
-
-            message.setFrom(new InternetAddress("App Rover <no-reply@rovermd.com>"));
-            // Set To: header field of the header.
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
-            message.setSentDate(new Date());
-            // Set Subject: header field
-            message.setSubject(eSubject);
-            //Setting the email priority high
-            //message.addHeader("X-Priority", "1");
-
-            Transport transport = session.getTransport("smtp");
-            transport.connect();
-            transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-            transport.close();
-            System.out.println("1");
-        } catch (Exception var18) {
-            System.out.println("Error while Generating Email!!!");
-            System.out.println(var18.getMessage());
-        }
-        return 1;
+    private static String GetLogPath(ServletContext servletContext) {
+        return servletContext.getInitParameter("general_messages_path");
     }
 
-    public int SendEmailOLD(String eSection, String eSubject, String eBody, String Email, String facilityIndex) {
-//        String Email1 = "m.mehmood@fam-llc.com";
-//        String Email1 = "alert@rovermd.com";
-        String SMTP_HOST_NAME = "smtp.ionos.com";
-        String Port = "587";
-        Properties props = new Properties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.host", SMTP_HOST_NAME);
-        props.put("mail.smtp.port", Port);
-        props.put("mail.smtp.auth", "true");
+    private static Date GetDate() {
         try {
-            System.out.println("Sending an Email....");
-            //Sending a HTML file in Email's
-//            StringWriter writer = new StringWriter();
-//            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
-
-            Authenticator auth = new SMTPAuthenticator();
-            Session mailSession = Session.getInstance(props, auth);
-            mailSession.setDebug(true);
-            Transport transport = mailSession.getTransport();
-
-            MimeMessage message = new MimeMessage(mailSession);
-            //message.setContent(Body, "text/html");
-            message.setContent(eBody, "text/html");
-            message.setSubject(eSubject);
-            // message.setFrom(new InternetAddress("App Rover <tabish.hafeez@fam-llc.com>"));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
-            //message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email2));
-            message.setSentDate(new Date());
-            transport.connect();
-            transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-            transport.close();
-            System.out.println("1");
-        } catch (Exception var18) {
-            System.out.println("Error while Generating Email!!!");
-            System.out.println(var18.getMessage());
-            return 0;
+            return new Date();
+        } catch (Exception e) {
+            return null;
         }
-
-        return 1;
     }
 
     public void init() {
@@ -1125,160 +862,56 @@ public class UtilityHelper extends HttpServlet {
         }
     }
 
-    public int SendEmailWithAttachment(String eSubject, ServletContext servletContext, Exception exp, String ClassName, String FuncName, Connection conn) {
-        CallableStatement cStmt = null;
-        ResultSet rset = null;
-        String Query = "";
-        //String Email1 = "tabish.hafeez@fam-llc.com";//change accordingly
-        String FilePath = Services.GetEmailLogsPath(servletContext);
-        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
-        try {
-            String HostName = "";
-            String EmailUserId = "";
-            String EmailPassword = "";
-            String SMTP = "";
-            String Port = "";
-            String Authentication = "";
-            String EmailTo = null;
-            try {
-                if (conn == null) {
-                    conn = Services.getMysqlConn(servletContext);
-                }
-                Query = "{CALL SP_GET_CredentialsEmail()}";
-                cStmt = conn != null ? conn.prepareCall(Query) : (CallableStatement) Services.getMysqlConn(servletContext);
-                rset = cStmt != null ? cStmt.executeQuery() : null;
-                if (rset != null && rset.next()) {
-                    HostName = rset.getString(1);
-                    EmailUserId = rset.getString(2);
-                    EmailPassword = rset.getString(3);
-                    SMTP = rset.getString(4);
-                    Port = rset.getString(5);
-                    Authentication = rset.getString(6);
-                    EmailTo = rset.getString(7);
-                }
-                if (rset != null) {
-                    rset.close();
-                }
-                if (cStmt != null) {
-                    cStmt.close();
-                }
-            } catch (Exception Ex) {
-                Ex.printStackTrace();
+    public static String getAge(LocalDate dob) {
+        int dy = dob.getYear();
+        int dm = dob.getMonthValue();
+        int dd = dob.getDayOfMonth();
+
+        int ty = LocalDate.now().getYear();
+        int tm = LocalDate.now().getMonthValue();
+        int td = LocalDate.now().getDayOfMonth();
+
+        int diff_y = -1,diff_m=-1, diff_d=-1;
+
+        String age=null;
+
+        if (tm > dm) {
+            diff_y = ty - dy;
+            diff_m = tm - dm;
+        } else if (tm < dm) {
+            diff_y = ty - dy - 1;
+
+            diff_m = 12 - dm + tm;
+        } else if (tm == dm) {
+            diff_y = ty - dy;
+            diff_m = tm - dm;
+            diff_d = td - dd;
+            if (diff_d < 0) {
+                diff_y--;
+                diff_m = 12 - 1;
             }
-            System.out.println("*****************************************");
-            System.out.println("HostName " + HostName);
-            System.out.println("EmailUserId " + EmailUserId);
-            System.out.println("EmailPassword " + EmailPassword);
-            System.out.println("SMTP " + SMTP);
-            System.out.println("Port " + Port);
-            System.out.println("Authentication " + Authentication);
-
-
-            System.out.println("*****************************************");
-            //1) get the session object
-
-            Properties props = new Properties();
-            props.put("mail.transport.protocol", SMTP);
-            props.put("mail.smtp.host", HostName);
-            props.put("mail.smtp.port", Port);
-            props.put("mail.smtp.auth", Authentication);
-            final String user = EmailUserId;//change accordingly
-            final String password = EmailPassword;//change accordingly
-            Session session = Session.getDefaultInstance(props,
-                    new Authenticator() {
-                        protected PasswordAuthentication getPasswordAuthentication() {
-                            return new PasswordAuthentication(user, password);
-                        }
-                    });
-
-
-            //session.setDebug(true);
-            //Sending a HTML file in Email's
-            StringWriter writer = new StringWriter();
-            //IOUtils.copy(new FileInputStream(new File("F://EmailFormatter.html")), writer);
-            IOUtils.copy(new FileInputStream(new File(emailHtmlFilePath + "EmailFormatter.html")), writer);
-//            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
-
-            MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("App Rover <no-reply@rovermd.com>"));
-            // Set To: header field of the header.
-            //message.addRecipient(Message.RecipientType.TO, new InternetAddress((EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo)));
-            EmailTo = (EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo);
-            System.out.println("EMAIL ADDRESS FROM UH --> " + EmailTo);
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(EmailTo));
-            // Set Subject: header field
-            message.setSubject(eSubject);
-            //Setting the email priority high
-            message.addHeader("X-Priority", "1");
-
-            Transport t = session.getTransport("smtp");
-            t.connect();
-
-            // attachement
-            Multipart multipart = new MimeMultipart();
-            BodyPart messageBodyPart = new MimeBodyPart();
-            BodyPart attachmentBodyPart = new MimeBodyPart();
-            messageBodyPart.setContent(writer.toString(), "text/html"); // 5
-
-            multipart.addBodyPart(messageBodyPart);
-//session.setDebug(true);
-            /************* MY PART *************/
-            String FileName = "";
-            try {
-                FileName = FilePath + "myLogs.txt";
-                //FileName = "/sftpdrive/opt/Htmls/md/logs/EmailLogs/myLogs.log";
-                final FileWriter fr = new FileWriter(FileName, true);
-                String str = "";
-                for (int i = 0; i < exp.getStackTrace().length; ++i) {
-                    str = String.valueOf(str) + exp.getStackTrace()[i] + "<br>";
-                }
-                //fr.write(new Date().toString() + "^" + ClassName + "^" + FuncName + "^" + exp.getMessage() + str + "\r\n");
-                fr.write(new Date().toString() + "^" + ClassName + "^" + FuncName + "^" + exp.getMessage() + "\r\n");
-                final PrintWriter pr = new PrintWriter(fr, true);
-                exp.printStackTrace(pr);
-                fr.write("\r\n");
-                fr.flush();
-                fr.close();
-                pr.close();
-            } catch (Exception ex) {
-            }
-
-            /**********************************/
-
-            String fName = FilePath + "myLogs.txt";//change accordingly
-            //String fName = "/sftpdrive/opt/Htmls/md/logs/EmailLogs/myLogs.log";//change accordingly
-            // file path
-            File filename = new File(fName);
-
-            DataSource source = new FileDataSource(filename);
-            attachmentBodyPart.setDataHandler(new DataHandler(source));
-            attachmentBodyPart.setFileName(filename.getName());
-            multipart.addBodyPart(attachmentBodyPart);
-            message.setContent(multipart);
-
-            Transport.send(message);
-
-            //Delete the file
-            Files.deleteIfExists(Paths.get(fName));
-            System.out.println("Email Sent..");
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return 1;
+
+        if (diff_y < 1) {
+            age = diff_m + " mos";
+        }else{
+            age = String.valueOf(diff_y);
+        }
+
+        return age;
     }
 
-    public int SendEmail_RequestReport(Connection conn, String eSubject, String eBody) {
-        CallableStatement cStmt = null;
-        ResultSet rset = null;
-        String Query = "";
-
+    public int SendEmail(String eSection, String eSubject, String eBody, String Email, Connection conn, ServletContext servletContext) {
         String HostName = "";
         String EmailUserId = "";
         String EmailPassword = "";
         String SMTP = "";
         String Port = "";
         String Authentication = "";
-        String EmailTo = "";
+        CallableStatement cStmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
         try {
             Query = "{CALL SP_GET_CredentialsEmail()}";
             cStmt = conn.prepareCall(Query);
@@ -1290,51 +923,67 @@ public class UtilityHelper extends HttpServlet {
                 SMTP = rset.getString(4);
                 Port = rset.getString(5);
                 Authentication = rset.getString(6);
-                EmailTo = rset.getString(7);
             }
             rset.close();
             cStmt.close();
 
-        } catch (Exception Ex) {
-            Ex.printStackTrace();
-        }
+/*            Properties props = new Properties();
+            props.put("mail.transport.protocol", "smtp");
+            props.put("mail.smtp.host", HostName);
+            props.put("mail.smtp.port", Port);
+            props.put("mail.smtp.auth", "true");*/
 
+            System.out.println("*****************************************");
+            System.out.println("HostName " + HostName);
+            System.out.println("EmailUserId " + EmailUserId);
+            System.out.println("EmailPassword " + EmailPassword);
+            System.out.println("SMTP " + SMTP);
+            System.out.println("Port " + Port);
+            System.out.println("Authentication " + Authentication);
+            System.out.println("*****************************************");
 
-        String SMTP_HOST_NAME = "smtp.ionos.com";
-        Properties props = new Properties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.host", SMTP_HOST_NAME);
-        props.put("mail.smtp.port", Port);
-        props.put("mail.smtp.auth", "true");
+            System.out.println("Sending an Email....");
+            Properties props = new Properties();
+            props.put("mail.transport.protocol", SMTP);
+            props.put("mail.smtp.host", HostName);
+            props.put("mail.smtp.port", Port);
+            props.put("mail.smtp.auth", Authentication);
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols","TLSv1.2");
+            props.put("mail.smtp.socketFactory.port", Port);
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.fallback", "true");
 
-
-        try {
-            //Sending a HTML file in Email's
-//            StringWriter writer = new StringWriter();
-//            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
-
-            Authenticator auth = new SMTPAuthenticator();
-            Session mailSession = Session.getInstance(props, auth);
-            //mailSession.setDebug(true);
-            Transport transport = mailSession.getTransport();
-
-            MimeMessage message = new MimeMessage(mailSession);
-            //message.setContent(Body, "text/html");
+            final String user = EmailUserId;//change accordingly
+            final String password = EmailPassword;//change accordingly
+            Session session = Session.getDefaultInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(user, password);
+                        }
+                    });
+            //session.setDebug(true);
+            MimeMessage message = new MimeMessage(session);
             message.setContent(eBody, "text/html");
-            message.setSubject(eSubject);
-            message.setFrom(new InternetAddress("App Rover <no-reply@rovermd.com>"));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(EmailTo));
-            //message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email2));
+
+            message.setFrom(new InternetAddress("App Rover <no-reply@fam-llc.com>"));
+            // Set To: header field of the header.
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
             message.setSentDate(new Date());
+            // Set Subject: header field
+            message.setSubject(eSubject);
+            //Setting the email priority high
+            //message.addHeader("X-Priority", "1");
+
+            Transport transport = session.getTransport("smtp");
             transport.connect();
             transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
             transport.close();
             System.out.println("1");
         } catch (Exception var18) {
-            System.out.println("Error while Generating Email!!!");
+            System.out.println("Error while Generating Email!!! IN SendEmail FUNCTION");
             System.out.println(var18.getMessage());
         }
-
         return 1;
     }
 
@@ -1864,6 +1513,250 @@ public class UtilityHelper extends HttpServlet {
         return found;
     }
 
+    public int SendEmailRoverLab(String eSection, String eSubject, String link, String Email, Connection conn, ServletContext servletContext, int MRN, String name, String facilityIndex) {
+        String HostName = "";
+        String EmailUserId = "";
+        String EmailPassword = "";
+        String SMTP = "";
+        String Port = "";
+        String Authentication = "";
+        CallableStatement cStmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
+        try {
+            Query = "{CALL SP_GET_CredentialsEmail()}";
+            cStmt = conn.prepareCall(Query);
+            rset = cStmt.executeQuery();
+            if (rset.next()) {
+                HostName = rset.getString(1);
+                EmailUserId = rset.getString(2);
+                EmailPassword = rset.getString(3);
+                SMTP = rset.getString(4);
+                Port = rset.getString(5);
+                Authentication = rset.getString(6);
+            }
+            rset.close();
+            cStmt.close();
+
+/*            Properties props = new Properties();
+            props.put("mail.transport.protocol", "smtp");
+            props.put("mail.smtp.host", HostName);
+            props.put("mail.smtp.port", Port);
+            props.put("mail.smtp.auth", "true");*/
+
+            System.out.println("*****************************************");
+            System.out.println("HostName " + HostName);
+            System.out.println("EmailUserId " + EmailUserId);
+            System.out.println("EmailPassword " + EmailPassword);
+            System.out.println("SMTP " + SMTP);
+            System.out.println("Port " + Port);
+            System.out.println("Authentication " + Authentication);
+            System.out.println("*****************************************");
+
+            System.out.println("Sending an Email....");
+            Properties props = new Properties();
+            props.put("mail.transport.protocol", SMTP);
+            props.put("mail.smtp.host", HostName);
+            props.put("mail.smtp.port", Port);
+            props.put("mail.smtp.auth", Authentication);
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols","TLSv1.2");
+            props.put("mail.smtp.socketFactory.port", Port);
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.fallback", "true");
+
+
+            final String user = EmailUserId;//change accordingly
+            final String password = EmailPassword;//change accordingly
+            Session session = Session.getDefaultInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(user, password);
+                        }
+                    });
+            //session.setDebug(true);
+            System.out.println("MRN " + MRN);
+            StringWriter writer = new StringWriter();
+            //
+            IOUtils.copy(new FileInputStream(new File(emailHtmlFilePath + "LabRegistration.html")), writer);
+            //writer.toString().replace("mrn",String.valueOf(MRN));
+            System.out.println("LINK *** " + link);
+
+            MimeMessage message = new MimeMessage(session);
+            //message.setContent(eBody, "text/html");
+            message.setContent(writer.toString().replace("mrn", String.valueOf(MRN) + ":" + facilityIndex), "text/html");
+
+            message.setFrom(new InternetAddress("App Rover <no-reply@fam-llc.com>"));
+            // Set To: header field of the header.
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
+            message.setSentDate(new Date());
+            // Set Subject: header field
+            message.setSubject(eSubject);
+            //Setting the email priority high
+            //message.addHeader("X-Priority", "1");
+
+            Transport transport = session.getTransport("smtp");
+            transport.connect();
+            transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+            transport.close();
+            System.out.println("1");
+        } catch (Exception var18) {
+            System.out.println("Error while Generating Email!!! IN SendEmailRoverLab FUNCTION");
+            System.out.println(var18.getMessage());
+        }
+        return 1;
+    }
+
+    public int SendEmailWithAttachment(String eSubject, ServletContext servletContext, Exception exp, String ClassName, String FuncName, Connection conn) {
+        CallableStatement cStmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        //String Email1 = "tabish.hafeez@fam-llc.com";//change accordingly
+        String FilePath = Services.GetEmailLogsPath(servletContext);
+        String emailHtmlFilePath = Services.GetEmailFilePath(servletContext);
+        try {
+            String HostName = "";
+            String EmailUserId = "";
+            String EmailPassword = "";
+            String SMTP = "";
+            String Port = "";
+            String Authentication = "";
+            String EmailTo = null;
+            try {
+                if (conn == null) {
+                    conn = Services.getMysqlConn(servletContext);
+                }
+                Query = "{CALL SP_GET_CredentialsEmail()}";
+                cStmt = conn != null ? conn.prepareCall(Query) : (CallableStatement) Services.getMysqlConn(servletContext);
+                rset = cStmt != null ? cStmt.executeQuery() : null;
+                if (rset != null && rset.next()) {
+                    HostName = rset.getString(1);
+                    EmailUserId = rset.getString(2);
+                    EmailPassword = rset.getString(3);
+                    SMTP = rset.getString(4);
+                    Port = rset.getString(5);
+                    Authentication = rset.getString(6);
+                    EmailTo = rset.getString(7);
+                }
+                if (rset != null) {
+                    rset.close();
+                }
+                if (cStmt != null) {
+                    cStmt.close();
+                }
+            } catch (Exception Ex) {
+                Ex.printStackTrace();
+            }
+            System.out.println("*****************************************");
+            System.out.println("HostName " + HostName);
+            System.out.println("EmailUserId " + EmailUserId);
+            System.out.println("EmailPassword " + EmailPassword);
+            System.out.println("SMTP " + SMTP);
+            System.out.println("Port " + Port);
+            System.out.println("Authentication " + Authentication);
+
+
+            System.out.println("*****************************************");
+            //1) get the session object
+
+            Properties props = new Properties();
+            props.put("mail.transport.protocol", SMTP);
+            props.put("mail.smtp.host", HostName);
+            props.put("mail.smtp.port", Port);
+            props.put("mail.smtp.auth", Authentication);
+            //Newly Added 25-Aug-2022
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols","TLSv1.2");
+            props.put("mail.smtp.socketFactory.port", Port);
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.fallback", "true");
+
+            final String user = EmailUserId;//change accordingly
+            final String password = EmailPassword;//change accordingly
+            Session session = Session.getDefaultInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(user, password);
+                        }
+                    });
+
+
+            //session.setDebug(true);
+            //Sending a HTML file in Email's
+            StringWriter writer = new StringWriter();
+            //IOUtils.copy(new FileInputStream(new File("F://EmailFormatter.html")), writer);
+            IOUtils.copy(new FileInputStream(new File(emailHtmlFilePath + "EmailFormatter.html")), writer);
+//            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
+
+            MimeMessage message = new MimeMessage(session);
+            message.setFrom(new InternetAddress("App Rover <no-reply@fam-llc.com>"));
+            // Set To: header field of the header.
+            //message.addRecipient(Message.RecipientType.TO, new InternetAddress((EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo)));
+            EmailTo = (EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo);
+            System.out.println("EMAIL ADDRESS FROM UH --> " + EmailTo);
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(EmailTo));
+            // Set Subject: header field
+            message.setSubject(eSubject);
+            //Setting the email priority high
+            message.addHeader("X-Priority", "1");
+
+            Transport t = session.getTransport("smtp");
+            t.connect();
+
+            // attachement
+            Multipart multipart = new MimeMultipart();
+            BodyPart messageBodyPart = new MimeBodyPart();
+            BodyPart attachmentBodyPart = new MimeBodyPart();
+            messageBodyPart.setContent(writer.toString(), "text/html"); // 5
+
+            multipart.addBodyPart(messageBodyPart);
+//session.setDebug(true);
+            /************* MY PART *************/
+            String FileName = "";
+            try {
+                FileName = FilePath + "myLogs.txt";
+                //FileName = "/sftpdrive/opt/Htmls/md/logs/EmailLogs/myLogs.log";
+                final FileWriter fr = new FileWriter(FileName, true);
+                String str = "";
+                for (int i = 0; i < exp.getStackTrace().length; ++i) {
+                    str = String.valueOf(str) + exp.getStackTrace()[i] + "<br>";
+                }
+                //fr.write(new Date().toString() + "^" + ClassName + "^" + FuncName + "^" + exp.getMessage() + str + "\r\n");
+                fr.write(new Date().toString() + "^" + ClassName + "^" + FuncName + "^" + exp.getMessage() + "\r\n");
+                final PrintWriter pr = new PrintWriter(fr, true);
+                exp.printStackTrace(pr);
+                fr.write("\r\n");
+                fr.flush();
+                fr.close();
+                pr.close();
+            } catch (Exception ex) {
+            }
+
+            /**********************************/
+
+            String fName = FilePath + "myLogs.txt";//change accordingly
+            //String fName = "/sftpdrive/opt/Htmls/md/logs/EmailLogs/myLogs.log";//change accordingly
+            // file path
+            File filename = new File(fName);
+
+            DataSource source = new FileDataSource(filename);
+            attachmentBodyPart.setDataHandler(new DataHandler(source));
+            attachmentBodyPart.setFileName(filename.getName());
+            multipart.addBodyPart(attachmentBodyPart);
+            message.setContent(multipart);
+
+            Transport.send(message);
+
+            //Delete the file
+            Files.deleteIfExists(Paths.get(fName));
+            System.out.println("Email Sent..");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 1;
+    }
+
     public String getClientIp(HttpServletRequest request) {
 
         String remoteAddr = "";
@@ -1876,6 +1769,85 @@ public class UtilityHelper extends HttpServlet {
         }
 
         return remoteAddr;
+    }
+
+    public int SendEmail_RequestReport(Connection conn, String eSubject, String eBody) {
+        CallableStatement cStmt = null;
+        ResultSet rset = null;
+        String Query = "";
+
+        String HostName = "";
+        String EmailUserId = "";
+        String EmailPassword = "";
+        String SMTP = "";
+        String Port = "";
+        String Authentication = "";
+        String EmailTo = "";
+        try {
+            Query = "{CALL SP_GET_CredentialsEmail()}";
+            cStmt = conn.prepareCall(Query);
+            rset = cStmt.executeQuery();
+            if (rset.next()) {
+                HostName = rset.getString(1);
+                EmailUserId = rset.getString(2);
+                EmailPassword = rset.getString(3);
+                SMTP = rset.getString(4);
+                Port = rset.getString(5);
+                Authentication = rset.getString(6);
+                EmailTo = rset.getString(7);
+            }
+            rset.close();
+            cStmt.close();
+
+        } catch (Exception Ex) {
+            Ex.printStackTrace();
+        }
+
+
+        Properties props = new Properties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.host", HostName);
+        props.put("mail.smtp.port", Port);
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.ssl.protocols","TLSv1.2");
+        props.put("mail.smtp.socketFactory.port", Port);
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.smtp.socketFactory.fallback", "true");
+        try {
+            final String user = EmailUserId;//change accordingly
+            final String password = EmailPassword;//change accordingly
+            Session session = Session.getDefaultInstance(props,
+                    new Authenticator() {
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(user, password);
+                        }
+                    });
+            //session.setDebug(true);
+            MimeMessage message = new MimeMessage(session);
+            message.setContent(eBody, "text/html");
+
+            message.setFrom(new InternetAddress("App Rover <no-reply@fam-llc.com>"));
+            // Set To: header field of the header.
+            String Email = "dev@fam-llc.com";
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(Email));
+            message.setSentDate(new Date());
+            // Set Subject: header field
+            message.setSubject(eSubject);
+            //Setting the email priority high
+            //message.addHeader("X-Priority", "1");
+
+            Transport transport = session.getTransport("smtp");
+            transport.connect();
+            transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+            transport.close();
+            System.out.println("1");
+        } catch (Exception var18) {
+            System.out.println("Error while Generating Email!!! IN SendEmail_RequestReport FUNCTION");
+            System.out.println(var18.getMessage());
+        }
+
+        return 1;
     }
 
     public int SendEmailWithAttachment_ROVERLABOLD(String eSubject, ServletContext servletContext, Connection conn, String EmailTo, String filepath) {
@@ -1951,7 +1923,7 @@ public class UtilityHelper extends HttpServlet {
 //            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
 
             MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("ROVER LAB <no-reply@roverlab.com>"));
+            message.setFrom(new InternetAddress("ROVER LAB <no-reply@fam-llc.com>"));
             // Set To: header field of the header.
             //message.addRecipient(Message.RecipientType.TO, new InternetAddress((EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo)));
             EmailTo = (EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo);
@@ -2051,6 +2023,12 @@ public class UtilityHelper extends HttpServlet {
             props.put("mail.smtp.host", HostName);
             props.put("mail.smtp.port", Port);
             props.put("mail.smtp.auth", Authentication);
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols","TLSv1.2");
+            props.put("mail.smtp.socketFactory.port", Port);
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtp.socketFactory.fallback", "true");
+
             final String user = EmailUserId;//change accordingly
             final String password = EmailPassword;//change accordingly
             Session session = Session.getDefaultInstance(props,
@@ -2069,7 +2047,7 @@ public class UtilityHelper extends HttpServlet {
 //            IOUtils.copy(new FileInputStream(new File("/sftpdrive/opt/Htmls/md/EmailFormats/EmailFormatter.html")), writer);
 
             MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("PrimeScope Diagnostic <no-reply@rovermd.com>"));
+            message.setFrom(new InternetAddress("PrimeScope Diagnostic <alert@fam-llc.com>"));
             // Set To: header field of the header.
             //message.addRecipient(Message.RecipientType.TO, new InternetAddress((EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo)));
             EmailTo = (EmailTo == null ? "tabish.hafeez@fam-llc.com" : EmailTo.equals("") ? "tabish.hafeez@fam-llc.com" : EmailTo);
@@ -2113,20 +2091,5 @@ public class UtilityHelper extends HttpServlet {
             e.printStackTrace();
         }
         return 1;
-    }
-
-    private class SMTPAuthenticator extends Authenticator {
-        private SMTPAuthenticator() {
-        }
-
-        public PasswordAuthentication getPasswordAuthentication() {
-            String SMTP_HOST_NAME = "smtp.ionos.com";
-            String SMTP_AUTH_USER = "alert@rovermd.com";
-            String SMTP_AUTH_PWD = "Ale$Rtr0VeMd(Com";
-
-            String username = SMTP_AUTH_USER;
-            String password = SMTP_AUTH_PWD;
-            return new PasswordAuthentication(username, password);
-        }
     }
 }

@@ -121,7 +121,6 @@ public class VictoriaRegistration extends HttpServlet {
             out.println("Exception" + e.getMessage());
         }
     }
-
     void ShowReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId) {
         Statement stmt = null;
         ResultSet rset = null;

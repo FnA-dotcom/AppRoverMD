@@ -9,10 +9,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NamesUtil {
-    private static NamesUtil util;
+public class NamesUtil
+{
     private Map<String, List<String>> map;
-
+    private static NamesUtil util;
+    
+    public static NamesUtil getInstance() {
+        if (NamesUtil.util == null) {
+            NamesUtil.util = new NamesUtil();
+        }
+        return NamesUtil.util;
+    }
+    
     private NamesUtil() {
         this.map = new HashMap<String, List<String>>();
         this.populateHD();
@@ -49,33 +57,26 @@ public class NamesUtil {
         this.populateCM_LICENSE_NO();
         this.populateCM_INTERNAL_LOCATION();
     }
-
-    public static NamesUtil getInstance() {
-        if (NamesUtil.util == null) {
-            NamesUtil.util = new NamesUtil();
-        }
-        return NamesUtil.util;
-    }
-
+    
     private void populateST() {
         final List<String> list = new ArrayList<String>();
         list.add("single value");
         this.map.put("ST", list);
     }
-
+    
     private void populateTN() {
         final List<String> list = new ArrayList<String>();
         list.add("telephone number");
         this.map.put("TN", list);
     }
-
+    
     private void populateCQ() {
         final List<String> list = new ArrayList<String>();
         list.add("quantity");
         list.add("units");
         this.map.put("CQ", list);
     }
-
+    
     private void populateCM_INTERNAL_LOCATION() {
         final List<String> list = new ArrayList<String>();
         list.add("nurse unit (Station)");
@@ -88,20 +89,20 @@ public class NamesUtil {
         list.add("Zentrum");
         this.map.put("CM_INTERNAL_LOCATION", list);
     }
-
+    
     private void populateCM_LICENSE_NO() {
         final List<String> list = new ArrayList<String>();
         list.add("License Number");
         list.add("issuing state,province,country");
         this.map.put("CM_LICENSE_NO", list);
     }
-
+    
     private void populateNM() {
         final List<String> list = new ArrayList<String>();
         list.add("name");
         this.map.put("NM", list);
     }
-
+    
     private void populateAD() {
         final List<String> list = new ArrayList<String>();
         list.add("street address");
@@ -114,14 +115,14 @@ public class NamesUtil {
         list.add("other geographic designation");
         this.map.put("AD", list);
     }
-
+    
     private void populateFC() {
         final List<String> list = new ArrayList<String>();
         list.add("Financial Class");
         list.add("Effective Date");
         this.map.put("FC", list);
     }
-
+    
     private void populateCN() {
         final List<String> list = new ArrayList<String>();
         list.add("ID number");
@@ -135,7 +136,7 @@ public class NamesUtil {
         list.add("assigning authority");
         this.map.put("CN", list);
     }
-
+    
     private void populatePN() {
         final List<String> list = new ArrayList<String>();
         list.add("family name");
@@ -146,7 +147,7 @@ public class NamesUtil {
         list.add("degree (e.g., MD)");
         this.map.put("PN", list);
     }
-
+    
     private void populateCM_PAT_ID() {
         final List<String> list = new ArrayList<String>();
         list.add("ID number");
@@ -156,14 +157,14 @@ public class NamesUtil {
         list.add("type");
         this.map.put("CM_PAT_ID", list);
     }
-
+    
     private void populateCM_MSG() {
         final List<String> list = new ArrayList<String>();
         list.add("message type");
         list.add("Trigger Event");
         this.map.put("CM_MSG", list);
     }
-
+    
     private void populateCK() {
         final List<String> list = new ArrayList<String>();
         list.add("ID number");
@@ -172,7 +173,7 @@ public class NamesUtil {
         list.add("assigning authority");
         this.map.put("CK", list);
     }
-
+    
     private void populateEI() {
         final List<String> list = new ArrayList<String>();
         list.add("entity identifier");
@@ -181,7 +182,7 @@ public class NamesUtil {
         list.add("universal ID type");
         this.map.put("EI", list);
     }
-
+    
     private void populatePTA() {
         final List<String> list = new ArrayList<String>();
         list.add("policy type");
@@ -189,7 +190,7 @@ public class NamesUtil {
         list.add("amount");
         this.map.put("PTA", list);
     }
-
+    
     private void populateRMC() {
         final List<String> list = new ArrayList<String>();
         list.add("room type");
@@ -197,32 +198,32 @@ public class NamesUtil {
         list.add("coverage amount");
         this.map.put("RMC", list);
     }
-
+    
     private void populateDT() {
         final List<String> list = new ArrayList<String>();
         list.add("date-value");
         this.map.put("DT", list);
     }
-
+    
     private void populateID() {
         final List<String> list = new ArrayList<String>();
         list.add("single value");
         this.map.put("ID", list);
     }
-
+    
     private void populateIS() {
         final List<String> list = new ArrayList<String>();
         list.add("code");
         list.add("description");
         this.map.put("IS", list);
     }
-
+    
     private void populateSI() {
         final List<String> list = new ArrayList<String>();
         list.add("single value");
         this.map.put("SI", list);
     }
-
+    
     private void populateCX() {
         final List<String> list = new ArrayList<String>();
         list.add("ID");
@@ -235,14 +236,14 @@ public class NamesUtil {
         list.add("expiration date");
         this.map.put("CX", list);
     }
-
+    
     private void populatePT() {
         final List<String> list = new ArrayList<String>();
         list.add("processing ID");
         list.add("processing mode");
         this.map.put("PT", list);
     }
-
+    
     private void populateVID() {
         final List<String> list = new ArrayList<String>();
         list.add("version ID");
@@ -250,7 +251,7 @@ public class NamesUtil {
         list.add("international version ID");
         this.map.put("VID", list);
     }
-
+    
     private void populateMSG() {
         final List<String> list = new ArrayList<String>();
         list.add("message type");
@@ -258,14 +259,14 @@ public class NamesUtil {
         list.add("message structure");
         this.map.put("MSG", list);
     }
-
+    
     private void populateTS() {
         final List<String> list = new ArrayList<String>();
         list.add("time of an event");
         list.add("degree of precision");
         this.map.put("TS", list);
     }
-
+    
     private void populateHD() {
         final List<String> list = new ArrayList<String>();
         list.add("namespace ID");
@@ -273,7 +274,7 @@ public class NamesUtil {
         list.add("universal ID type");
         this.map.put("HD", list);
     }
-
+    
     private void populateXAD() {
         final List<String> list = new ArrayList<String>();
         list.add("street address");
@@ -290,7 +291,7 @@ public class NamesUtil {
         list.add("address validity range");
         this.map.put("XAD", list);
     }
-
+    
     private void populateCE() {
         final List<String> list = new ArrayList<String>();
         list.add("identifier");
@@ -301,7 +302,7 @@ public class NamesUtil {
         list.add("name of alternate coding system");
         this.map.put("CE", list);
     }
-
+    
     private void populateXPN() {
         final List<String> list = new ArrayList<String>();
         list.add("family name");
@@ -317,7 +318,7 @@ public class NamesUtil {
         list.add("name assembly order");
         this.map.put("XPN", list);
     }
-
+    
     private void populateXCN() {
         final List<String> list = new ArrayList<String>();
         list.add("family name");
@@ -341,7 +342,7 @@ public class NamesUtil {
         list.add("name assembly order");
         this.map.put("XCN", list);
     }
-
+    
     private void populatePL() {
         final List<String> list = new ArrayList<String>();
         list.add("family name");
@@ -356,7 +357,7 @@ public class NamesUtil {
         list.add("Location description");
         this.map.put("PL", list);
     }
-
+    
     private void populateXTN() {
         final List<String> list = new ArrayList<String>();
         list.add("[(999)] 999-9999 [X99999][C any text]");
@@ -370,7 +371,7 @@ public class NamesUtil {
         list.add("any text");
         this.map.put("XTN", list);
     }
-
+    
     private void populateXON() {
         final List<String> list = new ArrayList<String>();
         list.add("organization name");
@@ -384,7 +385,7 @@ public class NamesUtil {
         list.add("Name Representation code");
         this.map.put("XON", list);
     }
-
+    
     public Map<String, List<String>> getMap() {
         return this.map;
     }

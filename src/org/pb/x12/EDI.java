@@ -17,5 +17,5 @@
 package org.pb.x12;
 
 public interface EDI {
-
+	
 }

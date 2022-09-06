@@ -23,117 +23,120 @@ import java.util.regex.Pattern;
 /**
  * The class represents methods used to translate a X12 transaction represented
  * as a file or string into an X12 object.
- *
+ * 
  * @author Prasad Balan
  */
 public class X12SimpleParser implements Parser {
 
-    static final int SIZE = 106;
-    static final int POS_SEGMENT = 105;
-    static final int POS_ELEMENT = 3;
-    static final int POS_COMPOSITE_ELEMENT = 104;
+	static final int SIZE = 106;
+	static final int POS_SEGMENT = 105;
+	static final int POS_ELEMENT = 3;
+	static final int POS_COMPOSITE_ELEMENT = 104;
 
-    /**
-     * The method takes a X12 file and converts it into a X2 object. The X12
-     * class has methods to convert it into XML format as well as methods to
-     * modify the contents.
-     *
-     * @param fileName a X12 file
-     * @return the X12 object
-     * @throws FormatException
-     * @throws IOException
-     */
-    @Override
-    public EDI parse(File fileName) throws FormatException, IOException {
-        final char[] buffer = new char[SIZE];
-        FileReader fr = new FileReader(fileName);
-        int count = fr.read(buffer);
-        fr.close();
-        if (count != SIZE) {
-            throw new FormatException();
-        }
-        Context context = new Context();
-        context.setSegmentSeparator(buffer[POS_SEGMENT]);
-        context.setElementSeparator(buffer[POS_ELEMENT]);
-        context.setCompositeElementSeparator(buffer[POS_COMPOSITE_ELEMENT]);
+	/**
+	 * The method takes a X12 file and converts it into a X2 object. The X12
+	 * class has methods to convert it into XML format as well as methods to
+	 * modify the contents.
+	 * 
+	 * @param fileName
+	 *            a X12 file
+	 * @return the X12 object
+	 * @throws FormatException
+	 * @throws IOException
+	 */
+	@Override
+	public EDI parse(File fileName) throws FormatException, IOException {
+		final char[] buffer = new char[SIZE];
+		FileReader fr = new FileReader(fileName);
+		int count = fr.read(buffer);
+		fr.close();
+		if (count != SIZE) {
+			throw new FormatException();
+		}
+		Context context = new Context();
+		context.setSegmentSeparator(buffer[POS_SEGMENT]);
+		context.setElementSeparator(buffer[POS_ELEMENT]);
+		context.setCompositeElementSeparator(buffer[POS_COMPOSITE_ELEMENT]);
 
-        Character segmentSeparator = context.getSegmentSeparator();
-        String quotedSegmentSeparator = Pattern.quote(segmentSeparator.toString());
+		Character segmentSeparator = context.getSegmentSeparator();
+		String quotedSegmentSeparator = Pattern.quote(segmentSeparator.toString());
 
-        Scanner scanner = new Scanner(fileName);
-        scanner.useDelimiter(quotedSegmentSeparator + "\r\n|" + quotedSegmentSeparator + "\n|" + quotedSegmentSeparator);
+		Scanner scanner = new Scanner(fileName);
+		scanner.useDelimiter(quotedSegmentSeparator + "\r\n|" + quotedSegmentSeparator + "\n|" + quotedSegmentSeparator);
 
-        X12Simple x12 = new X12Simple(context);
-        while (scanner.hasNext()) {
-            String line = scanner.next();
-            x12.addSegment(line);
-        }
-        scanner.close();
-        return x12;
-    }
+		X12Simple x12 = new X12Simple(context);
+		while (scanner.hasNext()) {
+			String line = scanner.next();
+			x12.addSegment(line);
+		}
+		scanner.close();
+		return x12;
+	}
 
-    /**
-     * The method takes a InputStream and converts it into a X2 object. The X12
-     * class has methods to convert it into XML format as well as methods to
-     * modify the contents.
-     *
-     * @param source InputStream
-     * @return the X12 object
-     * @throws FormatException
-     * @throws IOException
-     */
-    @Override
-    public EDI parse(InputStream source) throws FormatException, IOException {
-        StringBuilder strBuffer = new StringBuilder();
-        char[] cbuf = new char[1024];
-        int length = -1;
+	/**
+	 * The method takes a InputStream and converts it into a X2 object. The X12
+	 * class has methods to convert it into XML format as well as methods to
+	 * modify the contents.
+	 * 
+	 * @param source
+	 *            InputStream
+	 * @return the X12 object
+	 * @throws FormatException
+	 * @throws IOException
+	 */
+	@Override
+	public EDI parse(InputStream source) throws FormatException, IOException {
+		StringBuilder strBuffer = new StringBuilder();
+		char[] cbuf = new char[1024];
+		int length = -1;
 
-        Reader reader = new BufferedReader(new InputStreamReader(source));
+		Reader reader = new BufferedReader(new InputStreamReader(source));
 
-        while ((length = reader.read(cbuf)) != -1) {
-            strBuffer.append(cbuf, 0, length);
-        }
+		while ((length = reader.read(cbuf)) != -1) {
+			strBuffer.append(cbuf, 0, length);
+		}
 
-        String strSource = strBuffer.toString();
+		String strSource = strBuffer.toString();
 
-        return parse(strSource);
-    }
+		return parse(strSource);
+	}
 
-    /**
-     * The method takes a X12 string and converts it into a X2 object. The X12
-     * class has methods to convert it into XML format as well as methods to
-     * modify the contents.
-     *
-     * @param source String
-     * @return the X12 object
-     * @throws FormatException
-     * @throws IOException
-     */
-    @Override
-    public EDI parse(String source) throws FormatException {
-        if (source.length() < SIZE) {
-            throw new FormatException();
-        }
-        Context context = new Context();
-        context.setSegmentSeparator(source.charAt(POS_SEGMENT));
-        context.setElementSeparator(source.charAt(POS_ELEMENT));
-        context.setCompositeElementSeparator(source.charAt(POS_COMPOSITE_ELEMENT));
+	/**
+	 * The method takes a X12 string and converts it into a X2 object. The X12
+	 * class has methods to convert it into XML format as well as methods to
+	 * modify the contents.
+	 * 
+	 * @param source
+	 *            String
+	 * @return the X12 object
+	 * @throws FormatException
+	 * @throws IOException
+	 */
+	@Override
+	public EDI parse(String source) throws FormatException {
+		if (source.length() < SIZE) {
+			throw new FormatException();
+		}
+		Context context = new Context();
+		context.setSegmentSeparator(source.charAt(POS_SEGMENT));
+		context.setElementSeparator(source.charAt(POS_ELEMENT));
+		context.setCompositeElementSeparator(source.charAt(POS_COMPOSITE_ELEMENT));
 
-        Character segmentSeparator = context.getSegmentSeparator();
-        String quotedSegmentSeparator = Pattern.quote(segmentSeparator.toString());
+		Character segmentSeparator = context.getSegmentSeparator();
+		String quotedSegmentSeparator = Pattern.quote(segmentSeparator.toString());
 
-        Scanner scanner = new Scanner(source);
-        scanner.useDelimiter(quotedSegmentSeparator + "\r\n|" + quotedSegmentSeparator + "\n|" + quotedSegmentSeparator);
+		Scanner scanner = new Scanner(source);
+		scanner.useDelimiter(quotedSegmentSeparator + "\r\n|" + quotedSegmentSeparator + "\n|" + quotedSegmentSeparator);
 
-        X12Simple x12 = new X12Simple(context);
-        while (scanner.hasNext()) {
-            String line = scanner.next();
-            Segment s = x12.addSegment();
-            String[] tokens = line.split("\\" + context.getElementSeparator());
-            s.addElements(tokens);
-        }
-        scanner.close();
-        return x12;
-    }
+		X12Simple x12 = new X12Simple(context);
+		while (scanner.hasNext()) {
+			String line = scanner.next();
+			Segment s = x12.addSegment();
+			String[] tokens = line.split("\\" + context.getElementSeparator());
+			s.addElements(tokens);
+		}
+		scanner.close();
+		return x12;
+	}
 
 }

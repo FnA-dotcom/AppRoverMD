@@ -21,6 +21,7 @@ import java.sql.*;
 @SuppressWarnings("Duplicates")
 public class ERA_Posting extends HttpServlet {
 
+
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }

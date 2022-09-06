@@ -8,13 +8,11 @@ import Handheld.UtilityHelper;
 import Parsehtm.Parsehtm;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -25,39 +23,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.InetAddress;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalDate;
 
 @SuppressWarnings("Duplicates")
 public class SanMarcosBundle extends HttpServlet {
-
-    private static boolean ReadPdfGetData(final String FileName, final String Path) {
-        try (final PDDocument document = PDDocument.load(new File(Path + "/" + FileName))) {
-            document.getClass();
-            if (document.isEncrypted()) {
-                return false;
-            }
-            final PDFTextStripperByArea stripper = new PDFTextStripperByArea();
-            stripper.setSortByPosition(true);
-            final PDFTextStripper tStripper = new PDFTextStripper();
-            tStripper.getStartPage();
-            final String pdfFileInText = tStripper.getText(document);
-            final String[] lines;
-            final String[] split;
-            final String[] array2;
-            final String[] array = array2 = (split = (lines = pdfFileInText.split("\\r?\\n")));
-            for (final String line : array2) {
-                if (line.toUpperCase().trim().contains("SIGNATURE")) {
-                }
-            }
-        } catch (Exception ee) {
-            System.out.println(ee.getLocalizedMessage());
-            return false;
-        }
-        return true;
-    }
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -73,9 +43,8 @@ public class SanMarcosBundle extends HttpServlet {
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
-        String DirectoryName = "";
         final ServletContext context = this.getServletContext();
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         response.setContentType("text/html");
         final UtilityHelper helper = new UtilityHelper();
         final Services supp = new Services();
@@ -94,6 +63,7 @@ public class SanMarcosBundle extends HttpServlet {
             final String UserId = session.getAttribute("UserId").toString();
             final String DatabaseName = session.getAttribute("DatabaseName").toString();
             final int FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
+            final String DirectoryName = session.getAttribute("DirectoryName").toString();
             if (UserId.equals("")) {
                 final Parsehtm Parser = new Parsehtm(request);
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
@@ -109,18 +79,10 @@ public class SanMarcosBundle extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            Query = "Select dbname, IFNULL(DirectoryName,'') from oe.clients where Id = " + FacilityIndex;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                DirectoryName = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
 
             if (ActionID.equals("GETINPUTSanMarcos")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUTSanMarcos(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
+                GETINPUTSanMarcos(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName,helper);
             }
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
@@ -139,7 +101,7 @@ public class SanMarcosBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTSanMarcos(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    String GETINPUTSanMarcos_Inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int patientRegId, String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -154,6 +116,7 @@ public class SanMarcosBundle extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -170,7 +133,6 @@ public class SanMarcosBundle extends HttpServlet {
         String PriCarePhy = "";
         String ReasonVisit = "";
         String MRN = "";
-        int ClientIndex = 0;
         String ClientName = "";
         String DOS = "";
         String DoctorId = null;
@@ -245,11 +207,24 @@ public class SanMarcosBundle extends HttpServlet {
         final String Other = "";
         String Other_text = "";
         String ResultPdf = "";
+        String filename = "";
+        String DirectoryNameTow = "";
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
+        int VisitIndex = 0;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+        final int ID = patientRegId;
         try {
+            Query = "Select id FROM " + Database + ".PatientVisit ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -260,8 +235,14 @@ public class SanMarcosBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-')," +
+                        " IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-')," +
+                        " IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'), " +
+                        " IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -287,12 +268,17 @@ public class SanMarcosBundle extends HttpServlet {
                     ReasonVisit = rset.getString(18);
                     SelfPayChk = rset.getInt(19);
                     MRN = rset.getString(20);
-                    ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -301,29 +287,33 @@ public class SanMarcosBundle extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
+
                 if (!DoctorId.equals("-")) {
-                    out.println("Inside Get Doc Name");
                     Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
+                    if (rset.next()) {
                         DoctorName = rset.getString(1);
                     }
                     rset.close();
                     stmt.close();
                 } else {
-                    out.println("Inside Get Doc Name empty");
                     DoctorName = "";
                 }
             } catch (Exception e) {
-                out.println("Error In PateintReg:--" + e.getMessage());
-                out.println(Query);
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
             }
 //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'),IFNULL(PriInsurerName,'') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  " +
+                    "IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                    "IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
+                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  " +
+                    "IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'),IFNULL(PriInsurerName,'') " +
+                    "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 WorkersCompPolicy = rset.getInt(1);
                 MotorVehAccident = rset.getInt(2);
                 if (WorkersCompPolicy == 0) {
@@ -361,7 +351,6 @@ public class SanMarcosBundle extends HttpServlet {
 //            }
             try {
                 if (SelfPayChk != 0 && !PriInsuranceName.equals("-") || !PriInsuranceName.equals("")) {
-//                    out.println("Inside PriInsuranceName");
                     Query = "Select PayerName from " + Database + ".ProfessionalPayers where Id = " + PriInsuranceName;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -383,13 +372,16 @@ public class SanMarcosBundle extends HttpServlet {
                     stmt.close();
                 }
             } catch (Exception e) {
-                out.println("Error is PriInsurance: " + e.getMessage());
-                out.println(Query);
+//                out.println("Error is PriInsurance: " + e.getMessage());
+//                out.println(Query);
             }
-            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
@@ -399,10 +391,16 @@ public class SanMarcosBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient = "";
                 } else {
@@ -513,6 +511,7 @@ public class SanMarcosBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             String HearAboutUsString = "";
             String HearAboutUsString2 = "";
             if (ReturnPatient.toUpperCase().equals("YES")) {
@@ -569,8 +568,7 @@ public class SanMarcosBundle extends HttpServlet {
             if ("".toUpperCase().equals("YES")) {
                 HearAboutUsString2 += "Others ";
             }
-            rset.close();
-            stmt.close();
+
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
@@ -583,15 +581,58 @@ public class SanMarcosBundle extends HttpServlet {
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/SelfPay.pdf";
 
                 if (WorkersCompPolicy == 1) {
-
                     mergePdf.GETINPUT(request, response, out, conn, Database, inputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/WorkersCompConsent.pdf", ClientId, MRN);
                     inputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
                 }
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+
+                if (SignedFrom.contains("REGISTRATION")) {
+                    DirectoryNameTow = "REGISTRATION";
+                }
+
+                if ( SignedFrom.contains("VISIT")) {
+                    DirectoryNameTow = "VISIT";
+                }
+
+                if ( SignedFrom.contains("EDIT")) {
+                    DirectoryNameTow = "EDIT";
+                }
+
+                filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + "_" + found + "_" + SignedFrom + ".pdf";
+
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
+                final int pageCount = pdfReader.getNumberOfPages();
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+                Image SignImages = null;
+                final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/stcOperation/img_0_" + ID + ".png");
+                final boolean exists = tmpDir.exists();
+                if (exists) {
+                    Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        String UID = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                    SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/stcOperation/img_0_" + ID + ".png");
+                    SignImages.scaleAbsolute(80.0f, 30.0f);
+                } else {
+                    SignImages = null;
+                }
+
 //            final GenerateBarCode barCode = new GenerateBarCode();
 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
 //            final Image image = Image.getInstance(BarCodeFilePath);
@@ -602,10 +643,7 @@ public class SanMarcosBundle extends HttpServlet {
                     if (i == 1) {
 
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-
                         /////////////////////////////////////Patient Information//////////////////////////////////////////////////
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1044,13 +1082,9 @@ public class SanMarcosBundle extends HttpServlet {
                         pdfContentByte.setTextMatrix(490, 55); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName); // add the text
                         pdfContentByte.endText();
-
-
                     }
 
-
                     if (i == 4) {
-
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
 //                        pdfContentByte.beginText();
@@ -1065,7 +1099,10 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.setTextMatrix(400, 190); // set x and y co-ordinates
 //                        pdfContentByte.showText("Responsible Party Signature"); // add the text
 //                        pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(85, 180);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1147,6 +1184,10 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.setTextMatrix(85, 140); // set x and y co-ordinates
 //                        pdfContentByte.showText("Patient Signature"); // add the text
 //                        pdfContentByte.endText();
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(100, 140);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1160,6 +1201,10 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.setTextMatrix(85, 105); // set x and y co-ordinates
 //                        pdfContentByte.showText("Patient Signature"); // add the text
 //                        pdfContentByte.endText();
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(100, 105);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1184,10 +1229,13 @@ public class SanMarcosBundle extends HttpServlet {
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix(150, 325); // set x and y co-ordinates
+                        pdfContentByte.setTextMatrix(150, 360); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName); // add the text
                         pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(150, 205);
+                            pdfContentByte.addImage(SignImages);
+                        }
 //                        pdfContentByte.beginText();
 //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
 //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1266,11 +1314,14 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.setTextMatrix(320, 200); // set x and y co-ordinates
 //                        pdfContentByte.showText("Signature of Parent or Guardian"); // add the text
 //                        pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(130, 190);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
-                        pdfContentByte.setTextMatrix(85, 160); // set x and y co-ordinates
+                        pdfContentByte.setTextMatrix(85, 130); // set x and y co-ordinates
                         pdfContentByte.showText(Date); // add the text
                         pdfContentByte.endText();
                     }
@@ -1438,23 +1489,33 @@ public class SanMarcosBundle extends HttpServlet {
                 pdfStamper.close();
                 pdfReader.close();
 
-                final File pdfFile = new File(outputFilePath);
-                response.setContentType("application/pdf");
-                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-                response.setContentLength((int) pdfFile.length());
-                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-                int bytes;
-                while ((bytes = fileInputStream.read()) != -1) {
-                    responseOutputStream.write(bytes);
-                }
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+
+                return pageCount + "~" + outputFilePath + "~" + filename;
+//                final File pdfFile = new File(outputFilePath);
+//                response.setContentType("application/pdf");
+//                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
+//                response.setContentLength((int) pdfFile.length());
+//                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
+//                final OutputStream responseOutputStream = response.getOutputStream();
+//                int bytes;
+//                while ((bytes = fileInputStream.read()) != -1) {
+//                    responseOutputStream.write(bytes);
+//                }
             } else {
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/PrivateInsurance.pdf";
                 if (WorkersCompPolicy == 1) {
-
                     String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/WorkersCompConsent.pdf";
                     String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/WorkersCompConsent_" + ClientId + "_" + MRN + ".pdf";
-
 
                     ResultPdf = AttachWC_Form(Date, outputFilePathTmp2, inputFilePathTmp2,
                             request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf,
@@ -1464,8 +1525,6 @@ public class SanMarcosBundle extends HttpServlet {
                 }
 
                 if (PriInsuranceName.toUpperCase().contains("UNITED HEALTHCARE")) {
-                    System.out.println("PriInsuranceName -> " + PriInsuranceName);
-
                     String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form.pdf";
                     String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
 
@@ -1475,8 +1534,6 @@ public class SanMarcosBundle extends HttpServlet {
                 }
 
                 if (SecondryInsurance.toUpperCase().contains("UNITED HEALTHCARE")) {
-//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
-
                     String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form.pdf";
                     String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
 
@@ -1486,15 +1543,59 @@ public class SanMarcosBundle extends HttpServlet {
                     inputFilePath = ResultPdf;
                 }
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+
+                if (SignedFrom.contains("REGISTRATION")) {
+                    DirectoryNameTow = "REGISTRATION";
+                }
+
+                if ( SignedFrom.contains("VISIT")) {
+                    DirectoryNameTow = "VISIT";
+                }
+
+                if ( SignedFrom.contains("EDIT")) {
+                    DirectoryNameTow = "EDIT";
+                }
+
+                filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + "_" + found + "_" + SignedFrom + ".pdf";
+
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
 
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
 
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
-
+                final int pageCount = pdfReader.getNumberOfPages();
 
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+                Image SignImages = null;
+                final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/stcOperation/img_0_" + ID + ".png");
 
+                final boolean exists = tmpDir.exists();
+                if (exists) {
+                    Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        String UID = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                    SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/stcOperation/img_0_" + ID + ".png");
+                    SignImages.scaleAbsolute(80.0f, 30.0f);
+                    //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+
+                } else {
+                    SignImages = null;
+                }
 //              final GenerateBarCode barCode = new GenerateBarCode();
 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
 //            final Image image = Image.getInstance(BarCodeFilePath);
@@ -1503,8 +1604,6 @@ public class SanMarcosBundle extends HttpServlet {
                     if (i == 1) {
 
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-
                         /////////////////////////////////////Patient Information//////////////////////////////////////////////////
 
                         pdfContentByte.beginText();
@@ -1862,7 +1961,10 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.setTextMatrix(152, 580); // set x and y co-ordinates
 //                        pdfContentByte.showText("Patient Signature"); // add the text
 //                        pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(100, 555);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         String[] DateSp = Date.split("/");
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -2031,7 +2133,10 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.setTextMatrix(400, 190); // set x and y co-ordinates
 //                        pdfContentByte.showText("Responsible Party Signature"); // add the text
 //                        pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(100, 180);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -2175,6 +2280,11 @@ public class SanMarcosBundle extends HttpServlet {
                         pdfContentByte.showText(Date); // add the text
                         pdfContentByte.endText();
 
+
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(200, 165);
+                            pdfContentByte.addImage(SignImages);
+                        }
 //                        pdfContentByte.beginText();
 //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
 //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -2249,6 +2359,11 @@ public class SanMarcosBundle extends HttpServlet {
                         pdfContentByte.showText(CSZ[2]); // add the text
                         pdfContentByte.endText();
 
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(130, 190);
+                            pdfContentByte.addImage(SignImages);
+                        }
+
 //                        pdfContentByte.beginText();
 //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
 //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -2282,7 +2397,10 @@ public class SanMarcosBundle extends HttpServlet {
 //                        pdfContentByte.showText("Patient Signature"); // add the text
 //                        pdfContentByte.endText();
 
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(100, 90);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -2296,6 +2414,11 @@ public class SanMarcosBundle extends HttpServlet {
 
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
+
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(400, 130);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -2318,184 +2441,26 @@ public class SanMarcosBundle extends HttpServlet {
                         pdfContentByte.showText(Date); // add the text
                         pdfContentByte.endText();
                     }
-
-//                    if (i == 10) {
-//                        PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-//
-//
-//                        /////////////////////////////////////Patient Information//////////////////////////////////////////////////
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(186, 620); // set x and y co-ordinates
-//                        pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName); // add the text
-//                        pdfContentByte.endText();
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(450, 620); // set x and y co-ordinates
-//                        pdfContentByte.showText(Date); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 595); // set x and y co-ordinates
-//                        pdfContentByte.showText(SSN); // add the text
-//                        pdfContentByte.endText();
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(400, 595); // set x and y co-ordinates
-//                        pdfContentByte.showText(DOB); // add the text
-//                        pdfContentByte.endText();
-//
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(186, 570); // set x and y co-ordinates
-//                        pdfContentByte.showText(Employer); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(186, 545); // set x and y co-ordinates
-//                        pdfContentByte.showText(EmployerAddress); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(470, 520); // set x and y co-ordinates
-//                        pdfContentByte.showText(EmployerPhone); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(450, 460); // set x and y co-ordinates
-//                        pdfContentByte.showText(DOS); // add the text
-//                        pdfContentByte.endText();
-////                        pdfContentByte.beginText();
-////                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-////                        pdfContentByte.setColorFill(BaseColor.BLACK);
-////                        pdfContentByte.setTextMatrix(186, 460); // set x and y co-ordinates
-////                        pdfContentByte.showText("Date of Injury"); // add the text
-////                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(186, 405); // set x and y co-ordinates
-//                        pdfContentByte.showText(PriInsurance); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(156, 325); // set x and y co-ordinates
-//                        pdfContentByte.showText(PhNumber); // add the text
-//                        pdfContentByte.endText();
-//
-//
-//                    }
-//
-//                    if (i == 11) {
-//                        PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-//
-//
-//                        /////////////////////////////////////Patient Information//////////////////////////////////////////////////
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 665); // set x and y co-ordinates
-//                        pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 645); // set x and y co-ordinates
-//                        pdfContentByte.showText(Employer); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 590); // set x and y co-ordinates
-//                        pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 495); // set x and y co-ordinates
-//                        pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName); // add the text
-//                        pdfContentByte.endText();
-//
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 425); // set x and y co-ordinates
-//                        pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName); // add the text
-//                        pdfContentByte.endText();
-//
-////                        pdfContentByte.beginText();
-////                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-////                        pdfContentByte.setColorFill(BaseColor.BLACK);
-////                        pdfContentByte.setTextMatrix(90, 200); // set x and y co-ordinates
-////                        pdfContentByte.showText("Employee Signature"); // add the text
-////                        pdfContentByte.endText();
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(400, 200); // set x and y co-ordinates
-//                        pdfContentByte.showText(Date); // add the text
-//                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 165); // set x and y co-ordinates
-//                        pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName); // add the text
-//                        pdfContentByte.endText();
-////                        pdfContentByte.beginText();
-////                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-////                        pdfContentByte.setColorFill(BaseColor.BLACK);
-////                        pdfContentByte.setTextMatrix(400, 165); // set x and y co-ordinates
-////                        pdfContentByte.showText("Employee ID"); // add the text
-////                        pdfContentByte.endText();
-//
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(90, 130); // set x and y co-ordinates
-//                        pdfContentByte.showText(Employer); // add the text
-//                        pdfContentByte.endText();
-//
-//                    }
-
                 }
                 pdfStamper.close();
                 pdfReader.close();
-                final File pdfFile = new File(outputFilePath);
-                response.setContentType("application/pdf");
-                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-                response.setContentLength((int) pdfFile.length());
-                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-                int bytes;
-                while ((bytes = fileInputStream.read()) != -1) {
-                    responseOutputStream.write(bytes);
-                }
+
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                System.out.println("Query " + MainReceipt);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+                return pageCount + "~" + outputFilePath + "~" + filename;
+
             }
 
-
         } catch (Exception e) {
-//            out.println(e.getMessage());
             System.out.println(e.getMessage());
             String str = "";
             for (int j = 0; j < e.getStackTrace().length; ++j) {
@@ -2503,13 +2468,66 @@ public class SanMarcosBundle extends HttpServlet {
             }
             System.out.println(str);
         }
+        return "";
+    }
+
+    void GETINPUTSanMarcos(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        String VisitId = request.getParameter("VisitId");
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            String SignedFrom = "";
+            try {
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                        SignedFrom = "REGISTRATION";
+                    }
+                    else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                        SignedFrom = "VISIT";
+                    }
+                    else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                        SignedFrom = "EDIT";
+                    }
+
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+                } else {
+                    GETINPUTSanMarcos_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, SignedFrom,helper);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private String AttachUHC_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {
         try {
             FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
             PdfReader pdfReader = new PdfReader(inputFile);
-            PdfStamper pdfStamper = new PdfStamper(pdfReader, (OutputStream) fos);
+            PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
             for (int j = 1; j <= pdfReader.getNumberOfPages(); ++j) {
 
                 if (j == 1) {
@@ -2581,7 +2599,7 @@ public class SanMarcosBundle extends HttpServlet {
         try {
             FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
             PdfReader pdfReader = new PdfReader(inputFile);
-            PdfStamper pdfStamper = new PdfStamper(pdfReader, (OutputStream) fos);
+            PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
             for (int i = 1; i <= pdfReader.getNumberOfPages(); ++i) {
 
                 if (i == 1) {

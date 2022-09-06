@@ -38,168 +38,6 @@ public class ChartsUpload extends HttpServlet {
     static String FileName = "";
     private Connection conn = null;
 
-    private static boolean ReadPdfGetData(String FileName, String Path) {
-
-        try {
-            DOS = "";
-            Acct = "";
-            printabledate = "";
-            MRN = "";
-            ChiefComplaint = "";
-            firstname = "";
-            lastname = "";
-
-            try (PDDocument document = PDDocument.load(new File(Path + "" + FileName))) {
-                document.getPage(0);
-                document.getClass();
-
-                if (!document.isEncrypted()) {
-
-                    PDFTextStripperByArea stripper = new PDFTextStripperByArea();
-                    stripper.setSortByPosition(true);
-
-                    PDFTextStripper tStripper = new PDFTextStripper();
-                    tStripper.getStartPage();
-
-                    String pdfFileInText = tStripper.getText(document);
-//                System.out.println("pdfFileInText: " + pdfFileInText);
-                    int ii = 0;
-                    int iChComplaint = 0;
-                    int count = 1;   //Just to indicate line number
-                    // split by whitespace
-                    String lines[] = pdfFileInText.split("\\r?\\n");
-
-                    for (String line : lines) {
-
-                        if (line.startsWith("Acct #:")) {
-                            String AcctRaw = line;
-                            String AcctArr[] = AcctRaw.split("\\s+");
-                            Acct = AcctArr[2];
-                            String printabledateRaw = AcctArr[4];
-                            String printabledateArr[] = printabledateRaw.split("\\/");
-                            printabledate = printabledateArr[2] + "-" + printabledateArr[0] + "-" + printabledateArr[1] + " " + AcctArr[5] + ":00";
-                        }
-                        if (line.startsWith("DOS:")) {
-                            String DOSRaw = line;
-                            String DOSArr[] = DOSRaw.split("\\s+");
-                            DOS = DOSArr[1];
-                            String DOSFormatArr[] = DOS.split("\\/");
-                            DOS = DOSFormatArr[2] + "-" + DOSFormatArr[0] + "-" + DOSFormatArr[1] + " " + DOSArr[2] + ":00";
-                        }
-                        if (line.startsWith("MRN:")) {
-                            String MRNRaw = line;
-                            String MRNArr[] = MRNRaw.split("\\s+");
-                            MRN = MRNArr[1];
-                        }
-                        if (line.startsWith("Patient:")) {
-                            String PatientRaw = line;
-                            String PatientArr[] = PatientRaw.split("\\:");
-                            String Name = PatientArr[1];
-                            String NameArr[] = Name.split("\\,");
-                            firstname = NameArr[1];
-                            lastname = NameArr[0];
-                        }
-                        if (line.startsWith("DOB:")) {
-                            String DOBArr[] = line.split("\\s+");
-                            String dOB = DOBArr[1];
-                            String SMonth = dOB.substring(0, 2);
-                            String SDay = dOB.substring(3, 5);
-                            String SYear = dOB.substring(6, 10);
-                            DOB = SYear + "-" + SMonth + "-" + SDay;
-                        }
-                        if (count == 11) {
-                            if (!line.startsWith("CHIEF COMPLAINT:") && !line.startsWith("TRIAGE")) {
-                                ChiefComplaint = line;
-//                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
-//                                System.out.println("ChiefComplaint : " + ChiefComplaint);
-//                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                                break;
-                            }
-                        }
-                        if (count == 12) {
-                            if (!line.startsWith("CHIEF COMPLAINT:")) {
-                                ChiefComplaint = line;
-//                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
-//                                System.out.println("ChiefComplaint : " + ChiefComplaint);
-//                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                                break;
-                            }
-                        }
-                        if (count == 13) {
-                            if (!line.startsWith("CHIEF COMPLAINT:")) {
-                                ChiefComplaint = line;
-//                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
-//                                System.out.println("ChiefComplaint : " + ChiefComplaint);
-//                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                                break;
-                            }
-                        }
-/*                        if (line.startsWith("CHIEF COMPLAINT:")) {
-                            System.out.println("^^^^^^^^^^^^^^^^^^^^");
-                            System.out.println("ChiefComplaint : " + line);
-                            System.out.println("^^^^^^^^^^^^^^^^^^^^");
-                            if (count == 11) {
-                                System.out.println("$$$FIRST $$$$$COUNT VAL " + count + "$$$$$$$$$$");
-                                System.out.println("ChiefComplaint : " + line);
-                                System.out.println("$$$$$$$$$$$$$$$$$");
-                                break;
-                            }
-                            if (count == 12) {
-                                System.out.println("%%%SECOND%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
-                                System.out.println("ChiefComplaint : " + line);
-                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-                                break;
-                            }
-                            if (count == 13) {
-                                System.out.println("******THIRD*** COUNT VAL " + count + "***************");
-//                                ChiefComplaint = line;
-                                System.out.println("ChiefComplaint : " + line);
-                                System.out.println("********* ***************");
-                                break;
-                            }
-                        }*/
-/*                        if (count == 11) {
-                            System.out.println("$$$$$$$$$$$$$$$$$$");
-                            System.out.println("ChiefComplaint : " + line);
-                            System.out.println("$$$$$$$$$$$$$$$$$");
-                        }*/
-/*                        if (count == 12) {
-                            if (!line.startsWith("CHIEF")) {
-                                ChiefComplaint = line;
-*//*                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
-                                System.out.println("ChiefComplaint : " + ChiefComplaint);
-                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");*//*
-                                break;
-                            } else {
-                                System.out.println("$$$$$$$$ IN ELSE COUNT VAL " + count + "$$$$$$$$$$");
-                                System.out.println("ChiefComplaint : " + line);
-                                System.out.println("$$$$$$$$$$$$$$$$$");
-                            }
-                        }
-                        if (count == 13) {
-//                            System.out.println("********* COUNT VAL " + count + "***************");
-                            ChiefComplaint = line;
-//                            System.out.println("ChiefComplaint : " + ChiefComplaint);
-//                            System.out.println("********* ***************");
-                            break;
-                        }*/
-
-                        count++;
-                    }
-                } else {
-                    return false;
-
-                }
-            }
-
-        } catch (Exception ee) {
-            System.out.println(ee.getLocalizedMessage());
-            return false;
-
-        }
-        return true;
-    }
-
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -1010,6 +848,7 @@ public class ChartsUpload extends HttpServlet {
 
     }
 
+
     private void SaveDataOLD(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, int ClientId, String UserId, Connection NewConn) {
 
         Statement stmt = null;
@@ -1230,6 +1069,7 @@ public class ChartsUpload extends HttpServlet {
         }
     }
 
+
     private Dictionary doUpload(final HttpServletRequest request, final HttpServletResponse response, final PrintWriter out) throws Exception {
         try {
             String boundary = request.getHeader("Content-Type");
@@ -1299,6 +1139,169 @@ public class ChartsUpload extends HttpServlet {
         } catch (Exception var20) {
             throw new Exception("Error In Do Upload " + var20.getMessage());
         }
+    }
+
+
+    private static boolean ReadPdfGetData(String FileName, String Path) {
+
+        try {
+            DOS = "";
+            Acct = "";
+            printabledate = "";
+            MRN = "";
+            ChiefComplaint = "";
+            firstname = "";
+            lastname = "";
+
+            try (PDDocument document = PDDocument.load(new File(Path + "" + FileName))) {
+                document.getPage(0);
+                document.getClass();
+
+                if (!document.isEncrypted()) {
+
+                    PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+                    stripper.setSortByPosition(true);
+
+                    PDFTextStripper tStripper = new PDFTextStripper();
+                    tStripper.getStartPage();
+
+                    String pdfFileInText = tStripper.getText(document);
+//                System.out.println("pdfFileInText: " + pdfFileInText);
+                    int ii = 0;
+                    int iChComplaint = 0;
+                    int count = 1;   //Just to indicate line number
+                    // split by whitespace
+                    String lines[] = pdfFileInText.split("\\r?\\n");
+
+                    for (String line : lines) {
+
+                        if (line.startsWith("Acct #:")) {
+                            String AcctRaw = line;
+                            String AcctArr[] = AcctRaw.split("\\s+");
+                            Acct = AcctArr[2];
+                            String printabledateRaw = AcctArr[4];
+                            String printabledateArr[] = printabledateRaw.split("\\/");
+                            printabledate = printabledateArr[2] + "-" + printabledateArr[0] + "-" + printabledateArr[1] + " " + AcctArr[5] + ":00";
+                        }
+                        if (line.startsWith("DOS:")) {
+                            String DOSRaw = line;
+                            String DOSArr[] = DOSRaw.split("\\s+");
+                            DOS = DOSArr[1];
+                            String DOSFormatArr[] = DOS.split("\\/");
+                            DOS = DOSFormatArr[2] + "-" + DOSFormatArr[0] + "-" + DOSFormatArr[1] + " " + DOSArr[2] + ":00";
+                        }
+                        if (line.startsWith("MRN:")) {
+                            String MRNRaw = line;
+                            String MRNArr[] = MRNRaw.split("\\s+");
+                            MRN = MRNArr[1];
+                        }
+                        if (line.startsWith("Patient:")) {
+                            String PatientRaw = line;
+                            String PatientArr[] = PatientRaw.split("\\:");
+                            String Name = PatientArr[1];
+                            String NameArr[] = Name.split("\\,");
+                            firstname = NameArr[1];
+                            lastname = NameArr[0];
+                        }
+                        if (line.startsWith("DOB:")) {
+                            String DOBArr[] = line.split("\\s+");
+                            String dOB = DOBArr[1];
+                            String SMonth = dOB.substring(0, 2);
+                            String SDay = dOB.substring(3, 5);
+                            String SYear = dOB.substring(6, 10);
+                            DOB = SYear + "-" + SMonth + "-" + SDay;
+                        }
+                        if (count == 11) {
+                            if (!line.startsWith("CHIEF COMPLAINT:") && !line.startsWith("TRIAGE")) {
+                                ChiefComplaint = line;
+//                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
+//                                System.out.println("ChiefComplaint : " + ChiefComplaint);
+//                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+                                break;
+                            }
+                        }
+                        if (count == 12) {
+                            if (!line.startsWith("CHIEF COMPLAINT:")) {
+                                ChiefComplaint = line;
+//                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
+//                                System.out.println("ChiefComplaint : " + ChiefComplaint);
+//                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+                                break;
+                            }
+                        }
+                        if (count == 13) {
+                            if (!line.startsWith("CHIEF COMPLAINT:")) {
+                                ChiefComplaint = line;
+//                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
+//                                System.out.println("ChiefComplaint : " + ChiefComplaint);
+//                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+                                break;
+                            }
+                        }
+/*                        if (line.startsWith("CHIEF COMPLAINT:")) {
+                            System.out.println("^^^^^^^^^^^^^^^^^^^^");
+                            System.out.println("ChiefComplaint : " + line);
+                            System.out.println("^^^^^^^^^^^^^^^^^^^^");
+                            if (count == 11) {
+                                System.out.println("$$$FIRST $$$$$COUNT VAL " + count + "$$$$$$$$$$");
+                                System.out.println("ChiefComplaint : " + line);
+                                System.out.println("$$$$$$$$$$$$$$$$$");
+                                break;
+                            }
+                            if (count == 12) {
+                                System.out.println("%%%SECOND%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
+                                System.out.println("ChiefComplaint : " + line);
+                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+                                break;
+                            }
+                            if (count == 13) {
+                                System.out.println("******THIRD*** COUNT VAL " + count + "***************");
+//                                ChiefComplaint = line;
+                                System.out.println("ChiefComplaint : " + line);
+                                System.out.println("********* ***************");
+                                break;
+                            }
+                        }*/
+/*                        if (count == 11) {
+                            System.out.println("$$$$$$$$$$$$$$$$$$");
+                            System.out.println("ChiefComplaint : " + line);
+                            System.out.println("$$$$$$$$$$$$$$$$$");
+                        }*/
+/*                        if (count == 12) {
+                            if (!line.startsWith("CHIEF")) {
+                                ChiefComplaint = line;
+*//*                                System.out.println("%%%%%%%%% COUNT VAL " + count + "%%%%%%%%%%%%%");
+                                System.out.println("ChiefComplaint : " + ChiefComplaint);
+                                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%");*//*
+                                break;
+                            } else {
+                                System.out.println("$$$$$$$$ IN ELSE COUNT VAL " + count + "$$$$$$$$$$");
+                                System.out.println("ChiefComplaint : " + line);
+                                System.out.println("$$$$$$$$$$$$$$$$$");
+                            }
+                        }
+                        if (count == 13) {
+//                            System.out.println("********* COUNT VAL " + count + "***************");
+                            ChiefComplaint = line;
+//                            System.out.println("ChiefComplaint : " + ChiefComplaint);
+//                            System.out.println("********* ***************");
+                            break;
+                        }*/
+
+                        count++;
+                    }
+                } else {
+                    return false;
+
+                }
+            }
+
+        } catch (Exception ee) {
+            System.out.println(ee.getLocalizedMessage());
+            return false;
+
+        }
+        return true;
     }
 
     private void MoveDir(HttpServletRequest request, PrintWriter out) {

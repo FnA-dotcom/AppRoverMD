@@ -26,25 +26,26 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 
-public class PatientReg2 extends HttpServlet {
+public class PatientReg2 extends HttpServlet
+{
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
-
+    
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
+    
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
+    
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         final String UserId = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         final Services supp = new Services();
         ServletContext context = null;
         try {
@@ -64,10 +65,11 @@ public class PatientReg2 extends HttpServlet {
             }
             out.flush();
             out.close();
-        } catch (Exception e) {
-            out.println("Error: " + e.getMessage());
+        }catch(Exception e){
+            out.println("Error: "+e.getMessage());
         }
     }
+    
 
 
     void Victoria_2(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext) {
@@ -87,7 +89,7 @@ public class PatientReg2 extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select Id from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+            Query = "Select Id from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('"+ClientId+"')))";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -99,11 +101,11 @@ public class PatientReg2 extends HttpServlet {
             Parser.SetField("Date", String.valueOf(Date));
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormVictoria_2.html");
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
     }
 
-    void SaveDataVictoria(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, HttpServletResponse response) {
+    void SaveDataVictoria(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, HttpServletResponse response){
         try {
             Statement stmt = null;
             ResultSet rset = null;
@@ -119,7 +121,7 @@ public class PatientReg2 extends HttpServlet {
             String FirstName = null;
             String LastName = null;
             String MiddleInitial = null;
-            String County = null;
+            String County  = null;
             String DOB = null;
             String Age = null;
             String gender = null;
@@ -193,7 +195,7 @@ public class PatientReg2 extends HttpServlet {
             String WCPCarrierZipCode = null;
             String WCPAdjudicatorFirstName = null;
             String WCPAdjudicatorLastName = null;
-            String WCPAdjudicatorAreaCode = null;
+            String WCPAdjudicatorAreaCode = null; 
             String WCPAdjudicatorPhoneNumber = null;
             String WCPAdjudicatorFaxAreaCode = null;
             String WCPAdjudicatorFaxPhoneNumber = null;
@@ -289,7 +291,7 @@ public class PatientReg2 extends HttpServlet {
                 DOB = "0000-00-00";
             } else {
                 DOB = request.getParameter("DOB").trim();
-                DOB = DOB.substring(6, 10) + "-" + DOB.substring(0, 2) + "-" + DOB.substring(3, 5);
+                DOB =  DOB.substring(6,10) + "-" + DOB.substring(0,2) + "-" + DOB.substring(3,5);                
             }
             if (request.getParameter("Age") == null) {
                 Age = "";
@@ -381,7 +383,7 @@ public class PatientReg2 extends HttpServlet {
             } else {
                 ReasonVisit = request.getParameter("ReasonVisit").trim();
             }
-
+            
             if (request.getParameter("EmployementChk") == null) {
                 EmployementChk = "0";
             } else {
@@ -415,7 +417,7 @@ public class PatientReg2 extends HttpServlet {
                     PriCarePhy = "";
                 } else {
                     PriCarePhy = request.getParameter("PriCarePhy").trim();
-                }
+                }               
                 if (request.getParameter("PriCarePhyAddress") == null) {
                     PriCarePhyAddress = "";
                 } else {
@@ -502,7 +504,7 @@ public class PatientReg2 extends HttpServlet {
                     WCPDateofInjury = "0000-00-00";
                 } else {
                     WCPDateofInjury = request.getParameter("WCPDateofInjury").trim();
-                    WCPDateofInjury = WCPDateofInjury.substring(6, 10) + "-" + WCPDateofInjury.substring(0, 2) + "-" + WCPDateofInjury.substring(3, 5);
+                    WCPDateofInjury =  WCPDateofInjury.substring(6,10) + "-" + WCPDateofInjury.substring(0,2) + "-" + WCPDateofInjury.substring(3,5); 
                 }
                 if (request.getParameter("WCPCaseNo") == null) {
                     WCPCaseNo = "";
@@ -703,7 +705,7 @@ public class PatientReg2 extends HttpServlet {
                         AIIDateofAccident = "0000-00-00";
                     } else {
                         AIIDateofAccident = request.getParameter("AIIDateofAccident").trim();
-                        AIIDateofAccident = AIIDateofAccident.substring(6, 10) + "-" + AIIDateofAccident.substring(0, 2) + "-" + AIIDateofAccident.substring(3, 5);
+                        AIIDateofAccident =  AIIDateofAccident.substring(6,10) + "-" + AIIDateofAccident.substring(0,2) + "-" + AIIDateofAccident.substring(3,5);
                     }
                     if (request.getParameter("AIIAutoClaim") == null) {
                         AIIAutoClaim = "";
@@ -892,7 +894,7 @@ public class PatientReg2 extends HttpServlet {
                         AIIYourCarMakeModelYear = request.getParameter("AIIYourCarMakeModelYear").trim();
                     }
 
-                } else {
+                }else{
                     if (request.getParameter("AIIResponsiblePartyLicensePlate") == null) {
                         AIIResponsiblePartyLicensePlate = "";
                     } else {
@@ -965,111 +967,111 @@ public class PatientReg2 extends HttpServlet {
                     }
                 }
             }
-            if (request.getParameter("HealthInsuranceChk") == null) {
+            if(request.getParameter("HealthInsuranceChk") == null){
                 HealthInsuranceChk = "0";
-            } else {
+            }else{
                 HealthInsuranceChk = request.getParameter("HealthInsuranceChk").trim();
             }
-            if (HealthInsuranceChk.equals("1")) {
-                if (request.getParameter("GovtFundedInsurancePlanChk") == null) {
+            if(HealthInsuranceChk.equals("1")){
+                if(request.getParameter("GovtFundedInsurancePlanChk") == null){
                     GovtFundedInsurancePlanChk = "0";
-                } else {
+                }else{
                     GovtFundedInsurancePlanChk = request.getParameter("GovtFundedInsurancePlanChk").trim();
                 }
-                if (GovtFundedInsurancePlanChk.equals("1")) {
-                    if (request.getParameter("GFIPMedicare") == null) {
+                if(GovtFundedInsurancePlanChk.equals("1")){
+                    if(request.getParameter("GFIPMedicare") == null){
                         GFIPMedicare = "0";
-                    } else {
+                    }else{
                         GFIPMedicare = "1";
                     }
-                    if (request.getParameter("GFIPMedicaid") == null) {
+                    if(request.getParameter("GFIPMedicaid") == null){
                         GFIPMedicaid = "0";
-                    } else {
+                    }else{
                         GFIPMedicaid = "1";
                     }
-                    if (request.getParameter("GFIPCHIP") == null) {
+                    if(request.getParameter("GFIPCHIP") == null){
                         GFIPCHIP = "0";
-                    } else {
+                    }else{
                         GFIPCHIP = "1";
                     }
-                    if (request.getParameter("GFIPTricare") == null) {
+                    if(request.getParameter("GFIPTricare") == null){
                         GFIPTricare = "0";
-                    } else {
+                    }else{
                         GFIPTricare = "1";
                     }
-                    if (request.getParameter("GFIPVHA") == null) {
+                    if(request.getParameter("GFIPVHA") == null){
                         GFIPVHA = "0";
-                    } else {
+                    }else{
                         GFIPVHA = "1";
                     }
-                    if (request.getParameter("GFIPIndianHealth") == null) {
+                    if(request.getParameter("GFIPIndianHealth") == null){
                         GFIPIndianHealth = "0";
-                    } else {
+                    }else{
                         GFIPIndianHealth = "1";
                     }
                 }
-                if (request.getParameter("InsuranceSubPatient") == null) {
+                if(request.getParameter("InsuranceSubPatient") == null){
                     InsuranceSubPatient = "0";
-                } else {
+                }else{
                     InsuranceSubPatient = "1";
                 }
-                if (request.getParameter("InsuranceSubGuarantor") == null) {
+                if(request.getParameter("InsuranceSubGuarantor") == null){
                     InsuranceSubGuarantor = "0";
-                } else {
+                }else{
                     InsuranceSubGuarantor = "1";
                 }
-                if (request.getParameter("InsuranceSubOther") == null) {
+                if(request.getParameter("InsuranceSubOther") == null){
                     InsuranceSubOther = "0";
-                } else {
+                }else{
                     InsuranceSubOther = "1";
                 }
-                if (request.getParameter("HIPrimaryInsurance") == null) {
+                if(request.getParameter("HIPrimaryInsurance") == null){
                     HIPrimaryInsurance = "";
-                } else {
+                }else{
                     HIPrimaryInsurance = request.getParameter("HIPrimaryInsurance").trim();
                 }
-                if (request.getParameter("HISubscriberFirstName") == null) {
+                if(request.getParameter("HISubscriberFirstName") == null){
                     HISubscriberFirstName = "";
-                } else {
+                }else{
                     HISubscriberFirstName = request.getParameter("HISubscriberFirstName").trim();
                 }
-                if (request.getParameter("HISubscriberLastName") == null) {
+                if(request.getParameter("HISubscriberLastName") == null){
                     HISubscriberLastName = "";
-                } else {
+                }else{
                     HISubscriberLastName = request.getParameter("HISubscriberLastName").trim();
                 }
-                if (request.getParameter("HISubscriberDOB") == null) {
+                if(request.getParameter("HISubscriberDOB") == null){
                     HISubscriberDOB = "0000-00-00";
-                } else {
+                }else{
                     HISubscriberDOB = request.getParameter("HISubscriberDOB").trim();
-                    HISubscriberDOB = HISubscriberDOB.substring(6, 10) + "-" + HISubscriberDOB.substring(0, 2) + "-" + HISubscriberDOB.substring(3, 5);
+                    HISubscriberDOB =  HISubscriberDOB.substring(6,10) + "-" + HISubscriberDOB.substring(0,2) + "-" + HISubscriberDOB.substring(3,5);
                 }
-                if (request.getParameter("HISubscriberSSN") == null) {
+                if(request.getParameter("HISubscriberSSN") == null){
                     HISubscriberSSN = "";
-                } else {
+                }else{
                     HISubscriberSSN = request.getParameter("HISubscriberSSN").trim();
                 }
-                if (request.getParameter("HISubscriberRelationtoPatient") == null) {
+                if(request.getParameter("HISubscriberRelationtoPatient") == null){
                     HISubscriberRelationtoPatient = "";
-                } else {
+                }else{
                     HISubscriberRelationtoPatient = request.getParameter("HISubscriberRelationtoPatient").trim();
                 }
-                if (request.getParameter("HISubscriberGroupNo") == null) {
+                if(request.getParameter("HISubscriberGroupNo") == null){
                     HISubscriberGroupNo = "";
-                } else {
+                }else{
                     HISubscriberGroupNo = request.getParameter("HISubscriberGroupNo").trim();
                 }
-                if (request.getParameter("HISubscriberPolicyNo") == null) {
+                if(request.getParameter("HISubscriberPolicyNo") == null){
                     HISubscriberPolicyNo = "";
-                } else {
+                }else{
                     HISubscriberPolicyNo = request.getParameter("HISubscriberPolicyNo").trim();
                 }
-                if (request.getParameter("SecondHealthInsuranceChk") == null) {
+                if(request.getParameter("SecondHealthInsuranceChk") == null){
                     SecondHealthInsuranceChk = "1";
-                } else {
+                }else{
                     SecondHealthInsuranceChk = request.getParameter("SecondHealthInsuranceChk").trim();
                 }
-                if (SecondHealthInsuranceChk.equals("1")) {
+                if(SecondHealthInsuranceChk.equals("1")) {
                     if (request.getParameter("SHISecondaryName") == null) {
                         SHISecondaryName = "";
                     } else {
@@ -1089,7 +1091,7 @@ public class PatientReg2 extends HttpServlet {
                         SHISubscriberDOB = "0000-00-00";
                     } else {
                         SHISubscriberDOB = request.getParameter("SHISubscriberDOB").trim();
-                        SHISubscriberDOB = SHISubscriberDOB.substring(6, 10) + "-" + SHISubscriberDOB.substring(0, 2) + "-" + SHISubscriberDOB.substring(3, 5);
+                        SHISubscriberDOB =  SHISubscriberDOB.substring(6,10) + "-" + SHISubscriberDOB.substring(0,2) + "-" + SHISubscriberDOB.substring(3,5);
                     }
                     if (request.getParameter("SHISubscriberRelationtoPatient") == null) {
                         SHISubscriberRelationtoPatient = "";
@@ -1106,7 +1108,7 @@ public class PatientReg2 extends HttpServlet {
                     } else {
                         SHISubscriberPolicyNo = request.getParameter("SHISubscriberPolicyNo").trim();
                     }
-
+                    
                 }
             }
 /*
@@ -1259,7 +1261,7 @@ public class PatientReg2 extends HttpServlet {
             out.println("SHISubscriberGroupNo :--"+SHISubscriberGroupNo );
             out.println("SHISubscriberPolicyNo :--"+SHISubscriberPolicyNo );*/
 
-
+            
             Query = "Select Date_format(now(),'%Y-%m-%d')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1269,7 +1271,7 @@ public class PatientReg2 extends HttpServlet {
             rset.close();
             stmt.close();
             try {
-                Query = "Select Id, dbname from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+                Query = "Select Id, dbname from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('"+ClientId+"')))";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1288,7 +1290,7 @@ public class PatientReg2 extends HttpServlet {
 //                }
 
 //                Query = "SELECT MAX(MRN) + 1  FROM " + Database + ".PatientReg ";
-                Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
+                Query = "Select MRN from "+Database+".PatientReg order by ID desc limit 1 ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -1298,38 +1300,38 @@ public class PatientReg2 extends HttpServlet {
                 stmt.close();
                 if (String.valueOf(MRN).length() == 0) {
                     MRN = 310001;
-                } else if (String.valueOf(MRN).length() == 4) {
+                }else if(String.valueOf(MRN).length() == 4){
                     MRN = 310001;
-                } else if (String.valueOf(MRN).length() == 8) {
+                }else if(String.valueOf(MRN).length() == 8){
                     MRN = 310001;
-                } else if (String.valueOf(MRN).length() == 6) {
+                }else if(String.valueOf(MRN).length() == 6) {
                     MRN = MRN + 1;
                 }
 
-                if (ClientIndex == 8) {
-                    ExtendedMRN = "1008" + MRN;
-                } else if (ClientIndex == 9) {
-                    ExtendedMRN = "1009" + MRN;
-                } else if (ClientIndex == 10) {
-                    ExtendedMRN = "1010" + MRN;
-                } else if (ClientIndex == 11) {
-                    ExtendedMRN = "1011" + MRN;
+                if(ClientIndex == 8){
+                    ExtendedMRN = "1008"+MRN;
+                }else if(ClientIndex == 9){
+                    ExtendedMRN = "1009"+MRN;
+                }else if(ClientIndex == 10){
+                    ExtendedMRN = "1010"+MRN;
+                }else if(ClientIndex == 11){
+                    ExtendedMRN = "1011"+MRN;
                 }
 
-            } catch (Exception e) {
-                System.out.println("Error in getting MRN and ClientIndex" + e.getMessage());
+            }catch(Exception e){
+                System.out.println("Error in getting MRN and ClientIndex"+e.getMessage());
             }
 
             try {
-                if (Email.equals(ConfirmEmail)) {
+                if(Email.equals(ConfirmEmail)){
                     Email = ConfirmEmail;
-                } else {
+                }else{
                     out.println("<!DOCTYPE html><html><body><p style=\"color:black;\">Please Put Email and Confirm Email Correctly and then Submit</p>");
                     //  out.println("<br>Request has been send to ERM , Find Patient MRN "+MRN);
                     out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
                     return;
                 }
-                final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName ," +
+                final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO "+Database+".PatientReg (ClientIndex,FirstName,LastName ," +
                         " MiddleInitial,DOB,Age,Gender ,Email,PhNumber ,Address,City ,State,Country,ZipCode,SSN,Occupation ,Employer ,EmpContact," +
                         " PriCarePhy,ReasonVisit,SelfPayChk,CreatedDate,Title, MaritalStatus,CreatedBy, MRN, Status, ExtendedMRN, County) \n" +
                         " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,?,?) ");
@@ -1357,17 +1359,18 @@ public class PatientReg2 extends HttpServlet {
                 MainReceipt.setString(22, Title);
                 MainReceipt.setString(23, MaritalStatus);
                 MainReceipt.setString(24, "Out Patient");
-                MainReceipt.setInt(25, MRN);
+                MainReceipt.setInt(25,MRN);
                 MainReceipt.setString(26, ExtendedMRN);
                 MainReceipt.setString(27, County);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 2- Insertion PatientReg Table :" + e.getMessage());
                 return;
             }
             try {
-                Query = "Select max(ID) from " + Database + ".PatientReg ";
+                Query = "Select max(ID) from "+Database+".PatientReg ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -1375,25 +1378,26 @@ public class PatientReg2 extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 3- :" + e.getMessage());
                 return;
             }
 
-            try {
-                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO " + Database + ".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService,CreatedDate,CreatedBy) \nVALUES (?,?,?,1,NULL,now(),now(),?) ");
+            try{
+                final PreparedStatement MainReceipt = conn.prepareStatement("INSERT INTO "+Database+".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService,CreatedDate,CreatedBy) \nVALUES (?,?,?,1,NULL,now(),now(),?) ");
                 MainReceipt.setInt(1, MRN);
                 MainReceipt.setInt(2, PatientRegId);
                 MainReceipt.setString(3, ReasonVisit);
                 MainReceipt.setString(4, "Out Patient");
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }catch(Exception e){
                 out.println("Error 3.1 Insertion in table PatientVisit- :" + e.getMessage());
             }
 
-            try {
-                final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".PatientReg_Details (PatientRegId,Ethnicity," +
+            try{
+                final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO "+Database+".PatientReg_Details (PatientRegId,Ethnicity," +
                         "Ethnicity_OthersText,EmployementChk,Employer,Occupation,EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit," +
                         "PriCarePhyAddress,PriCarePhyCity,PriCarePhyState,PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer," +
                         "GuarantorEmployerPhNumber,GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode," +
@@ -1409,7 +1413,7 @@ public class PatientReg2 extends HttpServlet {
                 MainReceipt.setInt(8, Integer.parseInt(PrimaryCarePhysicianChk));
                 MainReceipt.setString(9, PriCarePhy);
                 MainReceipt.setString(10, ReasonVisit);
-                MainReceipt.setString(11, PriCarePhyAddress + " " + PriCarePhyAddress2);
+                MainReceipt.setString(11, PriCarePhyAddress + " "+ PriCarePhyAddress2);
                 MainReceipt.setString(12, PriCarePhyCity);
                 MainReceipt.setString(13, PriCarePhyState);
                 MainReceipt.setString(14, PriCarePhyZipCode);
@@ -1426,14 +1430,15 @@ public class PatientReg2 extends HttpServlet {
                 MainReceipt.setInt(25, Integer.parseInt(HealthInsuranceChk));
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 out.println("Error 4- Insertion PatientReg_Details Table :" + e.getMessage());
                 return;
             }
 
-            if (WorkersCompPolicyChk.equals("1")) {
-                try {
-                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Patient_WorkCompPolicy (PatientRegId,WCPDateofInjury," +
+            if(WorkersCompPolicyChk.equals("1")){
+                try{
+                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO "+Database+".Patient_WorkCompPolicy (PatientRegId,WCPDateofInjury," +
                             "WCPCaseNo,WCPGroupNo,WCPMemberId,WCPInjuryRelatedAutoMotorAccident,WCPInjuryRelatedWorkRelated,WCPInjuryRelatedOtherAccident," +
                             "WCPInjuryRelatedNoAccident,WCPInjuryOccurVehicle,WCPInjuryOccurWork,WCPInjuryOccurHome,WCPInjuryOccurOther,WCPInjuryDescription," +
                             "WCPHRFirstName,WCPHRLastName,WCPHRPhoneNumber,WCPHRAddress,WCPHRCity,WCPHRState,WCPHRZipCode,WCPPlanName,WCPCarrierName," +
@@ -1457,7 +1462,7 @@ public class PatientReg2 extends HttpServlet {
                     MainReceipt.setString(15, WCPHRFirstName);
                     MainReceipt.setString(16, WCPHRLastName);
                     MainReceipt.setString(17, WCPHRAreaCode + WCPHRPhoneNumber);
-                    MainReceipt.setString(18, WCPHRAddress + " " + WCPHRAddress2);
+                    MainReceipt.setString(18, WCPHRAddress + " " +WCPHRAddress2);
                     MainReceipt.setString(19, WCPHRCity);
                     MainReceipt.setString(20, WCPHRState);
                     MainReceipt.setString(21, WCPHRZipCode);
@@ -1475,14 +1480,14 @@ public class PatientReg2 extends HttpServlet {
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
 
-                } catch (Exception e) {
+                }catch(Exception e){
                     out.println("Error 5- Insertion Patient_WorkCompPolicy Table :" + e.getMessage());
                     return;
                 }
             }
-            if (MotorVehicleAccidentChk.equals("1")) {
-                try {
-                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Patient_AutoInsuranceInfo (PatientRegId," +
+            if(MotorVehicleAccidentChk.equals("1")){
+                try{
+                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO "+Database+".Patient_AutoInsuranceInfo (PatientRegId," +
                             "AutoInsuranceInformationChk,AIIDateofAccident,AIIAutoClaim,AIIAccidentLocationAddress,AIIAccidentLocationCity,AIIAccidentLocationState," +
                             "AIIAccidentLocationZipCode,AIIRoleInAccident,AIITypeOfAutoIOnsurancePolicy,AIIPrefixforReponsibleParty,AIIFirstNameforReponsibleParty," +
                             "AIIMiddleNameforReponsibleParty,AIILastNameforReponsibleParty,AIISuffixforReponsibleParty,AIICarrierResponsibleParty," +
@@ -1508,7 +1513,7 @@ public class PatientReg2 extends HttpServlet {
                     MainReceipt.setString(14, AIILastNameforReponsibleParty);
                     MainReceipt.setString(15, AIISuffixforReponsibleParty);
                     MainReceipt.setString(16, AIICarrierResponsibleParty);
-                    MainReceipt.setString(17, AIICarrierResponsiblePartyAddress + " " + AIICarrierResponsiblePartyAddress2);
+                    MainReceipt.setString(17, AIICarrierResponsiblePartyAddress+ " " + AIICarrierResponsiblePartyAddress2);
                     MainReceipt.setString(18, AIICarrierResponsiblePartyCity);
                     MainReceipt.setString(19, AIICarrierResponsiblePartyState);
                     MainReceipt.setString(20, AIICarrierResponsiblePartyZipCode);
@@ -1530,15 +1535,15 @@ public class PatientReg2 extends HttpServlet {
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
 
-                } catch (Exception e) {
+                }catch(Exception e){
                     out.println("Error 6- Insertion Patient_AutoInsuranceInfo Table :" + e.getMessage());
                     return;
                 }
             }
 
-            if (HealthInsuranceChk.equals("1")) {
-                try {
-                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Patient_HealthInsuranceInfo (PatientRegId," +
+            if(HealthInsuranceChk.equals("1")){
+                try{
+                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO "+Database+".Patient_HealthInsuranceInfo (PatientRegId," +
                             "GovtFundedInsurancePlanChk,GFIPMedicare,GFIPMedicaid,GFIPCHIP,GFIPTricare,GFIPVHA,GFIPIndianHealth,InsuranceSubPatient," +
                             "InsuranceSubGuarantor,InsuranceSubOther,HIPrimaryInsurance,HISubscriberFirstName,HISubscriberLastName,HISubscriberDOB,HISubscriberSSN," +
                             "HISubscriberRelationtoPatient,HISubscriberGroupNo,HISubscriberPolicyNo,SecondHealthInsuranceChk,SHISecondaryName," +
@@ -1573,7 +1578,7 @@ public class PatientReg2 extends HttpServlet {
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
 
-                } catch (Exception e) {
+                }catch(Exception e){
                     out.println("Error 7- Insertion Patient_HealthInsuranceInfo Table :" + e.getMessage());
                     String str = "";
                     for (int i = 0; i < e.getStackTrace().length; ++i) {
@@ -1595,8 +1600,8 @@ public class PatientReg2 extends HttpServlet {
             stmt.close();
             String Message = "";
             String InsertCOVIDRegReply = "0";
-            System.out.println(ReasonVisit + " Before");
-            if (ReasonVisit != null) {
+            System.out.println(ReasonVisit+" Before");
+            if(ReasonVisit != null) {
                 ReasonVisit = ReasonVisit.replaceAll(" ", "");
                 System.out.println(ReasonVisit + " After");
                 if (ReasonVisit.toUpperCase().equals("COVIDTESTING")) {
@@ -1615,8 +1620,9 @@ public class PatientReg2 extends HttpServlet {
             Parser.SetField("ClientId", String.valueOf(ClientId));
             Parser.GenerateHtml(out, "/opt/Htmls/orange_2/Exception/Message.html");
 
-        } catch (Exception e) {
-            out.println("Error found: " + e.getMessage());
+        }
+        catch (Exception e) {
+            out.println("Error found: "+e.getMessage());
             String str = "";
             for (int i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
@@ -1626,8 +1632,8 @@ public class PatientReg2 extends HttpServlet {
         }
     }
 
-    void EditValues(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, HttpServletResponse response) {
-        try {
+    void EditValues(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, HttpServletResponse response){
+        try{
 
             Statement stmt = null;
             ResultSet rset = null;
@@ -1787,8 +1793,8 @@ public class PatientReg2 extends HttpServlet {
             String SHISubscriberGroupNo = null;
             String SHISubscriberPolicyNo = null;
 
-            try {
-                Query = "Select dbname from oe.clients where Id = " + ClientId;
+            try{
+                Query = "Select dbname from oe.clients where Id = "+ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -1796,7 +1802,7 @@ public class PatientReg2 extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }catch(Exception e){
                 System.out.println(e.getMessage());
             }
 
@@ -1805,35 +1811,37 @@ public class PatientReg2 extends HttpServlet {
                         " IFNULL(Age,''), IFNULL(Gender, ''), IFNULL(Email,''), IFNULL(SUBSTRING(PhNumber, 1, 3),''),  IFNULL(SUBSTRING(PhNumber, 4, 10),'')," +
                         " IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(Country,''), IFNULL(ZipCode,''), IFNULL(SSN,''), IFNULL(Occupation,''), IFNULL(Employer,'')," +
                         " IFNULL(EmpContact, ''), IFNULL(PriCarePhy,''), IFNULL(ReasonVisit, ''), IFNULL(MaritalStatus, ''), IFNULL(DoctorsName,''), " +
-                        " IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y'),DATE_FORMAT(CreatedDate,'%m/%d/%Y')) from " + Database + ".PatientReg where MRN = '" + MRN + "'";
+                        " IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y'),DATE_FORMAT(CreatedDate,'%m/%d/%Y')) from "+Database+".PatientReg where MRN = '"+MRN+"'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
-                    Title = rset.getString(1);
-                    FirstName = rset.getString(2);
-                    LastName = rset.getString(3);
-                    MiddleInitial = rset.getString(4);
-                    DOB = rset.getString(5);
-                    Age = rset.getString(6);
-                    gender = rset.getString(7);
-                    Email = rset.getString(7);
-                    AreaCode = rset.getString(7);
-                    PhNumber = rset.getString(7);
-                    Address = rset.getString(7);
-                    City = rset.getString(7);
-                    State = rset.getString(7);
+                   Title = rset.getString(1);
+                   FirstName = rset.getString(2);
+                   LastName = rset.getString(3);
+                   MiddleInitial = rset.getString(4);
+                   DOB = rset.getString(5);
+                   Age = rset.getString(6);
+                   gender = rset.getString(7);
+                   Email = rset.getString(7);
+                   AreaCode  = rset.getString(7);
+                   PhNumber  = rset.getString(7);
+                   Address  = rset.getString(7);
+                   City  = rset.getString(7);
+                   State  = rset.getString(7);
 
                 }
                 rset.close();
                 stmt.close();
-            } catch (Exception e) {
+            }catch(Exception e){
                 out.println(e.getMessage());
             }
 
 
-        } catch (Exception e) {
+
+        }catch(Exception e){
             out.println(e.getMessage());
         }
+
 
 
     }
@@ -1876,12 +1884,14 @@ public class PatientReg2 extends HttpServlet {
             }
             rset.close();
             stmt.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println("Error in Getting Data from PatientReg table" + e.getMessage());
         }
         if (Gender.equals("male")) {
             Gender = "M";
-        } else {
+        }
+        else {
             Gender = "F";
         }
         try {
@@ -1899,7 +1909,7 @@ public class PatientReg2 extends HttpServlet {
             responseJSON.put("StateCode", State);
             responseJSON.put("IsValidDOB", true);
             responseJSON.put("Zipcode", ZipCode);
-            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString((Object) responseJSON);
+            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString((Object)responseJSON);
 
 //            out.println(Request);
 
@@ -1926,7 +1936,8 @@ public class PatientReg2 extends HttpServlet {
             reply = new String(response2);
             reply = reply.trim();
             //out.println(reply + "--:reply");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             String Message = "0";
 
             System.out.println("Error in Sending Data API COVID VICTORIA: " + e.getMessage());

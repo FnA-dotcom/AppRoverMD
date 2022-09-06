@@ -88,7 +88,9 @@ public class CardConnectBoltReg extends HttpServlet {
             if (ActionID.equals("GetInput")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Update Patient Information", "Open Patient Screen Upadte Info", FacilityIndex);
                 GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-            } else {
+            }
+
+            else {
                 out.println("Under Development");
             }
             try {

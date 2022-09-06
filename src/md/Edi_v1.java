@@ -111,12 +111,12 @@ import java.util.regex.Pattern;
  */
 public class Edi_v1 {
 
-    public static HashMap<String, Integer> ISATAG = new HashMap<String, Integer>();
+	public static HashMap<String,Integer> ISATAG=new HashMap<String, Integer>();
     public static int ClaimType = 0; //1 prof , 2 inst
     public static String ClaimTypeIdentifier = "005010X222A1";// 005010X222A1 Prof , 005010X223A2 Inst
 
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
 //
 //		Context c = new Context('~', '*', ':');
 //
@@ -323,19 +323,20 @@ public class Edi_v1 {
 //        System.out.println("InterControlNo ->" +InterControlNo);
 
         String RecieverInsurance_IdentificationCode = "";
-        if (isEmpty(RecieverInsurance_IdentificationCode)) System.out.println("NULL or Empty");
+        if(isEmpty(RecieverInsurance_IdentificationCode)) System.out.println("NULL or Empty");
 
     }
 
 
-    public static String getOnlyDigits(String s) {
-        Pattern pattern = Pattern.compile("[^0-9.]");
-        Matcher matcher = pattern.matcher(s);
-        String number = matcher.replaceAll("");
-        return number;
-    }
 
-    static boolean isEmpty(final String str) {
+	public static String getOnlyDigits(String s) {
+		Pattern pattern = Pattern.compile("[^0-9.]");
+		Matcher matcher = pattern.matcher(s);
+		String number = matcher.replaceAll("");
+		return number;
+	}
+
+    static boolean isEmpty(final String str){
         return (str == null) || (str.length() <= 0);
     }
 }

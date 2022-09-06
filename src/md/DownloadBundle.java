@@ -13,9 +13,6 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -28,7 +25,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,50 +32,6 @@ import java.util.List;
 
 @SuppressWarnings("Duplicates")
 public class DownloadBundle extends HttpServlet {
-    /*
-    ResultSet rset;
-    String Query;
-    Statement stmt;
-    private Connection conn;
-
-    public DownloadBundle() {
-        this.conn = null;
-        this.rset = null;
-        this.Query = "";
-        this.stmt = null;
-    }*/
-
-    public static int getAge(LocalDate dob) {
-        LocalDate curDate = LocalDate.now();
-        return Period.between(dob, curDate).getYears();
-    }
-
-    private static boolean ReadPdfGetData(final String FileName, final String Path) {
-        try (final PDDocument document = PDDocument.load(new File(Path + "/" + FileName))) {
-            document.getClass();
-            if (document.isEncrypted()) {
-                return false;
-            }
-            final PDFTextStripperByArea stripper = new PDFTextStripperByArea();
-            stripper.setSortByPosition(true);
-            final PDFTextStripper tStripper = new PDFTextStripper();
-            tStripper.getStartPage();
-            final String pdfFileInText = tStripper.getText(document);
-            final String[] lines;
-            final String[] split;
-            final String[] array2;
-            final String[] array = array2 = (split = (lines = pdfFileInText.split("\\r?\\n")));
-            for (final String line : array2) {
-                if (line.toUpperCase().trim().contains("SIGNATURE")) {
-                }
-            }
-        } catch (Exception ee) {
-//            System.out.println(ee.getLocalizedMessage());
-            return false;
-        }
-        return true;
-    }
-
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -91,6 +43,7 @@ public class DownloadBundle extends HttpServlet {
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
+
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
@@ -141,7 +94,10 @@ public class DownloadBundle extends HttpServlet {
 
             if (ActionID.equals("GETINPUT")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Orange Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUT(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
+                GETINPUT(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
+            } else if (ActionID.equals("GETINPUT_ForSpanish")) {
+                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Orange Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
+                GETINPUT_ForSpanish(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
             } else if (ActionID.equals("GETINPUTSAustin")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "South Austin Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
                 GETINPUTSAustin(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
@@ -166,12 +122,9 @@ public class DownloadBundle extends HttpServlet {
             } else if (ActionID.equals("GETINPUTNacogdoches")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Excel ER Nacogdoches Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
                 GETINPUTNacogdoches(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
-            } else if (ActionID.equals("GETINPUTFrontLine")) {
-                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Front Line ER Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUTFrontLine(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
             } else if (ActionID.equals("GETINPUTERDallas")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Victoria Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUTERDallas(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
+                GETINPUTERDallas(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
             } else if (ActionID.equals("GETINPUTAbilene")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Abilene Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
                 GETINPUTAbilene(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
@@ -207,7 +160,90 @@ public class DownloadBundle extends HttpServlet {
         }
     }
 
-    void GETINPUT(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUT_ForSpanish(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String SignedFrom = "REGISTRATION";
+        String Query = "";
+        String BundleName = "";
+        String filename = null;
+        String outputFilePath = null;
+        String pageCount = null;
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+
+        System.out.println("PatientRegId" + PatientRegId);
+        System.out.println("VisitId" + VisitId);
+        try {
+
+            try {
+
+                Query = "Select BundleName from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + "  And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    BundleName = rset.getString(1);
+                }
+                stmt.close();
+                rset.close();
+
+                if (BundleName.contains("EDIT") || BundleName.contains("VISIT")) {
+                    GETINPUT_Inside_ForSpanish(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, SignedFrom, VisitId, helper);
+                    return;
+                }
+
+                System.out.println("OutSide the Name Checking Condtion");
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " And  BundleName LIKE '%SPANISH%' ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+
+
+                    if (filename.contains("REGISTRATIONSIGNED") || filename.contains("REGISTRATION"))
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+
+                    if (filename.contains("VISITSIGNED") || filename.contains("VISIT"))
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+
+                    if (filename.contains("EDITSIGNED") || filename.contains("EDIT"))
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+
+
+                    System.out.println("outputFilePath runs" + outputFilePath);
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+                    //Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("VisitId", String.valueOf(VisitId));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("lang", "2");
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+
+                    System.out.println("GETINPUT_ForSpanish runs");
+                } else {
+                    System.out.println("GETINPUT_Inside_ForSpanish");
+                    GETINPUT_Inside_ForSpanish(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, SignedFrom, VisitId, helper);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void GETINPUT_Inside_ForSpanish(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int patientRegId, String SignedFrom, int PatientVisitNumber, UtilityHelper helper) {
+
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -222,6 +258,7 @@ public class DownloadBundle extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -312,10 +349,26 @@ public class DownloadBundle extends HttpServlet {
         String Physician_text = "";
         final String Other = "";
         String Other_text = "";
+        String DirectoryNameTow = "";
+        String filename = "";
         int SelfPayChk = 0;
+        int VisitIndex = PatientVisitNumber;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+        int ID = patientRegId;
+        System.out.println("Patient reg Id is " + ID);
         try {
+
+
+//            Query = "Select id FROM "+Database+".PatientVisit ORDER BY CreatedDate DESC LIMIT 1";
+//            stmt = conn.createStatement();
+//            rset = stmt.executeQuery(Query);
+//            if (rset.next()) {
+//                VisitIndex = rset.getInt(1);
+//
+//            }
+//            rset.close();
+//            stmt.close();
+
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -328,11 +381,12 @@ public class DownloadBundle extends HttpServlet {
             stmt.close();
             try {
                 Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
-                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), " +
-                        "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), " +
-                        "IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
-                        "IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
-                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  " +
+                        " IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), " +
+                        " IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), " +
+                        " IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
+                        " IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
+                        " IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')," +
+                        " IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
                         "From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -362,9 +416,15 @@ public class DownloadBundle extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 stmt.close();
+
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
 
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
@@ -375,6 +435,8 @@ public class DownloadBundle extends HttpServlet {
                 rset.close();
                 stmt.close();
 
+
+                System.out.println("DoctorID is ____>" + DoctorId);
                 Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -384,17 +446,17 @@ public class DownloadBundle extends HttpServlet {
                 rset.close();
                 stmt.close();
             } catch (Exception e) {
-                out.println("Error In PateintReg:--" + e.getMessage());
-                out.println(Query);
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
             }
             if (SelfPayChk == 1) {
                 Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), " +
                         "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
                         "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
                         "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
-                        "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), " +
+                        "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
                         "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
-                        "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,'-') " +
+                        "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
                         "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -436,7 +498,7 @@ public class DownloadBundle extends HttpServlet {
 
                 if (!PriInsuranceName.equals("-") && !PriInsuranceName.equals("") && !PriInsuranceName.equals("1")) {
                     Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + PriInsuranceName;
-//                    System.out.println(Query);
+                    System.out.println(Query);
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -447,7 +509,1823 @@ public class DownloadBundle extends HttpServlet {
                 }
                 if (!SecondryInsurance.equals("-") && !SecondryInsurance.equals("") && !SecondryInsurance.equals("1")) {
                     Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + SecondryInsurance;
-//                    System.out.println(Query);
+                    System.out.println(Query);
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        SecondryInsurance = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+            }
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), " +
+                    "IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' " +
+                    "WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                NextofKinName = rset.getString(1);
+                RelationToPatientER = rset.getString(2);
+                PhoneNumberER = rset.getString(3);
+                LeaveMessageERString = rset.getString(4);
+                AddressER = rset.getString(5);
+                CityStateZipER = rset.getString(6);
+            }
+            rset.close();
+            stmt.close();
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, " +
+                    "Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), " +
+                    "Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), " +
+                    "UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, " +
+                    "IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                if (rset.getInt(1) == 0) {
+                    ReturnPatient = "";
+                } else {
+                    ReturnPatient = "YES";
+                }
+                if (rset.getInt(2) == 0) {
+                    Google = "";
+                } else {
+                    Google = "YES";
+                }
+                if (rset.getInt(3) == 0) {
+                    MapSearch = "";
+                } else {
+                    MapSearch = "YES";
+                }
+                if (rset.getInt(4) == 0) {
+                    Billboard = "";
+                } else {
+                    Billboard = "YES";
+                }
+                if (rset.getInt(5) == 0) {
+                    OnlineReview = "";
+                } else {
+                    OnlineReview = "YES";
+                }
+                if (rset.getInt(6) == 0) {
+                    TV = "";
+                } else {
+                    TV = "YES";
+                }
+                if (rset.getInt(7) == 0) {
+                    Website = "";
+                } else {
+                    Website = "YES";
+                }
+                if (rset.getInt(8) == 0) {
+                    BuildingSignDriveBy = "";
+                } else {
+                    BuildingSignDriveBy = "YES";
+                }
+                if (rset.getInt(9) == 0) {
+                    Facebook = "";
+                } else {
+                    Facebook = "YES";
+                }
+                if (rset.getInt(10) == 0) {
+                    School = "";
+                    School_text = "";
+                } else {
+                    School = "YES";
+                    School_text = rset.getString(11);
+                }
+                if (rset.getInt(12) == 0) {
+                    Twitter = "";
+                } else {
+                    Twitter = "YES";
+                }
+                if (rset.getInt(13) == 0) {
+                    Magazine = "";
+                    Magazine_text = "";
+                } else {
+                    Magazine = "YES";
+                    Magazine_text = rset.getString(14);
+                }
+                if (rset.getInt(15) == 0) {
+                    Newspaper = "";
+                    Newspaper_text = "";
+                } else {
+                    Newspaper = "YES";
+                    Newspaper_text = rset.getString(16);
+                }
+                if (rset.getInt(17) == 0) {
+                    FamilyFriend = "";
+                    FamilyFriend_text = "";
+                } else {
+                    FamilyFriend = "YES";
+                    FamilyFriend_text = rset.getString(18);
+                }
+                if (rset.getInt(19) == 0) {
+                    UrgentCare = "";
+                    UrgentCare_text = "";
+                } else {
+                    UrgentCare = "YES";
+                    UrgentCare_text = rset.getString(20);
+                }
+                if (rset.getInt(21) == 0) {
+                    CommunityEvent = "";
+                    CommunityEvent_text = "";
+                } else {
+                    CommunityEvent = "YES";
+                    CommunityEvent_text = rset.getString(22);
+                }
+                if (rset.getString(23) == "" || rset.getString(23) == null) {
+                    Work_text = "";
+                } else {
+                    Work_text = rset.getString(23);
+                }
+                if (rset.getString(24) == "" || rset.getString(24) == null) {
+                    Physician_text = "";
+                } else {
+                    Physician_text = rset.getString(24);
+                }
+                if (rset.getString(25) == "" || rset.getString(25) == null) {
+                    Other_text = "";
+                } else {
+                    Other_text = rset.getString(25);
+                }
+            }
+            rset.close();
+            stmt.close();
+            String inputFilePath = "";
+            String ResultPdf = "";
+            final MergePdf mergePdf = new MergePdf();
+
+            inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Admin_ES.pdf";
+
+            if (PriInsuranceName.toUpperCase().contains("UNITED HEALTHCARE")) {
+//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
+
+                String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form_ES.pdf";
+                String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_ES_" + ClientId + "_" + MRN + ".pdf";
+
+                ResultPdf = AttachUHC_Form_ES(MemId, PrimaryDOB, PriInsurerName, DOS, PatientRelationtoPrimary, Date, outputFilePathTmp2, inputFilePathTmp2,
+                        request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf);
+                inputFilePath = ResultPdf;
+            }
+
+            if (SecondryInsurance.toUpperCase().contains("UNITED HEALTHCARE")) {
+//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
+
+                String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form_ES.pdf";
+                String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_ES_" + ClientId + "_" + MRN + ".pdf";
+
+                ResultPdf = AttachUHC_Form_ES(MemberID_2, SubscriberDOB, SubscriberName, DOS, PatientRelationshiptoSecondry, Date, outputFilePathTmp2, inputFilePathTmp2,
+                        request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf);
+
+                inputFilePath = ResultPdf;
+            }
+
+
+            System.out.println("In front line ");
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            System.out.println("Found Query " + Query);
+            stmt.close();
+            rset.close();
+
+            System.out.println("Signed form Contains -->  " + SignedFrom);
+            if (SignedFrom.contains("REGISTRATION")) {
+
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                System.out.println("VISITSIGNED");
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                System.out.println("EDITSIGNED");
+                DirectoryNameTow = "EDIT";
+            }
+
+
+            filename = FirstNameNoSpaces + LastName + ID + "_" + DateTime + "_" + found + "_" + SignedFrom + "_SPANISH.pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
+            final OutputStream fos = new FileOutputStream(new File(outputFilePath));
+            final PdfReader pdfReader = new PdfReader(inputFilePath);
+            final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+            final int pageCount = pdfReader.getNumberOfPages();
+            final GenerateBarCode barCode = new GenerateBarCode();
+            Image SignImages = null;
+            final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/Orange/img_0_" + ID + ".png");
+            System.out.println("IMG is ---> img_0_" + ID + ".png");
+            System.out.println("tmpDir.exists()  " + tmpDir.exists());
+            final boolean exists = tmpDir.exists();
+            if (exists) {
+                Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    String UID = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/Orange/img_0_" + ID + ".png");
+                SignImages.scaleAbsolute(80.0f, 30.0f);
+                //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+
+
+            } else {
+                SignImages = null;
+            }
+
+
+            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
+            final Image image = Image.getInstance(BarCodeFilePath);
+            image.scaleAbsolute(150.0f, 30.0f);
+            for (int i = 1; i <= pdfReader.getNumberOfPages(); ++i) {
+                if (i == 1) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 535.0f);
+                    pdfContentByte.showText(ReturnPatient);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 520.0f);
+                    pdfContentByte.showText(Google);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 500.0f);
+                    pdfContentByte.showText(MapSearch);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 485.0f);
+                    pdfContentByte.showText(Billboard);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 465.0f);
+                    pdfContentByte.showText(OnlineReview);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 450.0f);
+                    pdfContentByte.showText(TV);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 435.0f);
+                    pdfContentByte.showText(Website);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 415.0f);
+                    pdfContentByte.showText(BuildingSignDriveBy);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 398.0f);
+                    pdfContentByte.showText(Facebook);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 380.0f);
+                    pdfContentByte.showText(School);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(190.0f, 380.0f);
+                    pdfContentByte.showText(School_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 365.0f);
+                    pdfContentByte.showText(Twitter);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 348.0f);
+                    pdfContentByte.showText(Magazine);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 348.0f);
+                    pdfContentByte.showText(Magazine_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 330.0f);
+                    pdfContentByte.showText(Newspaper);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(220.0f, 330.0f);
+                    pdfContentByte.showText(Newspaper_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 312.0f);
+                    pdfContentByte.showText(FamilyFriend);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(220.0f, 312.0f);
+                    pdfContentByte.showText(FamilyFriend_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 295.0f);
+                    pdfContentByte.showText(UrgentCare);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(250.0f, 295.0f);
+                    pdfContentByte.showText(UrgentCare_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 278.0f);
+                    pdfContentByte.showText(CommunityEvent);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 278.0f);
+                    pdfContentByte.showText(CommunityEvent_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(160.0f, 225.0f);
+                    pdfContentByte.showText(Work_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(180.0f, 210.0f);
+                    pdfContentByte.showText(Physician_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(150.0f, 192.0f);
+                    pdfContentByte.showText(Other_text);
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(80.0f, 85.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(480.0f, 85.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                }
+                if (i == 2) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setTextMatrix(105.0f, 640.0f);
+                    pdfContentByte.showText(LastName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 640.0f);
+                    pdfContentByte.showText(FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510.0f, 635.0f);
+                    pdfContentByte.showText(MiddleInitial);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 605.0f);
+                    pdfContentByte.showText("Title:  " + Title);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 600.0f);
+                    pdfContentByte.showText(MaritalStatus);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 600.0f);
+                    pdfContentByte.showText(DOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440.0f, 600.0f);
+                    pdfContentByte.showText(Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510.0f, 600.0f);
+                    pdfContentByte.showText(gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 570.0f);
+                    pdfContentByte.showText(Address);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 570.0f);
+                    pdfContentByte.showText(CityStateZip);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 570.0f);
+                    pdfContentByte.showText(PhNumber);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 540.0f);
+                    pdfContentByte.showText(SSN);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 540.0f);
+                    pdfContentByte.showText(Occupation);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 540.0f);
+                    pdfContentByte.showText(Employer);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(515.0f, 540.0f);
+                    pdfContentByte.showText(EmployerPhone);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 510.0f);
+                    pdfContentByte.showText(PriCarePhy);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 510.0f);
+                    pdfContentByte.showText(Email);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(400.0f, 510.0f);
+                    pdfContentByte.showText(ReasonVisit);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 445.0f);
+                    pdfContentByte.showText(WorkersCompPolicyString);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330.0f, 445.0f);
+                    pdfContentByte.showText(MotorVehAccidentString);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 415.0f);
+                    if (PriInsuranceName.equals("1")) {
+                        pdfContentByte.showText(PriInsurance);
+                    } else {
+                        pdfContentByte.showText(PriInsuranceName);
+                    }
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(280.0f, 415.0f);
+                    pdfContentByte.showText(MemId);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420.0f, 415.0f);
+                    pdfContentByte.showText(GrpNumber);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(60, 375); // set x and y co-ordinates
+                    pdfContentByte.showText(PriInsurerName); // PriInsurerName
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 375.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 375.0f);
+                    pdfContentByte.showText(AddressIfDifferent);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 375.0f);
+                    pdfContentByte.showText(CityStateZip);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(85.0f, 335.0f);
+                    pdfContentByte.showText(PrimaryDOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(190.0f, 335.0f);
+                    pdfContentByte.showText(PrimarySSN);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(305.0f, 335.0f);
+                    pdfContentByte.showText(PatientRelationtoPrimary);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 335.0f);
+                    pdfContentByte.showText("");//Pri Insurer Phone Number
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 300.0f);
+                    pdfContentByte.showText(PrimaryOccupation);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(160.0f, 300.0f);
+                    pdfContentByte.showText(PrimaryEmployer);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 300.0f);
+                    pdfContentByte.showText(EmployerAddress);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 300.0f);
+                    pdfContentByte.showText(EmployerPhone);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 275.0f);
+                    pdfContentByte.showText(SecondryInsurance);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 275.0f);
+                    pdfContentByte.showText(SubscriberName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420.0f, 275.0f);
+                    pdfContentByte.showText(SubscriberDOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(100.0f, 240.0f);
+                    pdfContentByte.showText(PatientRelationshiptoSecondry);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 240.0f);
+                    pdfContentByte.showText(MemberID_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420.0f, 240.0f);
+                    pdfContentByte.showText(GroupNumber_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(70.0f, 185.0f);
+                    pdfContentByte.showText(NextofKinName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 190.0f);
+                    pdfContentByte.showText(RelationToPatientER);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 190.0f);
+                    pdfContentByte.showText(PhoneNumberER);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510.0f, 190.0f);
+                    pdfContentByte.showText(LeaveMessageERString);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 150.0f);
+                    pdfContentByte.showText(AddressER);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 150.0f);
+                    pdfContentByte.showText(CityStateZipER);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(180.0f, 65.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440.0f, 70.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 3) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(155.0f, 160.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(325.0f, 162.0f);
+                    pdfContentByte.showText("Date");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 82.0f);
+                    pdfContentByte.showText("Date");
+                    pdfContentByte.endText();
+                }
+                if (i == 4) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 50.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(285.0f, 55.0f);
+                    pdfContentByte.showText("Date");
+                    pdfContentByte.endText();
+                }
+                if (i == 5) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 360.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440.0f, 375.0f);
+                    pdfContentByte.showText("Date");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330.0f, 250.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                }
+                if (i == 6) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(125.0f, 593.0f);
+                    pdfContentByte.showText(Title + " " + FirstName + " " + MiddleInitial + " " + LastName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(300.0f, 593.0f);
+                    pdfContentByte.showText(DOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(495.0f, 593.0f);
+                    pdfContentByte.showText(PatientRelationtoPrimary);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(140.0f, 560.0f);
+                    pdfContentByte.showText(PriInsuranceName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(190.0f, 540.0f);
+                    pdfContentByte.showText(MemId);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(115.0f, 515.0f);
+                    pdfContentByte.showText(DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(105.0f, 393.0f);
+                    pdfContentByte.showText(Title + "  " + FirstName + "  " + MiddleInitial + "  " + LastName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 210.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330.0f, 215.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 7) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 490.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(115.0f, 451.0f);
+                    pdfContentByte.showText(SubscriberName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(400.0f, 451.0f);
+                    pdfContentByte.showText(SubscriberDOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 430.0f);
+                    pdfContentByte.showText(MemberID_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(360.0f, 430.0f);
+                    pdfContentByte.showText(GroupNumber_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(120.0f, 415.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 240.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(170.0f, 160.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(370.0f, 100.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(370.0f, 67.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 8) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 650.0f);
+                    pdfContentByte.showText(Title + " " + FirstName + " " + MiddleInitial + " " + LastName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 650.0f);
+                    pdfContentByte.showText(PhNumber);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 610.0f);
+                    pdfContentByte.showText(DOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 610.0f);
+                    pdfContentByte.showText(SSN);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 480.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 440.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 440.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 400.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 360.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 170.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                }
+                if (i == 9) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                }
+                if (i == 10) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                }
+                if (i == 11) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+//                if (SignImages != null) {
+//                    SignImages.setAbsolutePosition(200.0f, 60.0f);
+//                    pdfContentByte.addImage(SignImages);
+//                }
+
+                }
+                if (i == 12) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText("ClientName : " + ClientName + " Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB:" + DOB + " Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN:" + MRN + " DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(370.0f, 540.0f);
+                    pdfContentByte.showText(DOS);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(120.0f, 545.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                }
+                if (i == 13) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(143.0f, 638.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName + "  " + MiddleInitial);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(435.0f, 638.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 589.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 590.0f);
+                    pdfContentByte.showText(DOS);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(120.0f, 310.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(329.0f, 310.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+
+                }
+            }
+            image.scaleAbsolute(150.0f, 30.0f);
+            pdfStamper.close();
+            pdfReader.close();
+
+            System.out.println("Query to insert into Bundle History");
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            System.out.println("Query " + MainReceipt);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("outputFilePath", outputFilePath);
+//                   Parser.SetField("imagelist", String.valueOf(imagelist));
+            Parser.SetField("VisitId", String.valueOf(VisitIndex));
+            Parser.SetField("pageCount", String.valueOf(pageCount));
+            Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+            Parser.SetField("FileName", filename);
+            Parser.SetField("lang", "2");
+            Parser.SetField("ClientID", String.valueOf(ClientId));
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+
+//            final File pdfFile = new File(outputFilePath);
+//            response.setContentType("application/pdf");
+//            response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
+//            response.setContentLength((int) pdfFile.length());
+//            final FileInputStream fileInputStream = new FileInputStream(pdfFile);
+//            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+//            int bytes;
+//            while ((bytes = fileInputStream.read()) != -1) {
+//                responseOutputStream.write(bytes);
+//            }
+
+        } catch (Exception e) {
+            out.println(e.getMessage());
+            String str = "";
+            for (int j = 0; j < e.getStackTrace().length; ++j) {
+                str = str + e.getStackTrace()[j] + "<br>";
+            }
+            out.println(str);
+        }
+
+    }
+
+    void GETINPUT(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            String SignedFrom = "";
+            try {
+
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getNString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+
+
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " AND BundleName NOT LIKE '%SPANISH%' ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                        SignedFrom = "REGISTRATION";
+                    } else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                        SignedFrom = "VISIT";
+                    } else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                        SignedFrom = "EDIT";
+                    }
+
+
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("VisitId", String.valueOf(VisitId));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("lang", "1");
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+
+                } else {
+                    GETINPUT_Inside_Bundle(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, PatientRegId, SignedFrom, VisitId, helper);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    String GETINPUT_Inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int patientRegId, String SignedFrom, UtilityHelper helper) {
+
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        int PatientRegId = 0;
+        String DateTime = "";
+        String Date = "";
+        String Time = "";
+        String Title = "";
+        String FirstName = "";
+        String FirstNameNoSpaces = "";
+        String LastName = "";
+        String MiddleInitial = "";
+        String MaritalStatus = "";
+        String DOB = "";
+        String DOBForAge = "";
+        String Age = "";
+        String gender = "";
+        String Email = "";
+        String PhNumber = "";
+        String Address = "";
+        String CityStateZip = "";
+        final String State = "";
+        final String Country = "";
+        final String ZipCode = "";
+        String SSN = "";
+        String Occupation = "";
+        String Employer = "";
+        String EmpContact = "";
+        String PriCarePhy = "";
+        String ReasonVisit = "";
+        String MRN = "";
+        int ClientIndex = 0;
+        String ClientName = "";
+        String DOS = "";
+        String DoctorId = null;
+        String DoctorName = "";
+        int WorkersCompPolicy = 0;
+        String WorkersCompPolicyString = "Is this a worker\u2019s comp policy: YES/NO";
+        int MotorVehAccident = 0;
+        String MotorVehAccidentString = "Is this a Motor Vehicle Accident : YES/NO";
+        String PriInsurance = "";
+        String MemId = "";
+        String GrpNumber = "";
+        String PriInsuranceName = "";
+        String AddressIfDifferent = "";
+        String PrimaryDOB = "";
+        String PrimarySSN = "";
+        String PatientRelationtoPrimary = "";
+        String PrimaryOccupation = "";
+        String PrimaryEmployer = "";
+        String EmployerAddress = "";
+        String EmployerPhone = "";
+        String SecondryInsurance = "";
+        String SubscriberName = "";
+        String SubscriberDOB = "";
+        String MemberID_2 = "";
+        String GroupNumber_2 = "";
+        String PriInsurerName = "";
+        String PatientRelationshiptoSecondry = "";
+        String NextofKinName = "";
+        String RelationToPatientER = "";
+        String PhoneNumberER = "";
+        final int LeaveMessageER = 0;
+        String AddressER = "";
+        final String CityER = "";
+        final String StateER = "";
+        String LeaveMessageERString = "";
+        String CityStateZipER = "";
+        final String CountryER = "";
+        final String ZipCodeER = "";
+        final String DateConcent = "";
+        final String WitnessConcent = "";
+        final String PatientBehalfConcent = "";
+        final String RelativeSignConcent = "";
+        final String DateConcent2 = "";
+        final String WitnessConcent2 = "";
+        final String PatientSignConcent = "";
+        String ReturnPatient = "";
+        String Google = "";
+        String MapSearch = "";
+        String Billboard = "";
+        String OnlineReview = "";
+        String TV = "";
+        String Website = "";
+        String BuildingSignDriveBy = "";
+        String Facebook = "";
+        String School = "";
+        String School_text = "";
+        String Twitter = "";
+        String Magazine = "";
+        String Magazine_text = "";
+        String Newspaper = "";
+        String Newspaper_text = "";
+        String FamilyFriend = "";
+        String FamilyFriend_text = "";
+        String UrgentCare = "";
+        String UrgentCare_text = "";
+        String CommunityEvent = "";
+        String CommunityEvent_text = "";
+        final String Work = "";
+        String Work_text = "";
+        final String Physician = "";
+        String Physician_text = "";
+        final String Other = "";
+        String Other_text = "";
+        String DirectoryNameTow = "";
+        String filename = "";
+        int SelfPayChk = 0;
+        int VisitIndex = 0;
+        final int VerifyChkBox = 0;
+        int ID = patientRegId;
+        System.out.println("Patient reg Id is " + ID);
+        try {
+
+
+            Query = "Select id FROM " + Database + ".PatientVisit where PatientRegId=" + ID + " ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+
+            Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                DateTime = rset.getString(1);
+                Date = rset.getString(2);
+                Time = rset.getString(3);
+            }
+            rset.close();
+            stmt.close();
+            try {
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        " IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), " +
+                        " IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), " +
+                        " IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
+                        " IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
+                        " IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')," +
+                        " IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    PatientRegId = ID;
+                    LastName = rset.getString(1).trim();
+                    FirstName = rset.getString(2).trim();
+                    FirstNameNoSpaces = FirstName.replaceAll("\\s+", "");
+                    MiddleInitial = rset.getString(3).trim();
+                    Title = rset.getString(4).trim();
+                    MaritalStatus = rset.getString(5);
+                    DOB = rset.getString(6);
+                    Age = rset.getString(7);
+                    gender = rset.getString(8);
+                    Address = rset.getString(9);
+                    CityStateZip = rset.getString(10);
+                    PhNumber = rset.getString(11);
+                    SSN = rset.getString(12);
+                    Occupation = rset.getString(13);
+                    Employer = rset.getString(14);
+                    EmpContact = rset.getString(15);
+                    PriCarePhy = rset.getString(16);
+                    Email = rset.getString(17);
+                    ReasonVisit = rset.getString(18);
+                    SelfPayChk = rset.getInt(19);
+                    MRN = rset.getString(20);
+                    ClientIndex = rset.getInt(21);
+                    DOS = rset.getString(22);
+                    DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
+                }
+                rset.close();
+                stmt.close();
+
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
+                Query = "Select name from oe.clients where Id = " + ClientId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    ClientName = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    DoctorName = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+            } catch (Exception e) {
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
+            }
+            if (SelfPayChk == 1) {
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), " +
+                        "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                        "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
+                        "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
+                        "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                        "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
+                        "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
+                        "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    WorkersCompPolicy = rset.getInt(1);
+                    MotorVehAccident = rset.getInt(2);
+                    if (WorkersCompPolicy == 0) {
+                        WorkersCompPolicyString = "Is this a worker\u2019s comp policy: NO";
+                    } else {
+                        WorkersCompPolicyString = "Is this a worker\u2019s comp policy: YES";
+                    }
+                    if (MotorVehAccident == 0) {
+                        MotorVehAccidentString = "Is this a Motor Vehicle Accident : NO";
+                    } else {
+                        MotorVehAccidentString = "Is this a Motor Vehicle Accident : YES";
+                    }
+                    PriInsurance = rset.getString(3);
+                    MemId = rset.getString(4);
+                    GrpNumber = rset.getString(5);
+                    PriInsuranceName = rset.getString(6);
+                    AddressIfDifferent = rset.getString(7);
+                    PrimaryDOB = rset.getString(8);
+                    PrimarySSN = rset.getString(9);
+                    PatientRelationtoPrimary = rset.getString(10);
+                    PrimaryOccupation = rset.getString(11);
+                    PrimaryEmployer = rset.getString(12);
+                    EmployerAddress = rset.getString(13);
+                    EmployerPhone = rset.getString(14);
+                    SecondryInsurance = rset.getString(15);
+                    SubscriberName = rset.getString(16);
+                    SubscriberDOB = rset.getString(17);
+                    PatientRelationshiptoSecondry = rset.getString(18);
+                    MemberID_2 = rset.getString(19);
+                    GroupNumber_2 = rset.getString(20);
+                    PriInsurerName = rset.getString(21);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!PriInsuranceName.equals("-") && !PriInsuranceName.equals("") && !PriInsuranceName.equals("1")) {
+                    Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + PriInsuranceName;
+                    System.out.println(Query);
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        PriInsuranceName = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+                if (!SecondryInsurance.equals("-") && !SecondryInsurance.equals("") && !SecondryInsurance.equals("1")) {
+                    Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + SecondryInsurance;
+                    System.out.println(Query);
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -626,11 +2504,62 @@ public class DownloadBundle extends HttpServlet {
                 inputFilePath = ResultPdf;
             }
 
-            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf";
+
+            System.out.println("In front line ");
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            System.out.println("Found Query " + Query);
+            stmt.close();
+            rset.close();
+
+            System.out.println("Signed form Contains -->  " + SignedFrom);
+            if (SignedFrom.contains("REGISTRATION")) {
+
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
+
+            System.out.println("file name is  " + FirstNameNoSpaces + LastName + ID + "_" + found + "_" + SignedFrom + ".pdf");
+            filename = FirstNameNoSpaces + LastName + ID + "_" + DateTime + "_" + found + "_" + SignedFrom + ".pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+            final int pageCount = pdfReader.getNumberOfPages();
             final GenerateBarCode barCode = new GenerateBarCode();
+            Image SignImages = null;
+            final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/Orange/img_0_" + ID + ".png");
+            System.out.println("IMG is ---> img_0_" + ID + ".png");
+            System.out.println("tmpDir.exists()  " + tmpDir.exists());
+            final boolean exists = tmpDir.exists();
+            if (exists) {
+                Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    String UID = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/Orange/img_0_" + ID + ".png");
+                SignImages.scaleAbsolute(80.0f, 30.0f);
+                //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+
+
+            } else {
+                SignImages = null;
+            }
+
+
             final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
             final Image image = Image.getInstance(BarCodeFilePath);
             image.scaleAbsolute(150.0f, 30.0f);
@@ -1133,6 +3062,11 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(350.0f, 150.0f);
                     pdfContentByte.showText(CityStateZipER);
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(180.0f, 65.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1180,6 +3114,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(390.0f, 725.0f);
                     pdfContentByte.showText("Dr. " + DoctorName);
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(155.0f, 200.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1233,6 +3171,11 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(390.0f, 725.0f);
                     pdfContentByte.showText("Dr. " + DoctorName);
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 60.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1280,6 +3223,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(390.0f, 725.0f);
                     pdfContentByte.showText("Dr. " + DoctorName);
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 380.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1375,6 +3322,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(110.0f, 385.0f);
                     pdfContentByte.showText(Title + " " + FirstName + " " + MiddleInitial + " " + LastName);
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 200.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1464,6 +3415,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(50.0f, 240.0f);
                     pdfContentByte.showText(" ");
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(170.0f, 160.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1571,6 +3526,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(130.0f, 360.0f);
                     pdfContentByte.showText("");
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 170.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                 }
                 if (i == 9) {
                     final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
@@ -1694,6 +3653,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(390.0f, 725.0f);
                     pdfContentByte.showText("Dr. " + DoctorName);
                     pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(200.0f, 60.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                 }
                 if (i == 12) {
                     final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
@@ -1721,7 +3684,10 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.setTextMatrix(170.0f, 580.0f);
                     pdfContentByte.showText(DOS);
                     pdfContentByte.endText();
-
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(120.0f, 250.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1730,19 +3696,35 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.endText();
                 }
             }
+            image.scaleAbsolute(150.0f, 30.0f);
             pdfStamper.close();
             pdfReader.close();
 
-            final File pdfFile = new File(outputFilePath);
-            response.setContentType("application/pdf");
-            response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-            response.setContentLength((int) pdfFile.length());
-            final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-            int bytes;
-            while ((bytes = fileInputStream.read()) != -1) {
-                responseOutputStream.write(bytes);
-            }
+            System.out.println("Query to insert into Bundle History");
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            System.out.println("Query " + MainReceipt);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+
+
+//            final File pdfFile = new File(outputFilePath);
+//            response.setContentType("application/pdf");
+//            response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
+//            response.setContentLength((int) pdfFile.length());
+//            final FileInputStream fileInputStream = new FileInputStream(pdfFile);
+//            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+//            int bytes;
+//            while ((bytes = fileInputStream.read()) != -1) {
+//                responseOutputStream.write(bytes);
+//            }
+            return pageCount + "~" + outputFilePath + "~" + filename;
         } catch (Exception e) {
             out.println(e.getMessage());
             String str = "";
@@ -1751,13 +3733,1706 @@ public class DownloadBundle extends HttpServlet {
             }
             out.println(str);
         }
+        return "";
+
     }
 
-    void GETINPUTVictoria_inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUT_Inside_Bundle(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int patientRegId, String SignedFrom, int PatientVisitNumber, UtilityHelper helper) {
+
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
         int PatientRegId = 0;
+        String DateTime = "";
+        String Date = "";
+        String Time = "";
+        String Title = "";
+        String FirstName = "";
+        String FirstNameNoSpaces = "";
+        String LastName = "";
+        String MiddleInitial = "";
+        String MaritalStatus = "";
+        String DOB = "";
+        String DOBForAge = "";
+        String Age = "";
+        String gender = "";
+        String Email = "";
+        String PhNumber = "";
+        String Address = "";
+        String CityStateZip = "";
+        final String State = "";
+        final String Country = "";
+        final String ZipCode = "";
+        String SSN = "";
+        String Occupation = "";
+        String Employer = "";
+        String EmpContact = "";
+        String PriCarePhy = "";
+        String ReasonVisit = "";
+        String MRN = "";
+        int ClientIndex = 0;
+        String ClientName = "";
+        String DOS = "";
+        String DoctorId = null;
+        String DoctorName = "";
+        int WorkersCompPolicy = 0;
+        String WorkersCompPolicyString = "Is this a worker\u2019s comp policy: YES/NO";
+        int MotorVehAccident = 0;
+        String MotorVehAccidentString = "Is this a Motor Vehicle Accident : YES/NO";
+        String PriInsurance = "";
+        String MemId = "";
+        String GrpNumber = "";
+        String PriInsuranceName = "";
+        String AddressIfDifferent = "";
+        String PrimaryDOB = "";
+        String PrimarySSN = "";
+        String PatientRelationtoPrimary = "";
+        String PrimaryOccupation = "";
+        String PrimaryEmployer = "";
+        String EmployerAddress = "";
+        String EmployerPhone = "";
+        String SecondryInsurance = "";
+        String SubscriberName = "";
+        String SubscriberDOB = "";
+        String MemberID_2 = "";
+        String GroupNumber_2 = "";
+        String PriInsurerName = "";
+        String PatientRelationshiptoSecondry = "";
+        String NextofKinName = "";
+        String RelationToPatientER = "";
+        String PhoneNumberER = "";
+        final int LeaveMessageER = 0;
+        String AddressER = "";
+        final String CityER = "";
+        final String StateER = "";
+        String LeaveMessageERString = "";
+        String CityStateZipER = "";
+        final String CountryER = "";
+        final String ZipCodeER = "";
+        final String DateConcent = "";
+        final String WitnessConcent = "";
+        final String PatientBehalfConcent = "";
+        final String RelativeSignConcent = "";
+        final String DateConcent2 = "";
+        final String WitnessConcent2 = "";
+        final String PatientSignConcent = "";
+        String ReturnPatient = "";
+        String Google = "";
+        String MapSearch = "";
+        String Billboard = "";
+        String OnlineReview = "";
+        String TV = "";
+        String Website = "";
+        String BuildingSignDriveBy = "";
+        String Facebook = "";
+        String School = "";
+        String School_text = "";
+        String Twitter = "";
+        String Magazine = "";
+        String Magazine_text = "";
+        String Newspaper = "";
+        String Newspaper_text = "";
+        String FamilyFriend = "";
+        String FamilyFriend_text = "";
+        String UrgentCare = "";
+        String UrgentCare_text = "";
+        String CommunityEvent = "";
+        String CommunityEvent_text = "";
+        final String Work = "";
+        String Work_text = "";
+        final String Physician = "";
+        String Physician_text = "";
+        final String Other = "";
+        String Other_text = "";
+        String DirectoryNameTow = "";
+        String filename = "";
+        int SelfPayChk = 0;
+        int VisitIndex = PatientVisitNumber;
+        final int VerifyChkBox = 0;
+        int ID = patientRegId;
+        System.out.println("Patient reg Id is " + ID);
+        try {
+
+
+//            Query = "Select id FROM "+Database+".PatientVisit ORDER BY CreatedDate DESC LIMIT 1";
+//            stmt = conn.createStatement();
+//            rset = stmt.executeQuery(Query);
+//            if (rset.next()) {
+//                VisitIndex = rset.getInt(1);
+//
+//            }
+//            rset.close();
+//            stmt.close();
+
+            Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                DateTime = rset.getString(1);
+                Date = rset.getString(2);
+                Time = rset.getString(3);
+            }
+            rset.close();
+            stmt.close();
+            try {
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), " +
+                        "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), " +
+                        "IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
+                        "IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
+                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')," +
+                        "IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    PatientRegId = ID;
+                    LastName = rset.getString(1).trim();
+                    FirstName = rset.getString(2).trim();
+                    FirstNameNoSpaces = FirstName.replaceAll("\\s+", "");
+                    MiddleInitial = rset.getString(3).trim();
+                    Title = rset.getString(4).trim();
+                    MaritalStatus = rset.getString(5);
+                    DOB = rset.getString(6);
+                    Age = rset.getString(7);
+                    gender = rset.getString(8);
+                    Address = rset.getString(9);
+                    CityStateZip = rset.getString(10);
+                    PhNumber = rset.getString(11);
+                    SSN = rset.getString(12);
+                    Occupation = rset.getString(13);
+                    Employer = rset.getString(14);
+                    EmpContact = rset.getString(15);
+                    PriCarePhy = rset.getString(16);
+                    Email = rset.getString(17);
+                    ReasonVisit = rset.getString(18);
+                    SelfPayChk = rset.getInt(19);
+                    MRN = rset.getString(20);
+                    ClientIndex = rset.getInt(21);
+                    DOS = rset.getString(22);
+                    DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
+                Query = "Select name from oe.clients where Id = " + ClientId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    ClientName = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+
+                System.out.println("DoctorID is ____>" + DoctorId);
+                Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    DoctorName = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+            } catch (Exception e) {
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
+            }
+            if (SelfPayChk == 1) {
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), " +
+                        "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                        "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
+                        "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
+                        "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                        "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
+                        "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
+                        "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    WorkersCompPolicy = rset.getInt(1);
+                    MotorVehAccident = rset.getInt(2);
+                    if (WorkersCompPolicy == 0) {
+                        WorkersCompPolicyString = "Is this a worker\u2019s comp policy: NO";
+                    } else {
+                        WorkersCompPolicyString = "Is this a worker\u2019s comp policy: YES";
+                    }
+                    if (MotorVehAccident == 0) {
+                        MotorVehAccidentString = "Is this a Motor Vehicle Accident : NO";
+                    } else {
+                        MotorVehAccidentString = "Is this a Motor Vehicle Accident : YES";
+                    }
+                    PriInsurance = rset.getString(3);
+                    MemId = rset.getString(4);
+                    GrpNumber = rset.getString(5);
+                    PriInsuranceName = rset.getString(6);
+                    AddressIfDifferent = rset.getString(7);
+                    PrimaryDOB = rset.getString(8);
+                    PrimarySSN = rset.getString(9);
+                    PatientRelationtoPrimary = rset.getString(10);
+                    PrimaryOccupation = rset.getString(11);
+                    PrimaryEmployer = rset.getString(12);
+                    EmployerAddress = rset.getString(13);
+                    EmployerPhone = rset.getString(14);
+                    SecondryInsurance = rset.getString(15);
+                    SubscriberName = rset.getString(16);
+                    SubscriberDOB = rset.getString(17);
+                    PatientRelationshiptoSecondry = rset.getString(18);
+                    MemberID_2 = rset.getString(19);
+                    GroupNumber_2 = rset.getString(20);
+                    PriInsurerName = rset.getString(21);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!PriInsuranceName.equals("-") && !PriInsuranceName.equals("") && !PriInsuranceName.equals("1")) {
+                    Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + PriInsuranceName;
+                    System.out.println(Query);
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        PriInsuranceName = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+                if (!SecondryInsurance.equals("-") && !SecondryInsurance.equals("") && !SecondryInsurance.equals("1")) {
+                    Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + SecondryInsurance;
+                    System.out.println(Query);
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        SecondryInsurance = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+            }
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), " +
+                    "IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' " +
+                    "WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                NextofKinName = rset.getString(1);
+                RelationToPatientER = rset.getString(2);
+                PhoneNumberER = rset.getString(3);
+                LeaveMessageERString = rset.getString(4);
+                AddressER = rset.getString(5);
+                CityStateZipER = rset.getString(6);
+            }
+            rset.close();
+            stmt.close();
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, " +
+                    "Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), " +
+                    "Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), " +
+                    "UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, " +
+                    "IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                if (rset.getInt(1) == 0) {
+                    ReturnPatient = "";
+                } else {
+                    ReturnPatient = "YES";
+                }
+                if (rset.getInt(2) == 0) {
+                    Google = "";
+                } else {
+                    Google = "YES";
+                }
+                if (rset.getInt(3) == 0) {
+                    MapSearch = "";
+                } else {
+                    MapSearch = "YES";
+                }
+                if (rset.getInt(4) == 0) {
+                    Billboard = "";
+                } else {
+                    Billboard = "YES";
+                }
+                if (rset.getInt(5) == 0) {
+                    OnlineReview = "";
+                } else {
+                    OnlineReview = "YES";
+                }
+                if (rset.getInt(6) == 0) {
+                    TV = "";
+                } else {
+                    TV = "YES";
+                }
+                if (rset.getInt(7) == 0) {
+                    Website = "";
+                } else {
+                    Website = "YES";
+                }
+                if (rset.getInt(8) == 0) {
+                    BuildingSignDriveBy = "";
+                } else {
+                    BuildingSignDriveBy = "YES";
+                }
+                if (rset.getInt(9) == 0) {
+                    Facebook = "";
+                } else {
+                    Facebook = "YES";
+                }
+                if (rset.getInt(10) == 0) {
+                    School = "";
+                    School_text = "";
+                } else {
+                    School = "YES";
+                    School_text = rset.getString(11);
+                }
+                if (rset.getInt(12) == 0) {
+                    Twitter = "";
+                } else {
+                    Twitter = "YES";
+                }
+                if (rset.getInt(13) == 0) {
+                    Magazine = "";
+                    Magazine_text = "";
+                } else {
+                    Magazine = "YES";
+                    Magazine_text = rset.getString(14);
+                }
+                if (rset.getInt(15) == 0) {
+                    Newspaper = "";
+                    Newspaper_text = "";
+                } else {
+                    Newspaper = "YES";
+                    Newspaper_text = rset.getString(16);
+                }
+                if (rset.getInt(17) == 0) {
+                    FamilyFriend = "";
+                    FamilyFriend_text = "";
+                } else {
+                    FamilyFriend = "YES";
+                    FamilyFriend_text = rset.getString(18);
+                }
+                if (rset.getInt(19) == 0) {
+                    UrgentCare = "";
+                    UrgentCare_text = "";
+                } else {
+                    UrgentCare = "YES";
+                    UrgentCare_text = rset.getString(20);
+                }
+                if (rset.getInt(21) == 0) {
+                    CommunityEvent = "";
+                    CommunityEvent_text = "";
+                } else {
+                    CommunityEvent = "YES";
+                    CommunityEvent_text = rset.getString(22);
+                }
+                if (rset.getString(23) == "" || rset.getString(23) == null) {
+                    Work_text = "";
+                } else {
+                    Work_text = rset.getString(23);
+                }
+                if (rset.getString(24) == "" || rset.getString(24) == null) {
+                    Physician_text = "";
+                } else {
+                    Physician_text = rset.getString(24);
+                }
+                if (rset.getString(25) == "" || rset.getString(25) == null) {
+                    Other_text = "";
+                } else {
+                    Other_text = rset.getString(25);
+                }
+            }
+            rset.close();
+            stmt.close();
+            String inputFilePath = "";
+            String ResultPdf = "";
+            final MergePdf mergePdf = new MergePdf();
+
+            inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Admin.pdf";
+
+            if (PriInsuranceName.toUpperCase().contains("UNITED HEALTHCARE")) {
+//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
+
+                String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form.pdf";
+                String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
+
+                ResultPdf = AttachUHC_Form(MemId, PrimaryDOB, PriInsurerName, DOS, PatientRelationtoPrimary, Date, outputFilePathTmp2, inputFilePathTmp2,
+                        request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf);
+                inputFilePath = ResultPdf;
+            }
+
+            if (SecondryInsurance.toUpperCase().contains("UNITED HEALTHCARE")) {
+//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
+
+                String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form.pdf";
+                String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
+
+                ResultPdf = AttachUHC_Form(MemberID_2, SubscriberDOB, SubscriberName, DOS, PatientRelationshiptoSecondry, Date, outputFilePathTmp2, inputFilePathTmp2,
+                        request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf);
+
+                inputFilePath = ResultPdf;
+            }
+
+
+            System.out.println("In front line ");
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            System.out.println("Found Query " + Query);
+            stmt.close();
+            rset.close();
+
+            System.out.println("Signed form Contains -->  " + SignedFrom);
+            if (SignedFrom.contains("REGISTRATION")) {
+
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                System.out.println("VISITSIGNED");
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                System.out.println("EDITSIGNED");
+                DirectoryNameTow = "EDIT";
+            }
+
+            System.out.println("file name is  " + FirstNameNoSpaces + LastName + ID + "_" + found + "_" + SignedFrom + ".pdf");
+            filename = FirstNameNoSpaces + LastName + ID + "_" + DateTime + "_" + found + "_" + SignedFrom + ".pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
+            final OutputStream fos = new FileOutputStream(new File(outputFilePath));
+            final PdfReader pdfReader = new PdfReader(inputFilePath);
+            final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+            final int pageCount = pdfReader.getNumberOfPages();
+            final GenerateBarCode barCode = new GenerateBarCode();
+            Image SignImages = null;
+            final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/Orange/img_0_" + ID + ".png");
+            System.out.println("IMG is ---> img_0_" + ID + ".png");
+            System.out.println("tmpDir.exists()  " + tmpDir.exists());
+            final boolean exists = tmpDir.exists();
+            if (exists) {
+                Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    String UID = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/Orange/img_0_" + ID + ".png");
+                SignImages.scaleAbsolute(80.0f, 30.0f);
+                //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+
+
+            } else {
+                SignImages = null;
+            }
+
+
+            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
+            final Image image = Image.getInstance(BarCodeFilePath);
+            image.scaleAbsolute(150.0f, 30.0f);
+            for (int i = 1; i <= pdfReader.getNumberOfPages(); ++i) {
+                if (i == 1) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 535.0f);
+                    pdfContentByte.showText(ReturnPatient);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 520.0f);
+                    pdfContentByte.showText(Google);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 500.0f);
+                    pdfContentByte.showText(MapSearch);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 485.0f);
+                    pdfContentByte.showText(Billboard);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 465.0f);
+                    pdfContentByte.showText(OnlineReview);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 450.0f);
+                    pdfContentByte.showText(TV);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 435.0f);
+                    pdfContentByte.showText(Website);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 415.0f);
+                    pdfContentByte.showText(BuildingSignDriveBy);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 398.0f);
+                    pdfContentByte.showText(Facebook);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 380.0f);
+                    pdfContentByte.showText(School);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(190.0f, 380.0f);
+                    pdfContentByte.showText(School_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 365.0f);
+                    pdfContentByte.showText(Twitter);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 348.0f);
+                    pdfContentByte.showText(Magazine);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 348.0f);
+                    pdfContentByte.showText(Magazine_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 330.0f);
+                    pdfContentByte.showText(Newspaper);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(220.0f, 330.0f);
+                    pdfContentByte.showText(Newspaper_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 312.0f);
+                    pdfContentByte.showText(FamilyFriend);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(220.0f, 312.0f);
+                    pdfContentByte.showText(FamilyFriend_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 295.0f);
+                    pdfContentByte.showText(UrgentCare);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(220.0f, 295.0f);
+                    pdfContentByte.showText(UrgentCare_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 278.0f);
+                    pdfContentByte.showText(CommunityEvent);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(250.0f, 278.0f);
+                    pdfContentByte.showText(CommunityEvent_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(150.0f, 225.0f);
+                    pdfContentByte.showText(Work_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(180.0f, 210.0f);
+                    pdfContentByte.showText(Physician_text);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(150.0f, 195.0f);
+                    pdfContentByte.showText(Other_text);
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(80.0f, 85.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(480.0f, 85.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                }
+                if (i == 2) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setTextMatrix(105.0f, 640.0f);
+                    pdfContentByte.showText(LastName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 640.0f);
+                    pdfContentByte.showText(FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(500.0f, 640.0f);
+                    pdfContentByte.showText(MiddleInitial);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 605.0f);
+                    pdfContentByte.showText("Title: " + Title);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 600.0f);
+                    pdfContentByte.showText(MaritalStatus);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 600.0f);
+                    pdfContentByte.showText(DOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440.0f, 600.0f);
+                    pdfContentByte.showText(Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510.0f, 600.0f);
+                    pdfContentByte.showText(gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 570.0f);
+                    pdfContentByte.showText(Address);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 570.0f);
+                    pdfContentByte.showText(CityStateZip);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 570.0f);
+                    pdfContentByte.showText(PhNumber);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 540.0f);
+                    pdfContentByte.showText(SSN);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 540.0f);
+                    pdfContentByte.showText(Occupation);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 540.0f);
+                    pdfContentByte.showText(Employer);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(470.0f, 540.0f);
+                    pdfContentByte.showText(EmployerPhone);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 510.0f);
+                    pdfContentByte.showText(PriCarePhy);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 510.0f);
+                    pdfContentByte.showText(Email);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(400.0f, 510.0f);
+                    pdfContentByte.showText(ReasonVisit);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 445.0f);
+                    pdfContentByte.showText(WorkersCompPolicyString);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330.0f, 445.0f);
+                    pdfContentByte.showText(MotorVehAccidentString);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 415.0f);
+                    if (PriInsuranceName.equals("1")) {
+                        pdfContentByte.showText(PriInsurance);
+                    } else {
+                        pdfContentByte.showText(PriInsuranceName);
+                    }
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(280.0f, 415.0f);
+                    pdfContentByte.showText(MemId);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420.0f, 415.0f);
+                    pdfContentByte.showText(GrpNumber);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(60, 375); // set x and y co-ordinates
+                    pdfContentByte.showText(PriInsurerName); // PriInsurerName
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 375.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 375.0f);
+                    pdfContentByte.showText(AddressIfDifferent);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 375.0f);
+                    pdfContentByte.showText(CityStateZip);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 335.0f);
+                    pdfContentByte.showText(PrimaryDOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(160.0f, 335.0f);
+                    pdfContentByte.showText(PrimarySSN);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(270.0f, 335.0f);
+                    pdfContentByte.showText(PatientRelationtoPrimary);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 335.0f);
+                    pdfContentByte.showText("");//Pri Insurer Phone Number
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 300.0f);
+                    pdfContentByte.showText(PrimaryOccupation);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(160.0f, 300.0f);
+                    pdfContentByte.showText(PrimaryEmployer);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 300.0f);
+                    pdfContentByte.showText(EmployerAddress);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460.0f, 300.0f);
+                    pdfContentByte.showText(EmployerPhone);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 275.0f);
+                    pdfContentByte.showText(SecondryInsurance);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 275.0f);
+                    pdfContentByte.showText(SubscriberName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420.0f, 275.0f);
+                    pdfContentByte.showText(SubscriberDOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(60.0f, 240.0f);
+                    pdfContentByte.showText(PatientRelationshiptoSecondry);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 240.0f);
+                    pdfContentByte.showText(MemberID_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420.0f, 240.0f);
+                    pdfContentByte.showText(GroupNumber_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 190.0f);
+                    pdfContentByte.showText(NextofKinName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(200.0f, 190.0f);
+                    pdfContentByte.showText(RelationToPatientER);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 190.0f);
+                    pdfContentByte.showText(PhoneNumberER);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510.0f, 190.0f);
+                    pdfContentByte.showText(LeaveMessageERString);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(40.0f, 150.0f);
+                    pdfContentByte.showText(AddressER);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(350.0f, 150.0f);
+                    pdfContentByte.showText(CityStateZipER);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(180.0f, 65.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440.0f, 75.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 3) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(155.0f, 200.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(325.0f, 210.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 130.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 4) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 60.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                    pdfContentByte.beginText();
+
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(285.0f, 70.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 5) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 380.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440.0f, 395.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330.0f, 250.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                }
+                if (i == 6) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(95.0f, 585.0f);
+                    pdfContentByte.showText(Title + " " + FirstName + " " + MiddleInitial + " " + LastName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(300.0f, 585.0f);
+                    pdfContentByte.showText(DOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(490.0f, 585.0f);
+                    pdfContentByte.showText(PatientRelationtoPrimary);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(120.0f, 560.0f);
+                    pdfContentByte.showText(PriInsuranceName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(180.0f, 535.0f);
+                    pdfContentByte.showText(MemId);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 510.0f);
+                    pdfContentByte.showText(DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 385.0f);
+                    pdfContentByte.showText(Title + " " + FirstName + " " + MiddleInitial + " " + LastName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 200.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330.0f, 210.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 7) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 490.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 465.0f);
+                    pdfContentByte.showText(SubscriberName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 465.0f);
+                    pdfContentByte.showText(SubscriberDOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110.0f, 440.0f);
+                    pdfContentByte.showText(MemberID_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(260.0f, 440.0f);
+                    pdfContentByte.showText(GroupNumber_2);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(120.0f, 415.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 240.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(170.0f, 160.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(430.0f, 170.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Bold", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(430.0f, 130.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+                if (i == 8) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 650.0f);
+                    pdfContentByte.showText(Title + " " + FirstName + " " + MiddleInitial + " " + LastName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 650.0f);
+                    pdfContentByte.showText(PhNumber);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50.0f, 610.0f);
+                    pdfContentByte.showText(DOB);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 610.0f);
+                    pdfContentByte.showText(SSN);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 480.0f);
+                    pdfContentByte.showText(" ");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 440.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340.0f, 440.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 400.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(130.0f, 360.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150.0f, 170.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                }
+                if (i == 9) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                }
+                if (i == 10) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                }
+                if (i == 11) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(35.0f, 750.0f);
+                    pdfContentByte.showText("MRN: " + MRN);
+                    pdfContentByte.endText();
+                    image.setAbsolutePosition(10.0f, 710.0f);
+                    pdfContentByte.addImage(image);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 765.0f);
+                    pdfContentByte.showText(LastName + " , " + FirstName);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 755.0f);
+                    pdfContentByte.showText(ClientName + "        Sex:" + gender);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 745.0f);
+                    pdfContentByte.showText("DOB: " + DOB + "        Age:" + Age);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 735.0f);
+                    pdfContentByte.showText("MRN: " + MRN + "        DOS: " + DOS);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390.0f, 725.0f);
+                    pdfContentByte.showText("Dr. " + DoctorName);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(200.0f, 60.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                }
+                if (i == 12) {
+                    final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(123.0f, 638.0f);
+                    pdfContentByte.showText(LastName + ", " + FirstName + " " + MiddleInitial);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(435.0f, 638.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 589.0f);
+                    pdfContentByte.showText("");
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(170.0f, 580.0f);
+                    pdfContentByte.showText(DOS);
+                    pdfContentByte.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(120.0f, 250.0f);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(329.0f, 300.0f);
+                    pdfContentByte.showText(Date);
+                    pdfContentByte.endText();
+                }
+            }
+            image.scaleAbsolute(150.0f, 30.0f);
+            pdfStamper.close();
+            pdfReader.close();
+
+            System.out.println("Query to insert into Bundle History");
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            System.out.println("Query " + MainReceipt);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("outputFilePath", outputFilePath);
+            Parser.SetField("VisitId", String.valueOf(VisitIndex));
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+            Parser.SetField("pageCount", String.valueOf(pageCount));
+            Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+            Parser.SetField("FileName", filename);
+            Parser.SetField("lang", "1");
+            Parser.SetField("ClientID", String.valueOf(ClientId));
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+
+//            final File pdfFile = new File(outputFilePath);
+//            response.setContentType("application/pdf");
+//            response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
+//            response.setContentLength((int) pdfFile.length());
+//            final FileInputStream fileInputStream = new FileInputStream(pdfFile);
+//            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+//            int bytes;
+//            while ((bytes = fileInputStream.read()) != -1) {
+//                responseOutputStream.write(bytes);
+//            }
+
+        } catch (Exception e) {
+            out.println(e.getMessage());
+            String str = "";
+            for (int j = 0; j < e.getStackTrace().length; ++j) {
+                str = str + e.getStackTrace()[j] + "<br>";
+            }
+            out.println(str);
+        }
+
+    }
+
+    String GETINPUTVictoria_inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int PatientRegId, String SignedFrom) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+
         String DateTime = "";
         String Date = "";
         String Time = "";
@@ -1959,14 +5634,26 @@ public class DownloadBundle extends HttpServlet {
         final String Country = "";
         String MRN = "";
         int ClientIndex = 0;
+        int VisitIndex = 0;
         String ClientName = "";
         String DOS = "";
+        String filename = "";
+        String DirectoryNameTow = "";
         String DoctorId = null;
-        String DoctorName = null;
-        String DOBForAge = null;
+        final String DoctorName = null;
         try {
-            PreparedStatement ps = conn.prepareStatement(
-                    "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')");
+
+
+            Query = "Select id FROM " + Database + ".PatientVisit ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+            PreparedStatement ps = conn.prepareStatement("select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')");
             rset = ps.executeQuery();
             if (rset.next()) {
                 DateTime = rset.getString(1);
@@ -1976,15 +5663,8 @@ public class DownloadBundle extends HttpServlet {
             rset.close();
             ps.close();
             try {
-                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), " +
-                        "IFNULL(Title,'-'),IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  " +
-                        "IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), " +
-                        "IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), " +
-                        "IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
-                        "IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
-                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), " +
-                        "IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
-                        " From " + Database + ".PatientReg Where ID = ? ");
+                ps = conn.prepareStatement(" Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = ? ");
                 ps.setInt(1, ID);
                 rset = ps.executeQuery();
                 while (rset.next()) {
@@ -2014,15 +5694,9 @@ public class DownloadBundle extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
-                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 ps.close();
-
-                if (!DOB.equals("")) {
-                    Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
-                }
-
                 ps = conn.prepareStatement("Select name from oe.clients where Id = ?");
                 ps.setInt(1, ClientId);
                 rset = ps.executeQuery();
@@ -2035,12 +5709,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error In PateintReg:--" + e.getMessage());
                 out.println(ps.toString());
             }
-            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation," +
-                    "EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState," +
-                    "PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber," +
-                    "GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode," +
-                    "CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk " +
-                    "from " + Database + ".PatientReg_Details where PatientRegId = ?");
+            ps = conn.prepareStatement("Select  Ethnicity,Ethnicity_OthersText,EmployementChk,Employer,Occupation,EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState,PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber,GuarantorEmployerAddress,GuarantorEmployerCity,GuarantorEmployerState,GuarantorEmployerZipCode,CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk from " + Database + ".PatientReg_Details where PatientRegId = ?");
             ps.setInt(1, ID);
             rset = ps.executeQuery();
             while (rset.next()) {
@@ -2075,19 +5744,7 @@ public class DownloadBundle extends HttpServlet {
             ps.close();
             if (WorkersCompPolicyChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), " +
-                            "IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), " +
-                            "IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), " +
-                            "IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), " +
-                            "IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), " +
-                            "IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), " +
-                            "IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), " +
-                            "IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), " +
-                            "IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), " +
-                            "IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), " +
-                            "IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), " +
-                            "IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') " +
-                            "from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''), IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), IFNULL(WCPInjuryRelatedOtherAccident,''), IFNULL(WCPInjuryRelatedNoAccident,''), IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''), IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), IFNULL(WCPHRLastName,''), IFNULL(WCPHRPhoneNumber,''), IFNULL(WCPHRAddress,''), IFNULL(WCPHRCity,''), IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), IFNULL(WCPCarrierName,''), IFNULL(WCPPayerPhoneNumber,''), IFNULL(WCPCarrierAddress,''), IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), IFNULL(WCPAdjudicatorFirstName,''), IFNULL(WCPAdjudicatorLastName,''), IFNULL(WCPAdjudicatorPhoneNumber,''), IFNULL(WCPAdjudicatorFaxPhoneNumber,'') from " + Database + ".Patient_WorkCompPolicy where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -2132,26 +5789,7 @@ public class DownloadBundle extends HttpServlet {
             }
             if (MotorVehicleAccidentChk == 1) {
                 try {
-                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), " +
-                            "IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), " +
-                            "IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), " +
-                            "IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), " +
-                            "IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), " +
-                            "IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), " +
-                            "IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), " +
-                            "IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), " +
-                            "IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), " +
-                            "IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), " +
-                            "IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), " +
-                            "IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), " +
-                            "IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), " +
-                            "IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,'')," +
-                            "IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), " +
-                            "IFNULL(AIIYourCarMakeModelYear,'') " +
-                            "from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
+                    ps = conn.prepareStatement("Select IFNULL(AutoInsuranceInformationChk,'0'), IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'),''), IFNULL(AIIAutoClaim,''), IFNULL(AIIAccidentLocationAddress,''), IFNULL(AIIAccidentLocationCity,''), IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''), IFNULL(AIIRoleInAccident,''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), IFNULL(AIIPrefixforReponsibleParty,''), IFNULL(AIIFirstNameforReponsibleParty,''), IFNULL(AIIMiddleNameforReponsibleParty,''), IFNULL(AIILastNameforReponsibleParty,''), IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''), IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''), IFNULL(AIICarrierResponsiblePartyPhoneNumber,''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''), IFNULL(AIIResponsiblePartyAutoMakeModel,''), IFNULL(AIIResponsiblePartyLicensePlate,''), IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder,''), IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress,''), IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''), IFNULL(AIIYourInsuranceZipCode,''), IFNULL(AIIYourInsurancePhoneNumber,''),IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'') from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = ?");
                     ps.setInt(1, ID);
                     rset = ps.executeQuery();
                     if (rset.next()) {
@@ -2236,51 +5874,41 @@ public class DownloadBundle extends HttpServlet {
                     Services.DumException("DownloadBundle", "GetINput Victoria", request, e, this.getServletContext());
                 }
             }
-            switch (Ethnicity) {
-                case "1":
-                    Ethnicity = "Hispanic";
-                    break;
-                case "2":
-                    Ethnicity = "Non-Hispanic";
-                    break;
-                case "3":
-                    Ethnicity = "Unknown";
-                    break;
+            if (Ethnicity.equals("1")) {
+                Ethnicity = "Hispanic";
+            } else if (Ethnicity.equals("2")) {
+                Ethnicity = "Non-Hispanic";
+            } else if (Ethnicity.equals("3")) {
+                Ethnicity = "Unknown";
             }
-
-            switch (GuarantorChk) {
-                case "1":
-                    Guarantor = "The Patient";
-                    GuarantorDOB = DOB;
-                    GuarantorSEX = gender;
-                    GuarantorSSN = SSN;
-                    GuarantorAddress = Address + "";
-                    GuarantorPhoneNumber = "" + PhNumber;
-                    break;
-                case "2":
-                    Guarantor = "Legal Guardian";
-                    GuarantorDOB = "-";
-                    GuarantorSEX = "-";
-                    GuarantorSSN = "-";
-                    GuarantorAddress = "-";
-                    GuarantorPhoneNumber = "-";
-                    break;
-                case "3":
-                    Guarantor = "Patient Parent";
-                    GuarantorDOB = "-";
-                    GuarantorSEX = "-";
-                    GuarantorSSN = "-";
-                    GuarantorAddress = "-";
-                    GuarantorPhoneNumber = "-";
-                    break;
-                case "4":
-                    Guarantor = "Spouse/Partner";
-                    GuarantorDOB = "-";
-                    GuarantorSEX = "-";
-                    GuarantorSSN = "-";
-                    GuarantorAddress = "-";
-                    GuarantorPhoneNumber = "-";
-                    break;
+            if (GuarantorChk.equals("1")) {
+                Guarantor = "The Patient";
+                GuarantorDOB = DOB;
+                GuarantorSEX = gender;
+                GuarantorSSN = SSN;
+                GuarantorAddress = Address + "";
+                GuarantorPhoneNumber = "" + PhNumber;
+            } else if (GuarantorChk.equals("2")) {
+                Guarantor = "Legal Guardian";
+                GuarantorDOB = "-";
+                GuarantorSEX = "-";
+                GuarantorSSN = "-";
+                GuarantorAddress = "-";
+                GuarantorPhoneNumber = "-";
+            } else if (GuarantorChk.equals("3")) {
+                Guarantor = "Patient Parent";
+                GuarantorDOB = "-";
+                GuarantorSEX = "-";
+                GuarantorSSN = "-";
+                GuarantorAddress = "-";
+                GuarantorPhoneNumber = "-";
+            } else if (GuarantorChk.equals("2")) {
+                Guarantor = "Spouse/Partner";
+                GuarantorDOB = "-";
+                GuarantorSEX = "-";
+                GuarantorSSN = "-";
+                GuarantorAddress = "-";
+                GuarantorPhoneNumber = "-";
             }
             if (WorkersCompPolicyChk == 1) {
                 WorkCompPolicyStr = "Yes";
@@ -2301,33 +5929,7 @@ public class DownloadBundle extends HttpServlet {
             if (AIIDateofAccident.equals("00/00/0000")) {
                 AIIDateofAccident = "";
             }
-            ps = conn.prepareStatement(" Select " +
-                    "CASE WHEN MFFirstVisit = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN MFReturnPat = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN MFInternetFind = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN Facebook = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN MapSearch = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN GoogleSearch = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN VERWebsite = 1 THEN 'YES' ELSE '' END,  " +
-                    "CASE WHEN WebsiteAds = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN OnlineReviews = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN Twitter = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN LinkedIn = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN EmailBlast = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN YouTube = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN TV = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN Billboard = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN Radio = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN Brochure = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN DirectMail = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN CitizensDeTar = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN LiveWorkNearby = 1 THEN 'YES' ELSE '' END, " +
-                    "CASE WHEN FamilyFriend = 1 THEN 'YES' ELSE '' END, " +
-                    "IFNULL(FamilyFriend_text,''),  CASE WHEN UrgentCare = 1 THEN 'YES' ELSE '' END, IFNULL(UrgentCare_text,''),  " +
-                    "CASE WHEN NewspaperMagazine = 1 THEN 'YES' ELSE '' END, IFNULL(NewspaperMagazine_text,''),  " +
-                    "CASE WHEN School = 1 THEN 'YES' ELSE '' END, IFNULL(School_text,''),  " +
-                    "CASE WHEN Hotel = 1 THEN 'YES' ELSE '' END, IFNULL(Hotel_text,''), IFNULL(MFPhysician,'')  " +
-                    "FROM " + Database + ".MarketingInfo WHERE PatientRegId = ?");
+            ps = conn.prepareStatement(" Select CASE WHEN MFFirstVisit = 1 THEN 'YES' ELSE '' END,  CASE WHEN MFReturnPat = 1 THEN 'YES' ELSE '' END,  CASE WHEN MFInternetFind = 1 THEN 'YES' ELSE '' END,  CASE WHEN Facebook = 1 THEN 'YES' ELSE '' END,  CASE WHEN MapSearch = 1 THEN 'YES' ELSE '' END,  CASE WHEN GoogleSearch = 1 THEN 'YES' ELSE '' END,  CASE WHEN VERWebsite = 1 THEN 'YES' ELSE '' END,  CASE WHEN WebsiteAds = 1 THEN 'YES' ELSE '' END, CASE WHEN OnlineReviews = 1 THEN 'YES' ELSE '' END, CASE WHEN Twitter = 1 THEN 'YES' ELSE '' END, CASE WHEN LinkedIn = 1 THEN 'YES' ELSE '' END, CASE WHEN EmailBlast = 1 THEN 'YES' ELSE '' END, CASE WHEN YouTube = 1 THEN 'YES' ELSE '' END, CASE WHEN TV = 1 THEN 'YES' ELSE '' END, CASE WHEN Billboard = 1 THEN 'YES' ELSE '' END, CASE WHEN Radio = 1 THEN 'YES' ELSE '' END, CASE WHEN Brochure = 1 THEN 'YES' ELSE '' END, CASE WHEN DirectMail = 1 THEN 'YES' ELSE '' END, CASE WHEN CitizensDeTar = 1 THEN 'YES' ELSE '' END, CASE WHEN LiveWorkNearby = 1 THEN 'YES' ELSE '' END, CASE WHEN FamilyFriend = 1 THEN 'YES' ELSE '' END, IFNULL(FamilyFriend_text,''),  CASE WHEN UrgentCare = 1 THEN 'YES' ELSE '' END, IFNULL(UrgentCare_text,''),  CASE WHEN NewspaperMagazine = 1 THEN 'YES' ELSE '' END, IFNULL(NewspaperMagazine_text,''),  CASE WHEN School = 1 THEN 'YES' ELSE '' END, IFNULL(School_text,''),  CASE WHEN Hotel = 1 THEN 'YES' ELSE '' END, IFNULL(Hotel_text,''), IFNULL(MFPhysician,'')  FROM " + Database + ".MarketingInfo WHERE PatientRegId = ?");
             ps.setInt(1, ID);
             rset = ps.executeQuery();
             if (rset.next()) {
@@ -2386,7 +5988,7 @@ public class DownloadBundle extends HttpServlet {
             } else {
                 SignImages = null;
             }
-            System.out.println("AGE AFTER 2  -->" + Age);
+
             String inputFilePathTmp = "";
             String outputFilePathTmp = "";
             inputFilePathTmp = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/ABNformEnglish.pdf";
@@ -3215,55 +6817,55 @@ public class DownloadBundle extends HttpServlet {
                 }
             }
             pdfStamper1.close();
-            String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/UHCINSAPPEALFORMS.pdf";
-            String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf";
+//            String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/UHCINSAPPEALFORMS.pdf";
+//            String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf";
+//            FileOutputStream fos2 = new FileOutputStream(new File(outputFilePathTmp2));
+//            PdfReader pdfReader2 = new PdfReader(inputFilePathTmp2);
+//            PdfStamper pdfStamper2 = new PdfStamper(pdfReader2, (OutputStream) fos2);
+//            for (int j = 1; j <= pdfReader2.getNumberOfPages(); ++j) {
+//                if (j == 1) {
+//                    final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);
+//                    pdfContentByte2.beginText();
+//                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+//                    pdfContentByte2.setColorFill(BaseColor.BLACK);
+//                    pdfContentByte2.setTextMatrix(160.0f, 690.0f);
+//                    pdfContentByte2.showText("");
+//                    pdfContentByte2.endText();
+//                    pdfContentByte2.beginText();
+//                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+//                    pdfContentByte2.setColorFill(BaseColor.BLACK);
+//                    pdfContentByte2.setTextMatrix(140.0f, 665.0f);
+//                    pdfContentByte2.showText(HISubscriberLastName + ", " + HISubscriberFirstName);
+//                    pdfContentByte2.endText();
+//                    pdfContentByte2.beginText();
+//                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+//                    pdfContentByte2.setColorFill(BaseColor.BLACK);
+//                    pdfContentByte2.setTextMatrix(140.0f, 640.0f);
+//                    pdfContentByte2.showText(WCPMemberId);
+//                    pdfContentByte2.endText();
+//                    pdfContentByte2.beginText();
+//                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+//                    pdfContentByte2.setColorFill(BaseColor.BLACK);
+//                    pdfContentByte2.setTextMatrix(140.0f, 595.0f);
+//                    pdfContentByte2.showText("Victoria ED");
+//                    pdfContentByte2.endText();
+//                }
+//                if (j == 2) {
+//                    final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);
+//                    pdfContentByte2.beginText();
+//                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+//                    pdfContentByte2.setColorFill(BaseColor.BLACK);
+//                    pdfContentByte2.setTextMatrix(90.0f, 470.0f);
+//                    pdfContentByte2.showText(LastName + ", " + FirstName);
+//                    pdfContentByte2.endText();
+//                }
+//            }
+//            pdfStamper2.close();
+            String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/MEDICAIDSELFPAYAGREEMENT.pdf";
+            String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/MEDICAIDSELFPAYAGREEMENT_" + ClientId + "_" + MRN + ".pdf";
             FileOutputStream fos2 = new FileOutputStream(new File(outputFilePathTmp2));
             PdfReader pdfReader2 = new PdfReader(inputFilePathTmp2);
             PdfStamper pdfStamper2 = new PdfStamper(pdfReader2, (OutputStream) fos2);
-            for (int j = 1; j <= pdfReader2.getNumberOfPages(); ++j) {
-                if (j == 1) {
-                    final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);
-                    pdfContentByte2.beginText();
-                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
-                    pdfContentByte2.setColorFill(BaseColor.BLACK);
-                    pdfContentByte2.setTextMatrix(160.0f, 690.0f);
-                    pdfContentByte2.showText("");
-                    pdfContentByte2.endText();
-                    pdfContentByte2.beginText();
-                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
-                    pdfContentByte2.setColorFill(BaseColor.BLACK);
-                    pdfContentByte2.setTextMatrix(140.0f, 665.0f);
-                    pdfContentByte2.showText(HISubscriberLastName + ", " + HISubscriberFirstName);
-                    pdfContentByte2.endText();
-                    pdfContentByte2.beginText();
-                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
-                    pdfContentByte2.setColorFill(BaseColor.BLACK);
-                    pdfContentByte2.setTextMatrix(140.0f, 640.0f);
-                    pdfContentByte2.showText(WCPMemberId);
-                    pdfContentByte2.endText();
-                    pdfContentByte2.beginText();
-                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
-                    pdfContentByte2.setColorFill(BaseColor.BLACK);
-                    pdfContentByte2.setTextMatrix(140.0f, 595.0f);
-                    pdfContentByte2.showText("Victoria ED");
-                    pdfContentByte2.endText();
-                }
-                if (j == 2) {
-                    final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);
-                    pdfContentByte2.beginText();
-                    pdfContentByte2.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
-                    pdfContentByte2.setColorFill(BaseColor.BLACK);
-                    pdfContentByte2.setTextMatrix(90.0f, 470.0f);
-                    pdfContentByte2.showText(LastName + ", " + FirstName);
-                    pdfContentByte2.endText();
-                }
-            }
-            pdfStamper2.close();
-            inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/MEDICAIDSELFPAYAGREEMENT.pdf";
-            outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/MEDICAIDSELFPAYAGREEMENT_" + ClientId + "_" + MRN + ".pdf";
-            fos2 = new FileOutputStream(new File(outputFilePathTmp2));
-            pdfReader2 = new PdfReader(inputFilePathTmp2);
-            pdfStamper2 = new PdfStamper(pdfReader2, (OutputStream) fos2);
             for (int j = 1; j <= pdfReader2.getNumberOfPages(); ++j) {
                 if (j == 1) {
                     final PdfContentByte pdfContentByte2 = pdfStamper2.getOverContent(j);
@@ -3691,10 +7293,10 @@ public class DownloadBundle extends HttpServlet {
                         ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
                     }
                 }
-                if (HIPrimaryInsurance.trim().toUpperCase().equals("UNITED HEALTHCARE")) {
-                    mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf", ClientId, MRN);
-                    ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
-                }
+//                if (HIPrimaryInsurance.trim().toUpperCase().equals("UNITED HEALTHCARE")) {
+//                    mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf", ClientId, MRN);
+//                    ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+//                }
             }
             if (HISubscriberDOB.equals("00/00/0000")) {
                 HISubscriberDOB = "";
@@ -3732,13 +7334,52 @@ public class DownloadBundle extends HttpServlet {
                         request, response, out, conn, Database, ResultPdf, DirectoryName, ClientId, MRN, mergePdf);
             }
 
+//            if (!HIPrimaryInsurance.contains("UNITED HEALTHCARE") && !SHISecondaryName.contains("UNITED HEALTHCARE")) {
+//                //attach COB and Patient Auth FOrms
+//                inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/PatientAuthorizationforDesignatingProviderAsAuthorizedRepresentativeforBenefitAppeal.pdf";
+//                outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/PatientAuthorizationforDesignatingProviderAsAuthorizedRepresentativeforBenefitAppeal_" + ClientId + "_" + MRN + ".pdf";
+//                ResultPdf = AttachPatientAuth_Form(HISubscriberPolicyNo, DOB, FirstName + " " + LastName, DOS, HISubscriberRelationtoPatient, Date, outputFilePathTmp2, inputFilePathTmp2,
+//                        request, response, out, conn, Database, ResultPdf, DirectoryName, ClientId, MRN, mergePdf, SignImages, HIPrimaryInsurance);
+//
+//                inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/CoordinationofBenefits.pdf";
+//                outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/CoordinationofBenefits_" + ClientId + "_" + MRN + ".pdf";
+//                ResultPdf = AttachCOB_Form(Date, outputFilePathTmp2, inputFilePathTmp2, request, response, out, conn, Database, ResultPdf, DirectoryName, ClientId, MRN, mergePdf, SignImages);
+//
+//            }
+            System.out.println("In Victoria   ");
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            System.out.println("Found Query " + Query);
+            stmt.close();
+            rset.close();
+
+            System.out.println("Signed form Contains -->  " + SignedFrom);
+            if (SignedFrom.contains("REGISTRATION")) {
+
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
+
+            System.out.println("file name is  " + FirstNameNoSpaces + LastName + ID + "_" + found + "_" + SignedFrom + ".pdf");
+
+            filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + "_" + found + "_" + SignedFrom + ".pdf";
+
+
             String DOSDate = "";
             String DOSTime = "";
             DOSDate = DOS.substring(0, 10);
             DOSTime = DOS.substring(11, 19);
             String inputFilePath = "";
             inputFilePath = ResultPdf;
-            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
             final OutputStream fos3 = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader3 = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper3 = new PdfStamper(pdfReader3, fos3);
@@ -4264,16 +7905,28 @@ public class DownloadBundle extends HttpServlet {
             pdfReader2.close();
             pdfReader3.close();
 
+            System.out.println("Query to insert into Bundle History");
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            System.out.println("Query " + MainReceipt);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
 
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("outputFilePath", outputFilePath);
-//            Parser.SetField("imagelist", String.valueOf(imagelist));
-            Parser.SetField("pageCount", String.valueOf(pageCount));
-            Parser.SetField("PatientRegId", String.valueOf(ID));
-            Parser.SetField("FileName", FirstNameNoSpaces + LastNameNoSpace + ID + "_.pdf");
-            Parser.SetField("ClientID", String.valueOf(ClientId));
-
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+//            Parsehtm Parser = new Parsehtm(request);
+//            Parser.SetField("outputFilePath", outputFilePath);
+//
+//            Parser.SetField("pageCount", String.valueOf(pageCount));
+//            Parser.SetField("PatientRegId", String.valueOf(ID));
+//            Parser.SetField("FileName", FirstNameNoSpaces + LastNameNoSpace + ID + "_.pdf");
+//            Parser.SetField("ClientID", String.valueOf(ClientId));
+//
+//            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
 
 //            final File pdfFile = new File(outputFilePath);
 //            response.setContentType("application/pdf");
@@ -4301,37 +7954,66 @@ public class DownloadBundle extends HttpServlet {
             File.delete();
             File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Medicalreleaseform_" + ClientId + "_" + MRN + ".pdf");
             File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
             File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/MEDICAIDSELFPAYAGREEMENT_" + ClientId + "_" + MRN + ".pdf");
             File.delete();
             File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/FINANCIAL_HARDSHIP_RELIEF_" + ClientId + "_" + MRN + ".pdf");
             File.delete();
             File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Marketing_Slips_" + ClientId + "_" + MRN + ".pdf");
             File.delete();
+
+            System.out.println("returning this ------> " + pageCount + "~" + outputFilePath + "~" + filename);
+            return pageCount + "~" + outputFilePath + "~" + filename;
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+        return "";
     }
 
     void GETINPUTVictoria(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
+        String SignedFrom = "";
         int PatientRegId = Integer.parseInt(request.getParameter("ID"));
-
+        String VisitId = request.getParameter("VisitId");
+        PatientReg2 ptr2 = new PatientReg2();
         try {
             String filename = null;
             String outputFilePath = null;
             String pageCount = null;
             try {
-                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " ORDER BY CreatedDate DESC LIMIT 1";
+
+                Query = "SELECT SignedFrom FROM " + Database + ".SignRequest where PatientRegId = " + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                rset.close();
+                stmt.close();
+
+//                System.out.println("DIR NAME " + DirectoryName);
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
                     filename = rset.getString(1);
                     pageCount = rset.getString(2);
-                    outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + filename;
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                        SignedFrom = "REGISTRATION";
+                    } else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                        SignedFrom = "VISIT";
+                    } else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                        SignedFrom = "EDIT";
+                    }
+
                     Parsehtm Parser = new Parsehtm(request);
                     Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -4342,7 +8024,21 @@ public class DownloadBundle extends HttpServlet {
 
                     Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
                 } else {
-                    GETINPUTVictoria_inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName);
+                    String[] temp = ptr2.SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, PatientRegId, SignedFrom).split("~");
+
+                    String FileName = temp[2];
+                    outputFilePath = temp[1];
+                    pageCount = temp[0];
+
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
                 }
                 stmt.close();
                 rset.close();
@@ -6844,14 +10540,14 @@ public class DownloadBundle extends HttpServlet {
         ResultSet rset = null;
         String Query = "";
         int PatientRegId = Integer.parseInt(request.getParameter("ID"));
-
+        String VisitId = request.getParameter("VisitId");
         try {
             String filename = null;
             String outputFilePath = null;
             String pageCount = null;
             try {
                 System.out.println("DIR NAME " + DirectoryName);
-                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " ORDER BY CreatedDate DESC LIMIT 1";
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -7084,7 +10780,7 @@ public class DownloadBundle extends HttpServlet {
                             "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
                             "IFNULL(DATE_FORMAT(PrimaryDOB,'%d-%m-%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
                             "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
-                            "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), " +
+                            "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
                             "IFNULL(DATE_FORMAT(SubscriberDOB,'%d-%m-%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
                             "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') " +
                             "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
@@ -7127,7 +10823,7 @@ public class DownloadBundle extends HttpServlet {
                 }
                 if (SelfPayChk != 0 && !PriInsuranceName.equals("-") && !PriInsuranceName.equals("")) {
                     Query = " Select PayerName from " + Database + ".ProfessionalPayers where Id =  " + PriInsuranceName;
-//                    System.out.println(Query);
+                    System.out.println(Query);
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     while (rset.next()) {
@@ -8328,7 +12024,6 @@ public class DownloadBundle extends HttpServlet {
         String Other_text = "";
         int SelfPayChk = 0;
         final int VerifyChkBox = 0;
-        int pageCount = 0;
         final int ID = Integer.parseInt(request.getParameter("ID").trim());
         try {
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
@@ -8405,7 +12100,7 @@ public class DownloadBundle extends HttpServlet {
                         "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
                         "IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), " +
                         "IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), " +
-                        "IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), " +
+                        "IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
                         "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  " +
                         "IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), " +
                         "IFNULL(GroupNumber_2,'-') " +
@@ -8460,8 +12155,8 @@ public class DownloadBundle extends HttpServlet {
                     stmt.close();
                 }
             } catch (Exception e) {
-//                out.println("Error is PriInsurance: " + e.getMessage());
-//                out.println(Query);
+                out.println("Error is PriInsurance: " + e.getMessage());
+                out.println(Query);
             }
 //            System.out.println("Insurance Name " + _PriInsuranceName);
             Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
@@ -8626,15 +12321,11 @@ public class DownloadBundle extends HttpServlet {
 //                inputFilePath = "/sftpdrive";
 //            }
 //            System.out.println("Your current inputFilePath : " + inputFilePath);
-            if (ClientId == 19)
-                inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/hopeBundle.pdf";
-            else
-                inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/adminsaustin.pdf";
+            inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/adminsaustin.pdf";
             final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
-            pageCount = pdfReader.getNumberOfPages();
 //            final GenerateBarCode barCode = new GenerateBarCode();
 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
 //            final Image image = Image.getInstance(BarCodeFilePath);
@@ -9753,31 +13444,16 @@ public class DownloadBundle extends HttpServlet {
             pdfStamper.close();
             pdfReader.close();
 
-
-            if (ClientId == 19) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("outputFilePath", outputFilePath);
-
-                Parser.SetField("pageCount", String.valueOf(pageCount));
-                Parser.SetField("PatientRegId", String.valueOf(ID));
-                Parser.SetField("FileName", FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-                Parser.SetField("ClientID", String.valueOf(ClientId));
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
-            } else {
-
-                final File pdfFile = new File(outputFilePath);
-                response.setContentType("application/pdf");
-                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-                response.setContentLength((int) pdfFile.length());
-                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-                int bytes;
-                while ((bytes = fileInputStream.read()) != -1) {
-                    responseOutputStream.write(bytes);
-                }
+            final File pdfFile = new File(outputFilePath);
+            response.setContentType("application/pdf");
+            response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
+            response.setContentLength((int) pdfFile.length());
+            final FileInputStream fileInputStream = new FileInputStream(pdfFile);
+            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            int bytes;
+            while ((bytes = fileInputStream.read()) != -1) {
+                responseOutputStream.write(bytes);
             }
-
-
         } catch (Exception e) {
             out.println(e.getMessage());
         }
@@ -9970,7 +13646,7 @@ public class DownloadBundle extends HttpServlet {
                         "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
                         "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
                         "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), " +
-                        "IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  " +
+                        "IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  " +
                         "IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') " +
                         "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
@@ -10162,21 +13838,20 @@ public class DownloadBundle extends HttpServlet {
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
-//            System.out.println("Your current IP address : " + ip);
-//            System.out.println("Your current Hostname : " + hostname);
+            System.out.println("Your current IP address : " + ip);
+            System.out.println("Your current Hostname : " + hostname);
             if (hostname.trim().equals("romver-01")) {
                 inputFilePath = "";
             } else {
                 inputFilePath = "/sftpdrive";
             }
-//            System.out.println("Your current inputFilePath : " + inputFilePath);
+            System.out.println("Your current inputFilePath : " + inputFilePath);
             inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/adminsaustin.pdf";
             final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
             final GenerateBarCode barCode = new GenerateBarCode();
-
             final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
             final Image image = Image.getInstance(BarCodeFilePath);
             image.scaleAbsolute(150.0f, 30.0f);
@@ -11427,7 +15102,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println(Query);
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -12934,7 +16609,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -14322,7 +17997,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -15481,7 +19156,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -16528,7 +20203,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -17576,7 +21251,7 @@ public class DownloadBundle extends HttpServlet {
                         " CASE WHEN SympLossTaste = 1 THEN 'YES' ELSE '' END," +
                         " CASE WHEN SympShortBreath = 1 THEN 'YES' ELSE '' END, " +
                         " CASE WHEN SympCongestion = 1 THEN 'YES' ELSE '' END, " +
-                        " CONCAT(IFNULL(GuarantorName,''),' ',IFNULL(GuarantorLastName,'')), IFNULL(DATE_FORMAT(GuarantorDOB,'%m/%d/%Y'),''),IFNULL(GuarantorSSN,'')" +
+                        " CONCAT(IFNULL(GuarantorFirstName,''),' ',IFNULL(GuarantorLastName,'')), IFNULL(DATE_FORMAT(GuarantorDOB,'%m/%d/%Y'),''),IFNULL(GuarantorSSN,'')" +
                         " from " + Database + ".PatientReg_Details where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -17614,7 +21289,8 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e2.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,'') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), \n" +
+                        "CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -18647,7 +22323,7 @@ public class DownloadBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTFrontLine(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUTFrontLine_inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -18925,7 +22601,7 @@ public class DownloadBundle extends HttpServlet {
                         " CASE WHEN SympLossTaste = 1 THEN 'YES' ELSE '' END," +
                         " CASE WHEN SympShortBreath = 1 THEN 'YES' ELSE '' END, " +
                         " CASE WHEN SympCongestion = 1 THEN 'YES' ELSE '' END, " +
-                        " CONCAT(IFNULL(GuarantorName,''),' ',IFNULL(GuarantorLastName,'')), IFNULL(DATE_FORMAT(GuarantorDOB,'%m/%d/%Y'),''),IFNULL(GuarantorSSN,'')" +
+                        " CONCAT(IFNULL(GuarantorFirstName,''),' ',IFNULL(GuarantorLastName,'')), IFNULL(DATE_FORMAT(GuarantorDOB,'%m/%d/%Y'),''),IFNULL(GuarantorSSN,'')" +
                         " from " + Database + ".PatientReg_Details where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -18963,7 +22639,8 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e2.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,'') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'),CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), \n" +
+                        "CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -20339,7 +24016,7 @@ public class DownloadBundle extends HttpServlet {
                         " CASE WHEN SympLossTaste = 1 THEN 'YES' ELSE '' END," +
                         " CASE WHEN SympShortBreath = 1 THEN 'YES' ELSE '' END, " +
                         " CASE WHEN SympCongestion = 1 THEN 'YES' ELSE '' END, " +
-                        " IFNULL(GuarantorName,''),IFNULL(GuarantorLastName,''), IFNULL(DATE_FORMAT(GuarantorDOB,'%m/%d/%Y'),''),IFNULL(GuarantorSSN,'')" +
+                        " IFNULL(GuarantorFirstName,''),IFNULL(GuarantorLastName,''), IFNULL(DATE_FORMAT(GuarantorDOB,'%m/%d/%Y'),''),IFNULL(GuarantorSSN,'')" +
                         " from " + Database + ".PatientReg_Details where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -20378,7 +24055,7 @@ public class DownloadBundle extends HttpServlet {
                 out.println("Error in getting PatientReg_Details Table : " + e2.getMessage());
             }
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),' '),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,'') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),' '),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -21890,7 +25567,7 @@ public class DownloadBundle extends HttpServlet {
             images_Map_final = (HashMap<Integer, String>) pdftoImage.GetValues(request, out, conn, Database, ClientId, outputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/md/tmpImages/");
             final Collection<String> values = images_Map_final.values();
             final List<String> imagelist = new ArrayList<String>(values);
-//            System.out.println("imagelist Names: " + imagelist);
+            System.out.println("imagelist Names: " + imagelist);
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
             Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -24005,7 +27682,7 @@ public class DownloadBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTERDallas(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    String GETINPUTERDallas_BundleCreate(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName,final String SignedFrom,final int PatRegId,UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -24014,7 +27691,8 @@ public class DownloadBundle extends HttpServlet {
         String Date = "";
         String Time = "";
         final MergePdf mergePdf = new MergePdf();
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+//        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+       final int ID = PatRegId;
         final String Path1 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/";
         final String Path2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/";
         String ResultPdf = "";
@@ -24184,11 +27862,38 @@ public class DownloadBundle extends HttpServlet {
         final String Country = "";
         String MRN = "";
         int ClientIndex = 0;
+        int VisitIndex = 0;
         String ClientName = "";
         String DOS = "";
         String DoctorId = null;
         String DoctorName = "";
+        String DirectoryNameTow = "";
+        String DOBForAge = "";
+        String filename = "";
+
+        if (SignedFrom.contains("REGISTRATION")) {
+            DirectoryNameTow = "REGISTRATION";
+        } else if (SignedFrom.contains("VISIT")) {
+            DirectoryNameTow = "VISIT";
+        } else if (SignedFrom.contains("EDIT")) {
+            DirectoryNameTow = "EDIT";
+        }
+        System.out.println("PatientregId is =>"+ID);
+        System.out.println("ClientId is =>"+ClientId);
+        System.out.println("DirectoryName is =>"+DirectoryName);
+        System.out.println("UserId is =>"+UserId);
         try {
+
+            Query = "Select id FROM " + Database + ".PatientVisit where PatientRegId =" + ID + " ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -24206,7 +27911,7 @@ public class DownloadBundle extends HttpServlet {
                         "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), " +
                         "IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), " +
                         "ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), " +
-                        "IFNULL(DoctorsName,'-'), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,'')  From " + Database + ".PatientReg Where ID = " + ID;
+                        "IFNULL(DoctorsName,'-'), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -24237,10 +27942,13 @@ public class DownloadBundle extends HttpServlet {
                     City = rset.getString(24);
                     State = rset.getString(25);
                     ZipCode = rset.getString(26);
+                    DOBForAge = rset.getString(27);
                 }
                 rset.close();
                 stmt.close();
-
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
                 if (!DoctorId.equals("-")) {
                     Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList " +
                             "where Id = " + DoctorId;
@@ -24267,8 +27975,16 @@ public class DownloadBundle extends HttpServlet {
                 rset.close();
                 stmt.close();
             } catch (Exception e) {
-                out.println("Error In PateintReg:--" + e.getMessage());
-                out.println(Query);
+                System.out.println("in the catch exception of GetReport Function ");
+                System.out.println(e.getMessage());
+                String str = "";
+                for (int i = 0; i < e.getStackTrace().length; ++i) {
+                    str = str + e.getStackTrace()[i] + "<br>";
+                }
+                System.out.println(str);
+
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
             }
             Query = "Select  IFNULL(Ethnicity,''),IFNULL(Ethnicity_OthersText,''),IFNULL(EmployementChk,''),IFNULL(Employer,''),IFNULL(Occupation,'')," +
                     "IFNULL(EmpContact,''),IFNULL(PrimaryCarePhysicianChk,'')," +
@@ -24577,12 +28293,24 @@ public class DownloadBundle extends HttpServlet {
                 inputFilePath = ResultPdf;
 //                System.out.println("ResultPdf -> "+ResultPdf);
             }
+
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+            filename = FirstNameNoSpaces + LastName + ID + "_" + found + "_" + SignedFrom + ".pdf";
+            outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
             final PdfReader pdfReader = new PdfReader(inputFilePath);
             final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
             final int pageCount = pdfReader.getNumberOfPages();
 
-            outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastNameNoSpace + ID + "_.pdf";
+
             for (int i = 1; i <= pdfReader.getNumberOfPages(); ++i) {
                 if (i == 1) {
                     PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
@@ -25554,14 +29282,14 @@ public class DownloadBundle extends HttpServlet {
             pdfStamper.close();
             pdfReader.close();
 
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("outputFilePath", outputFilePath);
-//            Parser.SetField("imagelist", String.valueOf(imagelist));
-            Parser.SetField("pageCount", String.valueOf(pageCount));
-            Parser.SetField("PatientRegId", String.valueOf(ID));
-            Parser.SetField("FileName", FirstNameNoSpaces + LastNameNoSpace + ID + "_.pdf");
-            Parser.SetField("ClientID", String.valueOf(ClientId));
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+//            Parsehtm Parser = new Parsehtm(request);
+//            Parser.SetField("outputFilePath", outputFilePath);
+////            Parser.SetField("imagelist", String.valueOf(imagelist));
+//            Parser.SetField("pageCount", String.valueOf(pageCount));
+//            Parser.SetField("PatientRegId", String.valueOf(ID));
+//            Parser.SetField("FileName", FirstNameNoSpaces + LastNameNoSpace + ID + "_.pdf");
+//            Parser.SetField("ClientID", String.valueOf(ClientId));
+//            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
 
 /*
             final File pdfFile = new File(outputFilePath);
@@ -25576,30 +29304,163 @@ public class DownloadBundle extends HttpServlet {
             }
 */
 
-            File File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/WC_QUESTIONNAIRE_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/WC_MVA_AUTHORIZATIONTODISCLOSEMEDICALINFORMATION_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/WC_MVA_assignmentofproceeds_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MVACLAIMFORM_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MVA_ASSIGNMENTOFPROCEEDS_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/ABNformEnglish_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/Medicalreleaseform_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
-            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MEDICAIDSELFPAYAGREEMENT_" + ClientId + "_" + MRN + ".pdf");
-            File.delete();
+//            File File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/WC_QUESTIONNAIRE_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/WC_MVA_AUTHORIZATIONTODISCLOSEMEDICALINFORMATION_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/WC_MVA_assignmentofproceeds_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MVACLAIMFORM_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MVA_ASSIGNMENTOFPROCEEDS_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/ABNformEnglish_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/Medicalreleaseform_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/UHCINSAPPEALFORMS_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+//            File = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/ERDallas/TempDir/MEDICAIDSELFPAYAGREEMENT_" + ClientId + "_" + MRN + ".pdf");
+//            File.delete();
+
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+
+            return pageCount + "~" + outputFilePath + "~" + filename;
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            String str = "";
+            for (int i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
+            }
+            System.out.println(str);
+
+        }
+        return "";
+    }
+
+    void GETINPUTERDallas(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String temp="";
+        String filename = null;
+        String outputFilePath = null;
+        String pageCount = null;
+        String SignedFrom = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+
+        try {
+
+            try {
+
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getNString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+
+
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " AND BundleName NOT LIKE '%SPANISH%' ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                        SignedFrom = "REGISTRATION";
+                    } else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                        SignedFrom = "VISIT";
+                    } else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                        SignedFrom = "EDIT";
+                    }
+
+
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("VisitId", String.valueOf(VisitId));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("lang", "1");
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+
+                } else {
+                  temp = GETINPUTERDallas_BundleCreate(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName,SignedFrom,PatientRegId,helper);
+                    String[] arr = temp.split("~");
+                    String FileName = arr[2];
+                     outputFilePath = arr[1];
+                     pageCount = arr[0];
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("VisitId", String.valueOf(VisitId));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("lang", "1");
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
     private String AttachUHC_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {
+        String ClientAddress = null;
+        String ClientCity = null;
+        String ClientState = null;
+        String ClientZipCode = null;
+        String ClientName = null;
+        try {
+            String Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), IFNULL(name,'') from oe.clients" +
+                    " where Id = " + ClientId;
+            //System.out.println(Query);
+            Statement stmt = conn.createStatement();
+            ResultSet rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                ClientAddress = rset.getString(1);
+                ClientCity = rset.getString(2);
+                ClientState = rset.getString(3);
+                ClientZipCode = rset.getString(4);
+                ClientName = rset.getString(5);
+            }
+            rset.close();
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
         try {
             FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
             PdfReader pdfReader = new PdfReader(inputFile);
@@ -25631,6 +29492,39 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                     pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 625); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientAddress);//"Client Address "); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 625); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientCity);//"City"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(445, 625); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientState);//"State"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(485, 625); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientZipCode);//"Zip"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 600); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientName);//"Zip"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
                     pdfContentByte.setTextMatrix(90, 573); // set x and y co-ordinates
                     pdfContentByte.showText(DOS);//"Date Of Service"); // add the text
                     pdfContentByte.endText();
@@ -25655,6 +29549,290 @@ public class DownloadBundle extends HttpServlet {
                     pdfContentByte.showText(RelationtoPatient);//"Relation to Subscriber"); // Other (Please Specify)   add the text
                     pdfContentByte.endText();
 
+                }
+            }
+            pdfStamper.close();
+            pdfReader.close();
+            mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, outputFilePath/*"/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf"*/, ClientId, MRN);
+            ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+            return ResultPdf;
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String AttachUHC_Form_ES(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {
+        String ClientAddress = null;
+        String ClientCity = null;
+        String ClientState = null;
+        String ClientZipCode = null;
+        String ClientName = null;
+        try {
+            String Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), IFNULL(name,'') from oe.clients" +
+                    " where Id = " + ClientId;
+            //System.out.println(Query);
+            Statement stmt = conn.createStatement();
+            ResultSet rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                ClientAddress = rset.getString(1);
+                ClientCity = rset.getString(2);
+                ClientState = rset.getString(3);
+                ClientZipCode = rset.getString(4);
+                ClientName = rset.getString(5);
+            }
+            rset.close();
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
+            PdfReader pdfReader = new PdfReader(inputFile);
+            PdfStamper pdfStamper = new PdfStamper(pdfReader, (OutputStream) fos);
+            for (int j = 1; j <= pdfReader.getNumberOfPages(); ++j) {
+
+                if (j == 1) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(j);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(450, 682); // set x and y co-ordinates
+                    pdfContentByte.showText(MemID);//"Member ID Number "); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 682); // set x and y co-ordinates
+                    pdfContentByte.showText(DOB);//"DOB"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 682); // set x and y co-ordinates
+                    pdfContentByte.showText(Name);//"Member Name "); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 629); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientAddress);//"Client Address "); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 629); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientCity);//"City"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(445, 629); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientState);//"State"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(485, 629); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientZipCode);//"Zip"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 604); // set x and y co-ordinates
+                    pdfContentByte.showText(ClientName);//"Zip"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 575); // set x and y co-ordinates
+                    pdfContentByte.showText(DOS);//"Date Of Service"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(110, 535); // set x and y co-ordinates
+                    pdfContentByte.showText(Name);//"Member Name"); //  PATIENT BEFORE add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460, 140); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // Other (Please Specify)   add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(90, 98); // set x and y co-ordinates
+                    pdfContentByte.showText(RelationtoPatient);//"Relation to Subscriber"); // Other (Please Specify)   add the text
+                    pdfContentByte.endText();
+
+                }
+            }
+            pdfStamper.close();
+            pdfReader.close();
+            mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, outputFilePath/*"/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf"*/, ClientId, MRN);
+            ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+            return ResultPdf;
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String AttachPatientAuth_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf, Image SignImages, String HIPrimaryInsurance) throws IOException {
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
+            PdfReader pdfReader = new PdfReader(inputFile);
+            PdfStamper pdfStamper = new PdfStamper(pdfReader, (OutputStream) fos);
+            for (int j = 1; j <= pdfReader.getNumberOfPages(); ++j) {
+                if (j == 1) {
+                    final PdfContentByte pdfContentByte3 = pdfStamper.getOverContent(j);
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(120.0f, 590.0f);
+                    pdfContentByte3.showText(Name);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(300.0f, 590.0f);
+                    pdfContentByte3.showText(DOB);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(485.0f, 590.0f);
+                    pdfContentByte3.showText(RelationtoPatient);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(150.0f, 565.0f);
+                    pdfContentByte3.showText(HIPrimaryInsurance);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(150.0f, 540.0f);
+                    pdfContentByte3.showText(MemID);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(150.0f, 520.0f);
+                    pdfContentByte3.showText(DOS);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(150.0f, 420.0f);
+                    pdfContentByte3.showText(Name);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(380.0f, 420.0f);
+                    pdfContentByte3.showText("Victoria ER");
+                    pdfContentByte3.endText();
+
+
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(100.0f, 160.0f);
+                        pdfContentByte3.addImage(SignImages);
+                    }
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(440.0f, 160.0f);
+                    pdfContentByte3.showText(Date);
+                    pdfContentByte3.endText();
+                }
+            }
+            pdfStamper.close();
+
+            mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, outputFilePath/*"/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/VictoriaPdf/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf"*/, ClientId, MRN);
+            ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+            return ResultPdf;
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String AttachCOB_Form(String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf, Image SignImages) throws IOException {
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(outputFilePath));
+            PdfReader pdfReader = new PdfReader(inputFile);
+            PdfStamper pdfStamper = new PdfStamper(pdfReader, (OutputStream) fos);
+            for (int j = 1; j <= pdfReader.getNumberOfPages(); ++j) {
+                if (j == 1) {
+                    final PdfContentByte pdfContentByte3 = pdfStamper.getOverContent(j);
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(220.0f, 425.0f);
+                    pdfContentByte3.showText("");
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(155.0f, 400.0f);
+                    pdfContentByte3.showText("");
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(410.0f, 400.0f);
+                    pdfContentByte3.showText("");
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(155.0f, 380.0f);
+                    pdfContentByte3.showText("");
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(400.0f, 380.0f);
+                    pdfContentByte3.showText("");
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(115.0f, 158.0f);
+                    pdfContentByte3.showText("");
+                    pdfContentByte3.endText();
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(140.0f, 130.0f);
+                        pdfContentByte3.addImage(SignImages);
+                    }
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(400.0f, 130.0f);
+                    pdfContentByte3.showText(Date);
+                    pdfContentByte3.endText();
+                    pdfContentByte3.beginText();
+                    pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                    pdfContentByte3.setColorFill(BaseColor.BLACK);
+                    pdfContentByte3.setTextMatrix(400.0f, 100.0f);
+                    pdfContentByte3.showText(Date);
+                    pdfContentByte3.endText();
                 }
             }
             pdfStamper.close();

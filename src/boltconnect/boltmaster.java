@@ -146,6 +146,21 @@ public class boltmaster {
         return parseJsonString(result.body);
     }
 
+
+    private class HttpResponse {
+        private String body;
+
+
+        private String sessionKey;
+
+
+        public HttpResponse(String body, String sessionKey) {
+            this.body = body;
+            this.sessionKey = sessionKey;
+        }
+    }
+
+
     public void cancel() {
         try {
             sendRequest("cancel", "{\"merchantId\" : \"" + this.props
@@ -228,6 +243,7 @@ public class boltmaster {
         }
     }
 
+
     private Map<String, String> parseJsonString(String json) throws IOException {
         String noBrackets = json.replaceAll("\\{", "").replaceAll("\\}", "");
         return (Map) Arrays.stream(noBrackets.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"))
@@ -244,6 +260,7 @@ public class boltmaster {
                     return value;
                 }));
     }
+
 
     public void init() throws FileNotFoundException {
         File propertiesFile = new File("E:\\client.properties");
@@ -271,11 +288,13 @@ public class boltmaster {
 
     }
 
+
     private void setStatus(boolean error, String message, boolean disableButtons) {
         String indicatorFile = error ? "circle_red.png" : "circle_green.png";
         String id = error ? "status-error" : "status-ok";
 
     }
+
 
     public void connectionEstablished() {
         setStatus(false, "Terminal connected, waiting for agent", false);
@@ -287,19 +306,6 @@ public class boltmaster {
 
     public void connectionError(String message) {
         setStatus(true, message, true);
-    }
-
-    private class HttpResponse {
-        private String body;
-
-
-        private String sessionKey;
-
-
-        public HttpResponse(String body, String sessionKey) {
-            this.body = body;
-            this.sessionKey = sessionKey;
-        }
     }
 
 

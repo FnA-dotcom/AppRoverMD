@@ -128,7 +128,7 @@ public class BundleForms extends HttpServlet {
             Parser.SetField("ptrn", String.valueOf(pattern));
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/BundleForms.html");
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.getStackTrace();
         }
     }
 

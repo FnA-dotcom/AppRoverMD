@@ -42,6 +42,80 @@ public class availity_main {
 
     }
 
+    private  HttpResponse sendRequest(String operation, String body) throws IOException {
+        try {
+            BufferedReader br;
+            String client_id= URLEncoder.encode("deea5802-6af3-4daa-a26c-ffd5cee32fdb", StandardCharsets.UTF_8.toString());
+            String client_secret=URLEncoder.encode("gV7nQ6pW2qM8eS2eC1rI2hB8tQ4nC1tD3xN7rL5bE1uB2xS4vU", StandardCharsets.UTF_8.toString());
+
+            String operational="scope=hipaa&grant_type=client_credentials&client_id="+client_id+"&client_secret="+client_secret+"";
+
+            String baseUrl = "https://api.availity.com/availity/v1/token";
+            System.out.println(baseUrl);
+            // String apiKey = this.props.getApiKey();
+            HttpURLConnection conn = (HttpURLConnection)(new URL(baseUrl )).openConnection();
+            conn.setDoOutput(true);
+
+
+
+            conn.setRequestMethod("POST");
+            // conn.setRequestProperty("Authorization", apiKey);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("Accept", "application/json");
+
+
+
+
+            conn.setReadTimeout(300000);
+
+
+            OutputStream os = conn.getOutputStream();
+            os.write(operational.getBytes());
+            os.flush();
+
+
+            int statusCode = conn.getResponseCode();
+            if (statusCode == 200) {
+                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            } else {
+                br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+            }
+
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                output.append(line);
+            }
+
+
+            conn.disconnect();
+
+            String responseBody = output.toString();
+	     /* if (statusCode != 200) {
+	        //this.logger.log(Level.SEVERE, () -> String.format("Response status: %s, body:%n%s", new Object[] { Integer.valueOf(statusCode), responseBody }));
+	        Map<String, String> fields = parseJsonString(responseBody);
+	        throw new IOException((String)fields.get("errorMessage"));
+	      } */
+            Map<String, String> fields = parseJsonString(responseBody);
+            System.out.println(fields);
+            access_token=(String)fields.get("\"access_token");
+            System.out.println(access_token);
+
+
+
+
+            return new HttpResponse(output.toString(), access_token);
+        }
+        catch (IOException e) {
+
+            System.out.println(e.getMessage());
+            throw e;
+        } finally {
+
+
+        }
+    }
+
     private String connect() throws IOException {
         HttpResponse result = sendRequest("connect", "");
 
@@ -114,71 +188,16 @@ public class availity_main {
         }
     }
 
-    private HttpResponse sendRequest(String operation, String body) throws IOException {
-        try {
-            BufferedReader br;
-            String client_id = URLEncoder.encode("deea5802-6af3-4daa-a26c-ffd5cee32fdb", StandardCharsets.UTF_8.toString());
-            String client_secret = URLEncoder.encode("gV7nQ6pW2qM8eS2eC1rI2hB8tQ4nC1tD3xN7rL5bE1uB2xS4vU", StandardCharsets.UTF_8.toString());
-
-            String operational = "scope=hipaa&grant_type=client_credentials&client_id=" + client_id + "&client_secret=" + client_secret + "";
-
-            String baseUrl = "https://api.availity.com/availity/v1/token";
-            System.out.println(baseUrl);
-            // String apiKey = this.props.getApiKey();
-            HttpURLConnection conn = (HttpURLConnection) (new URL(baseUrl)).openConnection();
-            conn.setDoOutput(true);
+    private class HttpResponse {
+        private String body;
 
 
-            conn.setRequestMethod("POST");
-            // conn.setRequestProperty("Authorization", apiKey);
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            conn.setRequestProperty("Accept", "application/json");
+        private String sessionKey;
 
 
-            conn.setReadTimeout(300000);
-
-
-            OutputStream os = conn.getOutputStream();
-            os.write(operational.getBytes());
-            os.flush();
-
-
-            int statusCode = conn.getResponseCode();
-            if (statusCode == 200) {
-                br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            } else {
-                br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-            }
-
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                output.append(line);
-            }
-
-
-            conn.disconnect();
-
-            String responseBody = output.toString();
-	     /* if (statusCode != 200) {
-	        //this.logger.log(Level.SEVERE, () -> String.format("Response status: %s, body:%n%s", new Object[] { Integer.valueOf(statusCode), responseBody }));
-	        Map<String, String> fields = parseJsonString(responseBody);
-	        throw new IOException((String)fields.get("errorMessage"));
-	      } */
-            Map<String, String> fields = parseJsonString(responseBody);
-            System.out.println(fields);
-            access_token = (String) fields.get("\"access_token");
-            System.out.println(access_token);
-
-
-            return new HttpResponse(output.toString(), access_token);
-        } catch (IOException e) {
-
-            System.out.println(e.getMessage());
-            throw e;
-        } finally {
-
-
+        public HttpResponse(String body, String sessionKey) {
+            this.body = body;
+            this.sessionKey = sessionKey;
         }
     }
 
@@ -199,18 +218,6 @@ public class availity_main {
                 }));
     }
 
-    private class HttpResponse {
-        private String body;
-
-
-        private String sessionKey;
-
-
-        public HttpResponse(String body, String sessionKey) {
-            this.body = body;
-            this.sessionKey = sessionKey;
-        }
-    }
 
 
 }

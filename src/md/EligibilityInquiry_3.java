@@ -40,6 +40,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
             System.out.println("Unable to Generate Thread for Console Event " + e.getMessage());
         }
     }
+
     private static Date GetDate() {
         try {
             return new Date();
@@ -47,6 +48,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
         }
         return null;
     }
+
     private static String GetExceptionFileName() {
         int temp = 0;
         try {
@@ -58,15 +60,19 @@ public class EligibilityInquiry_3 extends HttpServlet {
             return "invalid filename " + e.getMessage();
         }
     }
+
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
+
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
+
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
+
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String UserId;
         int FacilityIndex;
@@ -172,13 +178,17 @@ public class EligibilityInquiry_3 extends HttpServlet {
         String Query = "";
         String DOS = "";
         String SubscriberID = "";
+        String Sec_SubscriberID = "";
         String FirstName = "";
         String LastName = "";
         String DOBAvaility = "";
         String DOSAvaility = "";
         String DOB = "";
         String GroupNo = "";
+        String Sec_GroupNo = "";
         String Gender = "";
+        String Pri_gender = "";
+        String Sec_gender = "";
         String NPI = "";
         String proname = "";
         String PatientMRN = "";
@@ -189,13 +199,31 @@ public class EligibilityInquiry_3 extends HttpServlet {
         StringBuilder PayProcedureList = new StringBuilder();
         StringBuilder CDRList = new StringBuilder();
         StringBuilder ProfessionalPayersList = new StringBuilder();
-        StringBuffer AvailityPayersList = new StringBuffer();
+        StringBuilder ServiceDates = new StringBuilder();
+        StringBuilder AvailityPayersList = new StringBuilder();
+        StringBuilder TypeOfInsurance = new StringBuilder();
         String PatientId = request.getParameter("PatientId");
         ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
         String patName = "";
         int profPayerIdx = 0;
+        int Sec_profPayerIdx = 0;
+        String Sec_payerName = "";
+        String PrimaryDOB = "";
+        String PrimaryDOB_Avail = "";
+        String SubscriberDOB = "";
+        String SubscriberDOB_Avail = "";
+        String PatientRelationtoPrimary = "";
+        String PatientRelationshiptoSecondry = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
         String payerName = "";
         String PayerId = "";
+        String Sec_PayerId = "";
+        String filter = "";
+        String genericDOB = "";
+        String genericDOS = "";
         try {
 
 /*            Query = "Select MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) " +
@@ -222,9 +250,9 @@ public class EligibilityInquiry_3 extends HttpServlet {
 
             Query = " Select ID, IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(DATE_FORMAT(DOB, '%Y%m%d'),'')," +
                     " IFNULL(DATE_FORMAT(DateofService,'%d-%m-%Y %T'), DATE_FORMAT(CreatedDate,'%d-%m-%Y %T')), " +
-                    " gender, IFNULL(DATE_FORMAT(DOB, '%Y-%m-%d'),''), IFNULL(DATE_FORMAT(DateofService,'%Y-%m-%d'), " +
-                    " DATE_FORMAT(CreatedDate,'%Y-%m-%d'))," +
-                    " MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) " +
+                    " gender, IFNULL(DATE_FORMAT(DOB, '%Y-%m-%d'),''), " +
+                    " IFNULL(DATE_FORMAT(DateofService,'%Y-%m-%d'),DATE_FORMAT(CreatedDate,'%Y-%m-%d'))," +
+                    " MRN,  CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,''))" +
                     " FROM " + Database + ".PatientReg " +
                     " WHERE ID = '" + PatientId + "' AND status = 0";
             stmt = conn.createStatement();
@@ -244,17 +272,16 @@ public class EligibilityInquiry_3 extends HttpServlet {
             rset.close();
             stmt.close();
 
-
-            Query = "Select IFNULL(PayerId,''), IFNULL(PayerName,'') " +
-                    "from " + Database + ".AvailityPayerList where Status = 1";
+            Query = "SELECT Id, ReasonVisit,IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),DATE_FORMAT(DateofService,'%d-%m-%Y %T') " +
+                    "FROM " + Database + ".PatientVisit WHERE PatientRegId = " + PatientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            PatientList.append("<option class=Inner value=''>Please Select Patient</option>");
             while (rset.next()) {
-                AvailityPayersList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + " (" + rset.getString(1) + ")</option>");
+                ServiceDates.append("<option  value='" + rset.getString(4) + "'> " + rset.getString(2) + " | " + rset.getString(3) + " </option>");
             }
-            rset.close();
             stmt.close();
+            rset.close();
+
 
             Query = "Select COUNT(*) from " + Database + ".InsuranceInfo " +
                     " where PatientRegId = " + PatientRegId;
@@ -267,7 +294,10 @@ public class EligibilityInquiry_3 extends HttpServlet {
             stmt.close();
 
             if (InsuranceFound > 0) {
-                Query = "Select GrpNumber, MemId,PriInsuranceName from " + Database + ".InsuranceInfo " +
+                Query = "Select GrpNumber, MemId,PriInsuranceName,MemberID_2,GroupNumber_2,SecondryInsurance,IFNULL(DATE_FORMAT(PrimaryDOB, '%Y%m%d'),''),IFNULL(DATE_FORMAT(SubscriberDOB, '%Y%m%d'),'')," +
+                        "PatientRelationtoPrimary,PatientRelationshiptoSecondry,SubscriberFirstName,SubscriberLastName,PriInsurerFirstName," +
+                        "PriInsurerLastName,PriInsurergender,Subscribergender,IFNULL(DATE_FORMAT(PrimaryDOB, '%Y-%m-%d'),'') ,IFNULL(DATE_FORMAT(SubscriberDOB, '%Y-%m-%d'),'') " +
+                        "from " + Database + ".InsuranceInfo " +
                         " where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -275,22 +305,86 @@ public class EligibilityInquiry_3 extends HttpServlet {
                     GroupNo = rset.getString(1);
                     SubscriberID = rset.getString(2);
                     profPayerIdx = rset.getInt(3);
+                    Sec_SubscriberID = rset.getString(4);
+                    Sec_GroupNo = rset.getString(5);
+                    Sec_profPayerIdx = rset.getInt(6);
+                    PrimaryDOB = rset.getString(7);
+                    SubscriberDOB = rset.getString(8);
+                    PatientRelationtoPrimary = rset.getString(9);
+                    PatientRelationshiptoSecondry = rset.getString(10);
+                    SubscriberFirstName = rset.getString(11);
+                    SubscriberLastName = rset.getString(12);
+                    PriInsurerFirstName = rset.getString(13);
+                    PriInsurerLastName = rset.getString(14);
+                    Pri_gender = rset.getString(15);
+                    Sec_gender = rset.getString(16);
+                    PrimaryDOB_Avail = rset.getString(17);
+                    SubscriberDOB_Avail = rset.getString(18);
                 }
                 rset.close();
                 stmt.close();
 
-                Query = "SELECT PayerName,PayerId FROM oe_2.ProfessionalPayers WHERE id = " + profPayerIdx;
+                Query = "SELECT PayerName,PayerId FROM oe_2.ProfessionalPayers WHERE id = " + profPayerIdx + "  ";
+//                AND (payername like '%TX%' OR payername like '%Texas%')
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    payerName = rset.getString(1).trim();
+                    PayerId = rset.getString(2).trim();
+                    ProfessionalPayersList.append("<option class=\"Inner\" value=\"" + PayerId + "\" selected>Primary - " + payerName + "</option>");
+                    TypeOfInsurance.append("<option class=\"Inner\" value=\"Primary\" selected>Primary</option>");
+                }
+                rset.close();
+                stmt.close();
+
+                Query = "SELECT PayerName,PayerId FROM oe_2.ProfessionalPayers WHERE id = " + Sec_profPayerIdx + "";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
-                    payerName = rset.getString(1).trim();
-                    PayerId = rset.getString(2).trim();
+                    Sec_payerName = rset.getString(1).trim();
+                    Sec_PayerId = rset.getString(2).trim();
+                    ProfessionalPayersList.append("<option class=\"Inner\" value=\"" + Sec_PayerId + "\" >Secondary - " + Sec_payerName + "</option>");
+                    TypeOfInsurance.append("<option class=\"Inner\" value=\"Secondary\" >Secondary</option>");
+                }
+                rset.close();
+                stmt.close();
+
+
+                if (!PayerId.equals("")) {
+
+                    filter += "'" + PayerId + "'";
+                }
+                if (!Sec_PayerId.equals("")) {
+                    filter += ",'" + Sec_PayerId + "'";
+                }
+
+
+                Query = "SELECT PayerName,PayerId FROM oe_2.ProfessionalPayers WHERE PayerId not IN (" + filter + ") ";
+                System.out.println("Query -> " + Query);
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    Sec_payerName = rset.getString(1).trim();
+                    Sec_PayerId = rset.getString(2).trim();
+                    ProfessionalPayersList.append("<option class=\"Inner\" value=\"" + Sec_PayerId + "\" >" + Sec_payerName + "</option>");
                 }
                 rset.close();
                 stmt.close();
             }
 
+            Query = "Select IFNULL(PayerId,''), IFNULL(PayerName,'') " +
+                    "from " + Database + ".AvailityPayerList where Status = 1 ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            PatientList.append("<option class=Inner value=''>Please Select Patient</option>");
+            while (rset.next()) {
+                AvailityPayersList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + " (" + rset.getString(1) + ")</option>");
+            }
+            rset.close();
+            stmt.close();
+
             if (ClientId == 9 || ClientId == 28) {
+
                 Query = "Select COUNT(*) from " + Database + ".Patient_HealthInsuranceInfo " +
                         " where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
@@ -302,7 +396,8 @@ public class EligibilityInquiry_3 extends HttpServlet {
                 stmt.close();
 
                 if (InsuranceFound > 0) {
-                    Query = "Select HISubscriberGroupNo,HISubscriberPolicyNo,HIPrimaryInsurance " +
+                    Query = "Select HISubscriberGroupNo,HISubscriberPolicyNo,HIPrimaryInsurance," +
+                            " SHISubscriberGroupNo,SHISubscriberPolicyNo,SHISecondaryName " +
                             " from " + Database + ".Patient_HealthInsuranceInfo " +
                             " where PatientRegId = " + PatientRegId;
                     stmt = conn.createStatement();
@@ -312,26 +407,62 @@ public class EligibilityInquiry_3 extends HttpServlet {
                         SubscriberID = rset.getString(2);
                         payerName = rset.getString(3).trim();
                         PayerId = rset.getString(3).trim();
+                        Sec_GroupNo = rset.getString(4);
+                        Sec_SubscriberID = rset.getString(5);
+                        Sec_payerName = rset.getString(6);
                     }
                     rset.close();
                     stmt.close();
+
+                    switch (payerName) {
+                        case "Aetna":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"38692\" selected> Aetna Better Health of Texas</option>");
+                            break;
+                        case "BCBS":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"00021\" selected>Blue Cross and Blue Shield of Texas</option>");
+                            break;
+                        case "Cigna":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"63092\" selected> Cigna HealthSpring of Texas</option>");
+                            break;
+                        case "Humana":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"-1\" selected> Please Select From Below Payers</option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"61102\" > Humana (Encounters)</option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"61101\" > Humana - Employers Health </option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"61115\" > Humana American ElderCare</option>");
+                            break;
+                        case "Medicare":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"04412\" selected> Medicare of Texas</option>");
+                            break;
+                        case "Medicaid":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"-1\" selected> Please Select From Below Payers</option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"00024\" > Medicaid of Texas - Acute Care </option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"LTC24\" > Medicaid of Texas - Long Term Care </option>");
+                            break;
+                        case "Tricare":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"TREST\" selected> Tricare East </option>");
+                            break;
+                        case "UMR":
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"-1\" selected> Please Select From Below Payers</option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"J2004\" > UMR Risk Management (WC) </option>");
+                            ProfessionalPayersList.append("<option class=\"Inner\" value=\"79480\" > UMR/Midwest Securities </option>");
+                            break;
+                    }
                 }
             }
 
             SubscriberID = SubscriberID.replace("-", "");
-            Query = "Select IFNULL(PatientMRN,''), IFNULL(Name,''), IFNULL(DateofBirth,''),IFNULL(DateofService,''), IFNULL(PolicyStatus,''), IFNULL(strmsg,''), " +
-                    " IFNULL(InsuranceNum,''), Id from oe.EligibilityInquiry " +
-                    " where ltrim(rtrim(UPPER(CreatedBy))) = ltrim(rtrim(UPPER('" + UserId + "'))) " +
-                    " and PatientMRN = '" + PatientMRN + "' Group by DateofService";
+            //ltrim(rtrim(UPPER(CreatedBy))) = ltrim(rtrim(UPPER('" + UserId + "'))) DATE_FORMAT(DateofService,'%m/%d/%Y %T') AS DisplayedDOS
+            Query = " Select IFNULL(PatientMRN,''), IFNULL(Name,''), IFNULL(DATE_FORMAT(DateofBirth,'%m/%d/%Y'),''), " +
+                    " DATE_FORMAT(STR_TO_DATE(DateofService,'%d-%m-%Y %T'),'%m/%d/%Y %T'), " +
+                    " IFNULL(PolicyStatus,''), IFNULL(strmsg,''), " +
+                    " IFNULL(InsuranceNum,''), Id, CreatedBy , IFNULL(DATE_FORMAT(CreatedDate,'%m/%d/%Y %T'),'') " +
+                    " from oe.EligibilityInquiry " +
+                    " where " +
+                    " PatientMRN = '" + PatientMRN + "' AND FacilityIndex=" + ClientId + " ORDER BY CreatedDate DESC";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
-                //String DOS1 = "";
-/*                if (!DOS.equals("")) {
-                    DOS1 = rset.getString(4).substring(3, 5) + "/" + rset.getString(4).substring(0, 2) + "/" + rset.getString(4).substring(6, 10);
-                }*/
                 CDRList.append("<tr><td align=left>" + rset.getString(1) + "</td>\n");
-//                CDRList.append("<td align=left>" + DOS1 + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(4) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(5) + "</td>\n");
                 CDRList.append("<td align=left>" + rset.getString(7) + "</td>\n");
@@ -340,6 +471,8 @@ public class EligibilityInquiry_3 extends HttpServlet {
                 } else {
                     CDRList.append("<td align=left><a href=/md/md.EligibilityInquiryReport?ActionID=GetResponse&Id=" + rset.getString(8) + " target=\"_blank\">" + "Eligibility Response</a></td>\n");
                 }
+                CDRList.append("<td align=left>" + rset.getString(9) + "</td>\n");
+                CDRList.append("<td align=left>" + rset.getString(10) + "</td>\n");
                 CDRList.append("</tr>");
             }
             rset.close();
@@ -351,17 +484,40 @@ public class EligibilityInquiry_3 extends HttpServlet {
             Parser.SetField("PayProcedureList", String.valueOf(PayProcedureList));
             Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
             Parser.SetField("AvailityPayersList", String.valueOf(AvailityPayersList));
+            Parser.SetField("TypeOfInsurance", String.valueOf(TypeOfInsurance));
             Parser.SetField("ClientIndex", String.valueOf(ClientId));
             Parser.SetField("UserId", String.valueOf(UserId));
             Parser.SetField("DOS", String.valueOf(DOS));
-            Parser.SetField("DOBAvaility", String.valueOf(DOBAvaility));
             Parser.SetField("DOSAvaility", String.valueOf(DOSAvaility));
             Parser.SetField("SubscriberID", String.valueOf(SubscriberID));
-            Parser.SetField("FirstName", String.valueOf(FirstName));
-            Parser.SetField("LastName", String.valueOf(LastName));
-            Parser.SetField("DOB", String.valueOf(DOB));
+            Parser.SetField("Sec_SubscriberID", String.valueOf(Sec_SubscriberID));
+
+            if (PatientRelationtoPrimary.equals("Self")) {
+                Parser.SetField("FirstName", String.valueOf(FirstName));
+                Parser.SetField("LastName", String.valueOf(LastName));
+                Parser.SetField("DOB", String.valueOf(DOB));
+                Parser.SetField("DOBAvaility", String.valueOf(DOBAvaility));
+                Parser.SetField("Gender", String.valueOf(Gender));
+            } else if (!PatientRelationtoPrimary.equals("")) {
+                Parser.SetField("FirstName", String.valueOf(PriInsurerFirstName));
+                Parser.SetField("LastName", String.valueOf(PriInsurerLastName));
+                Parser.SetField("DOB", String.valueOf(PrimaryDOB));
+                Parser.SetField("DOBAvaility", String.valueOf(PrimaryDOB_Avail));
+                Parser.SetField("Gender", String.valueOf(Pri_gender));
+            }
+
+
+            if (!PatientRelationshiptoSecondry.equals("Self") && !PatientRelationtoPrimary.equals("")) {
+                Parser.SetField("SecFirstName", String.valueOf(SubscriberFirstName));
+                Parser.SetField("SecLastName", String.valueOf(SubscriberLastName));
+                Parser.SetField("SecDOB", String.valueOf(SubscriberDOB));
+                Parser.SetField("SecDOB_Avail", String.valueOf(SubscriberDOB_Avail));
+                Parser.SetField("Sec_gender", String.valueOf(Sec_gender));
+            }
+
+
             Parser.SetField("GroupNo", String.valueOf(GroupNo));
-            Parser.SetField("Gender", String.valueOf(Gender));
+            Parser.SetField("Sec_GroupNo", String.valueOf(Sec_GroupNo));
             Parser.SetField("NPI", String.valueOf(NPI));
             Parser.SetField("proname", String.valueOf(proname));
             Parser.SetField("CDRList", String.valueOf(CDRList));
@@ -371,6 +527,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
             Parser.SetField("patName", patName);
             Parser.SetField("payerName", payerName);
             Parser.SetField("PayerId", PayerId);
+            Parser.SetField("ServiceDates", ServiceDates.toString());
             Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(servletContext)) + "Forms/EligibilityGetInput2_Copy.html");
         } catch (Exception ex) {
             pushLogs("Error in EligibilityGetInput in main : ", ex);
@@ -496,6 +653,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
             String DOB = request.getParameter("DOB").trim();
             String Gender = request.getParameter("Gender").trim();
             String DOS = request.getParameter("DateofService").trim();
+
             String PatientId = request.getParameter("PatientId").trim();
             String proname = request.getParameter("proname").trim();
             String PatientMRN = null;
@@ -504,6 +662,7 @@ public class EligibilityInquiry_3 extends HttpServlet {
             } else {
                 Gender = "F";
             }
+
             String Service_Type = request.getParameter("Service_Type").trim();
             if (Service_Type.equals("A"))
                 Service_Type = "52";
@@ -525,10 +684,8 @@ public class EligibilityInquiry_3 extends HttpServlet {
             String strMsg = eiresponse3.finaloutput.toString();
             out.println(strMsg);
 
-            Query = "Select MRN " +
-                    "from " + Database + ".PatientReg where status = 0 and ID = " + PatientId;
+            Query = "Select MRN from " + Database + ".PatientReg where status = 0 and ID = " + PatientId;
             stmt = conn.createStatement();
-//                out.println(Query);
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
                 PatientMRN = rset.getString(1);
@@ -572,4 +729,6 @@ public class EligibilityInquiry_3 extends HttpServlet {
             out.flush();
         }
     }
+
+
 }

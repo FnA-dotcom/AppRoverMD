@@ -154,7 +154,7 @@ public class SignPrint extends HttpServlet {
                 isSigned(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper, Bundle_Name);
             } else if (ActionID.equals("GetData") && request.getContentType().startsWith("multipart/form-data")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Search Patients Visit Input", "Click on Search Old Patient Option", FacilityIndex);
-                GetData(request, response, out, conn, context, UserId, DatabaseName, FacilityIndex, DirectoryName, Bundle_Name);
+                GetData(request, response, out, conn, context, UserId, DatabaseName, FacilityIndex, DirectoryName, Bundle_Name, helper);
             } else if (ActionID.equals("MakeTransparent")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Make Images Transparent", "Make Images Transparent", FacilityIndex);
                 MakeTransparent(out, Source, Dest);
@@ -189,6 +189,8 @@ public class SignPrint extends HttpServlet {
             Statement stmt = null;
             ResultSet rset = null;
             String Query = "";
+            String FileLastName = "";
+
 
             double[][] Victoria_Sign_Cordinate = {{86, 26}, {77, 28}, {95, 30}, {61, 11}, {87, 31},
                     {50, 17}, {75, 15}, {80.8, 26.7}, {77.1, 11}, {60.8, 14.5},
@@ -219,13 +221,17 @@ public class SignPrint extends HttpServlet {
             }
             rset.close();
             stmt.close();*/
-
+            if (FileName.contains("REGISTRATION")) {
+                FileLastName = "REGISTRATION";
+            } else if (FileName.contains("VISIT")) {
+                FileLastName = "VISIT";
+            } else if (FileName.contains("EDIT")) {
+                FileLastName = "EDIT";
+            }
             MRN = helper.getPatientRegMRN(request, conn, servletContext, Database, PatientRegId);
             Facility = helper.getFacilityName(request, conn, servletContext, ClientId);
-//            System.out.println("ClientId -> " + ClientId);
-//            System.out.println("Database -> " + Database);
 
-            if (ClientId == 19 || ClientId == 28 || ClientId == 39 || ClientId == 40 || ClientId == 41 || ClientId == 42 || ClientId == 43) {
+            if (ClientId == 8 || ClientId == 9 || ClientId == 25 || ClientId == 28 || ClientId == 27 || ClientId == 39 || ClientId == 40 || ClientId == 41 || ClientId == 42 || ClientId == 43) {
                 isExist = helper.signPDFCheckMobile(request, conn, servletContext, Database, PatientRegId);
                 if (isExist > 0) {
                     Parsehtm Parser = new Parsehtm(request);
@@ -303,7 +309,7 @@ public class SignPrint extends HttpServlet {
 
                 if (found > 0) {
                     Query = "Update " + Database + ".SignRequest set isSign = 0 , Status = 0, IP= '" + ip.toString() + "' , CreatedBy ='" + UserId + "' , CreatedDate=now(), " +
-                            " SendType = " + SendType + " , SignBy=null , UID='" + uuid.toString() + "' , AUTHID=null, PatientRegId=" + PatientRegId +
+                            " SendType = " + SendType + " , SignBy=null , UID='" + uuid.toString() + "' , AUTHID= null , SignedFrom = '" + FileLastName + "', PatientRegId=" + PatientRegId +
                             " where PatientRegId = " + PatientRegId;
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
@@ -311,7 +317,7 @@ public class SignPrint extends HttpServlet {
                 } else {
                     PreparedStatement MainReceipt = conn.prepareStatement(
                             "INSERT INTO " + Database + ".SignRequest (MRN,Status,isSign,IP,CreatedBy,CreatedDate," +
-                                    " SendType,SignBy,UID, AUTHID, PatientRegId,SignedFrom,SignCount) VALUES (?,?,?,?,?,now(),?,?,?,?,?,'REGISTRATION',0) ");
+                                    " SendType,SignBy,UID, AUTHID, PatientRegId,SignedFrom,SignCount) VALUES (?,?,?,?,?,now(),?,?,?,?,?,?,0) ");
                     MainReceipt.setInt(1, MRN);
                     MainReceipt.setInt(2, 0);
                     MainReceipt.setInt(3, 0);
@@ -322,14 +328,19 @@ public class SignPrint extends HttpServlet {
                     MainReceipt.setString(8, uuid.toString());
                     MainReceipt.setString(9, "");
                     MainReceipt.setInt(10, PatientRegId);
+                    MainReceipt.setString(11, FileLastName);
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
                 }
+
+
             } catch (Exception e) {
                 helper.SendEmailWithAttachment("Error in Sign Print ^^ ** (SignPDF)", servletContext, e, "SignPrint", "SignPDF", conn);
                 Services.DumException("SignPDF", "SignPDF", request, e, getServletContext());
                 return;
             }
+
+            // System.out.println("Here");
 
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
@@ -469,7 +480,7 @@ public class SignPrint extends HttpServlet {
         return "CONVERTED";
     }
 
-    void GetData(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, String DirectoryName, String bundle_Name) {
+    void GetData(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, ServletContext servletContext, String UserId, String Database, int ClientId, String DirectoryName, String bundle_Name, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -491,6 +502,10 @@ public class SignPrint extends HttpServlet {
         String rqType = "";
         String WEB = "";
         try {
+            if (ClientId == 25) {
+                DirectoryName = "stcOperation";
+            }
+
             Dictionary d = doUpload(request, response, out);
             Enumeration en = d.keys();
             while (en.hasMoreElements()) {
@@ -577,8 +592,26 @@ public class SignPrint extends HttpServlet {
             stmt.close();
 
 
-            if (ClientId == 9) {
+//            if (ClientId == 9) {
+//
+//                String signedFrom = null;
+//                Query = "Select SignedFrom  from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    signedFrom = rset.getString(1);
+//                }
+//                stmt.close();
+//                rset.close();
+//
+//                PatientReg2 ptr2 = new PatientReg2();
+//                ptr2.SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED");
+//            }
 
+            Parsehtm Parser = new Parsehtm(request);
+
+            if (ClientId == 8 || ClientId == 9 || ClientId == 19 || ClientId == 27 || ClientId == 28 || ClientId == 29 || ClientId == 25 ||
+                    ClientId == 39 || ClientId == 40 || ClientId == 41 || ClientId == 42 || ClientId == 43) {
                 String signedFrom = null;
                 Query = "Select SignedFrom  from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
                 stmt = conn.createStatement();
@@ -589,12 +622,54 @@ public class SignPrint extends HttpServlet {
                 stmt.close();
                 rset.close();
 
+                PatientReg ptr = new PatientReg();
+                DownloadBundle orangebndle = new DownloadBundle();
+                FrontlineBundle obj1 = new FrontlineBundle();
+                SanMarcosBundle smbundle = new SanMarcosBundle();
                 PatientReg2 ptr2 = new PatientReg2();
-                ptr2.SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED");
+
+                switch (ClientId) {
+                    case 8:
+                        orangebndle.GETINPUT_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    case 9:
+                        ptr2.SaveBundle_Victoria(request, out, conn, response, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED");
+                        break;
+                    case 19:
+                        ptr.SaveBundle_HopeER(request, out, conn, response, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    case 25:
+                        smbundle.GETINPUTSanMarcos_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    case 27:
+                    case 29:
+                        obj1.GETINPUTFrontLine_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    case 28:
+                        orangebndle.GETINPUTERDallas_BundleCreate(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName,signedFrom + "SIGNED",Integer.parseInt(PatientRegId),helper);
+                        break;
+                    case 39:
+                        ptr.GETINPUTSchertz(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED");
+                        break;
+                    case 40:
+                        ptr.GETINPUTfloresville(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED");
+                        break;
+                    case 41:
+                        ptr.GETINPUTwillowbrook(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    case 42:
+                        ptr.GETINPUTsummerwood(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    case 43:
+                        ptr.GETINPUTheights(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, Integer.parseInt(PatientRegId), signedFrom + "SIGNED", helper);
+                        break;
+                    default:
+                        break;
+                }
             }
 
-            Parsehtm Parser = new Parsehtm(request);
-            if (ClientId == 41 || ClientId == 42 || ClientId == 43 || ClientId == 39 || ClientId == 40 || ClientId == 19 || ClientId == 45) {
+            if (ClientId == 8 || ClientId == 9 || ClientId == 19 || ClientId == 25 || ClientId == 27 || ClientId == 28 || ClientId == 29 ||
+                    ClientId == 41 || ClientId == 42 || ClientId == 43 || ClientId == 39 || ClientId == 40) {
 
                 PreparedStatement ps = conn.prepareStatement("SELECT website from oe.ClientsWebsite where clientID=?");
                 ps.setInt(1, ClientId);
@@ -605,11 +680,6 @@ public class SignPrint extends HttpServlet {
                 ps.close();
                 rset.close();
 
-//                System.out.println("**** RQ TYPE **** " + rqType);
-//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
-//                Parser.SetField("FormName", "DownloadBundle");
-//                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_W.html");            if(
-                System.out.println("rqType ->> " + rqType);
                 if (rqType.equals("nullGetValues")) {
                     Parser.SetField("Message", "Thank You for Registration ");
                     Parser.SetField("WEB", WEB);
@@ -619,29 +689,7 @@ public class SignPrint extends HttpServlet {
                     Parser.SetField("FormName", "PatientUpdateInfo");
                     Parser.SetField("ActionID", "GetInput&ID=" + PatientRegId);
                     Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message.html");
-
                 }
-
-                /*if (UserId.contains("Mobile")) {
-                    Parser.SetField("Message", "Thank You for Registration ");
-//                Parser.SetField("FormName", "LifeSaversBundle");
-//                Parser.SetField("ActionID", bundle_Name + "&ID=" + PatientRegId);
-//                    Parser.SetField("FormName", "PatientUpdateInfo");
-//                    Parser.SetField("ActionID",  "GetInput&ID=" + PatientRegId);
-                    Parser.SetField("WEB", WEB);
-                    Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_SumWill.html");
-                } else {
-//                    Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
-//                Parser.SetField("FormName", "DownloadBundle");
-//                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_W.html");
-                    Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
-//                Parser.SetField("FormName", "LifeSaversBundle");
-//                Parser.SetField("ActionID", bundle_Name + "&ID=" + PatientRegId);
-                    Parser.SetField("FormName", "PatientUpdateInfo");
-                    Parser.SetField("ActionID", "GetInput&ID=" + PatientRegId);
-                    Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message.html");
-                }*/
-
             } else {
                 Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
                 Parser.SetField("FormName", "PatientUpdateInfo");
@@ -663,8 +711,6 @@ public class SignPrint extends HttpServlet {
         try {
             File directory = new File("/sftpdrive/opt/apache-tomcat-8.5.61/webapps/md/tmpImages/");
             FileUtils.cleanDirectory(directory);
-
-//            System.out.println("File for Deletion : " + outputFilePath);
             File File = new File(outputFilePath);
             File.delete();
 
@@ -687,16 +733,6 @@ public class SignPrint extends HttpServlet {
         int PatientRegId = Integer.parseInt(request.getParameter("PatientRegId"));
 
         try {
-/*            Query = "Select MRN, CONCAT(IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) " +
-                    "from frontlin_er.PatientReg where ID = " + PatientRegId;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                MRN = rset.getString(1);
-                PatientName = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();*/
             int found = 0;
             found = helper.signPDFCheckMobile(request, conn, servletContext, Database, PatientRegId);
 

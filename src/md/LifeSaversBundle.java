@@ -23,10 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.net.InetAddress;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalDate;
 
 @SuppressWarnings("Duplicates")
 public class LifeSaversBundle extends HttpServlet {
@@ -45,7 +43,6 @@ public class LifeSaversBundle extends HttpServlet {
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String ActionID = "";
-        String DirectoryName = "";
         final ServletContext context = this.getServletContext();
         final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
         response.setContentType("text/html");
@@ -67,6 +64,7 @@ public class LifeSaversBundle extends HttpServlet {
             final String UserId = session.getAttribute("UserId").toString();
             final String DatabaseName = session.getAttribute("DatabaseName").toString();
             final int FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
+            final String DirectoryName = session.getAttribute("DirectoryName").toString();
             if (UserId.equals("")) {
                 final Parsehtm Parser = new Parsehtm(request);
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
@@ -82,24 +80,20 @@ public class LifeSaversBundle extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            Query = "Select dbname, IFNULL(DirectoryName,'') from oe.clients where Id = " + FacilityIndex;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                DirectoryName = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
 
-            if (ActionID.equals("GETINPUTwillowbrook")) {
-                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUTwillowbrook(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
-            } else if (ActionID.equals("GETINPUTsummerwood")) {
-                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUTsummerwood(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
-            } else if (ActionID.equals("GETINPUTheights")) {
-                supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
-                GETINPUTheights(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
+            switch (ActionID) {
+                case "GETINPUTwillowbrook":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
+                    GETINPUTwillowbrook(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
+                    break;
+                case "GETINPUTsummerwood":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
+                    GETINPUTsummerwood(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
+                    break;
+                case "GETINPUTheights":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "San Marcos Admission Bundle", "Download or View Admission Bundle", FacilityIndex);
+                    GETINPUTheights(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
+                    break;
             }
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
@@ -118,7 +112,7 @@ public class LifeSaversBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTwillowbrook(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUTwillowbrook_Inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, final int PatientVisitNumber, final int PatRegId, final String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -133,6 +127,7 @@ public class LifeSaversBundle extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -224,23 +219,18 @@ public class LifeSaversBundle extends HttpServlet {
         final String Other = "";
         String Other_text = "";
         String ResultPdf = "";
+        String filename = "";
+        String DirectoryNameTow = "";
         String PriInsurerName = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
         int pageCount = 0;
+        int VisitIndex = PatientVisitNumber;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
-        int visitId = 0;
-        if (request.getParameter("visitId") == null) {
-            visitId = 0;
-        } else {
-            visitId = Integer.parseInt(request.getParameter("visitId"));
-        }
-
+        final int ID = PatRegId;
         try {
-            Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), " +
-                    "DATE_FORMAT(now(), '%T')";
+            Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -250,19 +240,26 @@ public class LifeSaversBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
+            if (SignedFrom.contains("REGISTRATION")) {
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
+
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-')," +
-                        " IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  " +
-                        "IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), " +
-                        "IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), " +
-                        "IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), " +
-                        "IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, " +
-                        "IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), " +
-                        "IFNULL(DoctorsName,'-') , IFNULL(COVIDStatus,'0')  " +
-                        "From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'), " +
+                        " IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-')," +
+                        " IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-')," +
+                        " IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-')," +
+                        " IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-') , IFNULL(COVIDStatus,'0'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') " +
+                        " From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                if (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -289,9 +286,15 @@ public class LifeSaversBundle extends HttpServlet {
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
                     COVIDStatus = rset.getString(24);
+                    DOBForAge = rset.getString(25);
+
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
 
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
@@ -303,9 +306,7 @@ public class LifeSaversBundle extends HttpServlet {
                 stmt.close();
 
                 if (!DoctorId.equals("-")) {
-//                    out.println("Inside Get Doc Name");
-                    Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) " +
-                            "from " + Database + ".DoctorsList where Id = " + DoctorId;
+                    Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -314,7 +315,6 @@ public class LifeSaversBundle extends HttpServlet {
                     rset.close();
                     stmt.close();
                 } else {
-//                    out.println("Inside Get Doc Name empty");
                     DoctorName = "";
                 }
             } catch (Exception e) {
@@ -322,15 +322,13 @@ public class LifeSaversBundle extends HttpServlet {
 //                out.println(Query);
             }
             //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-')," +
-                    "IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), " +
-                    "IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), " +
-                    "IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), " +
-                    "IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), " +
-                    "IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), " +
-                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), " +
-                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) " +
-                    " FROM " + Database + ".InsuranceInfo  WHERE PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  " +
+                    "IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                    "IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
+                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), " +
+                    "CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
+                    " FROM " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -371,9 +369,7 @@ public class LifeSaversBundle extends HttpServlet {
             //            }
             try {
                 if (SelfPayChk != 0 && !PriInsuranceName.equals("-") || !PriInsuranceName.equals("")) {
-//                    out.println("Inside PriInsuranceName");
-                    Query = "Select PayerName from oe_2.ProfessionalPayers " +
-                            "where Id = " + PriInsuranceName;
+                    Query = "Select PayerName from oe_2.ProfessionalPayers where Id = " + PriInsuranceName;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -382,8 +378,7 @@ public class LifeSaversBundle extends HttpServlet {
                     rset.close();
                     stmt.close();
 
-                    Query = "Select PayerName from oe_2.ProfessionalPayers " +
-                            "where Id =" + SecondryInsurance;
+                    Query = "Select PayerName from oe_2.ProfessionalPayers where Id =" + SecondryInsurance;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -396,11 +391,7 @@ public class LifeSaversBundle extends HttpServlet {
 //                out.println("Error is PriInsurance: " + e.getMessage());
 //                out.println(Query);
             }
-            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), " +
-                    "IFNULL(PhoneNumber,'-'), " +
-                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
-                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
-                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -413,13 +404,7 @@ public class LifeSaversBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, " +
-                    "BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, " +
-                    "Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), " +
-                    "FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
-                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  " +
-                    "IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
-                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -533,7 +518,6 @@ public class LifeSaversBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
-
             String HearAboutUsString = "";
             String HearAboutUsString2 = "";
             if (ReturnPatient.toUpperCase().equals("YES")) {
@@ -621,7 +605,15 @@ public class LifeSaversBundle extends HttpServlet {
                 SignImages = null;
             }
             if (SelfPayChk == 0) {
-
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
 
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/SELFPAYPATIENTPACKET.pdf";
 
@@ -646,8 +638,9 @@ public class LifeSaversBundle extends HttpServlet {
 //                    ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
                 }
 
+                filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
                 inputFilePath = ResultPdf;
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -1528,6 +1521,16 @@ public class LifeSaversBundle extends HttpServlet {
 //                    responseOutputStream.write(bytes);
 //                }
 
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex)" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -1538,7 +1541,16 @@ public class LifeSaversBundle extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
 
             } else {
-
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+                filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/INSUREDPATIENTPACKET.pdf";
 
                 mergePdf.GETINPUT(request, response, out, conn, Database, inputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/BillingNotice.pdf", ClientId, MRN);
@@ -1576,7 +1588,7 @@ public class LifeSaversBundle extends HttpServlet {
                 }
 
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -2470,6 +2482,16 @@ public class LifeSaversBundle extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
 //                final File pdfFile = new File(outputFilePath);
 //                response.setContentType("application/pdf");
 //                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
@@ -2506,7 +2528,76 @@ public class LifeSaversBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTsummerwood(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUTwillowbrook(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String SignedFrom = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            try {
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getNString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                    } else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                    } else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                    }
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+                } else {
+                    GETINPUTwillowbrook_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, VisitId, PatientRegId, SignedFrom, helper);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+//            if(found>0){
+//                found+=1;
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }else{
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    void GETINPUTsummerwood_Inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, final int PatientVisitNumber, final int PatRegId, final String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -2521,6 +2612,7 @@ public class LifeSaversBundle extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -2611,14 +2703,27 @@ public class LifeSaversBundle extends HttpServlet {
         String Physician_text = "";
         final String Other = "";
         String Other_text = "";
+        String filename = "";
+        String DirectoryNameTow = "";
         String ResultPdf = "";
         String PriInsurerName = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
+        int VisitIndex = PatientVisitNumber;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+        final int ID = PatRegId;
         try {
+
+            if (SignedFrom.contains("REGISTRATION")) {
+                DirectoryNameTow = "REGISTRATION";
+            } else if (SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            } else if (SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
+
+
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -2630,7 +2735,12 @@ public class LifeSaversBundle extends HttpServlet {
             rset.close();
             stmt.close();
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-') , IFNULL(COVIDStatus,'0')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-')," +
+                        " IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-')," +
+                        " IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-')," +
+                        " IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-')," +
+                        "  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        " DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-') , IFNULL(COVIDStatus,'0'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -2660,9 +2770,16 @@ public class LifeSaversBundle extends HttpServlet {
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
                     COVIDStatus = rset.getString(24);
+                    DOBForAge = rset.getString(25);
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -2690,7 +2807,7 @@ public class LifeSaversBundle extends HttpServlet {
 //                out.println(Query);
             }
             //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -2947,7 +3064,16 @@ public class LifeSaversBundle extends HttpServlet {
             } else {
                 inputFilePath = "/sftpdrive";
             }
-
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+            filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
             if (SelfPayChk == 0) {
 
                 String UID = "";
@@ -2995,7 +3121,7 @@ public class LifeSaversBundle extends HttpServlet {
 
 
                 inputFilePath = ResultPdf;
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -3866,6 +3992,17 @@ public class LifeSaversBundle extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -3942,7 +4079,7 @@ public class LifeSaversBundle extends HttpServlet {
                 }
 
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -4837,7 +4974,19 @@ public class LifeSaversBundle extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 Parsehtm Parser = new Parsehtm(request);
+
                 Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
                 Parser.SetField("pageCount", String.valueOf(pageCount));
@@ -4871,7 +5020,79 @@ public class LifeSaversBundle extends HttpServlet {
         }
     }
 
-    void GETINPUTheights(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void GETINPUTsummerwood(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String SignedFrom = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            try {
+
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getNString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex=" + VisitId + " ORDER BY CreatedDate DESC limit 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                System.out.println("Query");
+                if (rset.next()) {
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                    } else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                    } else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                    }
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+                } else {
+                    GETINPUTsummerwood_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, VisitId, PatientRegId, SignedFrom, helper);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+//            if(found>0){
+//                found+=1;
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }else{
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    void GETINPUTheights_Inside(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, final int PatientVisitNumber, final int PatRegId, final String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -4886,6 +5107,7 @@ public class LifeSaversBundle extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -4978,11 +5200,22 @@ public class LifeSaversBundle extends HttpServlet {
         String Other_text = "";
         String ResultPdf = "";
         String PriInsurerName = "";
+        String filename = "";
+        String DirectoryNameTow = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
+        int VisitIndex = PatientVisitNumber;
         final int VerifyChkBox = 0;
-        final int ID = Integer.parseInt(request.getParameter("ID").trim());
+        final int ID = PatRegId;
+
+        if (SignedFrom.contains("REGISTRATION")) {
+            DirectoryNameTow = "REGISTRATION";
+        } else if (SignedFrom.contains("VISIT")) {
+            DirectoryNameTow = "VISIT";
+        } else if (SignedFrom.contains("EDIT")) {
+            DirectoryNameTow = "EDIT";
+        }
         try {
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
             stmt = conn.createStatement();
@@ -4994,8 +5227,23 @@ public class LifeSaversBundle extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
+            Query = "Select id FROM " + Database + ".PatientVisit ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-'), IFNULL(COVIDStatus,'0')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-')," +
+                        " IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), " +
+                        "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), " +
+                        "IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'), " +
+                        " IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-'), IFNULL(COVIDStatus,'0'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -5025,9 +5273,15 @@ public class LifeSaversBundle extends HttpServlet {
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
                     COVIDStatus = rset.getString(24);
+                    DOBForAge = rset.getString(25);
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -5055,7 +5309,8 @@ public class LifeSaversBundle extends HttpServlet {
 //                out.println(Query);
             }
             //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'),\n" +
+                    "CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -5312,7 +5567,16 @@ public class LifeSaversBundle extends HttpServlet {
             } else {
                 inputFilePath = "/sftpdrive";
             }
-
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+            filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
             if (SelfPayChk == 0) {
 
                 String UID = "";
@@ -5361,7 +5625,7 @@ public class LifeSaversBundle extends HttpServlet {
                 }
 
                 inputFilePath = ResultPdf;
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -6232,6 +6496,16 @@ public class LifeSaversBundle extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(4, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -6310,7 +6584,7 @@ public class LifeSaversBundle extends HttpServlet {
                 }
 
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -7205,6 +7479,16 @@ public class LifeSaversBundle extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pdfReader.getNumberOfPages());
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("outputFilePath", outputFilePath);
 //            Parser.SetField("imagelist", String.valueOf(imagelist));
@@ -7237,6 +7521,78 @@ public class LifeSaversBundle extends HttpServlet {
             }
             System.out.println(str);
         }
+    }
+
+    void GETINPUTheights(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, UtilityHelper helper) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String SignedFrom = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("ID"));
+
+        int VisitId = Integer.parseInt(request.getParameter("VisitId"));
+        try {
+            String filename = null;
+            String outputFilePath = null;
+            String pageCount = null;
+            try {
+
+                Query = "Select SignedFrom from " + Database + ".SignRequest where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    SignedFrom = rset.getNString(1);
+                } else {
+                    SignedFrom = "REGISTRATION";
+                }
+                stmt.close();
+                rset.close();
+
+                Query = "Select BundleName,PgCount from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId + " And VisitIndex =" + VisitId + " ORDER BY CreatedDate DESC LIMIT 1";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    filename = rset.getString(1);
+                    pageCount = rset.getString(2);
+                    if (filename.contains("REGISTRATION")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/REGISTRATION/" + filename;
+                    } else if (filename.contains("VISIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/VISIT/" + filename;
+                    } else if (filename.contains("EDIT")) {
+                        outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/EDIT/" + filename;
+                    }
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("outputFilePath", outputFilePath);
+//            Parser.SetField("imagelist", String.valueOf(imagelist));
+                    Parser.SetField("pageCount", String.valueOf(pageCount));
+                    Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                    Parser.SetField("FileName", filename);
+                    Parser.SetField("ClientID", String.valueOf(ClientId));
+
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
+                } else {
+                    GETINPUTheights_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, VisitId, PatientRegId, SignedFrom, helper);
+                }
+                stmt.close();
+                rset.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("error ->>" + e.getMessage());
+            }
+
+//            if(found>0){
+//                found+=1;
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }else{
+//                filename =  FirstNameNoSpaces + "_" + PatientRegId + "_" + DateTime + "_"+found+"_"+SignedFrom+".pdf";
+//            }
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     private String AttachUHC_Form(String MemID, String DOB, String Name, String DOS, String RelationtoPatient, String Date, String outputFilePath, String inputFile, HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, String ResultPdf, String DirectoryName, int ClientId, String MRN, MergePdf mergePdf) throws IOException {

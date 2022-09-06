@@ -21,7 +21,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class EligibilityInquiry2 extends HttpServlet {
+public class EligibilityInquiry2 extends HttpServlet
+{
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
@@ -46,7 +47,7 @@ public class EligibilityInquiry2 extends HttpServlet {
         int ClientId = 0;
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         final Services supp = new Services();
         ServletContext context = null;
         context = this.getServletContext();
@@ -71,7 +72,7 @@ public class EligibilityInquiry2 extends HttpServlet {
             rset.close();
             stmt.close();
 
-            Query = "Select dbname from oe.clients where Id = " + ClientId;
+            Query = "Select dbname from oe.clients where Id = "+ClientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -92,20 +93,23 @@ public class EligibilityInquiry2 extends HttpServlet {
             if (ActionID.equals("EligibilityGetInput")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2", "Input Fields Details", ClientId);
                 this.EligibilityGetInput(request, out, conn, context, UserId, Database, ClientId);
-            } else if (ActionID.equals("GetDetails")) {
+            }
+            else if (ActionID.equals("GetDetails")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Patient Details", "Get Patient Details and Auto Fill the Input Fields", ClientId);
                 this.GetDetails(request, out, conn, context, UserId, Database, ClientId);
-            } else if (ActionID.equals("GetResponse")) {
+            }
+            else if (ActionID.equals("GetResponse")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Get Insurance Information", "Get Insurance Info, Response from finaltrizetto And eireponse Class", ClientId);
                 this.GetResponse(request, out, conn, context, UserId, Database, ClientId);
             }
             try {
                 conn.close();
-            } catch (Exception ex) {
             }
+            catch (Exception ex) {}
             out.flush();
             out.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println(e.getMessage());
         }
     }
@@ -161,7 +165,8 @@ public class EligibilityInquiry2 extends HttpServlet {
             Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
             Parser.SetField("UserId", String.valueOf(UserId));
             Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(servletContext)) + "Forms/EligibilityGetInput2.html");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             out.println("Error:-" + ex.getMessage());
         }
     }
@@ -225,7 +230,8 @@ public class EligibilityInquiry2 extends HttpServlet {
                 stmt.close();
             }
             out.println(String.valueOf(DOS) + "|" + SubscriberID + "|" + FirstName + "|" + LastName + "|" + DOB + "|" + GroupNo + "|" + Gender + "|" + NPI + "|" + proname);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             out.println("Error:-" + ex.getMessage());
         }
     }
@@ -249,7 +255,8 @@ public class EligibilityInquiry2 extends HttpServlet {
             final String proname = request.getParameter("proname").trim();
             if (Gender.equals("male")) {
                 Gender = "M";
-            } else {
+            }
+            else {
                 Gender = "F";
             }
             final String GPN = request.getParameter("GroupNo").trim();
@@ -273,10 +280,12 @@ public class EligibilityInquiry2 extends HttpServlet {
                 MainReceipt.setString(11, UserId);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 System.out.println("Error 2- Insertion EligibilityInquiry Table :" + e.getMessage());
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             out.println("Error:-" + ex.getMessage());
         }
     }

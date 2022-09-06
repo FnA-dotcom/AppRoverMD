@@ -13,7 +13,7 @@ public class MainTest {
         try {
             Connection conn = null;
             String connect_string = "jdbc:mysql://rovermd-01-master.cvsodt2nhyzz.us-east-1.rds.amazonaws.com/oe?user=webserver873849&password=Asljdpiwoeurj!!3498&autoReconnect=true";
-            String DRIVER = "com.mysql.jdbc.Driver";
+             String DRIVER = "com.mysql.jdbc.Driver";
 //            String DRIVER = "com.mariadb.cj.jdbc.Driver";
             try {
                 Class.forName(DRIVER).newInstance();

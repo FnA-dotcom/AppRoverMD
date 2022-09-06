@@ -29,7 +29,7 @@ import java.sql.*;
 import java.util.*;
 
 @SuppressWarnings("Duplicates")
-public class PatientReg2_27DEC2021 extends HttpServlet {
+public class PatientReg3 extends HttpServlet {
 //    private PreparedStatement pStmt = null;
 
     public void init(final ServletConfig config) throws ServletException {
@@ -171,7 +171,7 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
             Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
             if (ClientIndex == 9) {
                 //Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormVictoria_2.html");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PatientRegFormVictoria_2.html");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PatientRegFormVictoria_2_2.html");
             } else if (ClientIndex == 28) {
                 Parser.GenerateHtml(out, String.valueOf(String.valueOf(Services.GetHtmlPath(this.getServletContext()))) + "Forms/PatientRegFormERDallas.html");
             }
@@ -1841,6 +1841,2040 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
                 rset.close();
                 stmt.close();
             } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            try {
+                final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".PatientReg_Details (PatientRegId,Ethnicity,Race," +
+                        " EmployementChk,Employer,Occupation,EmpContact,PrimaryCarePhysicianChk,PriCarePhy,ReasonVisit,PriCarePhyAddress,PriCarePhyCity,PriCarePhyState," +
+                        " PriCarePhyZipCode,PatientMinorChk,GuarantorChk,GuarantorEmployer,GuarantorEmployerPhNumber,GuarantorEmployerAddress,GuarantorEmployerCity," +
+                        " GuarantorEmployerState,GuarantorEmployerZipCode,CreatedDate,WorkersCompPolicyChk,MotorVehicleAccidentChk,HealthInsuranceChk, SympChkCOVID, " +
+                        " DateSympOnset, SympFever, SympCough, SympShortBreath, SympFatigue, SympMuscBodyAches, SympHeadache, SympLossTaste, SympSoreThroat, " +
+                        " SympCongestionRunNos, SympNauseaVomit, SympDiarrhea, SympPerPainChest, SympNewConfusion, SympInabWake, SympOthers, SympOthersTxt," +
+                        " EmpHealthChk, PregChk,TestForTravel) \n" +
+                        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                MainReceipt.setInt(1, PatientRegId);
+                MainReceipt.setString(2, Ethnicity);
+                MainReceipt.setString(3, Race);
+                MainReceipt.setInt(4, Integer.parseInt(EmployementChk));
+                MainReceipt.setString(5, Employer);
+                MainReceipt.setString(6, Occupation);
+                MainReceipt.setString(7, EmpContact);
+                MainReceipt.setInt(8, Integer.parseInt(PrimaryCarePhysicianChk));
+                MainReceipt.setString(9, PriCarePhy);
+                MainReceipt.setString(10, ReasonVisit);
+                MainReceipt.setString(11, String.valueOf(String.valueOf(PriCarePhyAddress)) + " " + PriCarePhyAddress2);
+                MainReceipt.setString(12, PriCarePhyCity);
+                MainReceipt.setString(13, PriCarePhyState);
+                MainReceipt.setString(14, PriCarePhyZipCode);
+                MainReceipt.setInt(15, Integer.parseInt(PatientMinorChk));
+                MainReceipt.setString(16, GuarantorChk);
+                MainReceipt.setString(17, GuarantorEmployer);
+                MainReceipt.setString(18, String.valueOf(String.valueOf(GuarantorEmployerAreaCode)) + GuarantorEmployerPhNumber);
+                MainReceipt.setString(19, String.valueOf(String.valueOf(GuarantorEmployerAddress)) + " " + GuarantorEmployerAddress2);
+                MainReceipt.setString(20, GuarantorEmployerCity);
+                MainReceipt.setString(21, GuarantorEmployerState);
+                MainReceipt.setString(22, GuarantorEmployerZipCode);
+                MainReceipt.setInt(23, Integer.parseInt(WorkersCompPolicyChk));
+                MainReceipt.setInt(24, Integer.parseInt(MotorVehicleAccidentChk));
+                MainReceipt.setInt(25, Integer.parseInt(HealthInsuranceChk));
+                MainReceipt.setInt(26, Integer.parseInt(SympChkCOVID));
+                //MainReceipt.setString(27, DateSympOnset);
+                if (!DateSympOnset.equals(""))
+                    MainReceipt.setString(27, DateSympOnset);
+                else
+                    MainReceipt.setNull(27, Types.DATE);
+                MainReceipt.setString(28, SympFever);
+                MainReceipt.setString(29, SympCough);
+                MainReceipt.setString(30, SympShortBreath);
+                MainReceipt.setString(31, SympFatigue);
+                MainReceipt.setString(32, SympMuscBodyAches);
+                MainReceipt.setString(33, SympHeadache);
+                MainReceipt.setString(34, SympLossTaste);
+                MainReceipt.setString(35, SympLossTaste);
+                MainReceipt.setString(36, SympCongestionRunNos);
+                MainReceipt.setString(37, SympNauseaVomit);
+                MainReceipt.setString(38, SympDiarrhea);
+                MainReceipt.setString(39, SympPerPainChest);
+                MainReceipt.setString(40, SympNewConfusion);
+                MainReceipt.setString(41, SympInabWake);
+                MainReceipt.setString(42, SympOthers);
+                MainReceipt.setString(43, SympOthersTxt);
+                MainReceipt.setString(44, EmpHealthChk);
+                MainReceipt.setString(45, PregChk);
+                MainReceipt.setString(46, TestForTravel);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+            } catch (Exception e) {
+                helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion PatientReg_Details Table ^^" + facilityName + " ##MES#004)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                Parser.SetField("Message", "MES#005");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+                Services.DumException("PatientReg2", "SaveDataVictoriaError 4- Insertion PatientReg_Details Table :", request, e, this.getServletContext());
+                //return;
+            }
+            if (WorkersCompPolicyChk.equals("1")) {
+                try {
+                    final PreparedStatement MainReceipt = conn.prepareStatement(
+                            " INSERT INTO " + Database + ".Patient_WorkCompPolicy (PatientRegId,WCPDateofInjury,WCPCaseNo," +
+                                    "WCPGroupNo,WCPMemberId,WCPInjuryRelatedAutoMotorAccident,WCPInjuryRelatedWorkRelated," +
+                                    "WCPInjuryRelatedOtherAccident,WCPInjuryRelatedNoAccident,WCPInjuryOccurVehicle," +
+                                    "WCPInjuryOccurWork,WCPInjuryOccurHome,WCPInjuryOccurOther,WCPInjuryDescription," +
+                                    "WCPHRFirstName,WCPHRLastName,WCPHRPhoneNumber,WCPHRAddress,WCPHRCity,WCPHRState," +
+                                    "WCPHRZipCode,WCPPlanName,WCPCarrierName,WCPPayerPhoneNumber,WCPCarrierAddress," +
+                                    "WCPCarrierCity,WCPCarrierState,WCPCarrierZipCode,WCPAdjudicatorFirstName," +
+                                    "WCPAdjudicatorLastName,WCPAdjudicatorPhoneNumber,WCPAdjudicatorFaxPhoneNumber,CreatedDate)" +
+                                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                    MainReceipt.setInt(1, PatientRegId);
+                    //MainReceipt.setString(2, WCPDateofInjury);
+                    if (!WCPDateofInjury.equals(""))
+                        MainReceipt.setString(2, WCPDateofInjury);
+                    else
+                        MainReceipt.setNull(2, Types.DATE);
+                    MainReceipt.setString(3, WCPCaseNo);
+                    MainReceipt.setString(4, WCPGroupNo);
+                    MainReceipt.setString(5, WCPMemberId);
+                    MainReceipt.setString(6, WCPInjuryRelatedAutoMotorAccident);
+                    MainReceipt.setString(7, WCPInjuryRelatedWorkRelated);
+                    MainReceipt.setString(8, WCPInjuryRelatedOtherAccident);
+                    MainReceipt.setString(9, WCPInjuryRelatedNoAccident);
+                    MainReceipt.setString(10, WCPInjuryOccurVehicle);
+                    MainReceipt.setString(11, WCPInjuryOccurWork);
+                    MainReceipt.setString(12, WCPInjuryOccurHome);
+                    MainReceipt.setString(13, WCPInjuryOccurOther);
+                    MainReceipt.setString(14, WCPInjuryDescription);
+                    MainReceipt.setString(15, WCPHRFirstName);
+                    MainReceipt.setString(16, WCPHRLastName);
+                    MainReceipt.setString(17, String.valueOf(String.valueOf(WCPHRAreaCode)) + WCPHRPhoneNumber);
+                    MainReceipt.setString(18, String.valueOf(String.valueOf(WCPHRAddress)) + " " + WCPHRAddress2);
+                    MainReceipt.setString(19, WCPHRCity);
+                    MainReceipt.setString(20, WCPHRState);
+                    MainReceipt.setString(21, WCPHRZipCode);
+                    MainReceipt.setString(22, WCPPlanName);
+                    MainReceipt.setString(23, WCPCarrierName);
+                    MainReceipt.setString(24, String.valueOf(String.valueOf(WCPPayerAreaCode)) + WCPPayerPhoneNumber);
+                    MainReceipt.setString(25, String.valueOf(String.valueOf(WCPCarrierAddress)) + " " + WCPCarrierAddress2);
+                    MainReceipt.setString(26, WCPCarrierCity);
+                    MainReceipt.setString(27, WCPCarrierState);
+                    MainReceipt.setString(28, WCPCarrierZipCode);
+                    MainReceipt.setString(29, WCPAdjudicatorFirstName);
+                    MainReceipt.setString(30, WCPAdjudicatorLastName);
+                    MainReceipt.setString(31, String.valueOf(String.valueOf(WCPAdjudicatorAreaCode)) + WCPAdjudicatorPhoneNumber);
+                    MainReceipt.setString(32, String.valueOf(String.valueOf(WCPAdjudicatorFaxAreaCode)) + WCPAdjudicatorFaxPhoneNumber);
+                    MainReceipt.executeUpdate();
+                    MainReceipt.close();
+                } catch (Exception e) {
+                    helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion Patient_WorkCompPolicy Table ^^" + facilityName + " ##MES#005)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                    Services.DumException("PatientReg2", "SaveDataVictoriaError 5- Insertion Patient_WorkCompPolicy Table :", request, e, this.getServletContext());
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("FormName", "PatientReg2");
+                    Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                    Parser.SetField("Message", "MES#006");
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+                    //return;
+                }
+            }
+            if (MotorVehicleAccidentChk.equals("1")) {
+                try {
+                    final PreparedStatement MainReceipt = conn.prepareStatement(
+                            "INSERT INTO " + Database + ".Patient_AutoInsuranceInfo (PatientRegId,AutoInsuranceInformationChk," +
+                                    "AIIDateofAccident,AIIAutoClaim,AIIAccidentLocationAddress,AIIAccidentLocationCity," +
+                                    "AIIAccidentLocationState,AIIAccidentLocationZipCode,AIIRoleInAccident," +
+                                    "AIITypeOfAutoIOnsurancePolicy,AIIPrefixforReponsibleParty,AIIFirstNameforReponsibleParty," +
+                                    "AIIMiddleNameforReponsibleParty,AIILastNameforReponsibleParty,AIISuffixforReponsibleParty," +
+                                    "AIICarrierResponsibleParty,AIICarrierResponsiblePartyAddress,AIICarrierResponsiblePartyCity," +
+                                    "AIICarrierResponsiblePartyState,AIICarrierResponsiblePartyZipCode," +
+                                    "AIICarrierResponsiblePartyPhoneNumber,AIICarrierResponsiblePartyPolicyNumber," +
+                                    "AIIResponsiblePartyAutoMakeModel,AIIResponsiblePartyLicensePlate," +
+                                    "AIIFirstNameOfYourPolicyHolder,AIILastNameOfYourPolicyHolder," +
+                                    "AIINameAutoInsuranceOfYourVehicle,AIIYourInsuranceAddress,AIIYourInsuranceCity," +
+                                    "AIIYourInsuranceState,AIIYourInsuranceZipCode,AIIYourInsurancePhoneNumber," +
+                                    "AIIYourInsurancePolicyNo,AIIYourLicensePlate,AIIYourCarMakeModelYear,CreatedDate) " +
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                    MainReceipt.setInt(1, PatientRegId);
+                    MainReceipt.setInt(2, Integer.parseInt(AutoInsuranceInformationChk));
+                    //MainReceipt.setString(3, AIIDateofAccident);
+                    if (!AIIDateofAccident.equals(""))
+                        MainReceipt.setString(3, AIIDateofAccident);
+                    else
+                        MainReceipt.setNull(3, Types.DATE);
+                    MainReceipt.setString(4, AIIAutoClaim);
+                    MainReceipt.setString(5, AIIAccidentLocationAddress + " " + AIIAccidentLocationAddress2);
+                    MainReceipt.setString(6, AIIAccidentLocationCity);
+                    MainReceipt.setString(7, AIIAccidentLocationState);
+                    MainReceipt.setString(8, AIIAccidentLocationZipCode);
+                    MainReceipt.setString(9, AIIRoleInAccident);
+                    MainReceipt.setString(10, AIITypeOfAutoIOnsurancePolicy);
+                    MainReceipt.setString(11, AIIPrefixforReponsibleParty);
+                    MainReceipt.setString(12, AIIFirstNameforReponsibleParty);
+                    MainReceipt.setString(13, AIIMiddleNameforReponsibleParty);
+                    MainReceipt.setString(14, AIILastNameforReponsibleParty);
+                    MainReceipt.setString(15, AIISuffixforReponsibleParty);
+                    MainReceipt.setString(16, AIICarrierResponsibleParty);
+                    MainReceipt.setString(17, AIICarrierResponsiblePartyAddress + " " + AIICarrierResponsiblePartyAddress2);
+                    MainReceipt.setString(18, AIICarrierResponsiblePartyCity);
+                    MainReceipt.setString(19, AIICarrierResponsiblePartyState);
+                    MainReceipt.setString(20, AIICarrierResponsiblePartyZipCode);
+                    MainReceipt.setString(21, String.valueOf(String.valueOf(AIICarrierResponsiblePartyAreaCode)) + AIICarrierResponsiblePartyPhoneNumber);
+                    MainReceipt.setString(22, AIICarrierResponsiblePartyPolicyNumber);
+                    MainReceipt.setString(23, AIIResponsiblePartyAutoMakeModel);
+                    MainReceipt.setString(24, AIIResponsiblePartyLicensePlate);
+                    MainReceipt.setString(25, AIIFirstNameOfYourPolicyHolder);
+                    MainReceipt.setString(26, AIILastNameOfYourPolicyHolder);
+                    MainReceipt.setString(27, AIINameAutoInsuranceOfYourVehicle);
+                    MainReceipt.setString(28, String.valueOf(String.valueOf(AIIYourInsuranceAddress)) + " " + AIIYourInsuranceAddress2);
+                    MainReceipt.setString(29, AIIYourInsuranceCity);
+                    MainReceipt.setString(30, AIIYourInsuranceState);
+                    MainReceipt.setString(31, AIIYourInsuranceZipCode);
+                    MainReceipt.setString(32, String.valueOf(String.valueOf(AIIYourInsuranceAreaCode)) + AIIYourInsurancePhoneNumber);
+                    MainReceipt.setString(33, AIIYourInsurancePolicyNo);
+                    MainReceipt.setString(34, AIIYourLicensePlate);
+                    MainReceipt.setString(35, AIIYourCarMakeModelYear);
+                    MainReceipt.executeUpdate();
+                    MainReceipt.close();
+                } catch (Exception e) {
+                    helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion Patient_AutoInsuranceInfo Table ^^" + facilityName + " ##MES#006)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                    Services.DumException("PatientReg2", "SaveDataVictoriaError 6- Insertion Patient_AutoInsuranceInfo Table :", request, e, this.getServletContext());
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("FormName", "PatientReg2");
+                    Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                    Parser.SetField("Message", "MES#007");
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+//                    return;
+                }
+            }
+            if (HealthInsuranceChk.equals("1")) {
+                try {
+                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Patient_HealthInsuranceInfo (PatientRegId,GovtFundedInsurancePlanChk,GFIPMedicare,GFIPMedicaid,GFIPCHIP,GFIPTricare,GFIPVHA,GFIPIndianHealth,InsuranceSubPatient,InsuranceSubGuarantor,InsuranceSubOther,HIPrimaryInsurance,HISubscriberFirstName,HISubscriberLastName,HISubscriberDOB,HISubscriberSSN,HISubscriberRelationtoPatient,HISubscriberGroupNo,HISubscriberPolicyNo,SecondHealthInsuranceChk,SHISecondaryName,SHISubscriberFirstName,SHISubscriberLastName,SHISubscriberRelationtoPatient,SHISubscriberGroupNo,SHISubscriberPolicyNo,CreatedDate) \n VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                    MainReceipt.setInt(1, PatientRegId);
+                    MainReceipt.setInt(2, Integer.parseInt(GovtFundedInsurancePlanChk));
+                    MainReceipt.setInt(3, Integer.parseInt(GFIPMedicare));
+                    MainReceipt.setInt(4, Integer.parseInt(GFIPMedicaid));
+                    MainReceipt.setInt(5, Integer.parseInt(GFIPCHIP));
+                    MainReceipt.setInt(6, Integer.parseInt(GFIPTricare));
+                    MainReceipt.setInt(7, Integer.parseInt(GFIPVHA));
+                    MainReceipt.setInt(8, Integer.parseInt(GFIPIndianHealth));
+                    MainReceipt.setString(9, InsuranceSubPatient.toUpperCase());
+                    MainReceipt.setString(10, InsuranceSubGuarantor.toUpperCase());
+                    MainReceipt.setString(11, InsuranceSubOther.toUpperCase());
+                    MainReceipt.setString(12, HIPrimaryInsurance.toUpperCase());
+                    MainReceipt.setString(13, HISubscriberFirstName.toUpperCase());
+                    MainReceipt.setString(14, HISubscriberLastName.toUpperCase());
+                    MainReceipt.setString(15, HISubscriberDOB);
+                    MainReceipt.setString(16, HISubscriberSSN);
+                    MainReceipt.setString(17, HISubscriberRelationtoPatient.toUpperCase());
+                    MainReceipt.setString(18, HISubscriberGroupNo);
+                    MainReceipt.setString(19, HISubscriberPolicyNo);
+                    MainReceipt.setInt(20, Integer.parseInt(SecondHealthInsuranceChk));
+                    MainReceipt.setString(21, SHISecondaryName.toUpperCase());
+                    MainReceipt.setString(22, SHISubscriberFirstName.toUpperCase());
+                    MainReceipt.setString(23, SHISubscriberLastName.toUpperCase());
+                    MainReceipt.setString(24, SHISubscriberRelationtoPatient.toUpperCase());
+                    MainReceipt.setString(25, SHISubscriberGroupNo);
+                    MainReceipt.setString(26, SHISubscriberPolicyNo);
+                    MainReceipt.executeUpdate();
+                    MainReceipt.close();
+                } catch (Exception e) {
+                    helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion Patient_HealthInsuranceInfo Table ^^" + facilityName + " ##MES#007)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                    Services.DumException("PatientReg2", "SaveDataVictoriaError 7- Insertion Patient_HealthInsuranceInfo Table", request, e, this.getServletContext());
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.SetField("FormName", "PatientReg2");
+                    Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                    Parser.SetField("Message", "MES#008");
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+//                    return;
+                }
+            }
+            try {
+                final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".MarketingInfo (PatientRegId," +
+                        " MFFirstVisit,MFReturnPat,MFInternetFind,Facebook,MapSearch,GoogleSearch,VERWebsite,OnlineAdvertisements,OnlineReviews," +
+                        " Twitter,LinkedIn,EmailBlast,YouTube,TV,Billboard,Radio,Brochure,DirectMail,CitizensDeTar,LiveWorkNearby,FamilyFriend," +
+                        " FamilyFriend_text,UrgentCare,UrgentCare_text,NewspaperMagazine,NewspaperMagazine_text,School,School_text," +
+                        " Hotel,Hotel_text,MFPhysician,CreatedDate,EmployerSentMe,EmployerSentMe_text,MFPhysicianRefChk,PatientCell,RecInitial,WebsiteAds) \n " +
+                        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?) ");
+                MainReceipt.setInt(1, PatientRegId);
+                MainReceipt.setInt(2, Integer.parseInt(MFFirstVisit));
+                MainReceipt.setInt(3, Integer.parseInt(MFReturnPat));
+                MainReceipt.setInt(4, Integer.parseInt(MFInternetFind));
+                MainReceipt.setString(5, Facebook);
+                MainReceipt.setString(6, MapSearch);
+                MainReceipt.setString(7, GoogleSearch);
+                MainReceipt.setString(8, VERWebsite);
+                MainReceipt.setString(9, OnlineAdvertisements);
+                MainReceipt.setString(10, OnlineReviews);
+                MainReceipt.setString(11, Twitter);
+                MainReceipt.setString(12, LinkedIn);
+                MainReceipt.setString(13, EmailBlast);
+                MainReceipt.setString(14, YouTube);
+                MainReceipt.setString(15, TV);
+                MainReceipt.setString(16, Billboard);
+                MainReceipt.setString(17, Radio);
+                MainReceipt.setString(18, Brochure);
+                MainReceipt.setString(19, DirectMail);
+                MainReceipt.setString(20, CitizensDeTar);
+                MainReceipt.setString(21, LiveWorkNearby);
+                MainReceipt.setString(22, FamilyFriend);
+                MainReceipt.setString(23, FamilyFriend_text);
+                MainReceipt.setString(24, UrgentCare);
+                MainReceipt.setString(25, UrgentCare_text);
+                MainReceipt.setString(26, NewspaperMagazine);
+                MainReceipt.setString(27, NewspaperMagazine_text);
+                MainReceipt.setString(28, School);
+                MainReceipt.setString(29, School_text);
+                MainReceipt.setString(30, Hotel);
+                MainReceipt.setString(31, Hotel_text);
+                MainReceipt.setString(32, MFPhysician);
+                MainReceipt.setString(33, EmployerSentMe);
+                MainReceipt.setString(34, EmployerSentMe_text);
+                MainReceipt.setString(35, MFPhysicianRefChk);
+                MainReceipt.setString(36, PatientCell);
+                MainReceipt.setString(37, RecInitial);
+                MainReceipt.setString(38, WebsiteAds);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+            } catch (Exception e) {
+                helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion MarketingInfo Table ^^" + facilityName + " ##MES#008)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                Services.DumException("PatientReg2", "SaveDataVictoriaError 8- Insertion MarketingInfo Table", request, e, this.getServletContext());
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                Parser.SetField("Message", "MES#009");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+//                return;
+            }
+            String PatientName = null;
+            Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from " + Database + ".PatientReg where ID = " + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                PatientName = rset.getString(1);
+            }
+            rset.close();
+            stmt.close();
+            String Message = "";
+            String CDCFlag = "0";
+            String InsertCOVIDRegReply = "0";
+            if (ClientIndex == 9 && ReasonVisit != null) {
+                ReasonVisit = ReasonVisit.replaceAll(" ", "");
+                if (ReasonVisit.toUpperCase().equals("COVIDTESTING")) {
+                    InsertCOVIDRegReply = this.InsertCOVIDReg(request, response, out, conn, String.valueOf(PatientRegId));
+                    if (Integer.parseInt(InsertCOVIDRegReply) > 0) {
+                        Message = "and COVID Form Also Registered Successfully.";
+                        CDCFlag = "1";
+                    } else {
+                        Message = "and COVID Form Not Registered. ";
+                        CDCFlag = "0";
+                    }
+                }
+                Query = "Update victoria.PatientVisit set CDCFlag = '" + CDCFlag + "' where Id = " + VisitId;
+                stmt = conn.createStatement();
+                stmt.executeUpdate(Query);
+                stmt.close();
+            }
+            if (ClientId.equals("Victoria-ER")) {
+                String temp = SaveBundle_Victoria(request, out, conn, response, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION");
+                System.out.println("temp " + temp);
+//                .print();
+                String[] arr = temp.split("~");
+                String FileName = arr[2];
+                String outputFilePath = arr[1];
+                String pageCount = arr[0];
+                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully " + Message + ". Please walk to the front door and Press the buzzer.  DATED: " + Date);
+                Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully " + Message + ". Please wait for further processing.  DATED: " + Date);
+                Parser.SetField("MRN", "MRN: " + MRN);
+                Parser.SetField("FormName", "PatientReg");
+                Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientIndex);
+                Parser.SetField("pageCount", String.valueOf(pageCount));
+                Parser.SetField("FileName", String.valueOf(FileName));
+                Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+                Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
+                Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
+                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageVictoria.html");
+            } else {
+                final Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully " + Message + ". Please walk to the front door and Press the buzzer.  DATED: " + Date);
+                Parser.SetField("FormName", String.valueOf("PatientReg2"));
+                Parser.SetField("MRN", String.valueOf("MRN: " + MRN));
+                Parser.SetField("ActionID", String.valueOf("Victoria_2&ClientId=" + ClientId));
+                Parser.SetField("ClientId", String.valueOf(ClientId));
+                Parser.GenerateHtml(out, String.valueOf(String.valueOf(Services.GetHtmlPath(servletContext))) + "Exception/Message.html");
+            }
+
+        } catch (Exception e2) {
+            helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Main Catch ^^" + facilityName + " ##MES#010)", servletContext, e2, "PatientReg2", "SaveDataVictoria", conn);
+            Services.DumException("PatientReg2", "SaveDataVictoria -- " + Query + " ", request, e2, this.getServletContext());
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName", "PatientReg2");
+            Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+            Parser.SetField("Message", "MES#010");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+        }
+    }
+
+    
+    void SaveDataVictoria_2_2(HttpServletRequest request, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, UtilityHelper helper, HashMap<String, String> valuemap, PrintWriter out, String IDs, String InsuranceIDsF, String InsuranceIDsB, String clientId) throws FileNotFoundException {
+        String facilityName = "";
+
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        String Database = "";
+        String DirectoryName = "";
+        int MRN = 0;
+        String ExtendedMRN = "0";
+        int PatientRegId = 0;
+        String Date = "";
+        final String ClientId = clientId;//"";
+        int ClientIndex = 0;
+        String Title = null;
+        String FirstName = null;
+        String LastName = null;
+        String MiddleInitial = null;
+        String County = null;
+        String DOB = null;
+        String Month = "00";
+        String Day = "00";
+        String Year = "0000";
+        String Age = null;
+        String gender = null;
+        String Email = null;
+        String ConfirmEmail = null;
+        String MaritalStatus = null;
+        String AreaCode = null;
+        String PhNumber = null;
+        String Address = null;
+        String Address2 = null;
+        String City = null;
+        String State = null;
+        String ZipCode = null;
+        String Country = null;
+        String Ethnicity = null;
+        String Race = null;
+        final String Ethnicity_OthersText = null;
+        String SSN = null;
+        String EmployementChk = "0";
+        String Employer = null;
+        String Occupation = null;
+        String EmpContact = null;
+        String PrimaryCarePhysicianChk = "0";
+        String PriCarePhy = null;
+        String ReasonVisit = null;
+
+        String SympChkCOVID = "0";
+        String DateSympOnset = null;
+        String SympFever = "0";
+        String SympCough = "0";
+        String SympShortBreath = "0";
+        String SympFatigue = "0";
+        String SympMuscBodyAches = "0";
+        String SympHeadache = "0";
+        String SympLossTaste = "0";
+        String SympSoreThroat = "0";
+        String SympCongestionRunNos = "0";
+        String SympNauseaVomit = "0";
+        String SympDiarrhea = "0";
+        String SympPerPainChest = "0";
+        String SympNewConfusion = "0";
+        String SympInabWake = "0";
+        String SympOthers = "0";
+        String SympOthersTxt = "";
+        String EmpHealthChk = null;
+        String PregChk = null;
+        String TestForTravel = null;
+
+        String PriCarePhyAddress = "";
+        String PriCarePhyAddress2 = "";
+        String PriCarePhyCity = null;
+        String PriCarePhyState = null;
+        String PriCarePhyZipCode = null;
+        String PatientMinorChk = "0";
+        String GuarantorChk = "0";
+        String GuarantorEmployer = null;
+        String GuarantorEmployerAreaCode = null;
+        String GuarantorEmployerPhNumber = null;
+        String GuarantorEmployerAddress = "";
+        String GuarantorEmployerAddress2 = "";
+        String GuarantorEmployerCity = null;
+        String GuarantorEmployerState = null;
+        String GuarantorEmployerZipCode = null;
+        String WorkersCompPolicyChk = "0";
+        String WCPDateofInjury = null;
+        String WCPCaseNo = null;
+        String WCPGroupNo = null;
+        String WCPMemberId = null;
+        String WCPInjuryRelatedAutoMotorAccident = "0";
+        String WCPInjuryRelatedWorkRelated = "0";
+        String WCPInjuryRelatedOtherAccident = "0";
+        String WCPInjuryRelatedNoAccident = "0";
+        String WCPInjuryOccurVehicle = "0";
+        String WCPInjuryOccurWork = "0";
+        String WCPInjuryOccurHome = "0";
+        String WCPInjuryOccurOther = "0";
+        String WCPInjuryDescription = null;
+        String WCPHRFirstName = null;
+        String WCPHRLastName = null;
+        String WCPHRAreaCode = null;
+        String WCPHRPhoneNumber = null;
+        String WCPHRAddress = "";
+        String WCPHRAddress2 = "";
+        String WCPHRCity = null;
+        String WCPHRState = null;
+        String WCPHRZipCode = null;
+        String WCPPlanName = null;
+        String WCPCarrierName = null;
+        String WCPPayerAreaCode = null;
+        String WCPPayerPhoneNumber = null;
+        String WCPCarrierAddress = "";
+        String WCPCarrierAddress2 = "";
+        String WCPCarrierCity = null;
+        String WCPCarrierState = null;
+        String WCPCarrierZipCode = null;
+        String WCPAdjudicatorFirstName = null;
+        String WCPAdjudicatorLastName = null;
+        String WCPAdjudicatorAreaCode = null;
+        String WCPAdjudicatorPhoneNumber = null;
+        String WCPAdjudicatorFaxAreaCode = null;
+        String WCPAdjudicatorFaxPhoneNumber = null;
+        String MotorVehicleAccidentChk = "0";
+        String AutoInsuranceInformationChk = "0";
+        String AIIDateofAccident = "";
+        String AIIAutoClaim = null;
+        String AIIAccidentLocationAddress = null;
+        String AIIAccidentLocationAddress2 = null;
+        String AIIAccidentLocationCity = null;
+        String AIIAccidentLocationState = null;
+        String AIIAccidentLocationZipCode = null;
+        String AIIRoleInAccident = null;
+        String AIITypeOfAutoIOnsurancePolicy = null;
+        String AIIPrefixforReponsibleParty = null;
+        String AIIFirstNameforReponsibleParty = null;
+        String AIIMiddleNameforReponsibleParty = null;
+        String AIILastNameforReponsibleParty = null;
+        String AIISuffixforReponsibleParty = null;
+        String AIICarrierResponsibleParty = null;
+        String AIICarrierResponsiblePartyAddress = null;
+        String AIICarrierResponsiblePartyAddress2 = null;
+        String AIICarrierResponsiblePartyCity = null;
+        String AIICarrierResponsiblePartyState = null;
+        String AIICarrierResponsiblePartyZipCode = null;
+        String AIICarrierResponsiblePartyAreaCode = null;
+        String AIICarrierResponsiblePartyPhoneNumber = null;
+        String AIICarrierResponsiblePartyPolicyNumber = null;
+        String AIIResponsiblePartyAutoMakeModel = null;
+        String AIIResponsiblePartyLicensePlate = null;
+        String AIIFirstNameOfYourPolicyHolder = null;
+        String AIILastNameOfYourPolicyHolder = null;
+        String AIINameAutoInsuranceOfYourVehicle = null;
+        String AIIYourInsuranceAddress = null;
+        String AIIYourInsuranceAddress2 = null;
+        String AIIYourInsuranceCity = null;
+        String AIIYourInsuranceState = null;
+        String AIIYourInsuranceZipCode = null;
+        String AIIYourInsuranceAreaCode = null;
+        String AIIYourInsurancePhoneNumber = null;
+        String AIIYourInsurancePolicyNo = null;
+        String AIIYourLicensePlate = null;
+        String AIIYourCarMakeModelYear = null;
+        String HealthInsuranceChk = "0";
+        String GovtFundedInsurancePlanChk = "0";
+        String GFIPMedicare = "0";
+        String GFIPMedicaid = "0";
+        String GFIPCHIP = "0";
+        String GFIPTricare = "0";
+        String GFIPVHA = "0";
+        String GFIPIndianHealth = "0";
+        String InsuranceSubPatient = "0";
+        String InsuranceSubGuarantor = "0";
+        String InsuranceSubOther = "0";
+        String HIPrimaryInsurance = null;
+        String HISubscriberFirstName = null;
+        String HISubscriberLastName = null;
+        String HISubscriberDOB = null;
+        String HISubscriberSSN = null;
+        String HISubscriberRelationtoPatient = null;
+        String HISubscriberGroupNo = null;
+        String HISubscriberPolicyNo = null;
+        String SecondHealthInsuranceChk = null;
+        String SHISecondaryName = "";
+        String SHISubscriberFirstName = "";
+        String SHISubscriberLastName = "";
+        String SHISubscriberDOB = "";
+        String SHISubscriberRelationtoPatient = "";
+        String SHISubscriberGroupNo = "";
+        String SHISubscriberPolicyNo = "";
+        String MFFirstVisit = "";
+
+        String MFReturnPat = "";
+        String MFInternetFind = "";
+        String Facebook = "";
+        String MapSearch = "";
+        String GoogleSearch = "";
+        String VERWebsite = "";
+        String WebsiteAds = "";
+        String OnlineAdvertisements = "";
+        String OnlineReviews = "";
+        String Twitter = "";
+        String LinkedIn = "";
+        String EmailBlast = "";
+        String YouTube = "";
+        String TV = "";
+        String Billboard = "";
+        String Radio = "";
+        String Brochure = "";
+        String DirectMail = "";
+        String CitizensDeTar = "";
+        String LiveWorkNearby = "";
+        String FamilyFriend = "";
+        String FamilyFriend_text = "";
+        String UrgentCare = "";
+        String UrgentCare_text = "";
+        String NewspaperMagazine = "";
+        String NewspaperMagazine_text = "";
+        String School = "";
+        String School_text = "";
+        String Hotel = "";
+        String Hotel_text = "";
+        String EmployerSentMe = "";
+        String EmployerSentMe_text = "";
+        String PatientCell = "";
+        String MFPhysicianRefChk = "";
+        String MFPhysician = "";
+        String RecInitial = "";
+        int VisitId = 0;
+        try {
+
+//                        "INSERT INTO oe.EligibilityInquiry (PatientMRN,DateofService,TraceId ,PolicyStatus,strmsg, " +
+//                                "Name, DateofBirth, Gender, InsuranceNum, GediPayerId, CreatedBy, CreatedDate,ResponseType) " +
+//                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,now(),?) ");
+            PreparedStatement ps = conn.prepareStatement("Select Id, dbname,DirectoryName from oe.clients where ltrim(rtrim(UPPER(name))) = ?");
+            ps.setString(1, ClientId);
+
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                ClientIndex = rset.getInt(1);
+                Database = rset.getString(2);
+                DirectoryName = rset.getString(3);
+            }
+            rset.close();
+            ps.close();
+
+            for (String name: valuemap.keySet()) {
+                String key = name.toString();
+                String value = valuemap.get(name).toString();
+                System.out.println(key + " " + value);
+            }
+
+//            System.out.println("query 1 converted");
+//            HttpServletRequest request;
+            facilityName = helper.getFacilityName(request, conn, servletContext, ClientIndex);
+            if (valuemap.get(Title)== null) {
+                Title = "Mr.";
+            } else {
+                Title = valuemap.get("Title").trim();
+            }
+            if (valuemap.get("FirstName") == null) {
+                FirstName = "";
+            } else {
+                FirstName = valuemap.get("FirstName").trim();
+            }
+            if (valuemap.get("LastName") == null) {
+                LastName = "";
+            } else {
+                LastName = valuemap.get("LastName").trim();
+            }
+            if (valuemap.get("MiddleInitial") == null) {
+                MiddleInitial = "";
+            } else {
+                MiddleInitial = valuemap.get("MiddleInitial").trim();
+            }
+
+            if (valuemap.get("Month") == null) {
+                Month = "";
+            } else {
+                Month = valuemap.get("Month").trim();
+            }
+            if (valuemap.get("Day") == null) {
+                Day = "";
+            } else {
+                Day = valuemap.get("Day").trim();
+            }
+            if (valuemap.get("Year") == null) {
+                Year = "";
+            } else {
+                Year = valuemap.get("Year").trim();
+            }
+            DOB = Year + "-" + Month + "-" + Day;
+
+//            if (valuemap.get("DOB") == null) {
+//                DOB = "0000-00-00";
+//            } else {
+//                DOB = valuemap.get("DOB").trim();
+//                DOB = String.valueOf(String.valueOf(DOB.substring(6, 10))) + "-" + DOB.substring(0, 2) + "-" + DOB.substring(3, 5);
+//            }
+            if (valuemap.get("Age") == null) {
+                Age = "";
+            } else {
+                Age = valuemap.get("Age").trim();
+            }
+            if (valuemap.get("gender") == null) {
+                gender = "";
+            } else {
+                gender = valuemap.get("gender").trim();
+            }
+
+
+            int PatientFound = 0;
+            String FoundMRN = "";
+            try {
+                ps = conn.prepareStatement(" Select COUNT(*), IFNULL(MRN,0) from " + Database + ".PatientReg  " +
+                        "where Status = 0 and ltrim(rtrim(UPPER(FirstName))) = ?  and " +
+                        " ltrim(rtrim(UPPER(LastName))) = ? and DOB = ?");
+                ps.setString(1, FirstName.trim().toUpperCase());
+                ps.setString(2, LastName.trim().toUpperCase());
+                ps.setString(3, DOB);
+
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    PatientFound = rset.getInt(1);
+                    FoundMRN = rset.getString(2);
+                }
+                rset.close();
+                ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("query " + ps.toString());
+                System.out.println("Error -> " + e.getMessage());
+            }
+
+//            System.out.println("query 2 converted");
+
+
+            if (PatientFound > 0) {
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("Title", "Patient Already Found. MRN: " + FoundMRN);
+                Parser.SetField("Text", "Please Proceed to Front Desk with the MRN.");
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientId + "");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Warning.html");
+                return;
+            }
+
+
+            if (valuemap.get("Email") == null) {
+                Email = "";
+            } else {
+                Email = valuemap.get("Email").trim();
+            }
+            if (valuemap.get("ConfirmEmail") == null) {
+                ConfirmEmail = "";
+            } else {
+                ConfirmEmail = valuemap.get("ConfirmEmail").trim();
+            }
+            if (valuemap.get("MaritalStatus") == null) {
+                MaritalStatus = "";
+            } else {
+                MaritalStatus = valuemap.get("MaritalStatus").trim();
+            }
+            if (valuemap.get("AreaCode") == null) {
+                AreaCode = "";
+            } else {
+                AreaCode = valuemap.get("AreaCode").trim();
+            }
+            if (valuemap.get("PhNumber") == null) {
+                PhNumber = "";
+            } else {
+                PhNumber = valuemap.get("PhNumber").trim();
+            }
+            if (valuemap.get("Address") == null) {
+                Address = "";
+            } else {
+                Address = valuemap.get("Address").trim();
+            }
+            if (valuemap.get("Address2") == null) {
+                Address2 = "";
+            } else {
+                Address2 = valuemap.get("Address2").trim();
+            }
+            if (valuemap.get("City") == null) {
+                City = "";
+            } else {
+                City = valuemap.get("City").trim();
+            }
+            if (valuemap.get("State") == null) {
+                State = "";
+            } else {
+                State = valuemap.get("State").trim();
+            }
+            if (valuemap.get("County") == null) {
+                County = "";
+            } else {
+                County = valuemap.get("County").trim();
+            }
+            if (valuemap.get("Country") == null) {
+                Country = "";
+            } else {
+                Country = valuemap.get("Country").trim();
+            }
+            if (valuemap.get("ZipCode") == null) {
+                ZipCode = "";
+            } else {
+                ZipCode = valuemap.get("ZipCode").trim();
+            }
+            if (valuemap.get("Ethnicity") == null) {
+                Ethnicity = "Not Specified";
+            } else {
+                Ethnicity = valuemap.get("Ethnicity").trim();
+            }
+            if (valuemap.get("Race") == null) {
+                Race = "Not Specified";
+            } else {
+                Race = valuemap.get("Race").trim();
+            }
+            if (valuemap.get("SSN") == null) {
+                SSN = "";
+            } else {
+                SSN = valuemap.get("SSN").trim();
+            }
+            if (valuemap.get("ReasonVisit") == null) {
+                ReasonVisit = "";
+            } else {
+                ReasonVisit = valuemap.get("ReasonVisit").trim();
+            }
+
+            if (valuemap.get("SympChkCOVID") == null) {
+                SympChkCOVID = "0";
+            } else {
+                SympChkCOVID = valuemap.get("SympChkCOVID").trim();
+            }
+
+            if (valuemap.get("TestForTravelChk") == null) {
+                TestForTravel = "0";
+            } else {
+                TestForTravel = valuemap.get("TestForTravelChk").trim();
+            }
+
+
+            if (valuemap.get("DateSympOnset") == null) {
+                DateSympOnset = "0000-00-00";
+            } else {
+                DateSympOnset = valuemap.get("DateSympOnset").trim();
+//                if (DateSympOnset.length() <= 10)
+//                    DateSympOnset = DateSympOnset.substring(6, 10) + "-" + DateSympOnset.substring(0, 2) + "-" + DateSympOnset.substring(3, 5);
+            }
+
+            if (valuemap.get("SympFever") == null) {
+                SympFever = "0";
+            } else {
+                SympFever = "1";
+            }
+            if (valuemap.get("SympCough") == null) {
+                SympCough = "0";
+            } else {
+                SympCough = "1";
+            }
+            if (valuemap.get("SympShortBreath") == null) {
+                SympShortBreath = "0";
+            } else {
+                SympShortBreath = "1";
+            }
+            if (valuemap.get("SympFatigue") == null) {
+                SympFatigue = "0";
+            } else {
+                SympFatigue = "1";
+            }
+            if (valuemap.get("SympMuscBodyAches") == null) {
+                SympMuscBodyAches = "0";
+            } else {
+                SympMuscBodyAches = "1";
+            }
+            if (valuemap.get("SympHeadache") == null) {
+                SympHeadache = "0";
+            } else {
+                SympHeadache = "1";
+            }
+            if (valuemap.get("SympLossTaste") == null) {
+                SympLossTaste = "0";
+            } else {
+                SympLossTaste = "1";
+            }
+            if (valuemap.get("SympSoreThroat") == null) {
+                SympSoreThroat = "0";
+            } else {
+                SympSoreThroat = "1";
+            }
+            if (valuemap.get("SympCongestionRunNos") == null) {
+                SympCongestionRunNos = "0";
+            } else {
+                SympCongestionRunNos = "1";
+            }
+            if (valuemap.get("SympNauseaVomit") == null) {
+                SympNauseaVomit = "0";
+            } else {
+                SympNauseaVomit = "1";
+            }
+            if (valuemap.get("SympDiarrhea") == null) {
+                SympDiarrhea = "0";
+            } else {
+                SympDiarrhea = "1";
+            }
+            if (valuemap.get("SympPerPainChest") == null) {
+                SympPerPainChest = "0";
+            } else {
+                SympPerPainChest = "1";
+            }
+            if (valuemap.get("SympNewConfusion") == null) {
+                SympNewConfusion = "0";
+            } else {
+                SympNewConfusion = "1";
+            }
+            if (valuemap.get("SympInabWake") == null) {
+                SympInabWake = "0";
+            } else {
+                SympInabWake = "1";
+            }
+            if (valuemap.get("SympOthers") == null) {
+                SympOthers = "0";
+            } else {
+                SympOthers = "1";
+            }
+            if (valuemap.get("SympOthersTxt") == null) {
+                SympOthersTxt = "";
+            } else {
+                SympOthersTxt = valuemap.get("SympOthersTxt").trim();
+            }
+            if (valuemap.get("EmpHealthChk") == null) {
+                EmpHealthChk = "0";
+            } else {
+                EmpHealthChk = valuemap.get("EmpHealthChk").trim();
+            }
+            if (valuemap.get("PregChk") == null) {
+                PregChk = "0";
+            } else {
+                PregChk = valuemap.get("PregChk").trim();
+            }
+
+            if (valuemap.get("EmployementChk") == null) {
+                EmployementChk = "0";
+            } else {
+                EmployementChk = valuemap.get("EmployementChk").trim();
+            }
+            if (EmployementChk.equals("1")) {
+                if (valuemap.get("Employer") == null) {
+                    Employer = "";
+                } else {
+                    Employer = valuemap.get("Employer").trim();
+                }
+                if (valuemap.get("Occupation") == null) {
+                    Occupation = "";
+                } else {
+                    Occupation = valuemap.get("Occupation").trim();
+                }
+                if (valuemap.get("EmpContact") == null) {
+                    EmpContact = "";
+                } else {
+                    EmpContact = valuemap.get("EmpContact").trim();
+                }
+            }
+            if (valuemap.get("PrimaryCarePhysicianChk") == null) {
+                PrimaryCarePhysicianChk = "0";
+            } else {
+                PrimaryCarePhysicianChk = valuemap.get("PrimaryCarePhysicianChk").trim();
+            }
+            if (PrimaryCarePhysicianChk.equals("1")) {
+                if (valuemap.get("PriCarePhy") == null) {
+                    PriCarePhy = "";
+                } else {
+                    PriCarePhy = valuemap.get("PriCarePhy").trim();
+                }
+                if (valuemap.get("PriCarePhyAddress") == null) {
+                    PriCarePhyAddress = "";
+                } else {
+                    PriCarePhyAddress = valuemap.get("PriCarePhyAddress").trim();
+                }
+                if (valuemap.get("PriCarePhyAddress2") == null) {
+                    PriCarePhyAddress2 = "";
+                } else {
+                    PriCarePhyAddress2 = valuemap.get("PriCarePhyAddress2").trim();
+                }
+                if (valuemap.get("PriCarePhyCity") == null) {
+                    PriCarePhyCity = "";
+                } else {
+                    PriCarePhyCity = valuemap.get("PriCarePhyCity").trim();
+                }
+                if (valuemap.get("PriCarePhyState") == null) {
+                    PriCarePhyState = "";
+                } else {
+                    PriCarePhyState = valuemap.get("PriCarePhyState").trim();
+                }
+                if (valuemap.get("PriCarePhyZipCode") == null) {
+                    PriCarePhyZipCode = "";
+                } else {
+                    PriCarePhyZipCode = valuemap.get("PriCarePhyZipCode").trim();
+                }
+            }
+            if (valuemap.get("PatientMinorChk") == null) {
+                PatientMinorChk = "0";
+            } else {
+                PatientMinorChk = valuemap.get("PatientMinorChk").trim();
+            }
+            if (valuemap.get("GuarantorChk") == null) {
+                GuarantorChk = "0";
+            } else {
+                GuarantorChk = valuemap.get("GuarantorChk").trim();
+            }
+            if (valuemap.get("GuarantorEmployer") == null) {
+                GuarantorEmployer = "";
+            } else {
+                GuarantorEmployer = valuemap.get("GuarantorEmployer").trim();
+            }
+            if (valuemap.get("GuarantorEmployerAreaCode") == null) {
+                GuarantorEmployerAreaCode = "";
+            } else {
+                GuarantorEmployerAreaCode = valuemap.get("GuarantorEmployerAreaCode").trim();
+            }
+            if (valuemap.get("GuarantorEmployerPhNumber") == null) {
+                GuarantorEmployerPhNumber = "";
+            } else {
+                GuarantorEmployerPhNumber = valuemap.get("GuarantorEmployerPhNumber").trim();
+            }
+            if (valuemap.get("GuarantorEmployerAddress") == null) {
+                GuarantorEmployerAddress = "";
+            } else {
+                GuarantorEmployerAddress = valuemap.get("GuarantorEmployerAddress").trim();
+            }
+            if (valuemap.get("GuarantorEmployerAddress2") == null) {
+                GuarantorEmployerAddress2 = "";
+            } else {
+                GuarantorEmployerAddress2 = valuemap.get("GuarantorEmployerAddress2").trim();
+            }
+            if (valuemap.get("GuarantorEmployerCity") == null) {
+                GuarantorEmployerCity = "";
+            } else {
+                GuarantorEmployerCity = valuemap.get("GuarantorEmployerCity").trim();
+            }
+            if (valuemap.get("GuarantorEmployerState") == null) {
+                GuarantorEmployerState = "";
+            } else {
+                GuarantorEmployerState = valuemap.get("GuarantorEmployerState").trim();
+            }
+            if (valuemap.get("GuarantorEmployerZipCode") == null) {
+                GuarantorEmployerZipCode = "";
+            } else {
+                GuarantorEmployerZipCode = valuemap.get("GuarantorEmployerZipCode").trim();
+            }
+            if (valuemap.get("WorkersCompPolicyChk") == null) {
+                WorkersCompPolicyChk = "0";
+            } else {
+                WorkersCompPolicyChk = valuemap.get("WorkersCompPolicyChk").trim();
+            }
+            if (WorkersCompPolicyChk.equals("1")) {
+                if (valuemap.get("WCPDateofInjury") == null) {
+                    WCPDateofInjury = "0000-00-00";
+                } else {
+                    WCPDateofInjury = valuemap.get("WCPDateofInjury").trim();
+//                    WCPDateofInjury = String.valueOf(String.valueOf(WCPDateofInjury.substring(6, 10))) + "-" + WCPDateofInjury.substring(0, 2) + "-" + WCPDateofInjury.substring(3, 5);
+                }
+                if (valuemap.get("WCPCaseNo") == null) {
+                    WCPCaseNo = "";
+                } else {
+                    WCPCaseNo = valuemap.get("WCPCaseNo").trim();
+                }
+                if (valuemap.get("WCPGroupNo") == null) {
+                    WCPGroupNo = "";
+                } else {
+                    WCPGroupNo = valuemap.get("WCPGroupNo").trim();
+                }
+                if (valuemap.get("WCPMemberId") == null) {
+                    WCPMemberId = "";
+                } else {
+                    WCPMemberId = valuemap.get("WCPMemberId").trim();
+                }
+                if (valuemap.get("WCPInjuryRelatedAutoMotorAccident") == null) {
+                    WCPInjuryRelatedAutoMotorAccident = "0";
+                } else {
+                    WCPInjuryRelatedAutoMotorAccident = "1";
+                }
+                if (valuemap.get("WCPInjuryRelatedWorkRelated") == null) {
+                    WCPInjuryRelatedWorkRelated = "0";
+                } else {
+                    WCPInjuryRelatedWorkRelated = "1";
+                }
+                if (valuemap.get("WCPInjuryRelatedOtherAccident") == null) {
+                    WCPInjuryRelatedOtherAccident = "0";
+                } else {
+                    WCPInjuryRelatedOtherAccident = "1";
+                }
+                if (valuemap.get("WCPInjuryRelatedNoAccident") == null) {
+                    WCPInjuryRelatedNoAccident = "0";
+                } else {
+                    WCPInjuryRelatedNoAccident = "1";
+                }
+                if (valuemap.get("WCPInjuryOccurVehicle") == null) {
+                    WCPInjuryOccurVehicle = "0";
+                } else {
+                    WCPInjuryOccurVehicle = "1";
+                }
+                if (valuemap.get("WCPInjuryOccurWork") == null) {
+                    WCPInjuryOccurWork = "0";
+                } else {
+                    WCPInjuryOccurWork = "1";
+                }
+                if (valuemap.get("WCPInjuryOccurHome") == null) {
+                    WCPInjuryOccurHome = "0";
+                } else {
+                    WCPInjuryOccurHome = "1";
+                }
+                if (valuemap.get("WCPInjuryOccurOther") == null) {
+                    WCPInjuryOccurOther = "0";
+                } else {
+                    WCPInjuryOccurOther = "1";
+                }
+                if (valuemap.get("WCPInjuryDescription") == null) {
+                    WCPInjuryDescription = "";
+                } else {
+                    WCPInjuryDescription = valuemap.get("WCPInjuryDescription").trim();
+                }
+                if (valuemap.get("WCPHRFirstName") == null) {
+                    WCPHRFirstName = "";
+                } else {
+                    WCPHRFirstName = valuemap.get("WCPHRFirstName").trim();
+                }
+                if (valuemap.get("WCPHRLastName") == null) {
+                    WCPHRLastName = "";
+                } else {
+                    WCPHRLastName = valuemap.get("WCPHRLastName").trim();
+                }
+                if (valuemap.get("WCPHRAreaCode") == null) {
+                    WCPHRAreaCode = "";
+                } else {
+                    WCPHRAreaCode = valuemap.get("WCPHRAreaCode").trim();
+                }
+                if (valuemap.get("WCPHRPhoneNumber") == null) {
+                    WCPHRPhoneNumber = "";
+                } else {
+                    WCPHRPhoneNumber = valuemap.get("WCPHRPhoneNumber").trim();
+                }
+                if (valuemap.get("WCPHRAddress") == null) {
+                    WCPHRAddress = "";
+                } else {
+                    WCPHRAddress = valuemap.get("WCPHRAddress").trim();
+                }
+                if (valuemap.get("WCPHRAddress2") == null) {
+                    WCPHRAddress2 = "";
+                } else {
+                    WCPHRAddress2 = valuemap.get("WCPHRAddress2").trim();
+                }
+                if (valuemap.get("WCPHRCity") == null) {
+                    WCPHRCity = "";
+                } else {
+                    WCPHRCity = valuemap.get("WCPHRCity").trim();
+                }
+                if (valuemap.get("WCPHRState") == null) {
+                    WCPHRState = "";
+                } else {
+                    WCPHRState = valuemap.get("WCPHRState").trim();
+                }
+                if (valuemap.get("WCPHRZipCode") == null) {
+                    WCPHRZipCode = "";
+                } else {
+                    WCPHRZipCode = valuemap.get("WCPHRZipCode").trim();
+                }
+                if (valuemap.get("WCPPlanName") == null) {
+                    WCPPlanName = "";
+                } else {
+                    WCPPlanName = valuemap.get("WCPPlanName").trim();
+                }
+                if (valuemap.get("WCPCarrierName") == null) {
+                    WCPCarrierName = "";
+                } else {
+                    WCPCarrierName = valuemap.get("WCPCarrierName").trim();
+                }
+                if (valuemap.get("WCPPayerAreaCode") == null) {
+                    WCPPayerAreaCode = "";
+                } else {
+                    WCPPayerAreaCode = valuemap.get("WCPPayerAreaCode").trim();
+                }
+                if (valuemap.get("WCPPayerPhoneNumber") == null) {
+                    WCPPayerPhoneNumber = "";
+                } else {
+                    WCPPayerPhoneNumber = valuemap.get("WCPPayerPhoneNumber").trim();
+                }
+                if (valuemap.get("WCPCarrierAddress") == null) {
+                    WCPCarrierAddress = "";
+                } else {
+                    WCPCarrierAddress = valuemap.get("WCPCarrierAddress").trim();
+                }
+                if (valuemap.get("WCPCarrierAddress2") == null) {
+                    WCPCarrierAddress2 = "";
+                } else {
+                    WCPCarrierAddress2 = valuemap.get("WCPCarrierAddress2").trim();
+                }
+                if (valuemap.get("WCPCarrierCity") == null) {
+                    WCPCarrierCity = "";
+                } else {
+                    WCPCarrierCity = valuemap.get("WCPCarrierCity").trim();
+                }
+                if (valuemap.get("WCPCarrierState") == null) {
+                    WCPCarrierState = "";
+                } else {
+                    WCPCarrierState = valuemap.get("WCPCarrierState").trim();
+                }
+                if (valuemap.get("WCPCarrierZipCode") == null) {
+                    WCPCarrierZipCode = "";
+                } else {
+                    WCPCarrierZipCode = valuemap.get("WCPCarrierZipCode").trim();
+                }
+                if (valuemap.get("WCPAdjudicatorFirstName") == null) {
+                    WCPAdjudicatorFirstName = "";
+                } else {
+                    WCPAdjudicatorFirstName = valuemap.get("WCPAdjudicatorFirstName").trim();
+                }
+                if (valuemap.get("WCPAdjudicatorLastName") == null) {
+                    WCPAdjudicatorLastName = "";
+                } else {
+                    WCPAdjudicatorLastName = valuemap.get("WCPAdjudicatorLastName").trim();
+                }
+                if (valuemap.get("WCPAdjudicatorAreaCode") == null) {
+                    WCPAdjudicatorAreaCode = "";
+                } else {
+                    WCPAdjudicatorAreaCode = valuemap.get("WCPAdjudicatorAreaCode").trim();
+                }
+                if (valuemap.get("WCPAdjudicatorPhoneNumber") == null) {
+                    WCPAdjudicatorPhoneNumber = "";
+                } else {
+                    WCPAdjudicatorPhoneNumber = valuemap.get("WCPAdjudicatorPhoneNumber").trim();
+                }
+                if (valuemap.get("WCPAdjudicatorFaxAreaCode") == null) {
+                    WCPAdjudicatorFaxAreaCode = "";
+                } else {
+                    WCPAdjudicatorFaxAreaCode = valuemap.get("WCPAdjudicatorFaxAreaCode").trim();
+                }
+                if (valuemap.get("WCPAdjudicatorFaxPhoneNumber") == null) {
+                    WCPAdjudicatorFaxPhoneNumber = "";
+                } else {
+                    WCPAdjudicatorFaxPhoneNumber = valuemap.get("WCPAdjudicatorFaxPhoneNumber").trim();
+                }
+            }
+            if (valuemap.get("MotorVehicleAccidentChk") == null) {
+                MotorVehicleAccidentChk = "0";
+            } else {
+                MotorVehicleAccidentChk = valuemap.get("MotorVehicleAccidentChk").trim();
+            }
+            if (MotorVehicleAccidentChk.equals("1")) {
+                if (valuemap.get("AutoInsuranceInformationChk") == null) {
+                    AutoInsuranceInformationChk = "0";
+                } else {
+                    AutoInsuranceInformationChk = valuemap.get("AutoInsuranceInformationChk").trim();
+                }
+                if (AutoInsuranceInformationChk.equals("1")) {
+                    if (valuemap.get("AIIDateofAccident") == null) {
+                        AIIDateofAccident = "0000-00-00";
+                    } else {
+                        AIIDateofAccident = valuemap.get("AIIDateofAccident").trim();
+//                        AIIDateofAccident = String.valueOf(String.valueOf(AIIDateofAccident.substring(6, 10))) + "-" + AIIDateofAccident.substring(0, 2) + "-" + AIIDateofAccident.substring(3, 5);
+                    }
+                    if (valuemap.get("AIIAutoClaim") == null) {
+                        AIIAutoClaim = "";
+                    } else {
+                        AIIAutoClaim = valuemap.get("AIIAutoClaim").trim();
+                    }
+                    if (valuemap.get("AIIAccidentLocationAddress") == null) {
+                        AIIAccidentLocationAddress = "";
+                    } else {
+                        AIIAccidentLocationAddress = valuemap.get("AIIAccidentLocationAddress").trim();
+                    }
+                    if (valuemap.get("AIIAccidentLocationAddress2") == null) {
+                        AIIAccidentLocationAddress2 = "";
+                    } else {
+                        AIIAccidentLocationAddress2 = valuemap.get("AIIAccidentLocationAddress2").trim();
+                    }
+                    if (valuemap.get("AIIAccidentLocationCity") == null) {
+                        AIIAccidentLocationCity = "";
+                    } else {
+                        AIIAccidentLocationCity = valuemap.get("AIIAccidentLocationCity").trim();
+                    }
+                    if (valuemap.get("AIIAccidentLocationState") == null) {
+                        AIIAccidentLocationState = "";
+                    } else {
+                        AIIAccidentLocationState = valuemap.get("AIIAccidentLocationState").trim();
+                    }
+                    if (valuemap.get("AIIAccidentLocationZipCode") == null) {
+                        AIIAccidentLocationZipCode = "";
+                    } else {
+                        AIIAccidentLocationZipCode = valuemap.get("AIIAccidentLocationZipCode").trim();
+                    }
+                    if (valuemap.get("AIIRoleInAccident") == null) {
+                        AIIRoleInAccident = "";
+                    } else {
+                        AIIRoleInAccident = valuemap.get("AIIRoleInAccident").trim();
+                    }
+                    if (valuemap.get("AIITypeOfAutoIOnsurancePolicy") == null) {
+                        AIITypeOfAutoIOnsurancePolicy = "";
+                    } else {
+                        AIITypeOfAutoIOnsurancePolicy = valuemap.get("AIITypeOfAutoIOnsurancePolicy").trim();
+                    }
+                    if (valuemap.get("AIIPrefixforReponsibleParty") == null) {
+                        AIIPrefixforReponsibleParty = "";
+                    } else {
+                        AIIPrefixforReponsibleParty = valuemap.get("AIIPrefixforReponsibleParty").trim();
+                    }
+                    if (valuemap.get("AIIFirstNameforReponsibleParty") == null) {
+                        AIIFirstNameforReponsibleParty = "";
+                    } else {
+                        AIIFirstNameforReponsibleParty = valuemap.get("AIIFirstNameforReponsibleParty").trim();
+                    }
+                    if (valuemap.get("AIIMiddleNameforReponsibleParty") == null) {
+                        AIIMiddleNameforReponsibleParty = "";
+                    } else {
+                        AIIMiddleNameforReponsibleParty = valuemap.get("AIIMiddleNameforReponsibleParty").trim();
+                    }
+                    if (valuemap.get("AIILastNameforReponsibleParty") == null) {
+                        AIILastNameforReponsibleParty = "";
+                    } else {
+                        AIILastNameforReponsibleParty = valuemap.get("AIILastNameforReponsibleParty").trim();
+                    }
+                    if (valuemap.get("AIISuffixforReponsibleParty") == null) {
+                        AIISuffixforReponsibleParty = "";
+                    } else {
+                        AIISuffixforReponsibleParty = valuemap.get("AIISuffixforReponsibleParty").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsibleParty") == null) {
+                        AIICarrierResponsibleParty = "";
+                    } else {
+                        AIICarrierResponsibleParty = valuemap.get("AIICarrierResponsibleParty").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyAddress") == null) {
+                        AIICarrierResponsiblePartyAddress = "";
+                    } else {
+                        AIICarrierResponsiblePartyAddress = valuemap.get("AIICarrierResponsiblePartyAddress").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyAddress2") == null) {
+                        AIICarrierResponsiblePartyAddress2 = "";
+                    } else {
+                        AIICarrierResponsiblePartyAddress2 = valuemap.get("AIICarrierResponsiblePartyAddress2").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyCity") == null) {
+                        AIICarrierResponsiblePartyCity = "";
+                    } else {
+                        AIICarrierResponsiblePartyCity = valuemap.get("AIICarrierResponsiblePartyCity").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyState") == null) {
+                        AIICarrierResponsiblePartyState = "";
+                    } else {
+                        AIICarrierResponsiblePartyState = valuemap.get("AIICarrierResponsiblePartyState").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyZipCode") == null) {
+                        AIICarrierResponsiblePartyZipCode = "";
+                    } else {
+                        AIICarrierResponsiblePartyZipCode = valuemap.get("AIICarrierResponsiblePartyZipCode").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyAreaCode") == null) {
+                        AIICarrierResponsiblePartyAreaCode = "";
+                    } else {
+                        AIICarrierResponsiblePartyAreaCode = valuemap.get("AIICarrierResponsiblePartyAreaCode").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyPhoneNumber") == null) {
+                        AIICarrierResponsiblePartyPhoneNumber = "";
+                    } else {
+                        AIICarrierResponsiblePartyPhoneNumber = valuemap.get("AIICarrierResponsiblePartyPhoneNumber").trim();
+                    }
+                    if (valuemap.get("AIICarrierResponsiblePartyPolicyNumber") == null) {
+                        AIICarrierResponsiblePartyPolicyNumber = "";
+                    } else {
+                        AIICarrierResponsiblePartyPolicyNumber = valuemap.get("AIICarrierResponsiblePartyPolicyNumber").trim();
+                    }
+                    if (valuemap.get("AIIResponsiblePartyAutoMakeModel") == null) {
+                        AIIResponsiblePartyAutoMakeModel = "";
+                    } else {
+                        AIIResponsiblePartyAutoMakeModel = valuemap.get("AIIResponsiblePartyAutoMakeModel").trim();
+                    }
+                    if (valuemap.get("AIIResponsiblePartyLicensePlate") == null) {
+                        AIIResponsiblePartyLicensePlate = "";
+                    } else {
+                        AIIResponsiblePartyLicensePlate = valuemap.get("AIIResponsiblePartyLicensePlate").trim();
+                    }
+                    if (valuemap.get("AIIFirstNameOfYourPolicyHolder") == null) {
+                        AIIFirstNameOfYourPolicyHolder = "";
+                    } else {
+                        AIIFirstNameOfYourPolicyHolder = valuemap.get("AIIFirstNameOfYourPolicyHolder").trim();
+                    }
+                    if (valuemap.get("AIILastNameOfYourPolicyHolder") == null) {
+                        AIILastNameOfYourPolicyHolder = "";
+                    } else {
+                        AIILastNameOfYourPolicyHolder = valuemap.get("AIILastNameOfYourPolicyHolder").trim();
+                    }
+                    if (valuemap.get("AIINameAutoInsuranceOfYourVehicle") == null) {
+                        AIINameAutoInsuranceOfYourVehicle = "";
+                    } else {
+                        AIINameAutoInsuranceOfYourVehicle = valuemap.get("AIINameAutoInsuranceOfYourVehicle").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceAddress") == null) {
+                        AIIYourInsuranceAddress = "";
+                    } else {
+                        AIIYourInsuranceAddress = valuemap.get("AIIYourInsuranceAddress").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceAddress2") == null) {
+                        AIIYourInsuranceAddress2 = "";
+                    } else {
+                        AIIYourInsuranceAddress2 = valuemap.get("AIIYourInsuranceAddress2").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceCity") == null) {
+                        AIIYourInsuranceCity = "";
+                    } else {
+                        AIIYourInsuranceCity = valuemap.get("AIIYourInsuranceCity").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceState") == null) {
+                        AIIYourInsuranceState = "";
+                    } else {
+                        AIIYourInsuranceState = valuemap.get("AIIYourInsuranceState").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceZipCode") == null) {
+                        AIIYourInsuranceZipCode = "";
+                    } else {
+                        AIIYourInsuranceZipCode = valuemap.get("AIIYourInsuranceZipCode").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceAreaCode") == null) {
+                        AIIYourInsuranceAreaCode = "";
+                    } else {
+                        AIIYourInsuranceAreaCode = valuemap.get("AIIYourInsuranceAreaCode").trim();
+                    }
+                    if (valuemap.get("AIIYourInsurancePhoneNumber") == null) {
+                        AIIYourInsurancePhoneNumber = "";
+                    } else {
+                        AIIYourInsurancePhoneNumber = valuemap.get("AIIYourInsurancePhoneNumber").trim();
+                    }
+                    if (valuemap.get("AIIYourInsurancePolicyNo") == null) {
+                        AIIYourInsurancePolicyNo = "";
+                    } else {
+                        AIIYourInsurancePolicyNo = valuemap.get("AIIYourInsurancePolicyNo").trim();
+                    }
+                    if (valuemap.get("AIIYourLicensePlate") == null) {
+                        AIIYourLicensePlate = "";
+                    } else {
+                        AIIYourLicensePlate = valuemap.get("AIIYourLicensePlate").trim();
+                    }
+                    if (valuemap.get("AIIYourCarMakeModelYear") == null) {
+                        AIIYourCarMakeModelYear = "";
+                    } else {
+                        AIIYourCarMakeModelYear = valuemap.get("AIIYourCarMakeModelYear").trim();
+                    }
+                } else {
+                    if (valuemap.get("AIIResponsiblePartyLicensePlate") == null) {
+                        AIIResponsiblePartyLicensePlate = "";
+                    } else {
+                        AIIResponsiblePartyLicensePlate = valuemap.get("AIIResponsiblePartyLicensePlate").trim();
+                    }
+                    if (valuemap.get("AIIFirstNameOfYourPolicyHolder") == null) {
+                        AIIFirstNameOfYourPolicyHolder = "";
+                    } else {
+                        AIIFirstNameOfYourPolicyHolder = valuemap.get("AIIFirstNameOfYourPolicyHolder").trim();
+                    }
+                    if (valuemap.get("AIILastNameOfYourPolicyHolder") == null) {
+                        AIILastNameOfYourPolicyHolder = "";
+                    } else {
+                        AIILastNameOfYourPolicyHolder = valuemap.get("AIILastNameOfYourPolicyHolder").trim();
+                    }
+                    if (valuemap.get("AIINameAutoInsuranceOfYourVehicle") == null) {
+                        AIINameAutoInsuranceOfYourVehicle = "";
+                    } else {
+                        AIINameAutoInsuranceOfYourVehicle = valuemap.get("AIINameAutoInsuranceOfYourVehicle").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceAddress") == null) {
+                        AIIYourInsuranceAddress = "";
+                    } else {
+                        AIIYourInsuranceAddress = valuemap.get("AIIYourInsuranceAddress").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceAddress2") == null) {
+                        AIIYourInsuranceAddress2 = "";
+                    } else {
+                        AIIYourInsuranceAddress2 = valuemap.get("AIIYourInsuranceAddress2").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceCity") == null) {
+                        AIIYourInsuranceCity = "";
+                    } else {
+                        AIIYourInsuranceCity = valuemap.get("AIIYourInsuranceCity").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceState") == null) {
+                        AIIYourInsuranceState = "";
+                    } else {
+                        AIIYourInsuranceState = valuemap.get("AIIYourInsuranceState").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceZipCode") == null) {
+                        AIIYourInsuranceZipCode = "";
+                    } else {
+                        AIIYourInsuranceZipCode = valuemap.get("AIIYourInsuranceZipCode").trim();
+                    }
+                    if (valuemap.get("AIIYourInsuranceAreaCode") == null) {
+                        AIIYourInsuranceAreaCode = "";
+                    } else {
+                        AIIYourInsuranceAreaCode = valuemap.get("AIIYourInsuranceAreaCode").trim();
+                    }
+                    if (valuemap.get("AIIYourInsurancePhoneNumber") == null) {
+                        AIIYourInsurancePhoneNumber = "";
+                    } else {
+                        AIIYourInsurancePhoneNumber = valuemap.get("AIIYourInsurancePhoneNumber").trim();
+                    }
+                    if (valuemap.get("AIIYourInsurancePolicyNo") == null) {
+                        AIIYourInsurancePolicyNo = "";
+                    } else {
+                        AIIYourInsurancePolicyNo = valuemap.get("AIIYourInsurancePolicyNo").trim();
+                    }
+                    if (valuemap.get("AIIYourLicensePlate") == null) {
+                        AIIYourLicensePlate = "";
+                    } else {
+                        AIIYourLicensePlate = valuemap.get("AIIYourLicensePlate").trim();
+                    }
+                    if (valuemap.get("AIIYourCarMakeModelYear") == null) {
+                        AIIYourCarMakeModelYear = "";
+                    } else {
+                        AIIYourCarMakeModelYear = valuemap.get("AIIYourCarMakeModelYear").trim();
+                    }
+                }
+            }
+            if (valuemap.get("HealthInsuranceChk") == null) {
+                HealthInsuranceChk = "0";
+            } else {
+                HealthInsuranceChk = valuemap.get("HealthInsuranceChk").trim();
+            }
+            if (HealthInsuranceChk.equals("1")) {
+                if (valuemap.get("GovtFundedInsurancePlanChk") == null) {
+                    GovtFundedInsurancePlanChk = "0";
+                } else {
+                    GovtFundedInsurancePlanChk = valuemap.get("GovtFundedInsurancePlanChk").trim();
+                }
+                if (GovtFundedInsurancePlanChk.equals("1")) {
+                    if (valuemap.get("GFIPMedicare") == null) {
+                        GFIPMedicare = "0";
+                    } else {
+                        GFIPMedicare = "1";
+                    }
+                    if (valuemap.get("GFIPMedicaid") == null) {
+                        GFIPMedicaid = "0";
+                    } else {
+                        GFIPMedicaid = "1";
+                    }
+                    if (valuemap.get("GFIPCHIP") == null) {
+                        GFIPCHIP = "0";
+                    } else {
+                        GFIPCHIP = "1";
+                    }
+                    if (valuemap.get("GFIPTricare") == null) {
+                        GFIPTricare = "0";
+                    } else {
+                        GFIPTricare = "1";
+                    }
+                    if (valuemap.get("GFIPVHA") == null) {
+                        GFIPVHA = "0";
+                    } else {
+                        GFIPVHA = "1";
+                    }
+                    if (valuemap.get("GFIPIndianHealth") == null) {
+                        GFIPIndianHealth = "0";
+                    } else {
+                        GFIPIndianHealth = "1";
+                    }
+                }
+                if (valuemap.get("InsuranceSubPatient") == null) {
+                    InsuranceSubPatient = "0";
+                } else {
+                    InsuranceSubPatient = "1";
+                }
+                if (valuemap.get("InsuranceSubGuarantor") == null) {
+                    InsuranceSubGuarantor = "0";
+                } else {
+                    InsuranceSubGuarantor = "1";
+                }
+                if (valuemap.get("InsuranceSubOther") == null) {
+                    InsuranceSubOther = "0";
+                } else {
+                    InsuranceSubOther = "1";
+                }
+                if (valuemap.get("HIPrimaryInsurance") == null) {
+                    HIPrimaryInsurance = "";
+                } else {
+                    HIPrimaryInsurance = valuemap.get("HIPrimaryInsurance").trim();
+                }
+                if (valuemap.get("HISubscriberFirstName") == null) {
+                    HISubscriberFirstName = "";
+                } else {
+                    HISubscriberFirstName = valuemap.get("HISubscriberFirstName").trim();
+                }
+                if (valuemap.get("HISubscriberLastName") == null) {
+                    HISubscriberLastName = "";
+                } else {
+                    HISubscriberLastName = valuemap.get("HISubscriberLastName").trim();
+                }
+                if (valuemap.get("HISubscriberDOB") == null) {
+                    HISubscriberDOB = "0000-00-00";
+                } else {
+                    if (valuemap.get("HISubscriberDOB").length() > 0) {
+                        HISubscriberDOB = valuemap.get("HISubscriberDOB").trim();
+                        //HISubscriberDOB = String.valueOf(String.valueOf(HISubscriberDOB.substring(6, 10))) + "-" + HISubscriberDOB.substring(0, 2) + "-" + HISubscriberDOB.substring(3, 5);
+                    } else {
+                        HISubscriberDOB = "0000-00-00";
+                    }
+                }
+                if (valuemap.get("HISubscriberSSN") == null) {
+                    HISubscriberSSN = "";
+                } else {
+                    HISubscriberSSN = valuemap.get("HISubscriberSSN").trim();
+                }
+                if (valuemap.get("HISubscriberRelationtoPatient") == null) {
+                    HISubscriberRelationtoPatient = "";
+                } else {
+                    HISubscriberRelationtoPatient = valuemap.get("HISubscriberRelationtoPatient").trim();
+                }
+                if (valuemap.get("HISubscriberGroupNo") == null) {
+                    HISubscriberGroupNo = "";
+                } else {
+                    HISubscriberGroupNo = valuemap.get("HISubscriberGroupNo").trim();
+                }
+                if (valuemap.get("HISubscriberPolicyNo") == null) {
+                    HISubscriberPolicyNo = "";
+                } else {
+                    HISubscriberPolicyNo = valuemap.get("HISubscriberPolicyNo").trim();
+                }
+                if (valuemap.get("SecondHealthInsuranceChk") == null) {
+                    SecondHealthInsuranceChk = "0";
+                } else {
+                    SecondHealthInsuranceChk = valuemap.get("SecondHealthInsuranceChk").trim();
+                }
+                if (SecondHealthInsuranceChk.equals("1")) {
+                    if (valuemap.get("SHISecondaryName") == null) {
+                        SHISecondaryName = "";
+                    } else {
+                        SHISecondaryName = valuemap.get("SHISecondaryName").trim();
+                    }
+                    if (valuemap.get("SHISubscriberFirstName") == null) {
+                        SHISubscriberFirstName = "";
+                    } else {
+                        SHISubscriberFirstName = valuemap.get("SHISubscriberFirstName").trim();
+                    }
+                    if (valuemap.get("SHISubscriberLastName") == null) {
+                        SHISubscriberLastName = "";
+                    } else {
+                        SHISubscriberLastName = valuemap.get("SHISubscriberLastName").trim();
+                    }
+                    if (valuemap.get("SHISubscriberDOB") == null) {
+                        SHISubscriberDOB = "0000-00-00";
+                    } else {
+                        if (valuemap.get("SHISubscriberDOB").length() > 0) {
+                            SHISubscriberDOB = valuemap.get("SHISubscriberDOB").trim();
+                            //SHISubscriberDOB = String.valueOf(String.valueOf(SHISubscriberDOB.substring(6, 10))) + "-" + SHISubscriberDOB.substring(0, 2) + "-" + SHISubscriberDOB.substring(3, 5);
+                        } else {
+                            SHISubscriberDOB = "0000-00-00";
+                        }
+                    }
+                    if (valuemap.get("SHISubscriberRelationtoPatient") == null) {
+                        SHISubscriberRelationtoPatient = "";
+                    } else {
+                        SHISubscriberRelationtoPatient = valuemap.get("SHISubscriberRelationtoPatient").trim();
+                    }
+                    if (valuemap.get("SHISubscriberGroupNo") == null) {
+                        SHISubscriberGroupNo = "";
+                    } else {
+                        SHISubscriberGroupNo = valuemap.get("SHISubscriberGroupNo").trim();
+                    }
+                    if (valuemap.get("SHISubscriberPolicyNo") == null) {
+                        SHISubscriberPolicyNo = "";
+                    } else {
+                        SHISubscriberPolicyNo = valuemap.get("SHISubscriberPolicyNo").trim();
+                    }
+                }
+            }
+            if (valuemap.get("MFFirstVisit") == null) {
+                MFFirstVisit = "0";
+            } else {
+                MFFirstVisit = valuemap.get("MFFirstVisit");
+            }
+            if (valuemap.get("MFReturnPat") == null) {
+                MFReturnPat = "0";
+            } else {
+                MFReturnPat = valuemap.get("MFReturnPat");
+            }
+            if (valuemap.get("MFInternetFind") == null) {
+                MFInternetFind = "0";
+            } else {
+                MFInternetFind = valuemap.get("MFInternetFind");
+            }
+            if (valuemap.get("Facebook") == null) {
+                Facebook = "0";
+            } else {
+                Facebook = "1";
+            }
+            if (valuemap.get("MapSearch") == null) {
+                MapSearch = "0";
+            } else {
+                MapSearch = "1";
+            }
+            if (valuemap.get("GoogleSearch") == null) {
+                GoogleSearch = "0";
+            } else {
+                GoogleSearch = "1";
+            }
+            if (valuemap.get("VERWebsite") == null) {
+                VERWebsite = "0";
+            } else {
+                VERWebsite = "1";
+            }
+            if (valuemap.get("OnlineAdvertisements") == null) {
+                OnlineAdvertisements = "0";
+            } else {
+                OnlineAdvertisements = "1";
+            }
+            if (valuemap.get("WebsiteAds") == null) {
+                WebsiteAds = "0";
+            } else {
+                WebsiteAds = "1";
+            }
+            if (valuemap.get("OnlineReviews") == null) {
+                OnlineReviews = "0";
+            } else {
+                OnlineReviews = "1";
+            }
+            if (valuemap.get("Twitter") == null) {
+                Twitter = "0";
+            } else {
+                Twitter = "1";
+            }
+            if (valuemap.get("LinkedIn") == null) {
+                LinkedIn = "0";
+            } else {
+                LinkedIn = "1";
+            }
+            if (valuemap.get("EmailBlast") == null) {
+                EmailBlast = "0";
+            } else {
+                EmailBlast = "1";
+            }
+            if (valuemap.get("YouTube") == null) {
+                YouTube = "0";
+            } else {
+                YouTube = "1";
+            }
+            if (valuemap.get("TV") == null) {
+                TV = "0";
+            } else {
+                TV = "1";
+            }
+            if (valuemap.get("Billboard") == null) {
+                Billboard = "0";
+            } else {
+                Billboard = "1";
+            }
+            if (valuemap.get("Radio") == null) {
+                Radio = "0";
+            } else {
+                Radio = "1";
+            }
+            if (valuemap.get("Brochure") == null) {
+                Brochure = "0";
+            } else {
+                Brochure = "1";
+            }
+            if (valuemap.get("DirectMail") == null) {
+                DirectMail = "0";
+            } else {
+                DirectMail = "1";
+            }
+            if (valuemap.get("CitizensDeTar") == null) {
+                CitizensDeTar = "0";
+            } else {
+                CitizensDeTar = "1";
+            }
+            if (valuemap.get("LiveWorkNearby") == null) {
+                LiveWorkNearby = "0";
+            } else {
+                LiveWorkNearby = "1";
+            }
+            if (valuemap.get("FamilyFriend") == null) {
+                FamilyFriend = "0";
+            } else {
+                FamilyFriend = "1";
+            }
+            if (valuemap.get("UrgentCare") == null) {
+                UrgentCare = "0";
+            } else {
+                UrgentCare = "1";
+            }
+            if (valuemap.get("NewspaperMagazine") == null) {
+                NewspaperMagazine = "0";
+            } else {
+                NewspaperMagazine = "1";
+            }
+            if (valuemap.get("School") == null) {
+                School = "0";
+            } else {
+                School = "1";
+            }
+            if (valuemap.get("Hotel") == null) {
+                Hotel = "0";
+            } else {
+                Hotel = "1";
+            }
+            if (valuemap.get("EmployerSentMe") == null) {
+                EmployerSentMe = "0";
+            } else {
+                EmployerSentMe = "1";
+            }
+            if (valuemap.get("FamilyFriend_text") == null) {
+                FamilyFriend_text = "";
+            } else {
+                FamilyFriend_text = valuemap.get("FamilyFriend_text");
+            }
+            if (valuemap.get("UrgentCare_text") == null) {
+                UrgentCare_text = "";
+            } else {
+                UrgentCare_text = valuemap.get("UrgentCare_text");
+            }
+            if (valuemap.get("NewspaperMagazine_text") == null) {
+                NewspaperMagazine_text = "";
+            } else {
+                NewspaperMagazine_text = valuemap.get("NewspaperMagazine_text");
+            }
+            if (valuemap.get("School_text") == null) {
+                School_text = "";
+            } else {
+                School_text = valuemap.get("School_text");
+            }
+            if (valuemap.get("Hotel_text") == null) {
+                Hotel_text = "";
+            } else {
+                Hotel_text = valuemap.get("Hotel_text");
+            }
+            if (valuemap.get("EmployerSentMe_text") == null) {
+                EmployerSentMe_text = "";
+            } else {
+                EmployerSentMe_text = valuemap.get("EmployerSentMe_text");
+            }
+            if (valuemap.get("MFPhysicianRefChk") == null) {
+                MFPhysicianRefChk = "0";
+            } else {
+                MFPhysicianRefChk = valuemap.get("MFPhysicianRefChk");
+            }
+            if (valuemap.get("MFPhysician") == null) {
+                MFPhysician = "";
+            } else {
+                MFPhysician = valuemap.get("MFPhysician");
+            }
+            if (valuemap.get("PatientCell") == null) {
+                PatientCell = "";
+            } else {
+                PatientCell = valuemap.get("PatientCell").trim();
+            }
+            if (valuemap.get("RecInitial") == null) {
+                RecInitial = "";
+            } else {
+                RecInitial = valuemap.get("RecInitial").trim();
+            }
+            ps = conn.prepareStatement("Select Date_format(now(),'%Y-%m-%d')");
+            rset = ps.executeQuery();
+            while (rset.next()) {
+                Date = rset.getString(1);
+            }
+            rset.close();
+            ps.close();
+            try {
+
+                ps = conn.prepareStatement("Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ");
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    MRN = rset.getInt(1);
+                }
+                rset.close();
+                ps.close();
+                if (String.valueOf(MRN).length() == 0) {
+                    MRN = 310001;
+                } else if (String.valueOf(MRN).length() == 4) {
+                    MRN = 310001;
+                } else if (String.valueOf(MRN).length() == 8) {
+                    MRN = 310001;
+                } else if (MRN == 0) {
+                    MRN = 310001;
+                } else if (String.valueOf(MRN).length() == 6) {
+                    ++MRN;
+                }
+                if (ClientIndex == 8) {
+                    ExtendedMRN = "1008" + MRN;
+                } else if (ClientIndex == 9) {
+                    ExtendedMRN = "1009" + MRN;
+                } else if (ClientIndex == 10) {
+                    ExtendedMRN = "1010" + MRN;
+                } else if (ClientIndex == 11) {
+                    ExtendedMRN = "1011" + MRN;
+                }
+            } catch (Exception ex) {
+                helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria PatineReg2 Data get ^^" + facilityName + " ##MES#001)", servletContext, ex, "PatientReg2", "SaveDataVictoria", conn);
+                Services.DumException("PatientReg2", "MES#001", request, ex, this.getServletContext());
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                Parser.SetField("Message", "MES#001");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+                return;
+            }
+            try {
+                if (!Email.equals(ConfirmEmail)) {
+                    out.println("<!DOCTYPE html><html><body><p style=\"color:black;\">Please Put Email and Confirm Email Correctly and then Submit</p>");
+                    out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
+                    return;
+                }
+                if (Age.equals("-1")) {
+                    out.println("<!DOCTYPE html><html><body><p style=\"color:black;\">Please Select Date of Birth Correctly with Day, Month, Year and then Submit (AGE Cannot be -1)</p>");
+                    out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
+                    return;
+                }
+                Email = ConfirmEmail;
+                UtilityHelper utilityHelper = new UtilityHelper();
+                String ClientIp = utilityHelper.getClientIp(request);
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        " INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName , MiddleInitial,DOB,Age,Gender ,Email," +
+                                "PhNumber ,Address,City ,State,Country,ZipCode,SSN,Occupation ,Employer ,EmpContact, PriCarePhy," +
+                                "ReasonVisit,SelfPayChk,CreatedDate,Title, MaritalStatus,CreatedBy, MRN, Status, ExtendedMRN, County," +
+                                "sync,RegisterFrom,ViewDate, EnterIP)" +
+                                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,0,?,?,0,?,NOW(),?) ");
+                MainReceipt.setInt(1, ClientIndex);
+                MainReceipt.setString(2, FirstName.toUpperCase());
+                MainReceipt.setString(3, LastName.toUpperCase());
+                MainReceipt.setString(4, MiddleInitial.toUpperCase());
+                MainReceipt.setString(5, DOB);
+                MainReceipt.setString(6, Age);
+                MainReceipt.setString(7, gender.toUpperCase());
+                MainReceipt.setString(8, Email);
+                MainReceipt.setString(9, String.valueOf(String.valueOf(AreaCode)) + PhNumber);
+                MainReceipt.setString(10, String.valueOf(String.valueOf(Address)) + " " + Address2);
+                MainReceipt.setString(11, City.toUpperCase());
+                MainReceipt.setString(12, State.toUpperCase());
+                MainReceipt.setString(13, Country.toUpperCase());
+                MainReceipt.setString(14, ZipCode);
+                MainReceipt.setString(15, SSN);
+                MainReceipt.setString(16, "");
+                MainReceipt.setString(17, "");
+                MainReceipt.setString(18, "");
+                MainReceipt.setString(19, "");
+                MainReceipt.setString(20, ReasonVisit);
+                MainReceipt.setInt(21, 0);
+                MainReceipt.setString(22, Title.toUpperCase());
+                MainReceipt.setString(23, MaritalStatus.toUpperCase());
+                MainReceipt.setString(24, "Out Patient");
+                MainReceipt.setInt(25, MRN);
+                MainReceipt.setString(26, ExtendedMRN);
+                MainReceipt.setString(27, County.toUpperCase());
+                MainReceipt.setString(28, "**Patient Reg2");
+                MainReceipt.setString(29, ClientIp);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+
+
+
+
+
+
+            } catch (Exception e) {
+                helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion PatientReg Table ^^" + facilityName + " ##MES#002****)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                Services.DumException("PatientReg2", "SaveDataVictoriaError 2- Insertion PatientReg Table :", request, e, this.getServletContext());
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                Parser.SetField("Message", "MES#002");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+                return;
+            }
+            try {
+                ps = conn.prepareStatement("Select max(ID) from " + Database + ".PatientReg ");
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    PatientRegId = rset.getInt(1);
+                }
+                rset.close();
+                ps.close();
+            } catch (Exception e) {
+                helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria ^^" + facilityName + " ##MES#003)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                Services.DumException("PatientReg2", "SaveDataVictoriaError 3- :", request, e, this.getServletContext());
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                Parser.SetField("Message", "MES#003");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+                return;
+            }
+
+
+
+
+            try {
+                final PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService," +
+                                "CreatedDate,CreatedBy) VALUES (?,?,?,1,NULL,now(),now(),?) ");
+                MainReceipt.setInt(1, MRN);
+                MainReceipt.setInt(2, PatientRegId);
+                MainReceipt.setString(3, ReasonVisit);
+                MainReceipt.setString(4, "Out Patient");
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
+            } catch (Exception e) {
+                helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Insertion PatientVisit Table ^^" + facilityName + " ##MES#003)", servletContext, e, "PatientReg2", "SaveDataVictoria", conn);
+                Services.DumException("PatientReg2", "SaveDataVictoriaError 3.1 Insertion in table PatientVisit- :", request, e, this.getServletContext());
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName", "PatientReg2");
+                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
+                Parser.SetField("Message", "MES#004");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
+                //return;
+            }
+
+            try {
+                Query = "Select MAX(Id) from " + Database + ".PatientVisit";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    VisitId = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            try {
+                if (!IDs.equals("")) {
+                    ps = conn.prepareStatement("INSERT INTO " + Database + ".PatientDocUpload (UploadDocumentName,FileName,CreatedBy,CreatedDate,Status,VisitIdx,PatientMRN,PatientRegId,PremisisId) VALUES (?,?,'PatientRegForm',NOW(),0,?,?,?,?)");
+                    ps.setString(1, "ID Front");
+                    ps.setString(2, IDs);
+                    ps.setInt(3, VisitId);
+                    ps.setInt(4, MRN);
+                    ps.setInt(5, PatientRegId);
+                    ps.setInt(6, ClientIndex);
+                    ps.executeUpdate();
+                    ps.close();
+                }
+
+
+                if (!InsuranceIDsF.equals("")) {
+                    ps = conn.prepareStatement("INSERT INTO " + Database + ".PatientDocUpload (UploadDocumentName,FileName,CreatedBy,CreatedDate,Status,VisitIdx,PatientMRN,PatientRegId,PremisisId) VALUES (?,?,'PatientRegForm',NOW(),0,?,?,?,?)");
+                    ps.setString(1, "Insurance ID Front");
+                    ps.setString(2, InsuranceIDsF);
+                    ps.setInt(3, VisitId);
+                    ps.setInt(4, MRN);
+                    ps.setInt(5, PatientRegId);
+                    ps.setInt(6, ClientIndex);
+                    ps.executeUpdate();
+                    ps.close();
+                }
+                if (!InsuranceIDsB.equals("")) {
+                    ps = conn.prepareStatement("INSERT INTO " + Database + ".PatientDocUpload (UploadDocumentName,FileName,CreatedBy,CreatedDate,Status,VisitIdx,PatientMRN,PatientRegId,PremisisId) VALUES (?,?,'PatientRegForm',NOW(),0,?,?,?,?)");
+                    ps.setString(1, "Insurance ID Back");
+                    ps.setString(2, InsuranceIDsB);
+                    ps.setInt(3, VisitId);
+                    ps.setInt(4, MRN);
+                    ps.setInt(5, PatientRegId);
+                    ps.setInt(6, ClientIndex);
+                    ps.executeUpdate();
+                    ps.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("PatientDocUpload Error ");
                 System.out.println(e.getMessage());
             }
             try {
@@ -8927,24 +10961,16 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
         String IdfrontName = "";
         String insuranceFrontName = "";
         String insuranceBackName = "";
+        String value = "";
 
 
-        PreparedStatement ps = null;
-        try {
-            ps = conn.prepareStatement("Select Id, dbname,DirectoryName from oe.clients where Id = 9");
 
-            rset = ps.executeQuery();
-            if (rset.next()) {
-                PremisisId = rset.getInt(1);
-                Database = rset.getString(2);
-                DirectoryName = rset.getString(3);
-            }
-            rset.close();
-            ps.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
+        
+        HashMap<String, String> valuemap=new HashMap<String, String>();
+        
+        
+        
         try {
             Dictionary d = doUpload(request, response, out);
             Enumeration<String> en = d.keys();
@@ -8952,6 +10978,11 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
                 key = en.nextElement();
                 FileFound = false;
                 System.out.println("KEY -> " + key);
+                if(!(key.startsWith("Idfront") || key.startsWith("insuranceFront") || key.startsWith("insuranceBack" )))
+                {
+                    value=(String) d.get(key);
+                    valuemap.put(key,value.substring(4));
+                }
                 if (key.startsWith("ClientId")) {
                     ClientId = (String) d.get(key);
                 } else if ((key.startsWith("Idfront") && key.endsWith(".jpg")) || (key.startsWith("Idfront") && key.endsWith(".png"))) {
@@ -8987,7 +11018,7 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
                 }
                 System.out.println("FileFound : " + FileFound);
                 if (FileFound) {
-                    Path = "/sftpdrive/AdmissionBundlePdf/Attachment/" + DirectoryName + "/Uploads";
+                    Path = "/sftpdrive/AdmissionBundlePdf/Attachment/" + DirectoryName + "/";
                     UploadPath = String.valueOf(Path) + "/";
                     System.out.println("UploadPath : " + UploadPath);
 
@@ -9002,40 +11033,57 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
                     fouts.close();
                 }
             }
+            
+            
             ClientId = ClientId.substring(4);
 
-            ps = conn.prepareStatement("Select Id from " + Database + ".PatientReg order by ID desc limit 1 ");
-            rset = ps.executeQuery();
-            if (rset.next()) {
-                PatientId = rset.getString(1);
-            }
+//            ps = conn.prepareStatement("Select Id from " + Database + ".PatientReg order by ID desc limit 1 ");
+//            rset = ps.executeQuery();
+//            if (rset.next()) {
+//                PatientId = rset.getString(1);
+//            }
 
-            rset.close();
-            ps.close();
-            System.out.println("PatientId : " + PatientId);
+            PreparedStatement ps = null;
+            try {
+                ps = conn.prepareStatement("Select Id, dbname,DirectoryName from oe.clients where name = ?");
+                ps.setString(1,ClientId);
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    PremisisId = rset.getInt(1);
+                    Database = rset.getString(2);
+                    DirectoryName = rset.getString(3);
+                }
+                rset.close();
+                ps.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+//            rset.close();
+//            ps.close();
+//            System.out.println("PatientId : " + PatientId);
             System.out.println("PremisisId : " + PremisisId);
             System.out.println("Database : " + Database);
             System.out.println("DirectoryName : " + DirectoryName);
 
-            ps = conn.prepareStatement("UPDATE  " + Database + ".PatientReg  SET IDFront = ? , InsuranceFront = ? , InsuranceBack = ? WHERE Id = ?");
-            if (!IDs.equals("")) {
-                ps.setString(1, IDs);
-            } else {
-                ps.setString(1, null);
-            }
-            if (!InsuranceIDsF.equals("")) {
-                ps.setString(2, InsuranceIDsF);
-            } else {
-                ps.setString(2, null);
-            }
-            if (!InsuranceIDsB.equals("")) {
-                ps.setString(3, InsuranceIDsB);
-            } else {
-                ps.setString(3, null);
-            }
-            ps.setString(4, PatientId);
-            ps.executeUpdate();
-            ps.close();
+//            ps = conn.prepareStatement("UPDATE  " + Database + ".PatientReg  SET IDFront = ? , InsuranceFront = ? , InsuranceBack = ? WHERE Id = ?");
+//            if (!IDs.equals("")) {
+//                ps.setString(1, IDs);
+//            } else {
+//                ps.setString(1, null);
+//            }
+//            if (!InsuranceIDsF.equals("")) {
+//                ps.setString(2, InsuranceIDsF);
+//            } else {
+//                ps.setString(2, null);
+//            }
+//            if (!InsuranceIDsB.equals("")) {
+//                ps.setString(3, InsuranceIDsB);
+//            } else {
+//                ps.setString(3, null);
+//            }
+//            ps.setString(4, PatientId);
+//            ps.executeUpdate();
+//            ps.close();
 
 //            try {
 ////                Query = "";
@@ -9085,6 +11133,9 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
 //            Parser.SetField("ActionID", "PatientsDocUpload&PatientId=" + PatientRegId);
 //            Parser.SetField("UserId", UserId);
 //            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Success.html");
+            UtilityHelper helper = new UtilityHelper();
+
+            SaveDataVictoria_2_2(request,conn, servletContext, response, helper, valuemap ,out,IDs,InsuranceIDsF,InsuranceIDsB ,ClientId);
         } catch (Exception e2) {
             out.println("Error in Upload DOcuments!!" + e2.getMessage());
             String str = "";
@@ -9254,6 +11305,9 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
             System.out.println("Database : " + Database);
             System.out.println("DirectoryName : " + DirectoryName);
             System.out.println("MRN : " + MRN);
+            
+
+
 
             if (!IDs.equals("")) {
                 ps = conn.prepareStatement("UPDATE  " + Database + ".PatientReg  SET IDFront = ?  WHERE MRN = ?");
@@ -9351,8 +11405,8 @@ public class PatientReg2_27DEC2021 extends HttpServlet {
             String contentType = null;
             Dictionary<Object, Object> fields = new Hashtable<>();
             ServletInputStream in = request.getInputStream();
-            int i;
-            for (i = in.readLine(bytes, 0, 512); -1 != i; i = in.readLine(bytes, 0, 512)) {
+            int i = in.readLine(bytes, 0, 512);
+            for (; -1 != i; i = in.readLine(bytes, 0, 512)) {
                 String st = new String(bytes, 0, i);
                 if (st.startsWith(boundary)) {
                     state = 0;

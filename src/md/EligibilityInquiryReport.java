@@ -69,7 +69,7 @@ public class EligibilityInquiryReport extends HttpServlet {
             int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
 
             try {
-                boolean ValidSession = FacilityLogin.checkSession(out, request, context, response);
+                boolean ValidSession = FacilityLogin_old.checkSession(out, request, context, response);
                 if (!ValidSession) {
                     out.flush();
                     out.close();
@@ -90,7 +90,7 @@ public class EligibilityInquiryReport extends HttpServlet {
             ActionID = request.getParameter("ActionID");
             conn = Services.GetConnection(context, 1);
 
-            if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, this.ScreenIndex)) {
+            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
 //                out.println("You are not Authorized to access this page");
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Message", "You are not Authorized to access this page");

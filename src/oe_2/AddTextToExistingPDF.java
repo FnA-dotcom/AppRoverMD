@@ -12,8 +12,10 @@ import java.io.OutputStream;
 
 
 /**
- * How to Add Text To Existing PDF in java
- * Example Using iText library - core java tutorial
+ *
+ *  How to Add Text To Existing PDF in java
+ *  Example Using iText library - core java tutorial
+ *
  */
 public class AddTextToExistingPDF {
 
@@ -22,8 +24,8 @@ public class AddTextToExistingPDF {
         String inputFilePath = "C:\\Users\\abid_\\Desktop\\label01.pdf"; // Existing file
         String outputFilePath = "C:\\Users\\abid_\\Desktop\\label01_abid.pdf"; // New file
         String CheckMark = "\u2688";
-        String Lastname = "Ali";
-        String firstname = "Muhammad Abid";
+        String Lastname="Ali";
+        String firstname="Muhammad Abid";
         OutputStream fos = new FileOutputStream(new File(outputFilePath));
 
         PdfReader pdfReader = new PdfReader(inputFilePath);
@@ -37,7 +39,7 @@ public class AddTextToExistingPDF {
             //getOverContent() allows you to write content on TOP of existing pdf content.
             //getUnderContent() allows you to write content on BELOW of existing pdf content.
 
-            if (i == 1) {
+            if( i == 1){
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
 
@@ -56,175 +58,175 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 500); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 485); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 465); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 450); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 435); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 415); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 398); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 380); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(190, 380); // set x and y co-ordinates
                 pdfContentByte.showText("YSchool textES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 365); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 348); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(200, 348); // set x and y co-ordinates
                 pdfContentByte.showText("Magzine text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 330); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(220, 330); // set x and y co-ordinates
                 pdfContentByte.showText("Newspaer text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 312); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(220, 312); // set x and y co-ordinates
                 pdfContentByte.showText("Friend Faimily text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 295); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(220, 295); // set x and y co-ordinates
                 pdfContentByte.showText("Urgent Care text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 278); // set x and y co-ordinates
                 pdfContentByte.showText("YES"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(250, 278); // set x and y co-ordinates
                 pdfContentByte.showText("Community Event text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(150, 225); // set x and y co-ordinates
                 pdfContentByte.showText("Work text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(180, 210); // set x and y co-ordinates
                 pdfContentByte.showText("Physicain text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(150, 195); // set x and y co-ordinates
                 pdfContentByte.showText("Other text"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(80, 85); // set x and y co-ordinates
                 pdfContentByte.showText("2020-04-20"); // add the text
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(480, 85); // set x and y co-ordinates
                 pdfContentByte.showText("123445"); // add the text
@@ -232,21 +234,21 @@ public class AddTextToExistingPDF {
             }
 
 
-            if (i == 2) {
+            if(i==2) {
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
                 // Add text in existing PDF
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
                 pdfContentByte.setTextMatrix(105, 640); // set x and y co-ordinates
 
                 pdfContentByte.showText(Lastname); // add the text
                 pdfContentByte.endText();
-                System.out.println("Text added in " + outputFilePath);
+                System.out.println("Text added in "+outputFilePath);
                 BaseColor bColor = new BaseColor(0x00, 0xFF, 0x00);
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(350, 640); // set x and y co-ordinates
@@ -255,7 +257,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(500, 640); // set x and y co-ordinates
@@ -264,7 +266,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 605); // set x and y co-ordinates
@@ -273,7 +275,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(200, 600); // set x and y co-ordinates
@@ -282,7 +284,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(340, 600); // set x and y co-ordinates
@@ -291,7 +293,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(440, 600); // set x and y co-ordinates
@@ -300,7 +302,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(510, 600); // set x and y co-ordinates
@@ -309,7 +311,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 8); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 8); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 570); // set x and y co-ordinates
@@ -318,7 +320,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(280, 570); // set x and y co-ordinates
@@ -327,7 +329,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(460, 570); // set x and y co-ordinates
@@ -336,7 +338,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(50, 540); // set x and y co-ordinates
@@ -345,7 +347,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(170, 540); // set x and y co-ordinates
@@ -354,7 +356,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(350, 540); // set x and y co-ordinates
@@ -363,7 +365,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(470, 540); // set x and y co-ordinates
@@ -372,7 +374,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 510); // set x and y co-ordinates
@@ -381,7 +383,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(200, 510); // set x and y co-ordinates
@@ -390,7 +392,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(400, 510); // set x and y co-ordinates
@@ -399,7 +401,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 445); // set x and y co-ordinates
@@ -408,7 +410,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(330, 445); // set x and y co-ordinates
@@ -417,7 +419,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 415); // set x and y co-ordinates
@@ -426,7 +428,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(280, 415); // set x and y co-ordinates
@@ -435,7 +437,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(420, 415); // set x and y co-ordinates
@@ -444,7 +446,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 375); // set x and y co-ordinates
@@ -453,7 +455,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 8); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 8); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(260, 375); // set x and y co-ordinates
@@ -462,7 +464,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(460, 375); // set x and y co-ordinates
@@ -471,7 +473,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 335); // set x and y co-ordinates
@@ -480,7 +482,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(160, 335); // set x and y co-ordinates
@@ -489,7 +491,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(270, 335); // set x and y co-ordinates
@@ -498,7 +500,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(460, 335); // set x and y co-ordinates
@@ -507,7 +509,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 300); // set x and y co-ordinates
@@ -516,7 +518,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(160, 300); // set x and y co-ordinates
@@ -525,7 +527,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(260, 300); // set x and y co-ordinates
@@ -534,7 +536,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(460, 300); // set x and y co-ordinates
@@ -543,7 +545,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 275); // set x and y co-ordinates
@@ -552,7 +554,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(260, 275); // set x and y co-ordinates
@@ -561,7 +563,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(420, 275); // set x and y co-ordinates
@@ -570,7 +572,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(60, 240); // set x and y co-ordinates
@@ -579,7 +581,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(260, 240); // set x and y co-ordinates
@@ -588,7 +590,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(420, 240); // set x and y co-ordinates
@@ -597,7 +599,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(50, 190); // set x and y co-ordinates
@@ -606,7 +608,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(200, 190); // set x and y co-ordinates
@@ -615,7 +617,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(350, 190); // set x and y co-ordinates
@@ -624,7 +626,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(510, 190); // set x and y co-ordinates
@@ -633,7 +635,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 8); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 8); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(40, 150); // set x and y co-ordinates
@@ -642,7 +644,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(350, 150); // set x and y co-ordinates
@@ -651,7 +653,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(440, 70); // set x and y co-ordinates
@@ -660,15 +662,16 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
 
-                System.out.println("Text added in " + outputFilePath);
+
+                System.out.println("Text added in "+outputFilePath);
             }
 
-            if (i == 3) {
+            if( i == 3){
 
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(320, 230); // set x and y co-ordinates
@@ -677,7 +680,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(330, 150); // set x and y co-ordinates
@@ -687,10 +690,10 @@ public class AddTextToExistingPDF {
 
             }
 
-            if (i == 4) {
+            if( i == 4){
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(285, 70); // set x and y co-ordinates
@@ -699,10 +702,10 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
             }
 
-            if (i == 5) {
+            if( i == 5){
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(440, 395); // set x and y co-ordinates
@@ -711,7 +714,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 12); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 12); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(330, 250); // set x and y co-ordinates
@@ -720,11 +723,11 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
             }
 
-            if (i == 6) {
+            if( i == 6){
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(95, 585); // set x and y co-ordinates
@@ -733,7 +736,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(300, 585); // set x and y co-ordinates
@@ -742,7 +745,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(490, 585); // set x and y co-ordinates
@@ -751,7 +754,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(120, 560); // set x and y co-ordinates
@@ -760,7 +763,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(180, 535); // set x and y co-ordinates
@@ -769,7 +772,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 510); // set x and y co-ordinates
@@ -778,7 +781,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 385); // set x and y co-ordinates
@@ -787,7 +790,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(330, 210); // set x and y co-ordinates
@@ -796,11 +799,11 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
             }
 
-            if (i == 7) {
+            if( i == 7){
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(130, 490); // set x and y co-ordinates
@@ -809,7 +812,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 465); // set x and y co-ordinates
@@ -818,7 +821,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(340, 465); // set x and y co-ordinates
@@ -827,7 +830,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(110, 440); // set x and y co-ordinates
@@ -836,7 +839,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(260, 440); // set x and y co-ordinates
@@ -845,7 +848,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(120, 415); // set x and y co-ordinates
@@ -854,7 +857,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(50, 240); // set x and y co-ordinates
@@ -863,7 +866,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(430, 170); // set x and y co-ordinates
@@ -872,7 +875,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(430, 130); // set x and y co-ordinates
@@ -881,11 +884,11 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
             }
 
-            if (i == 8) {
+            if( i == 8){
                 PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(50, 650); // set x and y co-ordinates
@@ -894,7 +897,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(390, 650); // set x and y co-ordinates
@@ -903,7 +906,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(50, 610); // set x and y co-ordinates
@@ -912,7 +915,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(390, 610); // set x and y co-ordinates
@@ -921,7 +924,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(130, 480); // set x and y co-ordinates
@@ -930,7 +933,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(130, 440); // set x and y co-ordinates
@@ -939,7 +942,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(340, 440); // set x and y co-ordinates
@@ -949,7 +952,7 @@ public class AddTextToExistingPDF {
 
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(130, 400); // set x and y co-ordinates
@@ -958,7 +961,7 @@ public class AddTextToExistingPDF {
                 pdfContentByte.endText();
 
                 pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set font and size
+                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN,BaseFont.CP1257,BaseFont.EMBEDDED), 10); // set font and size
 
                 pdfContentByte.setColorFill(BaseColor.BLACK);
                 pdfContentByte.setTextMatrix(130, 360); // set x and y co-ordinates
@@ -974,7 +977,7 @@ public class AddTextToExistingPDF {
 
         pdfStamper.close(); //close pdfStamper
 
-        System.out.println("Modified PDF created in >> " + outputFilePath);
+        System.out.println("Modified PDF created in >> "+ outputFilePath);
 
     }
 }

@@ -115,11 +115,12 @@ public class RoverLabResult extends HttpServlet {
             }
             rset.close();
             stmt.close();
-
+            out.println("ActionID -> " + ActionID);
+            out.println(ActionID.equals("getResultPdf"));
             if (ActionID.equals("getResultPdf")) {
                 getResultPdf(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName);
-            } else if (ActionID.equals("sendResultReport")) {
-                sendResultReport(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName, helper);
+            }else if (ActionID.equals("sendResultReport")) {
+                sendResultReport(request, out, conn, context, response, UserId, DatabaseName, FacilityIndex, DirectoryName,helper);
             }
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
@@ -140,24 +141,15 @@ public class RoverLabResult extends HttpServlet {
 
 
     private void sendResultReport(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context,
-                                  HttpServletResponse response, String userId, String Database, int facilityIndex, String directoryName, UtilityHelper helper) {
+                                  HttpServletResponse response, String userId, String Database, int facilityIndex, String directoryName,UtilityHelper helper) {
         String O_ID = request.getParameter("O_ID").trim();
         String T_ID = request.getParameter("T_ID").trim();
         ResultSet rset = null;
         String email = null;
         String filepath = null;
         String filename = null;
-        String MRN = "";
-        String OrderNum = "";
-        int TestOrderResult = 0;
         try {
-            PreparedStatement ps = conn.prepareStatement(
-                    "SELECT IFNULL(a.email,''), IFNULL(c.Reportpath,''),IFNULL(c.filename,'')," +
-                            "b.Status,a.MRN,b.OrderNum " +
-                            "FROM  " + Database + ".PatientReg a " +
-                            " LEFT JOIN  " + Database + ".TestOrder b ON a.ID=b.PatRegIdx  " +
-                            " LEFT JOIN  " + Database + ".Tests c ON b.ID=c.OrderId   " +
-                            " where b.id=? AND c.id=? AND b.Status IN (6,7) AND c.TestIdx != 4");
+            PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(a.email,''), IFNULL(c.Reportpath,''),IFNULL(c.filename,'') FROM  " + Database + ".PatientReg a LEFT JOIN  " + Database + ".TestOrder b ON a.ID=b.PatRegIdx  LEFT JOIN  " + Database + ".Tests c ON b.ID=c.OrderId   where b.id=? AND c.id=?");
             ps.setString(1, O_ID);
             ps.setString(2, T_ID);
             rset = ps.executeQuery();
@@ -165,20 +157,18 @@ public class RoverLabResult extends HttpServlet {
                 email = rset.getString(1);
                 filepath = rset.getString(2);
                 filename = rset.getString(3);
-                TestOrderResult = rset.getInt(4);
-                MRN = rset.getString(5);
-                OrderNum = rset.getString(6);
             }
             rset.close();
             ps.close();
 
-//            if (TestOrderResult == 6 || TestOrderResult == 7) {
             //    String filePath = "https://rovermd.com:8443/md/md.Filedispatcher?p=/sftpdrive/users/epowerdoc/lab-integration/Integration/Reports_final/&fn=0000000047_OI-310031-30_TESTRS_202202171218.HL7.pdf";
-            String filePath = "https://rovermd.com:4443/md/md.Filedispatcher?p=" + filepath + "&fn=" + filename;
+            String filePath = "https://rovermd.com:8443/md/md.Filedispatcher?p="+filepath+"&fn="+filename;
 
             URL url = new URL(filePath);
-            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+            HttpURLConnection httpConn = (HttpURLConnection)
+                    url.openConnection();
 
+            System.out.println("");
             // File downloadFile = new File(filePath);
             // FileInputStream inStream = new FileInputStream(downloadFile);
 
@@ -186,9 +176,10 @@ public class RoverLabResult extends HttpServlet {
 
             // if you want to use a relative path to context root:
             String relativePath = getServletContext().getRealPath("");
-//            System.out.println("relativePath = " + relativePath);
+            System.out.println("relativePath = " + relativePath);
 
             // obtains ServletContext
+
 
             // gets MIME type of the file
             String mimeType = context.getMimeType(filePath);
@@ -196,24 +187,25 @@ public class RoverLabResult extends HttpServlet {
                 // set to binary type if MIME mapping not found
                 mimeType = "application/octet-stream";
             }
-//            System.out.println("MIME type: " + mimeType);
+            System.out.println("MIME type: " + mimeType);
 
             // modifies response
             response.setContentType(mimeType);
             response.setContentLength((int) httpConn.getContentLength());
 
             String fileName = filePath.substring(filePath.lastIndexOf("/") + 1,
-                    filePath.length()).replace("fn=", "");
+                    filePath.length());
 
             // forces download
             String headerKey = "Content-Disposition";
-            String headerValue = String.format("attachment; filename=\"%s\"", fileName);
+            String headerValue = String.format("attachment; filename=\"%s\"",
+                    fileName);
             response.setHeader(headerKey, headerValue);
-            String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + directoryName + "/Results/" + fileName.replace("&", "");
+            String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + directoryName + "/Results/" + fileName.replace("&","");
 
             // obtains response's output stream
             // OutputStream outStream = response.getOutputStream();
-            FileOutputStream fout = new FileOutputStream(outputFilePath);
+            FileOutputStream fout =  new FileOutputStream(outputFilePath);;
 
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
@@ -226,19 +218,16 @@ public class RoverLabResult extends HttpServlet {
             fout.close();
 
 
-//            System.out.println("EMAIL " + email);
-//            System.out.println("filepath " + filepath);
-//            System.out.println("outputFilePath " + outputFilePath);
-            //email="alisaadbaig@gmail.com";
-            helper.SendEmailWithAttachment_ROVERLAB("COVID Test Result", context, conn, email, outputFilePath, OrderNum, MRN);
+            System.out.println("EMAIL " + email);
+            System.out.println("filepath " + filepath);
+            System.out.println("outputFilePath " + outputFilePath);
+            email="alisaadbaig@gmail.com";
+            String[] files={outputFilePath};
+//            helper.SendEmailWithAttachment_ROVERLAB("Test Report", context, conn, email,files );
             System.out.println("1");
             out.println("1");
             out.flush();
             out.close();
-//            } else {
-//                out.println("No Result");
-//            }
-
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.getMessage();
@@ -247,22 +236,37 @@ public class RoverLabResult extends HttpServlet {
 
     }
 
-    private void getResultPdf(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+    void getResultPdf(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName) {
+        out.println("inside getResultPdf");
+
         ResultSet rset = null;
+        ResultSet rset2 = null;
 
         String ID = request.getParameter("PatRegIdx").trim();
         String O_ID = request.getParameter("O_ID").trim();
         String T_ID = request.getParameter("T_ID").trim();
+        String Name = null;
+        String DOB = null;
+        String Gender = null;
+        String TestingLocation = null;
+        String TestName = null;
+        String TestComments = null;
+        String TestResult = null;
+        String CollectionDateTime = null;
+        String ReceivedDateTime = null;
+        String ReportedDateTime = null;
+        String Physician = null;
+        String SampleType = null;
+        String DateTime = null;
         String filepath = null;
         String filename = null;
         PreparedStatement ps = null;
 
-        try {
-            ps = conn.prepareStatement(
-                    "SELECT IFNULL(Reportpath,''),IFNULL(filename,'') " +
-                            "FROM " + Database + ".Tests " +
-                            "WHERE OrderId='" + O_ID + "' AND Id='" + T_ID + "'");
 
+        try {
+
+
+            ps = conn.prepareStatement("SELECT IFNULL(Reportpath,''),IFNULL(filename,'') FROM " + Database + ".Tests WHERE OrderId='" + O_ID + "' AND Id='" + T_ID + "'");
             rset = ps.executeQuery();
             if (rset.next()) {
                 filepath = rset.getString(1);
@@ -270,16 +274,18 @@ public class RoverLabResult extends HttpServlet {
             }
             rset.close();
             ps.close();
-
+            out.println(filepath);
+            out.println(filename);
             if (filepath.compareTo("") == 0 && filename.compareTo("") == 0) {
                 out.println("Result not Available");
                 return;
             }
-            // String filePath = "https://rovermd.com:4443/md/md.Filedispatcher?p=/sftpdrive/users/epowerdoc/lab-integration/Integration/Reports_final/&fn=0000000047_OI-310031-30_TESTRS_202202171218.HL7.pdf";
-            String filePath = "https://rovermd.com:4443/md/md.Filedispatcher?p=" + filepath + "&fn=" + filename;
+            // String filePath = "https://rovermd.com:8443/md/md.Filedispatcher?p=/sftpdrive/users/epowerdoc/lab-integration/Integration/Reports_final/&fn=0000000047_OI-310031-30_TESTRS_202202171218.HL7.pdf";
+            String filePath = "https://rovermd.com:8443/md/md.Filedispatcher?p="+filepath+"&fn="+filename;
 
             URL url = new URL(filePath);
-            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+            HttpURLConnection httpConn = (HttpURLConnection)
+                    url.openConnection();
             //File downloadFile = new File(filePath);
             //FileInputStream inStream = new FileInputStream(downloadFile);
 
@@ -287,7 +293,7 @@ public class RoverLabResult extends HttpServlet {
 
             // if you want to use a relative path to context root:
             String relativePath = getServletContext().getRealPath("");
-//            System.out.println("relativePath = " + relativePath);
+            System.out.println("relativePath = " + relativePath);
 
             // obtains ServletContext
             ServletContext context = getServletContext();
@@ -298,21 +304,24 @@ public class RoverLabResult extends HttpServlet {
                 // set to binary type if MIME mapping not found
                 mimeType = "application/octet-stream";
             }
+            System.out.println("MIME type: " + mimeType);
 
             // modifies response
             response.setContentType(mimeType);
             response.setContentLength((int) httpConn.getContentLength());
 
-            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.length());
+            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1,
+                    filePath.length());
 
             // forces download
             String headerKey = "Content-Disposition";
-            String headerValue = String.format("attachment; filename=\"%s\"", fileName);
+            String headerValue = String.format("attachment; filename=\"%s\"",
+                    fileName);
             response.setHeader(headerKey, headerValue);
 
             // obtains response's output stream
             OutputStream outStream = response.getOutputStream();
-            System.out.println("OS " + outStream);
+
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
 
@@ -343,7 +352,6 @@ public class RoverLabResult extends HttpServlet {
                 responseOutputStream.write(bytes);
             }*/
         } catch (Exception e) {
-            System.out.println("EXCEPTION OCCURING --> " + e.getMessage());
             out.println("Hello ->>> " + e.getMessage());
             String str = "";
             for (int j = 0; j < e.getStackTrace().length; ++j) {

@@ -15,11 +15,11 @@ public class reporttest {
         Statement hstmt2 = null;
         ResultSet hrset2 = null;
         String Query2 = "";
-        int requestedMonthInt = 10;
-        String clientid = "";
-        String clientname = "";
-        String requestedYearString = "2020";
-        String requestedMonthString = "10";
+        int requestedMonthInt =10;
+        String clientid="";
+        String clientname="";
+        String requestedYearString="2020";
+        String requestedMonthString="10";
 
 
         int requestedMonthLength = 0;
@@ -32,20 +32,22 @@ public class reporttest {
             requestedMonthLength = 30;
         }
 
-        Connection conn = getConnectionlocal();
-        Query = "select id,name,directory_1,remotedirectory,tablename from clients where id not in (1,9,10,12)";
+        Connection conn=getConnectionlocal();
+        Query="select id,name,directory_1,remotedirectory,tablename from clients where id not in (1,9,10,12)";
         try {
             hstmt = conn.createStatement();
             hrset = hstmt.executeQuery(Query);
             System.out.println(Query);
 
-            while (hrset.next()) {
+            while (hrset.next())
+            {
                 clientid = hrset.getString(1);
                 clientname = hrset.getString(2);
-                System.out.print(clientid + "|" + clientname + "|");
-                String monthcount = "";
-                for (int i = 1; i <= requestedMonthLength; i++) {
-                    Query2 = "SELECT COUNT(*) FROM filelogs_sftp WHERE clientdirectory=" + clientid + " AND substr(dosdate,1,10)='" + requestedYearString + "-" + requestedMonthString + "-" + String.format("%02d", new Object[]{Integer.valueOf(i)}) + "' ";
+                System.out.print(clientid+"|"+clientname+"|");
+                String monthcount="";
+                for (int i = 1; i <= requestedMonthLength; i++)
+                {
+                    Query2 = "SELECT COUNT(*) FROM filelogs_sftp WHERE clientdirectory=" + clientid + " AND substr(dosdate,1,10)='" + requestedYearString + "-" + requestedMonthString + "-" + String.format("%02d", new Object[] { Integer.valueOf(i) }) + "' ";
                     // System.out.println(Query2);
                     hstmt2 = conn.createStatement();
                     hrset2 = hstmt2.executeQuery(Query2);
@@ -59,17 +61,18 @@ public class reporttest {
                 System.out.println(",");
 
 
+
             }
-        } catch (Exception ee) {
+        }catch(Exception ee) {
 
             System.out.println(ee.getMessage());
 
         }
 
     }
-
-    private static Connection getConnectionlocal() {
-        try {
+    private static Connection getConnectionlocal()
+    {
+        try{
             try {
                 Class.forName("com.mysql.jdbc.Driver").newInstance();
             } catch (InstantiationException e) {
@@ -86,8 +89,9 @@ public class reporttest {
 
             //Connection connection = DriverManager.getConnection("jdbc:mysql://54.80.137.178/oe?user=abdf890092&password=980293339jjjj");
             return connection;
-        } catch (Exception e) {
-            System.out.println("PL" + e.getMessage());
+        }catch (Exception e)
+        {
+            System.out.println("PL"+e.getMessage());
             return null;
         }
     }

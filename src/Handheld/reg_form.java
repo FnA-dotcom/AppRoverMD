@@ -24,7 +24,7 @@ public class reg_form {
         Htmlstart.append("<head></head>\n");
         Htmlstart.append("<style></style>");
         Htmlstart.append("<body>\n");
-        Htmlstart.append("<form novalidate method=\"post\" action=\"/md/md.PatientReg\" id=\"PatientRegForm\" onsubmit=\"return CheckDateofBirth();\">\n");
+        Htmlstart.append("<form novalidate method=\"post\" action=\"/md/md.Backup.PatientReg\" id=\"PatientRegForm\" onsubmit=\"return CheckDateofBirth();\">\n");
         Htmlend.append("<form>\n");
         Htmlend.append("<script></script>\n");
         Htmlend.append("</body></html>\n");

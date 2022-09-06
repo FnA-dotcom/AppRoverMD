@@ -6,6 +6,7 @@ import sun.misc.BASE64Encoder;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -36,7 +37,7 @@ public class EncryptionDecryption {
         return decryptedValue;
     }
 
-    private static Key generateKey() throws Exception {
+    private static Key generateKey() {
         Key key = new SecretKeySpec(keyValue, ALGO);
         return key;
     }
@@ -47,12 +48,11 @@ public class EncryptionDecryption {
             //String Enc = EncryptionDecryption.encrypt("4264-2879-0450-8997");//Card 2
             //String Enc = EncryptionDecryption.encrypt("1901");//Card 1 CVV
             //String Enc = EncryptionDecryption.encrypt("abc123");//Card 2 CVV
-            String Enc = EncryptionDecryption.encrypt("HopeER@1234");//Card 2 CVV
+            String Enc = EncryptionDecryption.encrypt("Frontline$1");//Card 2 CVV
             //String DEC = EncryptionDecryption.decrypt("NYwrb/Exfglgcp/76YDy0Q==");
             //String DEC = EncryptionDecryption.decrypt("7E40qBzNxzO/wK0eYcjWuw==");//Tabish id PWD
-//            String DEC = EncryptionDecryption.decrypt("dxAwprj1yuipUg8mGlaMSw==");
-            String DEC = EncryptionDecryption.decrypt("vBSHimHpK34D6B+gE7dyOg==");
-//            String DEC = EncryptionDecryption.decrypt("2eldZ/W+46qkwmdsQy/TMA==");
+//            String DEC = EncryptionDecryption.decrypt("hMAonx4OkZ60pRqKhLLAcg"+"==");
+            String DEC = EncryptionDecryption.decrypt("o/jxafZx/Ja8gTcQO2Fjdw==");
             System.out.println("Encrypted Val ---- " + Enc);
             System.out.println("Decrypted Val ---- " + DEC);
             //String PWD = "Test@12345";
@@ -73,7 +73,7 @@ public class EncryptionDecryption {
     public static String encryptHash(String text) throws NoSuchAlgorithmException,
             UnsupportedEncodingException {
         MessageDigest md = MessageDigest.getInstance("SHA-384");
-        md.update(text.getBytes("iso-8859-1"), 0, text.length());
+        md.update(text.getBytes(StandardCharsets.ISO_8859_1), 0, text.length());
         byte[] sha1hash = md.digest();
         return convertToHex(sha1hash);
     }

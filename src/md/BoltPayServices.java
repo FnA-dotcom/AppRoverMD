@@ -1,4 +1,3 @@
-/*
 package md;
 
 //import Handheld.UtilityHelper;
@@ -44,7 +43,7 @@ public class BoltPayServices extends HttpServlet {
         requestHandling(request, response);
     }
 
-    public void requestHandling(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    public void requestHandling(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         String UserId;
         int FacilityIndex;
         String DatabaseName;
@@ -126,7 +125,7 @@ public class BoltPayServices extends HttpServlet {
         }
     }
 
-    private void GetDetailsold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) throws IOException {
+    private void GetDetailsold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) {
         stmt = null;
         rset = null;
         Query = "";
@@ -161,11 +160,9 @@ public class BoltPayServices extends HttpServlet {
 
         try {
             //String[] BoltConnect = helper.getBoltCredential(conn, FlagType);
-            */
-/*out.println("Site " + BoltConnect[0] + "<br>");
+            /*out.println("Site " + BoltConnect[0] + "<br>");
             out.println("URL " + BoltConnect[1] + "<br>");
-            out.println("Currency " + BoltConnect[2] + "<br>");*//*
-
+            out.println("Currency " + BoltConnect[2] + "<br>");*/
 
 
             Query = "Select a.PatientMRN, CONCAT(IFNULL(b.Title,''),' ',IFNULL(b.FirstName,''),' ',IFNULL(b.MiddleInitial,''),' ',IFNULL(b.LastName,'')), " +
@@ -304,7 +301,7 @@ public class BoltPayServices extends HttpServlet {
 
     }
 
-    private void GetConnectold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) throws IOException {
+    private void GetConnectold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) {
         Query = "";
         stmt = null;
         rset = null;
@@ -350,7 +347,7 @@ public class BoltPayServices extends HttpServlet {
 //        }
     }
 
-    private void GetTransactionold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) throws IOException {
+    private void GetTransactionold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) {
 
         try {
             String InvoiceNo = "";
@@ -363,7 +360,7 @@ public class BoltPayServices extends HttpServlet {
             int InstallmentPlanFound = Integer.parseInt(request.getParameter("InstallmentPlanFound").trim());
             PatientMRN = request.getParameter("PatientMRN").trim();
             InvoiceNo = request.getParameter("InvoiceNo").trim();
-            TotalAmount = Double.parseDouble(request.getParameter("TotalAmount").replace(",", "").trim());
+            TotalAmount = Double.parseDouble(request.getParameter("TotalAmount").replace(",","").trim());
             PaidAmount = Double.parseDouble(request.getParameter("PaidAmount").trim());
             BalAmount = Double.parseDouble(request.getParameter("BalAmount").trim());
             String Amount = request.getParameter("Amount").trim();
@@ -389,7 +386,7 @@ public class BoltPayServices extends HttpServlet {
             AuthCardRe = bm.authCard(Amount);
 //            AuthCardRe = bm.authCard("11");
             //out.println("AuthCardRe--->"+AuthCardRe.toString());
-            System.out.println("Response HERE : " + AuthCardRe.toString());
+            System.out.println("Response HERE : " + AuthCardRe);
 
             //AuthCardRe = StringEscapeUtils.unescapeJava(AuthCardRe);
             System.out.println(Database + "-----:Database");
@@ -514,16 +511,14 @@ public class BoltPayServices extends HttpServlet {
             }
 
 //            }
-            */
-/*else {
+            /*else {
                 out.println("jsonvalidatefail");
                 try {
                     CheckActiveSession(conn, Database, UserId, ClientId);
                     bm.stop();
                 } catch (Exception e) {
                 }
-            }*//*
-
+            }*/
 
         } catch (Exception e) {
             try {
@@ -542,7 +537,7 @@ public class BoltPayServices extends HttpServlet {
 
     }
 
-    private void Disconnect_Stopold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) throws IOException {
+    private void Disconnect_Stopold(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId) {
         try {
             //CheckActiveSession(conn, Database, UserId, ClientId, helper, request, out, servletContext);
             bm.stop();
@@ -812,7 +807,7 @@ public class BoltPayServices extends HttpServlet {
             CheckActiveSession(conn, Database, UserId, ClientId, helper, request, out, servletContext);
             //bm.stop();
         } catch (Exception Ex) {
-            helper.SendEmailWithAttachment("Error in BoltPayServices ** (GetConnect ** CheckActiveSession)", servletContext, Ex, "BoltPayServices", "GetConnect", conn);
+            helper.SendEmailWithAttachment("Error in BoltPayServices ** (GetConnect ** CheckActiveSession)",  servletContext, Ex, "BoltPayServices", "GetConnect", conn);
             Services.DumException("BoltPayServices", "Get Connect", request, Ex, getServletContext());
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "RegisteredPatients");
@@ -828,7 +823,7 @@ public class BoltPayServices extends HttpServlet {
             bm.init(DeviceS, ClientId, conn);
             SessionKey = bm.validateConnection();
         } catch (Exception Ex) {
-            helper.SendEmailWithAttachment("Error in BoltPayServices ** (GetConnect -- validate Connection)", servletContext, Ex, "BoltPayServices", "GetConnect", conn);
+            helper.SendEmailWithAttachment("Error in BoltPayServices ** (GetConnect -- validate Connection)",  servletContext, Ex, "BoltPayServices", "GetConnect", conn);
             Services.DumException("BoltPayServices", "Get Connect", request, Ex, getServletContext());
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "RegisteredPatients");
@@ -892,16 +887,14 @@ public class BoltPayServices extends HttpServlet {
             int InstallmentPlanFound = Integer.parseInt(request.getParameter("InstallmentPlanFound").trim());
             PatientMRN = request.getParameter("PatientMRN").trim();
             InvoiceNo = request.getParameter("InvoiceNo").trim();
-*/
 /*            TotalAmount = Double.parseDouble(request.getParameter("TotalAmount").trim());
             PaidAmount = Double.parseDouble(request.getParameter("PaidAmount").trim());
             BalAmount = Double.parseDouble(request.getParameter("BalAmount").trim());
-            String Amount = request.getParameter("Amount").trim();*//*
-
-            TotalAmount = Double.parseDouble(request.getParameter("TotalAmount").trim().replaceAll(",", ""));
-            PaidAmount = Double.parseDouble(request.getParameter("PaidAmount").trim().replaceAll(",", ""));
-            BalAmount = Double.parseDouble(request.getParameter("BalAmount").trim().replaceAll(",", ""));
-            String Amount = request.getParameter("Amount").trim().replaceAll(",", "");
+            String Amount = request.getParameter("Amount").trim();*/
+            TotalAmount = Double.parseDouble(request.getParameter("TotalAmount").trim().replaceAll(",",""));
+            PaidAmount = Double.parseDouble(request.getParameter("PaidAmount").trim().replaceAll(",",""));
+            BalAmount = Double.parseDouble(request.getParameter("BalAmount").trim().replaceAll(",",""));
+            String Amount = request.getParameter("Amount").trim().replaceAll(",","");
             if (Amount.contains(".")) {
                 String parts[] = Amount.split("\\.");
                 if (parts[1].length() == 1) {
@@ -1061,16 +1054,14 @@ public class BoltPayServices extends HttpServlet {
             }
 
 //            }
-            */
-/*else {
+            /*else {
                 out.println("jsonvalidatefail");
                 try {
                     CheckActiveSession(conn, Database, UserId, ClientId);
                     bm.stop();
                 } catch (Exception e) {
                 }
-            }*//*
-
+            }*/
 
         } catch (Exception Ex) {
             CheckActiveSession(conn, Database, UserId, ClientId, helper, request, out, servletContext);
@@ -1105,8 +1096,7 @@ public class BoltPayServices extends HttpServlet {
 
     }
 
-    */
-/*public static boolean isValidJSON(String json) {
+    /*public static boolean isValidJSON(String json) {
         boolean valid = false;
         try {
             final JsonParser parser = new ObjectMapper().getJsonFactory()
@@ -1118,8 +1108,7 @@ public class BoltPayServices extends HttpServlet {
             jpe.printStackTrace();
         }
         return valid;
-    }*//*
-
+    }*/
 
     private void CheckActiveSession(Connection conn, String Database, String UserId, int ClientId, UtilityHelper helper, HttpServletRequest request, PrintWriter out, ServletContext servletContext) throws IOException {
         int FoundSession = 0;
@@ -1166,7 +1155,7 @@ public class BoltPayServices extends HttpServlet {
         }
     }
 
-    private void CheckActiveSessionold(Connection conn, String Database, String UserId, int ClientId) throws IOException {
+    private void CheckActiveSessionold(Connection conn, String Database, String UserId, int ClientId) {
         int FoundSession = 0;
         Query = "";
         stmt = null;
@@ -1196,8 +1185,7 @@ public class BoltPayServices extends HttpServlet {
         }
     }
 
-    private void establishSession(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId, UtilityHelper helper) {
+    private void establishSession(HttpServletRequest request, Connection conn, ServletContext servletContext, PrintWriter out, String Database, String UserId, int ClientId, UtilityHelper helper){
 
     }
 }
-*/

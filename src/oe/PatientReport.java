@@ -20,19 +20,20 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class PatientReport extends HttpServlet {
+public class PatientReport extends HttpServlet
+{
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
     }
-
+    
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
+    
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
     }
-
+    
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         String UserId = "";
@@ -40,7 +41,7 @@ public class PatientReport extends HttpServlet {
         String Passwd = "";
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter((OutputStream)response.getOutputStream());
         final Services supp = new Services();
         ServletContext context = null;
         context = this.getServletContext();
@@ -57,19 +58,21 @@ public class PatientReport extends HttpServlet {
         }
         if (ActionID.equals("GetReport")) {
             this.GetReport(request, out, conn, context, UserId, response);
-        } else if (ActionID.equals("GetReportInput")) {
+        }
+        else if (ActionID.equals("GetReportInput")) {
             this.GetReportInput(request, out, conn, context, UserId, response);
-        } else {
+        }
+        else {
             out.println("Under Development");
         }
         try {
             conn.close();
-        } catch (Exception ex) {
         }
+        catch (Exception ex) {}
         out.flush();
         out.close();
     }
-
+    
     void GetReportInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final HttpServletResponse response) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -89,11 +92,12 @@ public class PatientReport extends HttpServlet {
             final Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("Clients", Clients.toString());
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/PatientReport.html");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             out.println("Error in getting Report: " + e.getMessage());
         }
     }
-
+    
     void GetReport(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final HttpServletResponse response) {
         Statement hstmt = null;
         ResultSet hrset = null;
@@ -104,7 +108,7 @@ public class PatientReport extends HttpServlet {
         final int requestedMonthInt = Integer.parseInt(request.getParameter("Month").trim());
         String clientid = "";
         String clientname = "";
-        final String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "Novermber", "December"};
+        final String[] months = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "Novermber", "December" };
         final String requestedYearString = request.getParameter("Year").trim();
         String requestedMonthString = request.getParameter("Month").trim();
         final String Clients = request.getParameter("Clients").trim();
@@ -116,9 +120,11 @@ public class PatientReport extends HttpServlet {
         int requestedMonthLength = 0;
         if (requestedMonthInt == 1 || requestedMonthInt == 3 || requestedMonthInt == 5 || requestedMonthInt == 7 || requestedMonthInt == 8 || requestedMonthInt == 10 || requestedMonthInt == 12) {
             requestedMonthLength = 31;
-        } else if (requestedMonthInt == 2) {
+        }
+        else if (requestedMonthInt == 2) {
             requestedMonthLength = 28;
-        } else {
+        }
+        else {
             requestedMonthLength = 30;
         }
         try {
@@ -146,7 +152,8 @@ public class PatientReport extends HttpServlet {
             List.append("</thead>");
             if (Clients.equals("-1")) {
                 Query = "SELECT id,name,directory_1,remotedirectory,tablename FROM oe.clients WHERE id NOT IN (1,9,10,12)";
-            } else {
+            }
+            else {
                 Query = "SELECT id,name,directory_1,remotedirectory,tablename FROM oe.clients WHERE id = '" + Clients + "'";
             }
             hstmt = conn.createStatement();
@@ -185,8 +192,9 @@ public class PatientReport extends HttpServlet {
             if (Integer.parseInt(requestedMonthString) >= 1 && Integer.parseInt(requestedMonthString) <= 12) {
                 MonthName = months[Integer.parseInt(requestedMonthString) - 1];
             }
-            out.println((Object) List + "|" + "Month Name: " + MonthName);
-        } catch (Exception e) {
+            out.println((Object)List + "|" + "Month Name: " + MonthName);
+        }
+        catch (Exception e) {
             out.println("Error in getting Report: " + e.getMessage());
         }
     }

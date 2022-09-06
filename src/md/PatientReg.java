@@ -26,12 +26,6 @@ import java.util.Calendar;
 @SuppressWarnings("Duplicates")
 public class PatientReg extends HttpServlet {
 
-    Integer ScreenIndex = 4;
-/*    private ResultSet rset = null;
-    private   String Query = "";
-    private   Statement stmt = null;
-    private   PreparedStatement pStmt = null;    */
-
     public static int getAge(LocalDate dob) {
         LocalDate curDate = LocalDate.now();
         return Period.between(dob, curDate).getYears();
@@ -69,7 +63,6 @@ public class PatientReg extends HttpServlet {
             String UserId = session.getAttribute("UserId").toString();
             String DatabaseName = session.getAttribute("DatabaseName").toString();
             int FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
-//            int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
             String DirectoryName = session.getAttribute("DirectoryName").toString();
             if (UserId.equals("")) {
                 Parsehtm parsehtm = new Parsehtm(request);
@@ -80,15 +73,7 @@ public class PatientReg extends HttpServlet {
             }
             ActionID = request.getParameter("ActionID");
             conn = Services.GetConnection(context, 1);
-/*            if (!helper.AuthorizeScreen(request, out, this.conn, context, UserIndex, this.ScreenIndex)) {
-//                out.println("You are not Authorized to access this page");
-                Parsehtm Parser1 = new Parsehtm(request);
-                Parser1.SetField("Message", "You are not Authorized to access this page");
-                Parser1.SetField("FormName", "ManagementDashboard");
-                Parser1.SetField("ActionID", "GetInput");
-                Parser1.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
-                return;
-            }*/
+
             if (conn == null) {
                 Parsehtm parsehtm = new Parsehtm(request);
                 parsehtm.SetField("Error", "Unable to connect. Our team is looking into it!");
@@ -103,19 +88,20 @@ public class PatientReg extends HttpServlet {
                     SaveData(request, out, conn, context, DatabaseName, UserId, helper, response, DirectoryName);
                     break;
                 case "PartialComplete":
-                    PartialComplete(request, out, conn, context, DatabaseName, UserId, helper, response, DirectoryName);
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Save Partial Data", "Save Partial button pressed! ", FacilityIndex);
+                    PartialComplete(request, out, conn, context, DatabaseName, UserId, helper, FacilityIndex);
                     break;
                 case "EditValues_New":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Edit Values New from Patient Reg", "Click on View Edit Option from View Patients Option ", FacilityIndex);
-                    EditValues_New(request, out, conn, context, DatabaseName, UserId, helper);
+                    EditValues_New(request, out, conn, context, DatabaseName, UserId, helper, FacilityIndex);
                     break;
                 case "PartialComplete_View":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Edit Values New from Patient Reg", "Click on View Edit Option from View Patients Option ", FacilityIndex);
-                    PartialComplete_View(request, out, conn, context, DatabaseName, UserId, helper);
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "PartialComplete_View from Patient Reg", "Click on View PartialComplete_View from View Patients Option ", FacilityIndex);
+                    PartialComplete_View(request, out, conn, context, DatabaseName, UserId, helper, FacilityIndex);
                     break;
                 case "EditSave_New":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Save Edited Values NEW", "Save Edited Values NEWfor Patient ", FacilityIndex);
-                    EditSave_New(request, out, conn, context, DatabaseName, UserId, helper);
+                    EditSave_New(request, out, conn, context, DatabaseName, UserId, helper, response, FacilityIndex);
                     break;
                 case "CheckPatient":
                     supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Check Duplicate Patients", "Check if the Patient Exist ", FacilityIndex);
@@ -172,12 +158,15 @@ public class PatientReg extends HttpServlet {
             String Date = "";
             String PRF_name = "";
             String defaultCountryName = "";
-            StringBuffer Month = new StringBuffer();
-            StringBuffer Day = new StringBuffer();
-            StringBuffer Year = new StringBuffer();
-            StringBuffer ProfessionalPayersList = new StringBuffer();
-            StringBuffer CorporateAccountProfessionalPayersList = new StringBuffer();
+            StringBuilder Month = new StringBuilder();
+            StringBuilder Day = new StringBuilder();
+            StringBuilder Year = new StringBuilder();
+            StringBuilder ProfessionalPayersList = new StringBuilder();
+            StringBuilder CorporateAccountProfessionalPayersList = new StringBuilder();
             StringBuilder transactionType = new StringBuilder();
+            StringBuilder MaritalStatusList = new StringBuilder();
+            StringBuilder GenderList = new StringBuilder();
+            StringBuilder TitleList = new StringBuilder();
 
             int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
             facilityName = helper.getFacilityName(request, conn, servletContext, ClientIndex);
@@ -198,10 +187,6 @@ public class PatientReg extends HttpServlet {
             rset.close();
             stmt.close();
 
-            //Select Id, PayerId, LTRIM(rtrim(PayerName)) from oe_2.ProfessionalPayers where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId
-            // Select Id, PayerId, LTRIM(rtrim(PayerName)) from ProfessionalPayers where PayerName like  '%Texas%'  or PayerName like   '%ALL%' group by PayerId
-
-            //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId";//where PayerName like '%Texas%'";
             Query = "Select a.Id, a.PayerId, LTRIM(rtrim(REPLACE(a.PayerName,'Servicing States','') )), Count(*) from oe_2.ProfessionalPayers a\n" +
                     "LEFT JOIN " + Database + ".InsuranceInfo b ON  a.Id=b.PriInsuranceName\n" +
                     "where a.Id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955,64,1545,3646,8589,200,201,202,203,204,205,206,207,3649,5978,8206,4763,3465,3466,3467,3468,41,387,388,389,697,698,4757, 8605, 8606, 8254, 2560, 1663,8176,1049) \n" +
@@ -227,7 +212,6 @@ public class PatientReg extends HttpServlet {
             rset.close();
             stmt.close();
 
-            //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id not in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId ";//where PayerName not like '%Texas%'";
             Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
                     "where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";
             stmt = conn.createStatement();
@@ -248,26 +232,6 @@ public class PatientReg extends HttpServlet {
                     CorporateAccountProfessionalPayersList.append("<option value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
                 }
             }
-
-/*            if (ClientIndex == 27 || ClientIndex == 29) {
-                transactionType.append("<div class=\"form-row\">");
-                transactionType.append("<div class=\"col-md-2\">");
-                transactionType.append("<div class=\"form-group\">");
-                transactionType.append("<label><font color=\"black\">Transaction Type * </font></label>");
-                transactionType.append("<select class=\"form-control\" id=\"TransactionType\" name=\"TransactionType\" style=\"color:black;\">");
-                Query = "SELECT Id, TransactionType FROM " + Database + ".TransactionTypes ORDER BY TransactionType";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    transactionType.append("<option value=\"" + rset.getInt(1) + "\">" + rset.getString(2) + "</option>");
-                }
-                rset.close();
-                stmt.close();
-                transactionType.append("</select>");
-                transactionType.append("</div>\t");
-                transactionType.append("</div>\t");
-                transactionType.append("</div>\t");
-            }*/
 
             String[] month = {
                     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
@@ -294,6 +258,35 @@ public class PatientReg extends HttpServlet {
                     Year.append("<option value=" + i + ">" + i + "</option>");
                 }
             }
+
+            Query = "Select Id,Title from " + Database + ".Title WHERE status = 1 ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            TitleList.append("<option value='' selected disabled>Select Title</option>");
+            while (rset.next())
+                TitleList.append("<option value=\"" + rset.getString(2) + "\">" + rset.getString(2) + "</option>");
+            rset.close();
+            stmt.close();
+
+            Query = "Select Id,GenderName from " + Database + ".Gender WHERE status = 0";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            GenderList.append("<option value='' selected disabled>Select Gender</option>");
+            while (rset.next())
+                GenderList.append("<option value=\"" + rset.getString(2) + "\">" + rset.getString(2) + "</option>");
+            rset.close();
+            stmt.close();
+
+            Query = "Select Id,MaritalStatus from " + Database + ".MaritalStatus WHERE status = 1 ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            MaritalStatusList.append("<option value='' selected disabled>Select Marital Status</option>");
+            while (rset.next())
+                MaritalStatusList.append("<option value=\"" + rset.getString(2) + "\">" + rset.getString(2) + "</option>");
+            rset.close();
+            stmt.close();
+
+
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("Date", String.valueOf(Date));
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
@@ -312,6 +305,9 @@ public class PatientReg extends HttpServlet {
                 Parser.SetField("transactionType", String.valueOf(transactionType));
             }
             Parser.SetField("defaultCountryName", String.valueOf(defaultCountryName));
+            Parser.SetField("MaritalStatusList", String.valueOf(MaritalStatusList));
+            Parser.SetField("GenderList", String.valueOf(GenderList));
+            Parser.SetField("TitleList", String.valueOf(TitleList));
             Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PRF_files/" + PRF_name);
         } catch (Exception ex) {
             helper.SendEmailWithAttachment("Error in PatientReg ** (GetValues^^" + facilityName + ")", servletContext, ex, "PatientReg", "GetValues", conn);
@@ -319,22 +315,22 @@ public class PatientReg extends HttpServlet {
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "ManagementDashboard");
             Parser.SetField("ActionID", "GetInput");
-            Parser.SetField("Message", "MES#001");
+            Parser.SetField("Message", "MES#001-A");
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
         }
     }
 
     void SaveData(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, String Database, String UserId, UtilityHelper helper, HttpServletResponse response, String DirectoryName) throws FileNotFoundException {
-        Statement stmt = null;
-        ResultSet rset = null;
+        Statement stmt;
+        ResultSet rset;
         String Query = "";
         int PatientRegId = 0;
         int AddmissionBundle = 0;
         int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
-        String Title = "";
-        String FirstName = "";
-        String LastName = "";
-        String MiddleInitial = "";
+        String Title;
+        String FirstName;
+        String LastName;
+        String MiddleInitial;
         String MaritalStatus = "";
         String DOB = "";
         String Age = "";
@@ -350,6 +346,8 @@ public class PatientReg extends HttpServlet {
         String County = "";
         String ZipCode = "";
         String Ethnicity = "";
+        String LifesaversExtraQues_A = "";
+        String LifesaversExtraQues_Q = "";
         String Race = "";
         String SSN = "";
         String SpCarePhy = "";
@@ -380,7 +378,20 @@ public class PatientReg extends HttpServlet {
         String SympShortBreath = "0";
         String SympCongestion = "0";
         String AddInfoTextArea = "";
-        String GuarantorName = "";
+
+        String PoxPositveChk = "";
+        String PoxExposedDate = "";
+        String RashesChk = "";
+        String AgeChk = "";
+        String AssistanceChk = "";
+        String FallenChk = "";
+        String UnsteadyChk = "";
+        String PoxSymChk = "";
+
+
+//        String GuarantorName = "";
+        String GuarantorFirstName = "";
+        String GuarantorLastName = "";
         String GuarantorDOB = "";
         String GuarantorNumber = "";
         String GuarantorSSN = "";
@@ -396,7 +407,9 @@ public class PatientReg extends HttpServlet {
         String PriInsuranceName = "";
         String OtherInsuranceName = "";
         String OtherSecInsuranceName = "";
-        String PriInsurerName = "";
+//        String PriInsurerName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
         String AddressIfDifferent = "";
         String PrimaryDOB = "";
         String PrimarySSN = "";
@@ -405,8 +418,10 @@ public class PatientReg extends HttpServlet {
         String PrimaryEmployer = "";
         String EmployerAddress = "";
         String EmployerPhone = "";
-        String SecondryInsurance = "";
-        String SubscriberName = "";
+        String secondryInsurance = "";
+//        String SubscriberName = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
@@ -488,6 +503,9 @@ public class PatientReg extends HttpServlet {
         String VisitId = "";
         String CorporateAccountPriIns = "";
         String CorporateAccountSecIns = "";
+        String PriInsurergender = "";
+        String Subscribergender = "";
+
         //String TransactionType = "0";
         int MRN = 0;
         String CurrentDate = "";
@@ -496,13 +514,6 @@ public class PatientReg extends HttpServlet {
 
         try {
             try {
-/*                if (ClientIndex == 27 || ClientIndex == 29) {
-                    if (request.getParameter("TransactionType") == null) {
-                        TransactionType = "0";
-                    } else {
-                        TransactionType = request.getParameter("TransactionType").trim();
-                    }
-                }*/
                 if (request.getParameter("Title") == null) {
                     Title = null;
                 } else {
@@ -628,10 +639,23 @@ public class PatientReg extends HttpServlet {
                 } else {
                     EmpContact = request.getParameter("EmpContact").trim();
                 }
-                if (request.getParameter("GuarantorName") == null) {
-                    GuarantorName = "";
+//                if (request.getParameter("GuarantorName") == null) {
+//                    GuarantorName = "";
+//                } else {
+//                    GuarantorName = request.getParameter("GuarantorName").trim();
+//                }
+
+
+                if (request.getParameter("GuarantorFirstName") == null) {
+                    GuarantorFirstName = "";
                 } else {
-                    GuarantorName = request.getParameter("GuarantorName").trim();
+                    GuarantorFirstName = request.getParameter("GuarantorFirstName").trim();
+                }
+
+                if (request.getParameter("GuarantorLastName") == null) {
+                    GuarantorLastName = "";
+                } else {
+                    GuarantorLastName = request.getParameter("GuarantorLastName").trim();
                 }
                 if (request.getParameter("GuarantorDOB") == null) {
                     GuarantorDOB = "";
@@ -820,10 +844,20 @@ public class PatientReg extends HttpServlet {
                     PriInsuranceName = request.getParameter("PriInsuranceName").trim();
                 }
 
-                if (request.getParameter("PriInsurerName") == null) {
-                    PriInsurerName = "";
+//                if (request.getParameter("PriInsurerName") == null) {
+//                    PriInsurerName = "";
+//                } else {
+//                    PriInsurerName = request.getParameter("PriInsurerName").trim();
+//                }
+                if (request.getParameter("PriInsurerFirstName") == null) {
+                    PriInsurerFirstName = "";
                 } else {
-                    PriInsurerName = request.getParameter("PriInsurerName").trim();
+                    PriInsurerFirstName = request.getParameter("PriInsurerFirstName").trim();
+                }
+                if (request.getParameter("PriInsurerLastName") == null) {
+                    PriInsurerLastName = "";
+                } else {
+                    PriInsurerLastName = request.getParameter("PriInsurerLastName").trim();
                 }
 
                 if (request.getParameter("CorporateAccountPriIns") == null) {
@@ -857,13 +891,18 @@ public class PatientReg extends HttpServlet {
                     PrimaryDOB = "";
                 } else {
                     PrimaryDOB = request.getParameter("PrimaryDOB").trim();
-//                    System.out.println("INITIAL PRIMARY DOB *** " + PrimaryDOB);
-/*                    if (PrimaryDOB.length() > 0) {
-                        PrimaryDOB = "0000-00-00";
-                    } else {
-
-                    }*/
                 }
+                if (request.getParameter("PriInsurergender") == null) {
+                    PriInsurergender = "";
+                } else {
+                    PriInsurergender = request.getParameter("PriInsurergender").trim();
+                }
+                if (request.getParameter("Subscribergender") == null) {
+                    Subscribergender = "";
+                } else {
+                    Subscribergender = request.getParameter("Subscribergender").trim();
+                }
+
                 if (request.getParameter("PrimarySSN") == null) {
                     PrimarySSN = "";
                 } else {
@@ -895,24 +934,26 @@ public class PatientReg extends HttpServlet {
                     EmployerPhone = request.getParameter("EmployerPhone").trim();
                 }
                 if (request.getParameter("SecondryInsurance") == null) {
-                    SecondryInsurance = "0";
+                    secondryInsurance = "0";
                 } else {
-                    SecondryInsurance = request.getParameter("SecondryInsurance").trim();
+                    secondryInsurance = request.getParameter("SecondryInsurance").trim();
                 }
-                if (request.getParameter("SubscriberName") == null) {
-                    SubscriberName = "";
+
+                if (request.getParameter("SubscriberFirstName") == null) {
+                    SubscriberFirstName = "";
                 } else {
-                    SubscriberName = request.getParameter("SubscriberName").trim();
+                    SubscriberFirstName = request.getParameter("SubscriberFirstName").trim();
+                }
+
+                if (request.getParameter("SubscriberLastName") == null) {
+                    SubscriberLastName = "";
+                } else {
+                    SubscriberLastName = request.getParameter("SubscriberLastName").trim();
                 }
                 if (request.getParameter("SubscriberDOB").equals(null) || request.getParameter("SubscriberDOB").equals("")) {
                     SubscriberDOB = "0000-00-00";
                 } else {
                     SubscriberDOB = request.getParameter("SubscriberDOB").trim();
-/*                    if (SubscriberDOB.length() > 0) {
-
-                    } else {
-                        SubscriberDOB = "0000-00-00";
-                    }*/
                 }
                 if (request.getParameter("MemberID_2") == null) {
                     MemberID_2 = "";
@@ -1161,15 +1202,6 @@ public class PatientReg extends HttpServlet {
                     }
                 }
 
-
-                System.out.println("Instagram--->" + Instagram);
-                System.out.println("Youtube--->" + Youtube);
-                System.out.println("Spotify--->" + Spotify);
-                System.out.println("Instagram_text--->" + Instagram_text);
-                System.out.println("Youtube_text--->" + Youtube_text);
-                System.out.println("Spotify_text--->" + Spotify_text);
-
-
                 if (request.getParameter("Attorney") == null) {
                     Attorney = 0;
                     Attorney_text = "";
@@ -1269,6 +1301,50 @@ public class PatientReg extends HttpServlet {
 
 
                 if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+
+                    if (request.getParameter("PoxPositveChk") == null) {
+                        PoxPositveChk = "";
+                    } else {
+                        PoxPositveChk = request.getParameter("PoxPositveChk").trim();
+                    }
+                    if (request.getParameter("PoxExposedDate") == null) {
+                        PoxExposedDate = "0000-00-00";
+                    } else {
+                        PoxExposedDate = request.getParameter("PoxExposedDate").trim();
+                    }
+                    if (request.getParameter("RashesChk") == null) {
+                        RashesChk = "";
+                    } else {
+                        RashesChk = request.getParameter("RashesChk").trim();
+                    }
+                    if (request.getParameter("AgeChk") == null) {
+                        AgeChk = "0";
+                    } else {
+                        AgeChk = "1";
+                    }
+                    if (request.getParameter("AssistanceChk") == null) {
+                        AssistanceChk = "0";
+                    } else {
+                        AssistanceChk = "1";
+                    }
+                    if (request.getParameter("FallenChk") == null) {
+                        FallenChk = "0";
+                    } else {
+                        FallenChk = "1";
+                    }
+                    if (request.getParameter("UnsteadyChk") == null) {
+                        UnsteadyChk = "0";
+                    } else {
+                        UnsteadyChk = "1";
+                    }
+
+                    if (request.getParameter("PoxSymChk") == null) {
+                        PoxSymChk = "0";
+                    } else {
+                        PoxSymChk = "1";
+                    }
+
+
                     if (request.getParameter("releaseRecord") == null) {
                         releaseRecord = "0";
                     } else {
@@ -1282,14 +1358,9 @@ public class PatientReg extends HttpServlet {
 
                     Filter_WB_SW_A = ",STDrelease,releaseRecord";
                     Filter_WB_SW_Q = ",?,?";
+                    LifesaversExtraQues_A = ",PoxPositveChk, PoxExposedDate, RashesChk, AgeChk, AssistanceChk, FallenChk, UnsteadyChk,PoxSymChk";
+                    LifesaversExtraQues_Q = ",?,?,?,?,?,?,?,?";
                 }
-/*                else {
-                    if (ClientIndex == 27 || ClientIndex == 29) {
-                        Filter_WB_SW_A = ",TransactionTypeIdx";
-                        Filter_WB_SW_Q = ",?";
-                    }
-
-                }*/
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData^^" + facilityName + " ##MES#002)", servletContext, ex, "PatientReg", "SaveData", conn);
                 Services.DumException("SaveData^^" + facilityName + "", "PatientReg##MES#002 ", request, ex);
@@ -1301,64 +1372,47 @@ public class PatientReg extends HttpServlet {
                 return;
             }
             try {
-                Query = "Select Id,dbname from oe.clients where ltrim(rtrim(UPPER(Id))) =  ltrim(rtrim(UPPER('" + ClientIndex + "')))";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    ClientIndex = rset.getInt(1);
-                    Database = rset.getString(2);
+
+                if (ReasonVisit.equals("")) {
+                    out.println("Please Select the Reason of Visit from the DropDown that appears besides/below the ReasonVisit");
+                    out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
+                    return;
                 }
-                rset.close();
-                stmt.close();
-                try {
-                    if (ReasonVisit.equals("")) {
-                        out.println("Please Select the Reason of Visit from the DropDown that appears besides/below the ReasonVisit");
-                        out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
-                        return;
-                    }
-                    if (ClientIndex == 27 || ClientIndex == 29) {
-                        Query = "Select ReasonVisit from " + Database + ".ReasonVisits where Id = " + ReasonVisit;
-                        stmt = conn.createStatement();
-                        rset = stmt.executeQuery(Query);
-                        if (rset.next())
-                            ReasonVisit = rset.getString(1);
-                        rset.close();
-                        stmt.close();
-                    }
-                    if (MRN == 0)
-                        MRN = 310001;
-                    Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
+                if (ClientIndex == 27 || ClientIndex == 29) {
+                    Query = "Select ReasonVisit from " + Database + ".ReasonVisits where Id = " + ReasonVisit;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next())
-                        MRN = rset.getInt(1);
+                        ReasonVisit = rset.getString(1);
                     rset.close();
                     stmt.close();
-                    if (String.valueOf(MRN).length() == 0) {
-                        MRN = 310001;
-                    } else if (String.valueOf(MRN).length() == 4) {
-                        MRN = 310001;
-                    } else if (String.valueOf(MRN).length() == 8) {
-                        MRN = 310001;
-                    } else if (String.valueOf(MRN).length() == 6) {
-                        MRN++;
-                    }
-                    if (String.valueOf(ClientIndex).length() == 1) {
-                        ExtendedMRN = "100" + ClientIndex + MRN;
-                    } else if (String.valueOf(ClientIndex).length() == 2) {
-                        ExtendedMRN = "10" + ClientIndex + MRN;
-                    } else if (String.valueOf(ClientIndex).length() == 3) {
-                        ExtendedMRN = "1" + ClientIndex + MRN;
-                    }
-                } catch (Exception ex) {
-                    helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData^^" + facilityName + " ##MES#003)", servletContext, ex, "PatientReg", "SaveData", conn);
-                    Services.DumException("SaveData^^" + facilityName + " ##MES#003", "PatientReg ", request, ex);
-                    Parsehtm Parser = new Parsehtm(request);
-                    Parser.SetField("FormName", "PatientReg");
-                    Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientIndex + "");
-                    Parser.SetField("Message", "MES#003");
-                    Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-                    return;
+                }
+                if (MRN == 0)
+                    MRN = 310001;
+
+                Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next())
+                    MRN = rset.getInt(1);
+                rset.close();
+                stmt.close();
+
+                if (String.valueOf(MRN).length() == 0) {
+                    MRN = 310001;
+                } else if (String.valueOf(MRN).length() == 4) {
+                    MRN = 310001;
+                } else if (String.valueOf(MRN).length() == 8) {
+                    MRN = 310001;
+                } else if (String.valueOf(MRN).length() == 6) {
+                    MRN++;
+                }
+                if (String.valueOf(ClientIndex).length() == 1) {
+                    ExtendedMRN = "100" + ClientIndex + MRN;
+                } else if (String.valueOf(ClientIndex).length() == 2) {
+                    ExtendedMRN = "10" + ClientIndex + MRN;
+                } else if (String.valueOf(ClientIndex).length() == 3) {
+                    ExtendedMRN = "1" + ClientIndex + MRN;
                 }
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData^^" + facilityName + " ##MES#004)", servletContext, ex, "PatientReg", "SaveData", conn);
@@ -1370,16 +1424,10 @@ public class PatientReg extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
-            Query = "Select now()";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                CurrentDate = rset.getString(1);
-            rset.close();
-            stmt.close();
 
-            UtilityHelper utilityHelper = new UtilityHelper();
-            String ClientIp = utilityHelper.getClientIp(request);
+            CurrentDate = helper.getCurrDate(request, conn);
+
+            String ClientIp = helper.getClientIp(request);
             try {
                 PreparedStatement MainReceipt = conn.prepareStatement(
                         "INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName ,MiddleInitial,DOB,Age,Gender ,Email,PhNumber ," +
@@ -1392,7 +1440,8 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(3, LastName);
                 MainReceipt.setString(4, MiddleInitial);
                 MainReceipt.setString(5, DOB);
-                MainReceipt.setString(6, Age);
+//                MainReceipt.setString(6, Age);
+                MainReceipt.setString(6, null);
                 MainReceipt.setString(7, gender);
                 MainReceipt.setString(8, Email);
                 MainReceipt.setString(9, PhNumber);
@@ -1426,11 +1475,6 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.setString(36, STDrelease);
                     MainReceipt.setString(37, releaseRecord);
                 }
-/*                else {
-                    if (ClientIndex == 27 || ClientIndex == 29) {
-                        MainReceipt.setString(36, TransactionType);
-                    }
-                }*/
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
             } catch (Exception ex) {
@@ -1454,6 +1498,7 @@ public class PatientReg extends HttpServlet {
             } catch (Exception e) {
 //                out.println("Error 3- :" + e.getMessage());
             }
+
             try {
                 PreparedStatement MainReceipt = conn.prepareStatement(
                         "INSERT INTO " + Database + ".PatientVisit(MRN,PatientRegId,ReasonVisit,VisitNumber,DoctorId,DateofService," +
@@ -1499,8 +1544,9 @@ public class PatientReg extends HttpServlet {
                                 "TravelHowLong,COVIDExposedChk,  SympFever,SympBodyAches ,SympSoreThroat,SympFatigue , SympRash,SympVomiting ," +
                                 "SympDiarrhea,SympCough,SympRunnyNose,SympNausea,SympFluSymptoms ,SympEyeConjunctivitis, Race, CovidExpWhen, " +
                                 "SpCarePhy,  SympHeadache, SympLossTaste, SympShortBreath, SympCongestion, AddInfoTextArea, VisitId, " +
-                                "GuarantorName, GuarantorDOB,  GuarantorNumber, GuarantorSSN, COVIDPositveChk, CovidPositiveDate) " +
-                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                "GuarantorFirstName, GuarantorDOB,  GuarantorNumber, GuarantorSSN, COVIDPositveChk, CovidPositiveDate,GuarantorLastName" +
+                                " " + LifesaversExtraQues_A + ") " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? " + LifesaversExtraQues_Q + ") ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setInt(2, MRN);
                 MainReceipt.setInt(3, TravellingChk);
@@ -1532,7 +1578,7 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(26, SympCongestion);
                 MainReceipt.setString(27, AddInfoTextArea);
                 MainReceipt.setString(28, VisitId);
-                MainReceipt.setString(29, GuarantorName);
+                MainReceipt.setString(29, GuarantorFirstName);
                 MainReceipt.setString(30, GuarantorDOB);
                 MainReceipt.setString(31, GuarantorNumber);
                 MainReceipt.setString(32, GuarantorSSN);
@@ -1541,7 +1587,21 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.setString(34, CovidPositiveDate);
                 else
                     MainReceipt.setNull(34, Types.DATE);
-                //MainReceipt.setString(34, CovidPositiveDate);
+
+                MainReceipt.setString(35, GuarantorLastName);
+
+
+                if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+
+                    MainReceipt.setString(36, PoxPositveChk);
+                    MainReceipt.setString(37, PoxExposedDate);
+                    MainReceipt.setString(38, RashesChk);
+                    MainReceipt.setString(39, AgeChk);
+                    MainReceipt.setString(40, AssistanceChk);
+                    MainReceipt.setString(41, FallenChk);
+                    MainReceipt.setString(42, UnsteadyChk);
+                    MainReceipt.setString(43, PoxSymChk);
+                }
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
             } catch (Exception ex) {
@@ -1554,125 +1614,18 @@ public class PatientReg extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
-//            System.out.println("INS NAME *** " + PriInsuranceName);
-            if (!PriInsuranceName.equals("")) {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 1 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
+
+            if (PriInsuranceName.equals("") || PriInsuranceName.equals("8606")) {
+                SelfPayChk = 0;
+                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
             } else {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
-
-/*                int insuranceCount = 0;
-                Query = "SELECT COUNT(*) FROM " + Database + ".InsuranceInfo WHERE PatientRegId=" + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    insuranceCount = rset.getInt(1);
-                rset.close();
-                stmt.close();
-
-                if (insuranceCount > 0) {
-                    insertInsuranceInfoHistory(request, conn, servletContext, Database, PatientRegId, out, facilityName, helper);
-                    PreparedStatement preparedStatement = conn.prepareStatement(
-                            "DELETE FROM " + Database + ".InsuranceInfo WHERE PatientRegId = ?");
-                    preparedStatement.setInt(1, PatientRegId);
-                    preparedStatement.executeUpdate();
-                    preparedStatement.close();
-                }*/
-            }
-            if (PriInsuranceName.equals("8606")) {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
-            }
-            /*
-            if (!PriInsuranceName.equals("") || !PriInsuranceName.equals("8606")) {
+                SelfPayChk = 1;
                 Query = "Update " + Database + ".PatientReg Set SelfPayChk = 1 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
-            } else {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
-
-                int insuranceCount = 0;
-                Query = "SELECT COUNT(*) FROM " + Database + ".InsuranceInfo WHERE PatientRegId=" + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    insuranceCount = rset.getInt(1);
-                rset.close();
-                stmt.close();
-
-                if (insuranceCount > 0) {
-                    insertInsuranceInfoHistory(request, conn, servletContext, Database, PatientRegId, out, facilityName, helper);
-                    PreparedStatement preparedStatement = conn.prepareStatement(
-                            "DELETE FROM " + Database + ".InsuranceInfo WHERE PatientRegId = ?");
-                    preparedStatement.setInt(1, PatientRegId);
-                    preparedStatement.executeUpdate();
-                    preparedStatement.close();
-                }
             }
-            */
-//            System.out.println("**** SELF PAY CHECK **** " + SelfPayChk);
-/*            if (PriInsuranceName.equals("8606")) {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
+            stmt = conn.createStatement();
+            stmt.executeUpdate(Query);
+            stmt.close();
 
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
-            }*/
             try {
                 if (SelfPayChk == 1) {
                     if (ClientIndex == 10 || ClientIndex == 15) {
@@ -1695,14 +1648,14 @@ public class PatientReg extends HttpServlet {
                             return;
                         }
                     }
-//                    System.out.println("Primary DOB " + PrimaryDOB);
                     PreparedStatement MainReceipt = conn.prepareStatement(
                             "INSERT INTO " + Database + ".InsuranceInfo(PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance," +
                                     "MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary," +
-                                    "PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberName," +
-                                    "SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate,VisitId, PriInsurerName," +
-                                    "OtherInsuranceName,CorporateAccountPriIns,CorporateAccountSecIns,OtherSecInsuranceName) " +
-                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?) ");
+                                    "PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,secondryInsurance,SubscriberFirstName ," +
+                                    "SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate,VisitId, PriInsurerFirstName," +
+                                    "OtherInsuranceName,CorporateAccountPriIns,CorporateAccountSecIns,OtherSecInsuranceName,PriInsurerLastName," +
+                                    "SubscriberLastName,PriInsurergender,Subscribergender ) " +
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?,?,?,?,?) ");
                     MainReceipt.setInt(1, PatientRegId);
                     MainReceipt.setInt(2, WorkersCompPolicy);
                     MainReceipt.setInt(3, MotorVehAccident);
@@ -1711,7 +1664,6 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.setString(6, GrpNumber);
                     MainReceipt.setString(7, PriInsuranceName);
                     MainReceipt.setString(8, AddressIfDifferent);
-                    //MainReceipt.setString(9, PrimaryDOB);
                     if (!PrimaryDOB.equals(""))
                         MainReceipt.setString(9, PrimaryDOB);
                     else
@@ -1722,9 +1674,8 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.setString(13, PrimaryEmployer);
                     MainReceipt.setString(14, EmployerAddress);
                     MainReceipt.setString(15, EmployerPhone);
-                    MainReceipt.setString(16, SecondryInsurance);
-                    MainReceipt.setString(17, SubscriberName);
-                    //MainReceipt.setString(18, SubscriberDOB);
+                    MainReceipt.setString(16, secondryInsurance);
+                    MainReceipt.setString(17, SubscriberFirstName);
                     if (!SubscriberDOB.equals(""))
                         MainReceipt.setString(18, SubscriberDOB);
                     else
@@ -1733,11 +1684,15 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.setString(20, GroupNumber_2);
                     MainReceipt.setString(21, PatientRelationshiptoSecondry);
                     MainReceipt.setString(22, VisitId);
-                    MainReceipt.setString(23, PriInsurerName);
+                    MainReceipt.setString(23, PriInsurerFirstName);
                     MainReceipt.setString(24, OtherInsuranceName);
                     MainReceipt.setString(25, CorporateAccountPriIns);
                     MainReceipt.setString(26, CorporateAccountSecIns);
                     MainReceipt.setString(27, OtherSecInsuranceName);
+                    MainReceipt.setString(28, PriInsurerLastName);
+                    MainReceipt.setString(29, SubscriberLastName);
+                    MainReceipt.setString(30, PriInsurergender);
+                    MainReceipt.setString(31, Subscribergender);
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
                 }
@@ -1819,15 +1774,26 @@ public class PatientReg extends HttpServlet {
                     return;
                 }
             } else {
-
-
                 String queryTextContainer = "";
                 String queryValueContainer = "";
                 if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
                     queryTextContainer = ",Instagram_text,Youtube_text,Spotify_text";
                     queryValueContainer = ",?,?,?";
-                }
 
+                    if (AssistanceChk.equals("1") || FallenChk.equals("1") || UnsteadyChk.equals("1") || PoxSymChk.equals("1")) {
+                        String Alerts = "This Patient is a fall Risk";
+                        PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Alerts (ClientIndex,PatientRegId,MRN ,"
+                                + " Alerts,CreatedDate,CreatedBy) \n"
+                                + " VALUES (?,?,?,?,now(),?) ");
+                        MainReceipt.setInt(1, ClientIndex);
+                        MainReceipt.setString(2, String.valueOf(PatientRegId));
+                        MainReceipt.setString(3, String.valueOf(MRN));
+                        MainReceipt.setString(4, Alerts);
+                        MainReceipt.setString(5, UserId);
+                        MainReceipt.executeUpdate();
+                        MainReceipt.close();
+                    }
+                }
 
                 try {
                     PreparedStatement MainReceipt = conn.prepareStatement(
@@ -1870,7 +1836,6 @@ public class PatientReg extends HttpServlet {
                         MainReceipt.setString(30, Youtube_text);
                         MainReceipt.setString(31, Spotify_text);
                     }
-
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
                 } catch (Exception ex) {
@@ -1878,13 +1843,14 @@ public class PatientReg extends HttpServlet {
                     Services.DumException("SaveData^^" + facilityName + " ##MES#013", "PatientReg ", request, ex);
                     Parsehtm Parser = new Parsehtm(request);
                     Parser.SetField("FormName", "PatientReg");
-                    Parser.SetField("ActionID", "GetValues&ClientIndex=\"+ClientIndex+\"");
+                    Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientIndex + "");
                     Parser.SetField("Message", "MES#013");
                     Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                     return;
                 }
             }
-            Query = "Select CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) from " + Database + ".PatientReg " +
+            Query = "Select CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) " +
+                    "FROM " + Database + ".PatientReg " +
                     "where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1906,25 +1872,54 @@ public class PatientReg extends HttpServlet {
                 e.printStackTrace();
             }
 
-            if (ClientIndex == 19 || ClientIndex == 33 || ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+            if (ClientIndex == 8 || ClientIndex == 19 || ClientIndex == 25 || ClientIndex == 27 || ClientIndex == 29 ||
+                    ClientIndex == 33 || ClientIndex == 39 || ClientIndex == 40 || ClientIndex == 41 || ClientIndex == 42 ||
+                    ClientIndex == 43) {
                 String temp = "";
-                if (ClientIndex == 41)
-                    temp = GETINPUTwillowbrook(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId);
-                else if (ClientIndex == 42)
-                    temp = GETINPUTsummerwood(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId);
-                else if (ClientIndex == 43)
-                    temp = GETINPUTheights(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId);
-                else
-                    temp = SaveBundle_HopeER(request, out, conn, response, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION");
 
-                System.out.println("temp " + temp);
-//                .print();
+                switch (ClientIndex) {
+                    case 8:
+                        DownloadBundle orangebndle = new DownloadBundle();
+                        temp = orangebndle.GETINPUT_Inside(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 19:
+                        temp = SaveBundle_HopeER(request, out, conn, response, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 25:
+                        SanMarcosBundle smbundle = new SanMarcosBundle();
+                        temp = smbundle.GETINPUTSanMarcos_Inside(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 27:
+                    case 29:
+                        FrontlineBundle obj1 = new FrontlineBundle();
+                        temp = obj1.GETINPUTFrontLine_Inside(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 39:
+                        temp = GETINPUTSchertz(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION");
+                        break;
+                    case 40:
+                        temp = GETINPUTfloresville(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION");
+                        break;
+                    case 41:
+                        temp = GETINPUTwillowbrook(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 42:
+                        temp = GETINPUTsummerwood(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    case 43:
+                        temp = GETINPUTheights(request, out, conn, servletContext, response, UserId, Database, ClientIndex, DirectoryName, PatientRegId, "REGISTRATION", helper);
+                        break;
+                    default:
+                        out.println("Under Development!!!");
+                        break;
+                }
+
                 String[] arr = temp.split("~");
                 String FileName = arr[2];
                 String outputFilePath = arr[1];
                 String pageCount = arr[0];
+
                 Parsehtm Parser = new Parsehtm(request);
-//                Parser.SetField("Message", "Thank You " + String.valueOf(PatientName) + " We Have Registered You Successfully " + Message + ". Please walk to the front door and Press the buzzer.  DATED: " + Date);
                 Parser.SetField("Message", "Thank You " + PatientName + " We Have Registered You Successfully " + ". Please wait for further processing.  DATED: " + Date);
                 Parser.SetField("MRN", "MRN: " + MRN);
                 Parser.SetField("FormName", "PatientReg");
@@ -1956,15 +1951,13 @@ public class PatientReg extends HttpServlet {
         }
     }
 
-    void PartialComplete(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext
-            servletContext, String Database, String UserId, UtilityHelper helper, HttpServletResponse response, String
-                                 DirectoryName) throws FileNotFoundException {
+    private void PartialComplete(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext
+            servletContext, String Database, String UserId, UtilityHelper helper, int ClientIndex) throws FileNotFoundException {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
         int PatientRegId = 0;
         int AddmissionBundle = 0;
-        int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
         String Title = "";
         String FirstName = "";
         String LastName = "";
@@ -2014,7 +2007,9 @@ public class PatientReg extends HttpServlet {
         String SympShortBreath = "0";
         String SympCongestion = "0";
         String AddInfoTextArea = "";
-        String GuarantorName = "";
+//        String GuarantorName = "";
+        String GuarantorFirstName = "";
+        String GuarantorLastName = "";
         String GuarantorDOB = "";
         String GuarantorNumber = "";
         String GuarantorSSN = "";
@@ -2030,7 +2025,10 @@ public class PatientReg extends HttpServlet {
         String PriInsuranceName = "";
         String OtherInsuranceName = "";
         String OtherSecInsuranceName = "";
-        String PriInsurerName = "";
+//        String PriInsurerName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
+
         String AddressIfDifferent = "";
         String PrimaryDOB = "";
         String PrimarySSN = "";
@@ -2040,7 +2038,9 @@ public class PatientReg extends HttpServlet {
         String EmployerAddress = "";
         String EmployerPhone = "";
         String SecondryInsurance = "";
-        String SubscriberName = "";
+//        String SubscriberName = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
@@ -2235,10 +2235,21 @@ public class PatientReg extends HttpServlet {
                 } else {
                     EmpContact = request.getParameter("EmpContact").trim();
                 }
-                if (request.getParameter("GuarantorName") == null) {
-                    GuarantorName = "";
+//                if (request.getParameter("GuarantorName") == null) {
+//                    GuarantorName = "";
+//                } else {
+//                    GuarantorName = request.getParameter("GuarantorName").trim();
+//                }
+                if (request.getParameter("GuarantorFirstName") == null) {
+                    GuarantorFirstName = "";
                 } else {
-                    GuarantorName = request.getParameter("GuarantorName").trim();
+                    GuarantorFirstName = request.getParameter("GuarantorFirstName").trim();
+                }
+
+                if (request.getParameter("GuarantorLastName") == null) {
+                    GuarantorLastName = "";
+                } else {
+                    GuarantorLastName = request.getParameter("GuarantorLastName").trim();
                 }
                 if (request.getParameter("GuarantorDOB") == null) {
                     GuarantorDOB = "";
@@ -2425,10 +2436,22 @@ public class PatientReg extends HttpServlet {
                 } else {
                     PriInsuranceName = request.getParameter("PriInsuranceName").trim();
                 }
-                if (request.getParameter("PriInsurerName") == null) {
-                    PriInsurerName = "";
+//                if (request.getParameter("PriInsurerName") == null) {
+//                    PriInsurerName = "";
+//                } else {
+//                    PriInsurerName = request.getParameter("PriInsurerName").trim();
+//                }
+
+
+                if (request.getParameter("PriInsurerFirstName") == null) {
+                    PriInsurerFirstName = "";
                 } else {
-                    PriInsurerName = request.getParameter("PriInsurerName").trim();
+                    PriInsurerFirstName = request.getParameter("PriInsurerFirstName").trim();
+                }
+                if (request.getParameter("PriInsurerLastName") == null) {
+                    PriInsurerLastName = "";
+                } else {
+                    PriInsurerLastName = request.getParameter("PriInsurerLastName").trim();
                 }
                 if (request.getParameter("OtherInsuranceName") == null) {
                     OtherInsuranceName = "";
@@ -2489,10 +2512,22 @@ public class PatientReg extends HttpServlet {
                 } else {
                     SecondryInsurance = request.getParameter("SecondryInsurance").trim();
                 }
-                if (request.getParameter("SubscriberName") == null) {
-                    SubscriberName = "";
+//                if (request.getParameter("SubscriberName") == null) {
+//                    SubscriberName = "";
+//                } else {
+//                    SubscriberName = request.getParameter("SubscriberName").trim();
+//                }
+
+                if (request.getParameter("SubscriberFirstName") == null) {
+                    SubscriberFirstName = "";
                 } else {
-                    SubscriberName = request.getParameter("SubscriberName").trim();
+                    SubscriberFirstName = request.getParameter("SubscriberFirstName").trim();
+                }
+
+                if (request.getParameter("SubscriberLastName") == null) {
+                    SubscriberLastName = "";
+                } else {
+                    SubscriberLastName = request.getParameter("SubscriberLastName").trim();
                 }
                 if (request.getParameter("SubscriberDOB").equals(null) || request.getParameter("SubscriberDOB").equals("")) {
                     SubscriberDOB = "0000-00-00";
@@ -2821,21 +2856,7 @@ public class PatientReg extends HttpServlet {
                 return;
             }
             try {
-                Query = "Select Id,dbname from oe.clients where ltrim(rtrim(UPPER(Id))) =  ltrim(rtrim(UPPER('" + ClientIndex + "')))";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    ClientIndex = rset.getInt(1);
-                    Database = rset.getString(2);
-                }
-                rset.close();
-                stmt.close();
                 try {
-//                    if (ReasonVisit.equals("")) {
-//                        out.println("Please Select the Reason of Visit from the DropDown that appears besides/below the ReasonVisit");
-//                        out.println("<br><input type=button class=button name=Back Value=\"  Back  \" onclick=history.back()></body></html>");
-//                        return;
-//                    }
                     if (ClientIndex == 27 || ClientIndex == 29) {
                         Query = "Select ReasonVisit from " + Database + ".ReasonVisits where Id = " + ReasonVisit;
                         stmt = conn.createStatement();
@@ -2847,6 +2868,7 @@ public class PatientReg extends HttpServlet {
                     }
                     if (MRN == 0)
                         MRN = 310001;
+
                     Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -2890,16 +2912,10 @@ public class PatientReg extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
-            Query = "Select now()";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                CurrentDate = rset.getString(1);
-            rset.close();
-            stmt.close();
 
-            UtilityHelper utilityHelper = new UtilityHelper();
-            String ClientIp = utilityHelper.getClientIp(request);
+            CurrentDate = helper.getCurrDate(request, conn);
+            String ClientIp = helper.getClientIp(request);
+
             try {
                 PreparedStatement MainReceipt = conn.prepareStatement(
                         "INSERT INTO " + Database + ".PatientReg (ClientIndex,FirstName,LastName ,MiddleInitial,DOB,Age,Gender ,Email,PhNumber ," +
@@ -3010,8 +3026,8 @@ public class PatientReg extends HttpServlet {
                                 "TravelHowLong,COVIDExposedChk,  SympFever,SympBodyAches ,SympSoreThroat,SympFatigue , SympRash,SympVomiting ," +
                                 "SympDiarrhea,SympCough,SympRunnyNose,SympNausea,SympFluSymptoms ,SympEyeConjunctivitis, Race, CovidExpWhen, " +
                                 "SpCarePhy,  SympHeadache, SympLossTaste, SympShortBreath, SympCongestion, AddInfoTextArea, VisitId, " +
-                                "GuarantorName, GuarantorDOB,  GuarantorNumber, GuarantorSSN, COVIDPositveChk, CovidPositiveDate) " +
-                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                "GuarantorFirstName, GuarantorDOB,  GuarantorNumber, GuarantorSSN, COVIDPositveChk, CovidPositiveDate,GuarantorLastName) " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
                 MainReceipt.setInt(1, PatientRegId);
                 MainReceipt.setInt(2, MRN);
                 MainReceipt.setInt(3, TravellingChk);
@@ -3043,7 +3059,7 @@ public class PatientReg extends HttpServlet {
                 MainReceipt.setString(26, SympCongestion);
                 MainReceipt.setString(27, AddInfoTextArea);
                 MainReceipt.setString(28, VisitId);
-                MainReceipt.setString(29, GuarantorName);
+                MainReceipt.setString(29, GuarantorFirstName);
                 MainReceipt.setString(30, GuarantorDOB);
                 MainReceipt.setString(31, GuarantorNumber);
                 MainReceipt.setString(32, GuarantorSSN);
@@ -3052,6 +3068,9 @@ public class PatientReg extends HttpServlet {
                     MainReceipt.setString(34, CovidPositiveDate);
                 else
                     MainReceipt.setNull(34, Types.DATE);
+
+
+                MainReceipt.setString(35, GuarantorLastName);
                 //MainReceipt.setString(34, CovidPositiveDate);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
@@ -3065,110 +3084,17 @@ public class PatientReg extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
-            if (!PriInsuranceName.equals("")) {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 1 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
+            if (PriInsuranceName.equals("") || PriInsuranceName.equals("8606")) {
+                SelfPayChk = 0;
+                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
             } else {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
+                SelfPayChk = 1;
+                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 1 where ID = " + PatientRegId;
             }
-            if (PriInsuranceName.equals("8606")) {
-                Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
-                stmt.close();
-            }
-            try {
-                if (SelfPayChk == 1) {
-                    if (ClientIndex == 10 || ClientIndex == 15)
-                        try {
-                            PreparedStatement preparedStatement = conn.prepareStatement(
-                                    "INSERT INTO " + Database + ".PatientAdmissionBundle(PatientRegId,AdmissionBundle,CreatedDate) " +
-                                            "VALUES (?,?,now()) ");
-                            preparedStatement.setInt(1, PatientRegId);
-                            preparedStatement.setInt(2, AddmissionBundle);
-                            preparedStatement.executeUpdate();
-                            preparedStatement.close();
-                        } catch (Exception ex) {
-                            helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData PatientAdmissionBundle Table^^" + facilityName + " ##MES#009)", servletContext, ex, "PatientReg", "SaveData", conn);
-                            Services.DumException("SaveData^^" + facilityName + " ##MES#009", "PatientReg ", request, ex);
-                            Parsehtm Parser = new Parsehtm(request);
-                            Parser.SetField("FormName", "PatientReg");
-                            Parser.SetField("ActionID", "GetValues&ClientIndex=\"+ClientIndex+\"");
-                            Parser.SetField("Message", "MES#009");
-                            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-                            return;
-                        }
-                    PreparedStatement MainReceipt = conn.prepareStatement(
-                            "INSERT INTO " + Database + ".InsuranceInfo(PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance," +
-                                    "MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary," +
-                                    "PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberName," +
-                                    "SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate,VisitId, PriInsurerName, " +
-                                    "OtherInsuranceName,OtherSecInsuranceName) " +
-                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?) ");
-                    MainReceipt.setInt(1, PatientRegId);
-                    MainReceipt.setInt(2, WorkersCompPolicy);
-                    MainReceipt.setInt(3, MotorVehAccident);
-                    MainReceipt.setString(4, PriInsurance);
-                    MainReceipt.setString(5, MemId);
-                    MainReceipt.setString(6, GrpNumber);
-                    MainReceipt.setString(7, PriInsuranceName);
-                    MainReceipt.setString(8, AddressIfDifferent);
-                    MainReceipt.setString(9, PrimaryDOB);
-                    MainReceipt.setString(10, PrimarySSN);
-                    MainReceipt.setString(11, PatientRelationtoPrimary);
-                    MainReceipt.setString(12, PrimaryOccupation);
-                    MainReceipt.setString(13, PrimaryEmployer);
-                    MainReceipt.setString(14, EmployerAddress);
-                    MainReceipt.setString(15, EmployerPhone);
-                    MainReceipt.setString(16, SecondryInsurance);
-                    MainReceipt.setString(17, SubscriberName);
-                    MainReceipt.setString(18, SubscriberDOB);
-                    MainReceipt.setString(19, MemberID_2);
-                    MainReceipt.setString(20, GroupNumber_2);
-                    MainReceipt.setString(21, PatientRelationshiptoSecondry);
-                    MainReceipt.setString(22, VisitId);
-                    MainReceipt.setString(23, PriInsurerName);
-                    MainReceipt.setString(24, OtherInsuranceName);
-                    MainReceipt.setString(25, OtherSecInsuranceName);
-                    MainReceipt.executeUpdate();
-                    MainReceipt.close();
-                }
-            } catch (Exception ex) {
-                helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData Insertion InsuranceInfo Table^^" + facilityName + " ##MES#010)", servletContext, ex, "PatientReg", "SaveData", conn);
-                Services.DumException("SaveData^^" + facilityName + " ##MES#010", "PatientReg ", request, ex);
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("FormName", "PatientReg");
-                Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientIndex + "");
-                Parser.SetField("Message", "MES#010");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-                return;
-            }
+            stmt = conn.createStatement();
+            stmt.executeUpdate(Query);
+            stmt.close();
+
             try {
                 PreparedStatement MainReceipt = conn.prepareStatement(
                         "INSERT INTO " + Database + ".EmergencyInfo (PatientRegId,NextofKinName,RelationToPatient,PhoneNumber," +
@@ -3285,7 +3211,8 @@ public class PatientReg extends HttpServlet {
                     return;
                 }
             }
-            Query = "Select CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) from " + Database + ".PatientReg " +
+            Query = "Select CONCAT(IFNULL(Title,''), ' ' , IFNULL(FirstName,''), ' ', IFNULL(MiddleInitial,''), ' ', IFNULL(LastName,'')) " +
+                    " from " + Database + ".PatientReg " +
                     "where ID = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -3294,28 +3221,7 @@ public class PatientReg extends HttpServlet {
             rset.close();
             stmt.close();
 
-            String Date = "";
-            try {
-                Query = "Select Date_format(now(),'%m/%d/%Y %T')";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    Date = rset.getString(1);
-                rset.close();
-                stmt.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-
-//                Parsehtm Parser = new Parsehtm(request);
-//                Parser.SetField("Message", "Patient Name : " + String.valueOf(PatientName) + "  We Have Registered You Successfully " + ". You can complete it later ");
-//                Parser.SetField("MRN", "MRN: " + MRN);
-//                Parser.SetField("FormName", "RegisteredPatients");
-//                Parser.SetField("ActionID", "ShowReportIncompleteForm");
-//                Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
-//                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
-            out.println("MRN: " + MRN + "~" + "Patient Name : " + String.valueOf(PatientName) + "  We Have Registered You Successfully " + ". You can complete it later ");
+            out.println("MRN: " + MRN + "~" + "Patient Name : " + PatientName + "  We Have Registered You Successfully . You can complete it later ");
         } catch (Exception ex) {
             helper.SendEmailWithAttachment("Error in PatientReg ** (SaveData Main Catch^^" + facilityName + " ##MES#014)", servletContext, ex, "PatientReg", "SaveData", conn);
             Services.DumException("SaveData^^" + facilityName + " ##MES#014", "PatientReg ", request, ex);
@@ -3327,15 +3233,15 @@ public class PatientReg extends HttpServlet {
         }
     }
 
+
+
     void EditValues_New(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext
-            servletContext, String Database, String UserId, UtilityHelper helper) throws FileNotFoundException {
+            servletContext, String Database, String UserId, UtilityHelper helper, int ClientId) throws FileNotFoundException {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
-        int ClientIndex = 0;
         int PatientRegId = 0;
         String MRN = request.getParameter("MRN").trim();
-        int ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
         String Title = "";
         String FirstName = "";
         String LastName = "";
@@ -3378,7 +3284,10 @@ public class PatientReg extends HttpServlet {
         String MemId = "";
         String GrpNumber = "";
         String PriInsuranceName = "";
-        String PriInsurerName = "";
+        String PriInsurergender = "", Subscribergender = "";
+//        String PriInsurerName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
         String OtherInsuranceName = "";
         String OtherSecInsuranceName = "";
         String CorporateAccountPriIns = "";
@@ -3392,7 +3301,9 @@ public class PatientReg extends HttpServlet {
         String EmployerAddress = "";
         String EmployerPhone = "";
         String SecondryInsurance = "";
-        String SubscriberName = "";
+//        String SubscriberName = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
@@ -3440,7 +3351,9 @@ public class PatientReg extends HttpServlet {
         String SympShortBreath = "0";
         String SympCongestion = "0";
         String AddInfoTextArea = "0";
-        String GuarantorName = "";
+//        String GuarantorName = "";
+        String GuarantorFirstName = "";
+        String GuarantorLastName = "";
         String GuarantorDOB = "";
         String GuarantorNumber = "";
         String GuarantorSSN = "";
@@ -3487,6 +3400,16 @@ public class PatientReg extends HttpServlet {
         String FacebookN = "0";
         String TwitterN = "0";
         String SchoolN = "0";
+
+        String PoxPositveChk = "";
+        String PoxExposedDate = "";
+        String RashesChk = "";
+        String AgeChk = "";
+        String AssistanceChk = "";
+        String FallenChk = "";
+        String UnsteadyChk = "";
+        String PoxSymChk = "";
+
         String MagazineN = "0";
         String NewspaperN = "0";
         String FamilyFriendN = "0";
@@ -3495,93 +3418,96 @@ public class PatientReg extends HttpServlet {
         String WorkN = "0";
         String PhysicianN = "0";
         String OtherN = "0";
-        StringBuffer ReturnPatient = new StringBuffer();
-        StringBuffer Google = new StringBuffer();
-        StringBuffer MapSearch = new StringBuffer();
-        StringBuffer Billboard = new StringBuffer();
-        StringBuffer OnlineReview = new StringBuffer();
-        StringBuffer TV = new StringBuffer();
-        StringBuffer Website = new StringBuffer();
-        StringBuffer BuildingSignDriveBy = new StringBuffer();
+        StringBuilder ReturnPatient = new StringBuilder();
+        StringBuilder Google = new StringBuilder();
+        StringBuilder MapSearch = new StringBuilder();
+        StringBuilder Billboard = new StringBuilder();
+        StringBuilder OnlineReview = new StringBuilder();
+        StringBuilder TV = new StringBuilder();
+        StringBuilder Website = new StringBuilder();
+        StringBuilder BuildingSignDriveBy = new StringBuilder();
 
-        StringBuffer InstagramBuff = new StringBuffer();
-        StringBuffer YoutubeBuff = new StringBuffer();
-        StringBuffer SpotifyBuff = new StringBuffer();
+        StringBuilder InstagramBuff = new StringBuilder();
+        StringBuilder YoutubeBuff = new StringBuilder();
+        StringBuilder SpotifyBuff = new StringBuilder();
 
-        StringBuffer Facebook = new StringBuffer();
-        StringBuffer School = new StringBuffer();
+        StringBuilder Facebook = new StringBuilder();
+        StringBuilder School = new StringBuilder();
         String School_text = "";
-        StringBuffer Twitter = new StringBuffer();
-        StringBuffer Magazine = new StringBuffer();
+        StringBuilder Twitter = new StringBuilder();
+        StringBuilder Magazine = new StringBuilder();
         String Magazine_text = "";
-        StringBuffer Newspaper = new StringBuffer();
+        StringBuilder Newspaper = new StringBuilder();
         String Newspaper_text = "";
-        StringBuffer FamilyFriend = new StringBuffer();
+        StringBuilder FamilyFriend = new StringBuilder();
         String FamilyFriend_text = "";
-        StringBuffer UrgentCare = new StringBuffer();
+        StringBuilder UrgentCare = new StringBuilder();
         String UrgentCare_text = "";
-        StringBuffer CommunityEvent = new StringBuffer();
+        StringBuilder CommunityEvent = new StringBuilder();
         String CommunityEvent_text = "";
-        StringBuffer Work_textBuff = new StringBuffer();
+        StringBuilder Work_textBuff = new StringBuilder();
         String Work_text = "";
-        StringBuffer Physician_textBuff = new StringBuffer();
+        StringBuilder Physician_textBuff = new StringBuilder();
         String Physician_text = "";
-        StringBuffer Other_textBuff = new StringBuffer();
-        StringBuffer Attorney_textBuff = new StringBuffer();
+        StringBuilder Other_textBuff = new StringBuilder();
+        StringBuilder Attorney_textBuff = new StringBuilder();
         String Other_text = "";
         String Attorney_text = "";
-        int SelfPayChk = 0;
-        int VerifyChkBox = 0;
+
+        String LifesaversExtraQues_A = "";
         int CorporateAccountProfessionalPri = 0;
         int CorporateAccountProfessionalSec = 0;
-        String PatientName = "";
-        String DOS = "";
-        StringBuffer TitleBuff = new StringBuffer();
-        StringBuffer COVIDStatusBuff = new StringBuffer();
-        StringBuffer EthnicityBuff = new StringBuffer();
-        StringBuffer RaceBuff = new StringBuffer();
-        StringBuffer ReasonVisitBuff = new StringBuffer();
-        StringBuffer ReasonVisitBuffN = new StringBuffer();
-        StringBuffer PriInsuranceNameBuff = new StringBuffer();
-        StringBuffer CorporateAccountProfessionalPriPayersList = new StringBuffer();
-        StringBuffer CorporateAccountProfessionalSecPayersList = new StringBuffer();
-        StringBuffer PriInsuranceBuff = new StringBuffer();
-        StringBuffer SecondryInsuranceBuff = new StringBuffer();
-        StringBuffer DoctorList = new StringBuffer();
-        StringBuffer MaritalStatusBuff = new StringBuffer();
-        StringBuffer PatientRelationBuff = new StringBuffer();
-        StringBuffer CountryBuff = new StringBuffer();
-        StringBuffer genderBuff = new StringBuffer();
-        StringBuffer SelfPayChkBuff = new StringBuffer();
-        StringBuffer MotorVehAccidentBuff = new StringBuffer();
-        StringBuffer OtherInsuranceNameBuff = new StringBuffer();
-        StringBuffer OtherSecInsuranceNameBuff = new StringBuffer();
-        StringBuffer WorkersCompPolicyBuff = new StringBuffer();
-        StringBuffer PatientRelationshiptoSecondryBuff = new StringBuffer();
-        StringBuffer PatientRelationtoPrimaryBuff = new StringBuffer();
-        StringBuffer CountryBuffER = new StringBuffer();
-        StringBuffer LeaveMessageERBuff = new StringBuffer();
-        StringBuffer TravellingChkBuff = new StringBuffer();
-        StringBuffer COVIDPositveChkBuff = new StringBuffer();
-        StringBuffer COVIDExposedChkBuff = new StringBuffer();
-        StringBuffer AdmissionBundleBuff = new StringBuffer();
-        //StringBuffer TransactionTypeOptionsList = new StringBuffer();
+        StringBuilder TitleBuff = new StringBuilder();
+        StringBuilder COVIDStatusBuff = new StringBuilder();
+        StringBuilder EthnicityBuff = new StringBuilder();
+        StringBuilder RaceBuff = new StringBuilder();
+        StringBuilder ReasonVisitBuff = new StringBuilder();
+        StringBuilder ReasonVisitBuffN = new StringBuilder();
+        StringBuilder PriInsuranceNameBuff = new StringBuilder();
+        StringBuilder CorporateAccountProfessionalPriPayersList = new StringBuilder();
+        StringBuilder CorporateAccountProfessionalSecPayersList = new StringBuilder();
+        StringBuilder PriInsuranceBuff = new StringBuilder();
+        StringBuilder SecondryInsuranceBuff = new StringBuilder();
+        StringBuilder DoctorList = new StringBuilder();
+        StringBuilder MaritalStatusBuff = new StringBuilder();
+        StringBuilder PatientRelationBuff = new StringBuilder();
+        StringBuilder CountryBuff = new StringBuilder();
+        StringBuilder genderBuff = new StringBuilder();
+        StringBuilder SelfPayChkBuff = new StringBuilder();
+        StringBuffer PriInsurergenderBuff = new StringBuffer();
+        StringBuffer SubscribergenderBuff = new StringBuffer();
+        StringBuilder MotorVehAccidentBuff = new StringBuilder();
+        StringBuilder OtherInsuranceNameBuff = new StringBuilder();
+        StringBuilder OtherSecInsuranceNameBuff = new StringBuilder();
+        StringBuilder WorkersCompPolicyBuff = new StringBuilder();
+        StringBuilder PatientRelationshiptoSecondryBuff = new StringBuilder();
+        StringBuilder PatientRelationtoPrimaryBuff = new StringBuilder();
+        StringBuilder CountryBuffER = new StringBuilder();
+        StringBuilder LeaveMessageERBuff = new StringBuilder();
+        StringBuilder TravellingChkBuff = new StringBuilder();
+        StringBuilder COVIDPositveChkBuff = new StringBuilder();
+        StringBuilder COVIDExposedChkBuff = new StringBuilder();
+        StringBuilder AdmissionBundleBuff = new StringBuilder();
+
+        StringBuilder PoxPositveChkBuff = new StringBuilder();
+        StringBuilder PoxExposedDateBuff = new StringBuilder();
+        StringBuilder RashesChkBuff = new StringBuilder();
+        StringBuilder AgeChkBuff = new StringBuilder();
+        StringBuilder AssistanceChkBuff = new StringBuilder();
+        StringBuilder FallenChkBuff = new StringBuilder();
+        StringBuilder UnsteadyChkBuff = new StringBuilder();
+        StringBuilder PoxSymChkBuff = new StringBuilder();
+
         String Style = "";
-
         String STDrelease = "";
-        StringBuffer STDreleaseBuff = new StringBuffer();
-
+        StringBuilder STDreleaseBuff = new StringBuilder();
         String releaseRecord = "";
-        StringBuffer releaseRecordBuff = new StringBuffer();
-
+        StringBuilder releaseRecordBuff = new StringBuilder();
         String Filter_WB_SW_A = "";
 
         if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
             Filter_WB_SW_A = ",IFNULL(STDrelease,'0'),IFNULL(releaseRecord,'0')";
-        } else {
-            if (ClientId == 27 || ClientId == 29) {
-                Filter_WB_SW_A = ",IFNULL(TransactionTypeIdx,'')";
-            }
+            LifesaversExtraQues_A = ",IFNULL(PoxPositveChk,''), IFNULL(DATE_FORMAT(PoxExposedDate,'%Y-%m-%d'),''),IFNULL(RashesChk,0),IFNULL(AgeChk,0),IFNULL(AssistanceChk,0),IFNULL(FallenChk,0),IFNULL(UnsteadyChk,0),IFNULL(PoxSymChk,0)";
         }
 
         String facilityName = helper.getFacilityName(request, conn, servletContext, ClientId);
@@ -3593,8 +3519,7 @@ public class PatientReg extends HttpServlet {
                     "IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(ID,0), ClientIndex, " +
                     "DATE_FORMAT(CreatedDate, '%d-%m-%Y'), IFNULL(Country,'-'), IFNULL(COVIDStatus, '-'), IFNULL(DoctorsName,'-'), " +
                     "IFNULL(DateofService, '-'), IFNULL(Ethnicity,''), IFNULL(County,''), IFNULL(Address2,''), IFNULL(StreetAddress2,'')," +
-                    "IFNULL(ReasonVisitOthers,'')" +
-                    " " + Filter_WB_SW_A +
+                    "IFNULL(ReasonVisitOthers,'') " + Filter_WB_SW_A +
                     "From " + Database + ".PatientReg Where MRN =" + MRN;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -3606,7 +3531,8 @@ public class PatientReg extends HttpServlet {
                 MaritalStatus = rset.getString(5);
                 DOB = rset.getString(6);
                 Age = rset.getString(7);
-                gender = rset.getString(8);
+                gender = rset.getString(8).toLowerCase();
+                ;
                 Address = rset.getString(9);
                 City = rset.getString(10);
                 State = rset.getString(11);
@@ -3619,14 +3545,10 @@ public class PatientReg extends HttpServlet {
                 PriCarePhy = rset.getString(18);
                 Email = rset.getString(19);
                 ReasonVisit = rset.getString(20);
-                SelfPayChk = rset.getInt(21);
                 PatientRegId = rset.getInt(22);
-                ClientIndex = rset.getInt(23);
-                DOS = rset.getString(24);
                 Country = rset.getString(25);
                 COVIDStatus = rset.getString(26);
                 DoctorName = rset.getString(27);
-                DateofService = rset.getString(28);
                 Ethnicity = rset.getString(29);
                 County = rset.getString(30);
                 Address2 = rset.getString(31);
@@ -3636,10 +3558,6 @@ public class PatientReg extends HttpServlet {
                 if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                     STDrelease = rset.getString(34);
                     releaseRecord = rset.getString(35);
-                } else {
-                    if (ClientId == 27 || ClientId == 29) {
-                        TransactionTypeIdx = rset.getInt(34);
-                    }
                 }
             }
             rset.close();
@@ -3652,9 +3570,9 @@ public class PatientReg extends HttpServlet {
                         "IFNULL(SympCough,0),  IFNULL(SympRunnyNose,0), IFNULL(SympNausea,0), IFNULL(SympFluSymptoms,0), " +
                         "IFNULL(SympEyeConjunctivitis,0), IFNULL(Race,''),  IFNULL(DATE_FORMAT(CovidExpWhen,'%Y-%m-%d'),''), " +
                         "IFNULL(SpCarePhy,''), IFNULL(SympHeadache,0),IFNULL(SympLossTaste,0), IFNULL(SympShortBreath,0),  " +
-                        "IFNULL(SympCongestion,0), IFNULL(AddInfoTextArea,''),IFNULL(GuarantorName,''),IFNULL(GuarantorDOB,''), " +
-                        "IFNULL(GuarantorNumber,''),  IFNULL(GuarantorSSN,''), IFNULL(COVIDPositveChk,0), IFNULL(CovidPositiveDate,'') " +
-                        "from " + Database + ".PatientReg_Details where PatientRegId = " + PatientRegId;
+                        "IFNULL(SympCongestion,0), IFNULL(AddInfoTextArea,''),IFNULL(GuarantorFirstName,''),IFNULL(GuarantorDOB,''), " +
+                        "IFNULL(GuarantorNumber,''),  IFNULL(GuarantorSSN,''), IFNULL(COVIDPositveChk,0), IFNULL(CovidPositiveDate,''),IFNULL(GuarantorLastName,'')  " + LifesaversExtraQues_A + " " +
+                        " from " + Database + ".PatientReg_Details where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -3683,12 +3601,23 @@ public class PatientReg extends HttpServlet {
                     SympShortBreath = rset.getString(23);
                     SympCongestion = rset.getString(24);
                     AddInfoTextArea = rset.getString(25);
-                    GuarantorName = rset.getString(26);
+                    GuarantorFirstName = rset.getString(26);
                     GuarantorDOB = rset.getString(27);
                     GuarantorNumber = rset.getString(28);
                     GuarantorSSN = rset.getString(29);
                     COVIDPositveChk = rset.getString(30);
                     CovidPositiveDate = rset.getString(31);
+                    GuarantorLastName = rset.getString(32);
+                    if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                        PoxPositveChk = rset.getString(33);
+                        PoxExposedDate = rset.getString(34);
+                        RashesChk = rset.getString(35);
+                        AgeChk = rset.getString(36);
+                        AssistanceChk = rset.getString(37);
+                        FallenChk = rset.getString(38);
+                        UnsteadyChk = rset.getString(39);
+                        PoxSymChk = rset.getString(40);
+                    }
                 }
                 rset.close();
                 stmt.close();
@@ -3731,31 +3660,6 @@ public class PatientReg extends HttpServlet {
             rset.close();
             stmt.close();
 
-
-/*            if (ClientIndex == 27 || ClientIndex == 29) {
-                TransactionTypeOptionsList.append("<div class=\"form-row\" id=\"TransactionTypeDiv\"  >");
-                TransactionTypeOptionsList.append("<div class=\"col-md-2\">");
-                TransactionTypeOptionsList.append("<div class=\"form-group\">");
-                TransactionTypeOptionsList.append("<label><font color=\"black\">Transaction Type * </font></label>");
-                TransactionTypeOptionsList.append("<select class=\"form-control\" id=\"TransactionType\" name=\"TransactionType\" style=\"color:black;\" required>");
-                Query = "Select Id, TransactionType from "+Database+".TransactionTypes";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                TransactionTypeOptionsList.append("<option value=''>Select Type</option>");
-                while (rset.next()) {
-                    if (TransactionTypeIdx == (rset.getInt(1))) {
-                        TransactionTypeOptionsList.append("<option value=" + rset.getInt(1) + " selected>" + rset.getString(2) + "</option>");
-                        continue;
-                    }
-                    TransactionTypeOptionsList.append("<option value=" + rset.getInt(1) + ">" + rset.getString(2) + "</option>");
-                }
-                rset.close();
-                stmt.close();
-                TransactionTypeOptionsList.append("</select>");
-                TransactionTypeOptionsList.append("</div>\t");
-                TransactionTypeOptionsList.append("</div>\t");
-                TransactionTypeOptionsList.append("</div>");
-            }*/
             switch (Ethnicity) {
                 case "1":
                     EthnicityBuff.append("<div class=\"radio\">\n<input name=\"Ethnicity\" type=\"radio\" id=\"Ethnicity_HispanicOrLatino\" value=\"1\" checked required>\n<label for=\"Ethnicity_HispanicOrLatino\">Hispanic or Latino</label>                    \n</div>\n<div class=\"radio\">\n<input name=\"Ethnicity\" type=\"radio\" id=\"Ethnicity_NonHispanicOrLatino\" value=\"2\" >\n<label for=\"Ethnicity_NonHispanicOrLatino\">Non Hispanic or Latino</label>   \n</div>\n<div class=\"radio\">\n<input name=\"Ethnicity\" type=\"radio\" id=\"Ethnicity_Others\"  value=\"3\">\n<label for=\"Ethnicity_Others\">Others</label> \n</div>\n");
@@ -4002,8 +3906,6 @@ public class PatientReg extends HttpServlet {
 
             }
             if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
-//                System.out.println("releaseRecord -> "+releaseRecord);
-//                System.out.println("STDrelease -> "+STDrelease);
                 if (releaseRecord.equals("0")) {
                     releaseRecordBuff.append("<input name=\"releaseRecord\" type=\"radio\" id=\"releaseRecordY\" value=\"1\"  />\n" +
                             "<label for=\"releaseRecordY\"> Yes</label>\n" +
@@ -4031,6 +3933,93 @@ public class PatientReg extends HttpServlet {
                             "<input name=\"STDrelease\" type=\"radio\" id=\"STDreleaseN\"value=\"0\" />\n" +
                             "<label for=\"STDreleaseN\"> No</label>");
                 }
+
+                switch (PoxPositveChk) {
+                    case "1":
+                        PoxPositveChkBuff.append("<div class=\"demo-radio-button\">\n" +
+                                "<input name=\"PoxPositveChk\" type=\"radio\" id=\"PoxPositveChkY\" value=\"1\" onclick=\"PoxPositiveChk(this.value)\" checked  />\n" +
+                                "<label for=\"PoxPositveChkY\">Yes</label>\n" +
+
+                                "<input name=\"PoxPositveChk\" type=\"radio\" id=\"PoxPositveChkN\"value=\"0\" onclick=\"PoxPositiveChk(this.value)\" />\n" +
+                                "<label for=\"PoxPositveChkN\">No</label>\t\n" +
+                                "</div>");
+                        break;
+                    case "0":
+                        PoxPositveChkBuff.append("<div class=\"demo-radio-button\">\n" +
+                                "<input name=\"PoxPositveChk\" type=\"radio\" id=\"PoxPositveChkY\" value=\"1\" onclick=\"PoxPositiveChk(this.value)\"   />\n" +
+                                "<label for=\"PoxPositveChkY\">Yes</label>\n" +
+
+                                "<input name=\"PoxPositveChk\" type=\"radio\" id=\"PoxPositveChkN\"value=\"0\" onclick=\"PoxPositiveChk(this.value)\" checked />\n" +
+                                "<label for=\"PoxPositveChkN\">No</label>\t\n" +
+                                "</div>");
+                        break;
+                    default:
+                        PoxPositveChkBuff.append("<div class=\"demo-radio-button\">\n" +
+                                "<input name=\"PoxPositveChk\" type=\"radio\" id=\"PoxPositveChkY\" value=\"1\" onclick=\"PoxPositiveChk(this.value)\"   />\n" +
+                                "<label for=\"PoxPositveChkY\">Yes</label>\n" +
+
+                                "<input name=\"PoxPositveChk\" type=\"radio\" id=\"PoxPositveChkN\"value=\"0\" onclick=\"PoxPositiveChk(this.value)\" />\n" +
+                                "<label for=\"PoxPositveChkN\">No</label>\t\n" +
+                                "</div>");
+                        break;
+                }
+                switch (RashesChk) {
+                    case "1":
+                        RashesChkBuff.append("<div class=\"demo-radio-button\">\n" +
+                                "<input name=\"RashesChk\" type=\"radio\" id=\"RashesChkY\" value=\"1\" checked />\n" +
+                                "<label for=\"rashesChkY\">Yes</label>\n" +
+
+                                "<input name=\"RashesChk\" type=\"radio\" id=\"RashesChkN\"value=\"0\"  />\n" +
+                                "<label for=\"RashesChkN\">No</label>\t\n" +
+                                "</div>\t");
+                        break;
+                    case "0":
+                        RashesChkBuff.append("<div class=\"demo-radio-button\">\n" +
+                                "<input name=\"RashesChk\" type=\"radio\" id=\"RashesChkY\" value=\"1\"  />\n" +
+                                "<label for=\"rashesChkY\">Yes</label>\n" +
+
+                                "<input name=\"RashesChk\" type=\"radio\" id=\"RashesChkN\"value=\"0\" checked />\n" +
+                                "<label for=\"RashesChkN\">No</label>\t\n" +
+                                "</div>\t");
+                        break;
+                    default:
+                        RashesChkBuff.append("<div class=\"demo-radio-button\">\n" +
+                                "<input name=\"RashesChk\" type=\"radio\" id=\"RashesChkY\" value=\"1\"  />\n" +
+                                "<label for=\"rashesChkY\">Yes</label>\n" +
+
+                                "<input name=\"RashesChk\" type=\"radio\" id=\"RashesChkN\"value=\"0\"  />\n" +
+                                "<label for=\"rashesChkN\">No</label>\t\n" +
+                                "</div>\t");
+                        break;
+                }
+
+
+                if (AgeChk.equals("1")) {
+                    AgeChkBuff.append("<input type=\"checkbox\" id=\"AgeChk\" name=\"AgeChk\" checked />");
+                } else {
+                    AgeChkBuff.append("<input type=\"checkbox\" id=\"AgeChk\" name=\"AgeChk\" />");
+                }
+
+                if (AssistanceChk.equals("1")) {
+                    AssistanceChkBuff.append("<input type=\"checkbox\" id=\"AssistanceChk\" name=\"AssistanceChk\" checked />");
+                } else {
+                    AssistanceChkBuff.append("<input type=\"checkbox\" id=\"AssistanceChk\" name=\"AssistanceChk\" />");
+                }
+                if (FallenChk.equals("1")) {
+                    FallenChkBuff.append("<input type=\"checkbox\" id=\"FallenChk\" name=\"FallenChk\" checked />");
+                } else {
+                    FallenChkBuff.append("<input type=\"checkbox\" id=\"FallenChk\" name=\"FallenChk\" />");
+                }
+                if (UnsteadyChk.equals("1")) {
+                    UnsteadyChkBuff.append("<input type=\"checkbox\" id=\"UnsteadyChk\" name=\"UnsteadyChk\" checked />");
+                } else {
+                    UnsteadyChkBuff.append("<input type=\"checkbox\" id=\"UnsteadyChk\" name=\"UnsteadyChk\" />");
+                }
+                if (PoxSymChk.equals("1")) {
+                    PoxSymChkBuff.append("<input type=\"checkbox\" id=\"PoxSymChk\" name=\"PoxSymChk\" checked />");
+                } else {
+                    PoxSymChkBuff.append("<input type=\"checkbox\" id=\"PoxSymChk\" name=\"PoxSymChk\" />");
+                }
             }
 
             if (ClientId == 27 || ClientId == 29) {
@@ -4038,7 +4027,7 @@ public class PatientReg extends HttpServlet {
                     Query = "Select ReasonVisit, Id from " + Database + ".ReasonVisits WHERE Catagory = 'COVID'";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
-                    ReasonVisitBuffN.append("<label><font color=\"black\">Reason For Visit </font></label>");
+                    ReasonVisitBuffN.append("<label><font color=\"black\">Reason For Visit <span class=\"text-danger\">*</span> </font></label>");
                     ReasonVisitBuffN.append("<select class=\"form-control\" id=\"ReasonVisit\" name=\"ReasonVisit\" style=\"color:black;\"  required >");
                     ReasonVisitBuffN.append("<option value=\"\">Select Reason of Visit</option>\n");
                     while (rset.next()) {
@@ -4070,15 +4059,12 @@ public class PatientReg extends HttpServlet {
                     ReasonVisitBuffN.append("</select>");
                 }
             } else {
-
                 if (ReasonVisit.equals("Sports Physical")) {
                     ReasonVisitBuffN.append("<label><font style=\"display:none\" color=\"black\">Reason For Visit </font></label>");
                     ReasonVisitBuffN.append("<input type=\"text\" placeholder=\"\" class=\"form-control\"id=\"ReasonVisit\" name=\"ReasonVisit\" style=\"display:none\" value=\"" + ReasonVisit.trim() + "\" >");
-
                 } else {
                     ReasonVisitBuffN.append("<label><font style=\"display:block\" color=\"black\">Reason For Visit </font></label>");
                     ReasonVisitBuffN.append("<input type=\"text\" placeholder=\"\" class=\"form-control\"id=\"ReasonVisit\" name=\"ReasonVisit\" value=\"" + ReasonVisit.trim() + "\" >");
-
                 }
             }
 //            if (SelfPayChk == 0 ) {
@@ -4086,10 +4072,11 @@ public class PatientReg extends HttpServlet {
                     "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
                     "IFNULL(DATE_FORMAT(PrimaryDOB,'%Y-%m-%d'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
                     "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
-                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), " +
+                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberFirstName,'-'), " +
                     "IFNULL(DATE_FORMAT(SubscriberDOB,'%Y-%m-%d'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
-                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,''), IFNULL(OtherInsuranceName,'')," +
-                    "IFNULL(CorporateAccountPriIns,'') , IFNULL(CorporateAccountSecIns,''),IFNULL(OtherSecInsuranceName,'') " +
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerFirstName,''), IFNULL(OtherInsuranceName,'')," +
+                    "IFNULL(CorporateAccountPriIns,'') , IFNULL(CorporateAccountSecIns,''),IFNULL(OtherSecInsuranceName,'')," +
+                    "IFNULL(PriInsurerLastName,''),IFNULL(SubscriberLastName,''),IFNULL(PriInsurergender,''),IFNULL(Subscribergender,'')  " +
                     "from " + Database + ".InsuranceInfo  where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -4109,19 +4096,49 @@ public class PatientReg extends HttpServlet {
                 EmployerAddress = rset.getString(13);
                 EmployerPhone = rset.getString(14);
                 SecondryInsurance = rset.getString(15);
-                SubscriberName = rset.getString(16);
+                SubscriberFirstName = rset.getString(16);
                 SubscriberDOB = rset.getString(17);
                 PatientRelationshiptoSecondry = rset.getString(18);
                 MemberID_2 = rset.getString(19);
                 GroupNumber_2 = rset.getString(20);
-                PriInsurerName = rset.getString(21);
+                PriInsurerFirstName = rset.getString(21);
                 OtherInsuranceName = rset.getString(22);
                 CorporateAccountPriIns = rset.getString(23);
                 CorporateAccountSecIns = rset.getString(24);
                 OtherSecInsuranceName = rset.getString(25);
+                PriInsurerLastName = rset.getString(26);
+                SubscriberLastName = rset.getString(27);
+                PriInsurergender = rset.getString(28);
+                Subscribergender = rset.getString(29);
             }
             rset.close();
             stmt.close();
+
+            switch (PriInsurergender) {
+                case "male":
+                    PriInsurergenderBuff.append("<select class=\"form-control\" id=\"PriInsurergender\" name=\"PriInsurergender\" style=\"color:black;\" required>\n<option value=\"\"  disabled>Select Gender</option>\n<option value=\"male\" selected>Male</option>\n<option value=\"female\"  disabled >Female</option>\n</select>\n");
+                    break;
+                case "female":
+                    PriInsurergenderBuff.append("<select class=\"form-control\" id=\"PriInsurergender\" name=\"PriInsurergender\" style=\"color:black;\" required>\n<option value=\"\"  disabled >Select Gender</option>\n<option value=\"male\"  disabled >Male</option>\n<option value=\"female\" selected>Female</option>\n</select>\n");
+                    break;
+                default:
+                    PriInsurergenderBuff.append("<select class=\"form-control\" id=\"PriInsurergender\" name=\"PriInsurergender\" style=\"color:black;\" required>\n<option value=\"\"  disabled selected>Select Gender</option>\n<option value=\"male\">Male</option>\n<option value=\"female\">Female</option>\n</select>\n");
+                    break;
+            }
+
+
+            switch (Subscribergender) {
+                case "male":
+                    SubscribergenderBuff.append("<select class=\"form-control\" id=\"Subscribergender\" name=\"Subscribergender\" style=\"color:black;\" required>\n<option value=\"\"  disabled>Select Gender</option>\n<option value=\"male\" selected>Male</option>\n<option value=\"female\"  disabled >Female</option>\n</select>\n");
+                    break;
+                case "female":
+                    SubscribergenderBuff.append("<select class=\"form-control\" id=\"Subscribergender\" name=\"Subscribergender\" style=\"color:black;\" required>\n<option value=\"\"  disabled >Select Gender</option>\n<option value=\"male\"  disabled >Male</option>\n<option value=\"female\" selected>Female</option>\n</select>\n");
+                    break;
+                default:
+                    SubscribergenderBuff.append("<select class=\"form-control\" id=\"Subscribergender\" name=\"Subscribergender\" style=\"color:black;\" required>\n<option value=\"\"  disabled selected>Select Gender</option>\n<option value=\"male\">Male</option>\n<option value=\"female\">Female</option>\n</select>\n");
+                    break;
+            }
+
 //            }
 
             if (WorkersCompPolicy == 0) {
@@ -4157,42 +4174,11 @@ public class PatientReg extends HttpServlet {
             } else {
                 Style += "#OtherSecInsuranceDiv{display:none;}";
             }
-            /*Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955,64,1545,3646,8589,200,201,202,203,204,205,206,207,3649,5978,8206,4763,3465,3466,3467,3468,41,387,388,389,697,698,4757, 8605, 8606, 8254) " +
-                    " AND Status != 100 group by PayerId";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            PriInsuranceNameBuff.append("<option value='-1'>--------------</option>");
-            while (rset.next()) {
-                if (PriInsuranceName.equals(rset.getString(1))) {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();
-
-            //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id not in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId ";//where PayerName not like '%Texas%'";
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                if (PriInsuranceName.equals(rset.getString(1))) {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();*/
 
             Query = "Select Id, PayerId, PayerName from oe_2.ProfessionalPayers";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             PriInsuranceNameBuff.append("<option value=''>--------------</option>");
-            //System.out.println("PriInsuranceName -> " + PriInsuranceName);
             while (rset.next()) {
                 if (PriInsuranceName.equals(rset.getString(1))) {
                     PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
@@ -4243,7 +4229,6 @@ public class PatientReg extends HttpServlet {
                 ps.close();
             }
 
-
             Query = "Select Id, PayerId, PayerName from oe_2.ProfessionalPayers";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -4257,38 +4242,6 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-
-
-            /*Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955,64,1545,3646,8589,200,201,202,203,204,205,206,207,3649,5978,8206,4763,3465,3466,3467,3468,41,387,388,389,697,698,4757, 8605, 8606, 8254) " +
-                    " AND Status != 100 group by PayerId";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            SecondryInsuranceBuff.append("<option value='-1'>--------------</option>");
-            while (rset.next()) {
-                if (SecondryInsurance.equals(rset.getString(1))) {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();
-
-            //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id not in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId ";//where PayerName not like '%Texas%'";
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                if (SecondryInsurance.equals(rset.getString(1))) {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();*/
 
             Query = "Select PatientRelation from " + Database + ".PatientRelation";
             stmt = conn.createStatement();
@@ -4351,10 +4304,13 @@ public class PatientReg extends HttpServlet {
                     break;
             }
 
-            Query = " Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'),  IFNULL(LeaveMessage,0), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(Country,'-'), IFNULL(ZipCode,'-')  from " + Database + ".EmergencyInfo where PatientRegId = " + PatientRegId;
+            Query = " Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'),  " +
+                    "IFNULL(LeaveMessage,0), IFNULL(Address,'-'), IFNULL(City,'-'), IFNULL(State,'-'), IFNULL(Country,'-'), " +
+                    "IFNULL(ZipCode,'-')  " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
@@ -4368,11 +4324,13 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             if (LeaveMessageER == 0) {
                 LeaveMessageERBuff.append("<select class=\"form-control\" id=\"LeaveMessageER\" name=\"LeaveMessageER\" style=\"color:black;\">\n<option value=\"0\" selected>No</option>\n<option value=\"1\">Yes</option>\n</select>\t\t\t\t\t\t\t\t  \n");
             } else {
                 LeaveMessageERBuff.append("<select class=\"form-control\" id=\"LeaveMessageER\" name=\"LeaveMessageER\" style=\"color:black;\">\n<option value=\"0\" >No</option>\n<option value=\"1\" selected>Yes</option>\n</select>\t\t\t\t\t\t\t\t  \n");
             }
+
             Query = "Select Country from " + Database + ".Country";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -4500,94 +4458,9 @@ public class PatientReg extends HttpServlet {
                 }
 
             }
-            /*
-            if (ClientId == 27 || ClientId == 29) {
-                Query = " Select FrVisitedBefore, FrFamiliyVisitedBefore, FrInternet, FrBillboard, FrGoogle, FrBuildingSignage, " +
-                        "FrFacebook, FrLivesNear,  FrTwitter, FrTV, FrMapSearch, FrEvent, IFNULL(FrPhysicianReferral,''), " +
-                        "IFNULL(FrNeurologyReferral,'-'), IFNULL(FrUrgentCareReferral,''),  IFNULL(FrOrganizationReferral,''), " +
-                        "IFNULL(FrFriendFamily,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    if (rset.getInt(1) == 0) {
-                        FrVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeY\" value=\"1\" />\n<label for=\"FrVisitedBeforeY\">Yes</label>\n\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeN\"value=\"0\" checked/>\n<label for=\"FrVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else if (rset.getInt(1) == 1) {
-                        FrVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeY\" value=\"1\" checked/>\n<label for=\"FrVisitedBeforeY\">Yes</label>\n\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeN\"value=\"0\" />\n<label for=\"FrVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else {
-                        FrVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeY\" value=\"1\" />\n<label for=\"FrVisitedBeforeY\">Yes</label>\n\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeN\"value=\"0\" />\n<label for=\"FrVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    }
-                    if (rset.getInt(2) == 0) {
-                        FrFamiliyVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeY\" value=\"1\" />\n<label for=\"FrFamiliyVisitedBeforeY\">Yes</label>\n\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeN\"value=\"0\" checked />\n<label for=\"FrFamiliyVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else if (rset.getInt(2) == 1) {
-                        FrFamiliyVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeY\" value=\"1\" checked/>\n<label for=\"FrFamiliyVisitedBeforeY\">Yes</label>\n\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeN\"value=\"0\"  />\n<label for=\"FrFamiliyVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else {
-                        FrFamiliyVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeY\" value=\"1\" />\n<label for=\"FrFamiliyVisitedBeforeY\">Yes</label>\n\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeN\"value=\"0\"  />\n<label for=\"FrFamiliyVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    }
-                    if (rset.getInt(3) == 1) {
-                        FrInternetN.append("<input type=\"checkbox\" id=\"FrInternet\" name=\"FrInternet\" checked/>");
-                    } else {
-                        FrInternetN.append("<input type=\"checkbox\" id=\"FrInternet\" name=\"FrInternet\"/>");
-                    }
-                    if (rset.getInt(4) == 1) {
-                        FrBillboardN.append("<input type=\"checkbox\" id=\"FrBillboard\" name=\"FrBillboard\" checked/>");
-                    } else {
-                        FrBillboardN.append("<input type=\"checkbox\" id=\"FrBillboard\" name=\"FrBillboard\" />");
-                    }
-                    if (rset.getInt(5) == 1) {
-                        FrGoogleN.append("<input type=\"checkbox\" id=\"FrGoogle\" name=\"FrGoogle\" checked/>");
-                    } else {
-                        FrGoogleN.append("<input type=\"checkbox\" id=\"FrGoogle\" name=\"FrGoogle\" />");
-                    }
-                    if (rset.getInt(6) == 1) {
-                        FrBuildingSignageN.append("<input type=\"checkbox\" id=\"FrBuildingSignage\" name=\"FrBuildingSignage\" checked/>");
-                    } else {
-                        FrBuildingSignageN.append("<input type=\"checkbox\" id=\"FrBuildingSignage\" name=\"FrBuildingSignage\" />");
-                    }
-                    if (rset.getInt(7) == 1) {
-                        FrFacebookN.append("<input type=\"checkbox\" id=\"FrFacebook\" name=\"FrFacebook\" checked/>");
-                    } else {
-                        FrFacebookN.append("<input type=\"checkbox\" id=\"FrFacebook\" name=\"FrFacebook\" />");
-                    }
-                    if (rset.getInt(8) == 1) {
-                        FrLivesNearN.append("<input type=\"checkbox\" id=\"FrLivesNear\" name=\"FrLivesNear\" checked/>");
-                    } else {
-                        FrLivesNearN.append("<input type=\"checkbox\" id=\"FrLivesNear\" name=\"FrLivesNear\" />");
-                    }
-                    if (rset.getInt(9) == 1) {
-                        FrTwitterN.append("<input type=\"checkbox\" id=\"FrTwitter\" name=\"FrTwitter\" checked/>");
-                    } else {
-                        FrTwitterN.append("<input type=\"checkbox\" id=\"FrTwitter\" name=\"FrTwitter\" />");
-                    }
-                    if (rset.getInt(10) == 1) {
-                        FrTVN.append("<input type=\"checkbox\" id=\"FrTV\" name=\"FrTV\" checked/>");
-                    } else {
-                        FrTVN.append("<input type=\"checkbox\" id=\"FrTV\" name=\"FrTV\" />");
-                    }
-                    if (rset.getInt(11) == 1) {
-                        FrMapSearchN.append("<input type=\"checkbox\" id=\"FrMapSearch\" name=\"FrMapSearch\" checked/>");
-                    } else {
-                        FrMapSearchN.append("<input type=\"checkbox\" id=\"FrMapSearch\" name=\"FrMapSearch\" />");
-                    }
-                    if (rset.getInt(12) == 1) {
-                        FrEventN.append("<input type=\"checkbox\" id=\"FrEvent\" name=\"FrEvent\" checked/>");
-                    } else {
-                        FrEventN.append("<input type=\"checkbox\" id=\"FrEvent\" name=\"FrEvent\" />");
-                    }
-                    FrPhysicianReferral = rset.getString(13).trim();
-                    FrNeurologyReferral = rset.getString(14).trim();
-                    FrUrgentCareReferral = rset.getString(15).trim();
-                    FrOrganizationReferral = rset.getString(16).trim();
-                    FrFriendFamily = rset.getString(17).trim();
-                }
-                rset.close();
-                stmt.close();
-            }
-            */
-
-//            nowworking
             String queryTextContainer = "";
 
-            if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+            if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                 queryTextContainer = ",IFNULL(Instagram_text,''),IFNULL(Youtube_text,''),IFNULL(Spotify_text,'')";
             }
 
@@ -4600,7 +4473,7 @@ public class PatientReg extends HttpServlet {
                     "from " + Database + ".RandomCheckInfo where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 ReturnPatientN = rset.getString(1);
                 GoogleN = rset.getString(2);
                 MapSearchN = rset.getString(3);
@@ -4627,7 +4500,7 @@ public class PatientReg extends HttpServlet {
                 Physician_text = rset.getString(24);
                 Other_text = rset.getString(25);
                 Attorney_text = rset.getString(26);
-                if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
+                if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                     Instagram_text = rset.getString(27);
                     Youtube_text = rset.getString(28);
                     Spotify_text = rset.getString(29);
@@ -4738,8 +4611,8 @@ public class PatientReg extends HttpServlet {
             }
 
 
-            if (ClientIndex == 41 || ClientIndex == 42 || ClientIndex == 43) {
-                if (Instagram_text == "" || Instagram_text == null || Instagram_text.equals("")) {
+            if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                if (Instagram_text == null || Instagram_text.equals("")) {
                     InstagramBuff.append("<input type=\"checkbox\" id=\"Instagram\" name=\"Instagram\">");
                 } else {
                     InstagramBuff.append("<input type=\"checkbox\" id=\"Instagram\" name=\"Instagram\" checked>");
@@ -4760,23 +4633,16 @@ public class PatientReg extends HttpServlet {
                 }
             }
 
-/*            String Date = "";
-            Query = "Select Date_format(now(),'%Y-%m-%d')";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next())
-                Date = rset.getString(1);
-            rset.close();
-            stmt.close();*/
-
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("LastName", String.valueOf(LastName));
             Parser.SetField("FirstName", String.valueOf(FirstName));
             Parser.SetField("MiddleInitial", String.valueOf(MiddleInitial));
             Parser.SetField("TitleBuff", String.valueOf(TitleBuff));
             Parser.SetField("DOB", String.valueOf(DOB));
-            Parser.SetField("Age", String.valueOf(Age));
+            Parser.SetField("Age", String.valueOf(helper.getAge(LocalDate.parse(DOB))));
             Parser.SetField("genderBuff", String.valueOf(genderBuff));
+            Parser.SetField("Subscribergender", String.valueOf(SubscribergenderBuff));
+            Parser.SetField("PriInsurergender", String.valueOf(PriInsurergenderBuff));
             Parser.SetField("Email", String.valueOf(Email));
             Parser.SetField("MaritalStatusBuff", String.valueOf(MaritalStatusBuff));
             Parser.SetField("PhNumber", String.valueOf(PhNumber));
@@ -4825,7 +4691,8 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("SympShortBreath", String.valueOf(SympShortBreath));
             Parser.SetField("SympCongestion", String.valueOf(SympCongestion));
             Parser.SetField("AddInfoTextAreaN", String.valueOf(AddInfoTextAreaN));
-            Parser.SetField("GuarantorName", String.valueOf(GuarantorName));
+            Parser.SetField("GuarantorFirstName", String.valueOf(GuarantorFirstName));
+            Parser.SetField("GuarantorLastName", String.valueOf(GuarantorLastName));
             Parser.SetField("GuarantorDOB", String.valueOf(GuarantorDOB));
             Parser.SetField("GuarantorNumber", String.valueOf(GuarantorNumber));
             Parser.SetField("GuarantorSSN", String.valueOf(GuarantorSSN));
@@ -4836,7 +4703,8 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("PriInsuranceNameBuff", String.valueOf(PriInsuranceNameBuff));
             Parser.SetField("OtherInsuranceNameBuff", String.valueOf(OtherInsuranceNameBuff));
             Parser.SetField("OtherSecInsuranceNameBuff", String.valueOf(OtherSecInsuranceNameBuff));
-            Parser.SetField("PriInsurerName", String.valueOf(PriInsurerName));
+            Parser.SetField("PriInsurerFirstName", String.valueOf(PriInsurerFirstName));
+            Parser.SetField("PriInsurerLastName", String.valueOf(PriInsurerLastName));
             Parser.SetField("PriInsuranceBuff", String.valueOf(PriInsuranceBuff));
             Parser.SetField("MemId", String.valueOf(MemId));
             Parser.SetField("GrpNumber", String.valueOf(GrpNumber));
@@ -4849,7 +4717,8 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("EmployerAddress", String.valueOf(EmployerAddress));
             Parser.SetField("EmployerPhone", String.valueOf(EmployerPhone));
             Parser.SetField("SecondryInsuranceBuff", String.valueOf(SecondryInsuranceBuff));
-            Parser.SetField("SubscriberName", String.valueOf(SubscriberName));
+            Parser.SetField("SubscriberFirstName", String.valueOf(SubscriberFirstName));
+            Parser.SetField("SubscriberLastName", String.valueOf(SubscriberLastName));
             Parser.SetField("SubscriberDOB", String.valueOf(SubscriberDOB));
             Parser.SetField("MemberID_2", String.valueOf(MemberID_2));
             Parser.SetField("GroupNumber_2", String.valueOf(GroupNumber_2));
@@ -4889,6 +4758,19 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("Work_text", String.valueOf(Work_text));
             Parser.SetField("Physician_textBuff", String.valueOf(Physician_textBuff));
             Parser.SetField("Physician_text", String.valueOf(Physician_text));
+
+            Parser.SetField("PoxPositveChkBuff", String.valueOf(PoxPositveChkBuff));
+            Parser.SetField("PoxPositveChk", String.valueOf(PoxPositveChk));
+
+            Parser.SetField("PoxExposedDate", String.valueOf(PoxExposedDate));
+            Parser.SetField("RashesChkBuff", String.valueOf(RashesChkBuff));
+            Parser.SetField("AgeChkBuff", String.valueOf(AgeChkBuff));
+            Parser.SetField("AssistanceChkBuff", String.valueOf(AssistanceChkBuff));
+            Parser.SetField("FallenChkBuff", String.valueOf(FallenChkBuff));
+            Parser.SetField("UnsteadyChkBuff", String.valueOf(UnsteadyChkBuff));
+            Parser.SetField("PoxSymChkBuff", String.valueOf(PoxSymChkBuff));
+
+
             Parser.SetField("Other_textBuff", String.valueOf(Other_textBuff));
             Parser.SetField("Other_text", String.valueOf(Other_text));
             Parser.SetField("Attorney_textBuff", String.valueOf(Attorney_textBuff));
@@ -4928,9 +4810,6 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("CorporateAccountProfessionalSec", String.valueOf(CorporateAccountProfessionalSec));
             Parser.SetField("CorporateAccountProfessionalSecPayersList", String.valueOf(CorporateAccountProfessionalSecPayersList));
             Parser.SetField("CorporateAccountProfessionalPriPayersList", String.valueOf(CorporateAccountProfessionalPriPayersList));
-/*            if (ClientId == 27 || ClientId == 29) {
-                Parser.SetField("TransactionTypeOptionsList", String.valueOf(TransactionTypeOptionsList));
-            }*/
             if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                 Parser.SetField("STDreleaseBuff", String.valueOf(STDreleaseBuff));
                 Parser.SetField("releaseRecordBuff", String.valueOf(releaseRecordBuff));
@@ -4947,15 +4826,14 @@ public class PatientReg extends HttpServlet {
         }
     }
 
+
     void PartialComplete_View(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext
-            servletContext, String Database, String UserId, UtilityHelper helper) throws FileNotFoundException {
+            servletContext, String Database, String UserId, UtilityHelper helper, int ClientId) throws FileNotFoundException {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
-        int ClientIndex = 0;
         int PatientRegId = 0;
         String MRN = request.getParameter("MRN").trim();
-        int ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
         String Title = "";
         String FirstName = "";
         String LastName = "";
@@ -4990,7 +4868,8 @@ public class PatientReg extends HttpServlet {
         String MemId = "";
         String GrpNumber = "";
         String PriInsuranceName = "";
-        String PriInsurerName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
         String OtherInsuranceName = "";
         String OtherSecInsuranceName = "";
         String AddressIfDifferent = "";
@@ -5002,7 +4881,8 @@ public class PatientReg extends HttpServlet {
         String EmployerAddress = "";
         String EmployerPhone = "";
         String SecondryInsurance = "";
-        String SubscriberName = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
@@ -5050,7 +4930,9 @@ public class PatientReg extends HttpServlet {
         String SympShortBreath = "0";
         String SympCongestion = "0";
         String AddInfoTextArea = "0";
-        String GuarantorName = "";
+        String GuarantorFirstName = "";
+        String GuarantorLastName = "";
+
         String GuarantorDOB = "";
         String GuarantorNumber = "";
         String GuarantorSSN = "";
@@ -5104,69 +4986,69 @@ public class PatientReg extends HttpServlet {
         String WorkN = "0";
         String PhysicianN = "0";
         String OtherN = "0";
-        StringBuffer ReturnPatient = new StringBuffer();
-        StringBuffer Google = new StringBuffer();
-        StringBuffer MapSearch = new StringBuffer();
-        StringBuffer Billboard = new StringBuffer();
-        StringBuffer OnlineReview = new StringBuffer();
-        StringBuffer TV = new StringBuffer();
-        StringBuffer Website = new StringBuffer();
-        StringBuffer BuildingSignDriveBy = new StringBuffer();
-        StringBuffer Facebook = new StringBuffer();
-        StringBuffer School = new StringBuffer();
+        StringBuilder ReturnPatient = new StringBuilder();
+        StringBuilder Google = new StringBuilder();
+        StringBuilder MapSearch = new StringBuilder();
+        StringBuilder Billboard = new StringBuilder();
+        StringBuilder OnlineReview = new StringBuilder();
+        StringBuilder TV = new StringBuilder();
+        StringBuilder Website = new StringBuilder();
+        StringBuilder BuildingSignDriveBy = new StringBuilder();
+        StringBuilder Facebook = new StringBuilder();
+        StringBuilder School = new StringBuilder();
         String School_text = "";
-        StringBuffer Twitter = new StringBuffer();
-        StringBuffer Magazine = new StringBuffer();
+        StringBuilder Twitter = new StringBuilder();
+        StringBuilder Magazine = new StringBuilder();
         String Magazine_text = "";
-        StringBuffer Newspaper = new StringBuffer();
+        StringBuilder Newspaper = new StringBuilder();
         String Newspaper_text = "";
-        StringBuffer FamilyFriend = new StringBuffer();
+        StringBuilder FamilyFriend = new StringBuilder();
         String FamilyFriend_text = "";
-        StringBuffer UrgentCare = new StringBuffer();
+        StringBuilder UrgentCare = new StringBuilder();
         String UrgentCare_text = "";
-        StringBuffer CommunityEvent = new StringBuffer();
+        StringBuilder CommunityEvent = new StringBuilder();
         String CommunityEvent_text = "";
-        StringBuffer Work_textBuff = new StringBuffer();
+        StringBuilder Work_textBuff = new StringBuilder();
         String Work_text = "";
-        StringBuffer Physician_textBuff = new StringBuffer();
+        StringBuilder Physician_textBuff = new StringBuilder();
         String Physician_text = "";
-        StringBuffer Other_textBuff = new StringBuffer();
+        StringBuilder Other_textBuff = new StringBuilder();
         String Other_text = "";
-        StringBuffer Attorney_textBuff = new StringBuffer();
+        StringBuilder Attorney_textBuff = new StringBuilder();
         String Attorney_text = "";
         int SelfPayChk = 0;
         int VerifyChkBox = 0;
         String PatientName = "";
         String DOS = "";
-        StringBuffer TitleBuff = new StringBuffer();
-        StringBuffer COVIDStatusBuff = new StringBuffer();
-        StringBuffer EthnicityBuff = new StringBuffer();
-        StringBuffer RaceBuff = new StringBuffer();
-        StringBuffer ReasonVisitBuff = new StringBuffer();
-        StringBuffer ReasonVisitBuffN = new StringBuffer();
-        StringBuffer PriInsuranceNameBuff = new StringBuffer();
-        StringBuffer PriInsuranceBuff = new StringBuffer();
-        StringBuffer SecondryInsuranceBuff = new StringBuffer();
-        StringBuffer DoctorList = new StringBuffer();
-        StringBuffer MaritalStatusBuff = new StringBuffer();
-        StringBuffer PatientRelationBuff = new StringBuffer();
-        StringBuffer CountryBuff = new StringBuffer();
-        StringBuffer genderBuff = new StringBuffer();
-        StringBuffer SelfPayChkBuff = new StringBuffer();
-        StringBuffer MotorVehAccidentBuff = new StringBuffer();
-        StringBuffer OtherInsuranceNameBuff = new StringBuffer();
+        StringBuilder TitleBuff = new StringBuilder();
+        StringBuilder COVIDStatusBuff = new StringBuilder();
+        StringBuilder EthnicityBuff = new StringBuilder();
+        StringBuilder RaceBuff = new StringBuilder();
+        StringBuilder ReasonVisitBuff = new StringBuilder();
+        StringBuilder ReasonVisitBuffN = new StringBuilder();
+        StringBuilder PriInsuranceNameBuff = new StringBuilder();
+        StringBuilder PriInsuranceBuff = new StringBuilder();
+        StringBuilder SecondryInsuranceBuff = new StringBuilder();
+        StringBuilder DoctorList = new StringBuilder();
+        StringBuilder MaritalStatusBuff = new StringBuilder();
+        StringBuilder PatientRelationBuff = new StringBuilder();
+        StringBuilder CountryBuff = new StringBuilder();
+        StringBuilder genderBuff = new StringBuilder();
+        StringBuilder SelfPayChkBuff = new StringBuilder();
+        StringBuilder MotorVehAccidentBuff = new StringBuilder();
+        StringBuilder OtherInsuranceNameBuff = new StringBuilder();
         /*** TODO **** */
         //Start FROM HERE  OtherSecInsuranceName 6 JAN 2022
-        StringBuffer OtherSecInsuranceNameBuff = new StringBuffer();
-        StringBuffer WorkersCompPolicyBuff = new StringBuffer();
-        StringBuffer PatientRelationshiptoSecondryBuff = new StringBuffer();
-        StringBuffer PatientRelationtoPrimaryBuff = new StringBuffer();
-        StringBuffer CountryBuffER = new StringBuffer();
-        StringBuffer LeaveMessageERBuff = new StringBuffer();
-        StringBuffer TravellingChkBuff = new StringBuffer();
-        StringBuffer COVIDPositveChkBuff = new StringBuffer();
-        StringBuffer COVIDExposedChkBuff = new StringBuffer();
-        StringBuffer AdmissionBundleBuff = new StringBuffer();
+        StringBuilder OtherSecInsuranceNameBuff = new StringBuilder();
+        StringBuilder WorkersCompPolicyBuff = new StringBuilder();
+        StringBuilder PatientRelationshiptoSecondryBuff = new StringBuilder();
+        StringBuilder PatientRelationtoPrimaryBuff = new StringBuilder();
+        StringBuilder CountryBuffER = new StringBuilder();
+        StringBuilder LeaveMessageERBuff = new StringBuilder();
+        StringBuilder TravellingChkBuff = new StringBuilder();
+        StringBuilder COVIDPositveChkBuff = new StringBuilder();
+        StringBuilder COVIDExposedChkBuff = new StringBuilder();
+        StringBuilder AdmissionBundleBuff = new StringBuilder();
         String Style = "";
         String facilityName = helper.getFacilityName(request, conn, servletContext, ClientId);
         try {
@@ -5188,7 +5070,7 @@ public class PatientReg extends HttpServlet {
                 MaritalStatus = rset.getString(5);
                 DOB = rset.getString(6);
                 Age = rset.getString(7);
-                gender = rset.getString(8);
+                gender = rset.getString(8).toLowerCase();
                 Address = rset.getString(9);
                 City = rset.getString(10);
                 State = rset.getString(11);
@@ -5201,14 +5083,10 @@ public class PatientReg extends HttpServlet {
                 PriCarePhy = rset.getString(18);
                 Email = rset.getString(19);
                 ReasonVisit = rset.getString(20);
-                SelfPayChk = rset.getInt(21);
                 PatientRegId = rset.getInt(22);
-                ClientIndex = rset.getInt(23);
-                DOS = rset.getString(24);
                 Country = rset.getString(25);
                 COVIDStatus = rset.getString(26);
                 DoctorName = rset.getString(27);
-                DateofService = rset.getString(28);
                 Ethnicity = rset.getString(29);
                 County = rset.getString(30);
                 Address2 = rset.getString(31);
@@ -5225,8 +5103,8 @@ public class PatientReg extends HttpServlet {
                         "IFNULL(SympCough,0),  IFNULL(SympRunnyNose,0), IFNULL(SympNausea,0), IFNULL(SympFluSymptoms,0), " +
                         "IFNULL(SympEyeConjunctivitis,0), IFNULL(Race,''),  IFNULL(DATE_FORMAT(CovidExpWhen,'%Y-%m-%d'),''), " +
                         "IFNULL(SpCarePhy,''), IFNULL(SympHeadache,0),IFNULL(SympLossTaste,0), IFNULL(SympShortBreath,0),  " +
-                        "IFNULL(SympCongestion,0), IFNULL(AddInfoTextArea,''),IFNULL(GuarantorName,''),IFNULL(GuarantorDOB,''), " +
-                        "IFNULL(GuarantorNumber,''),  IFNULL(GuarantorSSN,''), IFNULL(COVIDPositveChk,0), IFNULL(CovidPositiveDate,'') " +
+                        "IFNULL(SympCongestion,0), IFNULL(AddInfoTextArea,''),IFNULL(GuarantorFirstName,''),IFNULL(GuarantorDOB,''), " +
+                        "IFNULL(GuarantorNumber,''),  IFNULL(GuarantorSSN,''), IFNULL(COVIDPositveChk,0), IFNULL(CovidPositiveDate,''), IFNULL(GuarantorLastName,'') " +
                         "from " + Database + ".PatientReg_Details where PatientRegId = " + PatientRegId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -5256,12 +5134,13 @@ public class PatientReg extends HttpServlet {
                     SympShortBreath = rset.getString(23);
                     SympCongestion = rset.getString(24);
                     AddInfoTextArea = rset.getString(25);
-                    GuarantorName = rset.getString(26);
+                    GuarantorFirstName = rset.getString(26);
                     GuarantorDOB = rset.getString(27);
                     GuarantorNumber = rset.getString(28);
                     GuarantorSSN = rset.getString(29);
                     COVIDPositveChk = rset.getString(30);
                     CovidPositiveDate = rset.getString(31);
+                    GuarantorLastName = rset.getString(32);
                 }
                 rset.close();
                 stmt.close();
@@ -5580,10 +5459,10 @@ public class PatientReg extends HttpServlet {
                     "IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
                     "IFNULL(DATE_FORMAT(PrimaryDOB,'%Y-%m-%d'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), " +
                     "IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  " +
-                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), " +
+                    "IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberFirstName,'-'), " +
                     "IFNULL(DATE_FORMAT(SubscriberDOB,'%Y-%m-%d'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
-                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,''), IFNULL(OtherInsuranceName,''), " +
-                    "IFNULL(OtherSecInsuranceName,'') from " + Database + ".InsuranceInfo  where PatientRegId = " + PatientRegId;
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerFirstName,''), IFNULL(OtherInsuranceName,''), " +
+                    "IFNULL(OtherSecInsuranceName,''),IFNULL(PriInsurerLastName,''),IFNULL(SubscriberLastName,'') from " + Database + ".InsuranceInfo  where PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -5602,18 +5481,19 @@ public class PatientReg extends HttpServlet {
                 EmployerAddress = rset.getString(13);
                 EmployerPhone = rset.getString(14);
                 SecondryInsurance = rset.getString(15);
-                SubscriberName = rset.getString(16);
+                SubscriberFirstName = rset.getString(16);
                 SubscriberDOB = rset.getString(17);
                 PatientRelationshiptoSecondry = rset.getString(18);
                 MemberID_2 = rset.getString(19);
                 GroupNumber_2 = rset.getString(20);
-                PriInsurerName = rset.getString(21);
+                PriInsurerFirstName = rset.getString(21);
                 OtherInsuranceName = rset.getString(22);
                 OtherSecInsuranceName = rset.getString(23);
+                PriInsurerLastName = rset.getString(24);
+                SubscriberLastName = rset.getString(25);
             }
             rset.close();
             stmt.close();
-//            }
 
             if (WorkersCompPolicy == 0) {
                 WorkersCompPolicyBuff.append("<div class=\"demo-radio-button\">\n<input name=\"WorkersCompPolicy\" type=\"radio\" id=\"WorkersCompPolicyY\" value=\"1\" />\n<label for=\"WorkersCompPolicyY\">Yes</label>\n\n<input name=\"WorkersCompPolicy\" type=\"radio\" id=\"WorkersCompPolicyN\"value=\"0\" checked/>\n<label for=\"WorkersCompPolicyN\">No</label>\t\n</div> \n");
@@ -5649,42 +5529,11 @@ public class PatientReg extends HttpServlet {
                 Style += "#OtherSecInsuranceDiv{display:none;}";
             }
 
-            /*Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955,64,1545,3646,8589,200,201,202,203,204,205,206,207,3649,5978,8206,4763,3465,3466,3467,3468,41,387,388,389,697,698,4757, 8605, 8606, 8254) " +
-                    " AND Status != 100 group by PayerId";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            PriInsuranceNameBuff.append("<option value='-1'>--------------</option>");
-            while (rset.next()) {
-                if (PriInsuranceName.equals(rset.getString(1))) {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();
-
-            //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id not in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId ";//where PayerName not like '%Texas%'";
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                if (PriInsuranceName.equals(rset.getString(1))) {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();*/
-
             Query = "Select Id, PayerId, PayerName from oe_2.ProfessionalPayers";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             PriInsuranceNameBuff.append("<option value=''>--------------</option>");
-            System.out.println("PriInsuranceName -> " + PriInsuranceName);
+
             while (rset.next()) {
                 if (PriInsuranceName.equals(rset.getString(1))) {
                     PriInsuranceNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
@@ -5708,38 +5557,6 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-
-
-            /*Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955,64,1545,3646,8589,200,201,202,203,204,205,206,207,3649,5978,8206,4763,3465,3466,3467,3468,41,387,388,389,697,698,4757, 8605, 8606, 8254) " +
-                    " AND Status != 100 group by PayerId";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            SecondryInsuranceBuff.append("<option value='-1'>--------------</option>");
-            while (rset.next()) {
-                if (SecondryInsurance.equals(rset.getString(1))) {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();
-
-            //Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers where id not in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955) group by PayerId ";//where PayerName not like '%Texas%'";
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                if (SecondryInsurance.equals(rset.getString(1))) {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(3) + "</option>");
-                } else {
-                    SecondryInsuranceBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(3) + "</option>");
-                }
-            }
-            rset.close();
-            stmt.close();*/
 
             Query = "Select PatientRelation from " + Database + ".PatientRelation";
             stmt = conn.createStatement();
@@ -5954,89 +5771,6 @@ public class PatientReg extends HttpServlet {
                 }
 
             }
-            /*
-            if (ClientId == 27 || ClientId == 29) {
-                Query = " Select FrVisitedBefore, FrFamiliyVisitedBefore, FrInternet, FrBillboard, FrGoogle, FrBuildingSignage, " +
-                        "FrFacebook, FrLivesNear,  FrTwitter, FrTV, FrMapSearch, FrEvent, IFNULL(FrPhysicianReferral,''), " +
-                        "IFNULL(FrNeurologyReferral,'-'), IFNULL(FrUrgentCareReferral,''),  IFNULL(FrOrganizationReferral,''), " +
-                        "IFNULL(FrFriendFamily,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    if (rset.getInt(1) == 0) {
-                        FrVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeY\" value=\"1\" />\n<label for=\"FrVisitedBeforeY\">Yes</label>\n\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeN\"value=\"0\" checked/>\n<label for=\"FrVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else if (rset.getInt(1) == 1) {
-                        FrVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeY\" value=\"1\" checked/>\n<label for=\"FrVisitedBeforeY\">Yes</label>\n\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeN\"value=\"0\" />\n<label for=\"FrVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else {
-                        FrVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeY\" value=\"1\" />\n<label for=\"FrVisitedBeforeY\">Yes</label>\n\n<input name=\"FrVisitedBefore\" type=\"radio\" id=\"FrVisitedBeforeN\"value=\"0\" />\n<label for=\"FrVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    }
-                    if (rset.getInt(2) == 0) {
-                        FrFamiliyVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeY\" value=\"1\" />\n<label for=\"FrFamiliyVisitedBeforeY\">Yes</label>\n\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeN\"value=\"0\" checked />\n<label for=\"FrFamiliyVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else if (rset.getInt(2) == 1) {
-                        FrFamiliyVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeY\" value=\"1\" checked/>\n<label for=\"FrFamiliyVisitedBeforeY\">Yes</label>\n\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeN\"value=\"0\"  />\n<label for=\"FrFamiliyVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    } else {
-                        FrFamiliyVisitedBeforeN.append("<div class=\"demo-radio-button\">\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeY\" value=\"1\" />\n<label for=\"FrFamiliyVisitedBeforeY\">Yes</label>\n\n<input name=\"FrFamiliyVisitedBefore\" type=\"radio\" id=\"FrFamiliyVisitedBeforeN\"value=\"0\"  />\n<label for=\"FrFamiliyVisitedBeforeN\">No</label>\t\n</div>\t\t\t\t\t\t\t\t\t \n");
-                    }
-                    if (rset.getInt(3) == 1) {
-                        FrInternetN.append("<input type=\"checkbox\" id=\"FrInternet\" name=\"FrInternet\" checked/>");
-                    } else {
-                        FrInternetN.append("<input type=\"checkbox\" id=\"FrInternet\" name=\"FrInternet\"/>");
-                    }
-                    if (rset.getInt(4) == 1) {
-                        FrBillboardN.append("<input type=\"checkbox\" id=\"FrBillboard\" name=\"FrBillboard\" checked/>");
-                    } else {
-                        FrBillboardN.append("<input type=\"checkbox\" id=\"FrBillboard\" name=\"FrBillboard\" />");
-                    }
-                    if (rset.getInt(5) == 1) {
-                        FrGoogleN.append("<input type=\"checkbox\" id=\"FrGoogle\" name=\"FrGoogle\" checked/>");
-                    } else {
-                        FrGoogleN.append("<input type=\"checkbox\" id=\"FrGoogle\" name=\"FrGoogle\" />");
-                    }
-                    if (rset.getInt(6) == 1) {
-                        FrBuildingSignageN.append("<input type=\"checkbox\" id=\"FrBuildingSignage\" name=\"FrBuildingSignage\" checked/>");
-                    } else {
-                        FrBuildingSignageN.append("<input type=\"checkbox\" id=\"FrBuildingSignage\" name=\"FrBuildingSignage\" />");
-                    }
-                    if (rset.getInt(7) == 1) {
-                        FrFacebookN.append("<input type=\"checkbox\" id=\"FrFacebook\" name=\"FrFacebook\" checked/>");
-                    } else {
-                        FrFacebookN.append("<input type=\"checkbox\" id=\"FrFacebook\" name=\"FrFacebook\" />");
-                    }
-                    if (rset.getInt(8) == 1) {
-                        FrLivesNearN.append("<input type=\"checkbox\" id=\"FrLivesNear\" name=\"FrLivesNear\" checked/>");
-                    } else {
-                        FrLivesNearN.append("<input type=\"checkbox\" id=\"FrLivesNear\" name=\"FrLivesNear\" />");
-                    }
-                    if (rset.getInt(9) == 1) {
-                        FrTwitterN.append("<input type=\"checkbox\" id=\"FrTwitter\" name=\"FrTwitter\" checked/>");
-                    } else {
-                        FrTwitterN.append("<input type=\"checkbox\" id=\"FrTwitter\" name=\"FrTwitter\" />");
-                    }
-                    if (rset.getInt(10) == 1) {
-                        FrTVN.append("<input type=\"checkbox\" id=\"FrTV\" name=\"FrTV\" checked/>");
-                    } else {
-                        FrTVN.append("<input type=\"checkbox\" id=\"FrTV\" name=\"FrTV\" />");
-                    }
-                    if (rset.getInt(11) == 1) {
-                        FrMapSearchN.append("<input type=\"checkbox\" id=\"FrMapSearch\" name=\"FrMapSearch\" checked/>");
-                    } else {
-                        FrMapSearchN.append("<input type=\"checkbox\" id=\"FrMapSearch\" name=\"FrMapSearch\" />");
-                    }
-                    if (rset.getInt(12) == 1) {
-                        FrEventN.append("<input type=\"checkbox\" id=\"FrEvent\" name=\"FrEvent\" checked/>");
-                    } else {
-                        FrEventN.append("<input type=\"checkbox\" id=\"FrEvent\" name=\"FrEvent\" />");
-                    }
-                    FrPhysicianReferral = rset.getString(13).trim();
-                    FrNeurologyReferral = rset.getString(14).trim();
-                    FrUrgentCareReferral = rset.getString(15).trim();
-                    FrOrganizationReferral = rset.getString(16).trim();
-                    FrFriendFamily = rset.getString(17).trim();
-                }
-                rset.close();
-                stmt.close();
-            }
-            */
 
             Query = " Select IFNULL(ReturnPatient,'0'), IFNULL(Google,'0'), IFNULL(MapSearch,'0'), IFNULL(Billboard,'0'), IFNULL(OnlineReview,'0'), " +
                     "IFNULL(TV,'0'), IFNULL(Website,'0'), IFNULL(BuildingSignDriveBy,'0'),  IFNULL(Facebook,'0'), " +
@@ -6179,15 +5913,6 @@ public class PatientReg extends HttpServlet {
                 Attorney_textBuff.append("<input type=\"checkbox\" id=\"Attorney\" name=\"Attorney\" checked>");
             }
 
-/*            String Date = "";
-            Query = "Select Date_format(now(),'%Y-%m-%d')";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next())
-                Date = rset.getString(1);
-            rset.close();
-            stmt.close();*/
-
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("LastName", String.valueOf(LastName));
             Parser.SetField("FirstName", String.valueOf(FirstName));
@@ -6244,7 +5969,8 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("SympShortBreath", String.valueOf(SympShortBreath));
             Parser.SetField("SympCongestion", String.valueOf(SympCongestion));
             Parser.SetField("AddInfoTextAreaN", String.valueOf(AddInfoTextAreaN));
-            Parser.SetField("GuarantorName", String.valueOf(GuarantorName));
+            Parser.SetField("GuarantorFirstName", String.valueOf(GuarantorFirstName));
+            Parser.SetField("GuarantorLastName", String.valueOf(GuarantorLastName));
             Parser.SetField("GuarantorDOB", String.valueOf(GuarantorDOB));
             Parser.SetField("GuarantorNumber", String.valueOf(GuarantorNumber));
             Parser.SetField("GuarantorSSN", String.valueOf(GuarantorSSN));
@@ -6255,7 +5981,8 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("PriInsuranceNameBuff", String.valueOf(PriInsuranceNameBuff));
             Parser.SetField("OtherInsuranceNameBuff", String.valueOf(OtherInsuranceNameBuff));
             Parser.SetField("OtherSecInsuranceNameBuff", String.valueOf(OtherSecInsuranceNameBuff));
-            Parser.SetField("PriInsurerName", String.valueOf(PriInsurerName));
+            Parser.SetField("PriInsurerFirstName", String.valueOf(PriInsurerFirstName));
+            Parser.SetField("PriInsurerLastName", String.valueOf(PriInsurerLastName));
             Parser.SetField("PriInsuranceBuff", String.valueOf(PriInsuranceBuff));
             Parser.SetField("MemId", String.valueOf(MemId));
             Parser.SetField("GrpNumber", String.valueOf(GrpNumber));
@@ -6268,7 +5995,8 @@ public class PatientReg extends HttpServlet {
             Parser.SetField("EmployerAddress", String.valueOf(EmployerAddress));
             Parser.SetField("EmployerPhone", String.valueOf(EmployerPhone));
             Parser.SetField("SecondryInsuranceBuff", String.valueOf(SecondryInsuranceBuff));
-            Parser.SetField("SubscriberName", String.valueOf(SubscriberName));
+            Parser.SetField("SubscriberFirstName", String.valueOf(SubscriberFirstName));
+            Parser.SetField("SubscriberLastName", String.valueOf(SubscriberLastName));
             Parser.SetField("SubscriberDOB", String.valueOf(SubscriberDOB));
             Parser.SetField("MemberID_2", String.valueOf(MemberID_2));
             Parser.SetField("GroupNumber_2", String.valueOf(GroupNumber_2));
@@ -6346,15 +6074,15 @@ public class PatientReg extends HttpServlet {
     }
 
     void EditSave_New(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext
-            servletContext, String Database, String UserId, UtilityHelper helper) throws FileNotFoundException {
+            servletContext, String Database, String UserId, UtilityHelper helper, HttpServletResponse response, int ClientId) throws FileNotFoundException {
         String Query = "";
         Statement stmt = null;
         ResultSet rset = null;
         PreparedStatement pStmt = null;
-
+        String LifesaversExtraQues_A = "";
+        String LifesaversExtraQues_Q = "";
         int PatientRegId = 0;
         int ClientIndex = 0;
-        String ClientId = request.getParameter("ClientIndex").trim();
         String MRN = request.getParameter("MRN").trim();
         String Title = "";
         String FirstName = "";
@@ -6362,7 +6090,6 @@ public class PatientReg extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
-        String Age = "";
         String gender = "";
         String Email = "";
         String PhNumber = "";
@@ -6375,7 +6102,6 @@ public class PatientReg extends HttpServlet {
         String City = "";
         String State = "";
         String Country = "";
-        String DoctorName = "";
         String ZipCode = "";
         String SSN = "";
         String SpCarePhy = "";
@@ -6402,7 +6128,10 @@ public class PatientReg extends HttpServlet {
         String SympLossTaste = "0";
         String SympShortBreath = "0";
         String SympCongestion = "0";
-        String GuarantorName = "";
+//        String GuarantorName = "";
+        String GuarantorFirstName = "";
+        String GuarantorLastName = "";
+
         String GuarantorDOB = "";
         String GuarantorNumber = "";
         String GuarantorSSN = "";
@@ -6426,8 +6155,12 @@ public class PatientReg extends HttpServlet {
         String OtherInsuranceName = "";
         String OtherSecInsuranceName = "";
         String AddressIfDifferent = "";
-        String PriInsurerName = "";
+//        String PriInsurerName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
         String PrimaryDOB = "";
+        String Subscribergender = "";
+        String PriInsurergender = "";
         String PrimarySSN = "";
         String PatientRelationtoPrimary = "";
         String PrimaryOccupation = "";
@@ -6435,7 +6168,9 @@ public class PatientReg extends HttpServlet {
         String EmployerAddress = "";
         String EmployerPhone = "";
         String SecondryInsurance = "";
-        String SubscriberName = "";
+//        String SubscriberName = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
@@ -6517,20 +6252,20 @@ public class PatientReg extends HttpServlet {
         int VerifyChkBox = 0;
         String PatientName = "";
         int ID = 0;
-
+        String PoxPositveChk = "";
+        String PoxExposedDate = "";
+        String RashesChk = "";
+        String AgeChk = "";
+        String AssistanceChk = "";
+        String FallenChk = "";
+        String UnsteadyChk = "";
+        String PoxSymChk = "";
         String STDrelease = "";
         String releaseRecord = "";
         String Filter_WB_SW_A = "";
 
-        String COVIDStatus = "0";
-        String DateofService = null;
-        String facilityName = helper.getFacilityName(request, conn, servletContext, Integer.parseInt(ClientId));
+        String facilityName = helper.getFacilityName(request, conn, servletContext, ClientId);
         try {
-/*            if (request.getParameter("TransactionType") == null) {
-                TransactionType = "0";
-            } else {
-                TransactionType = request.getParameter("TransactionType").trim();
-            }*/
             if (request.getParameter("Title") == null) {
                 Title = null;
             } else {
@@ -6561,13 +6296,8 @@ public class PatientReg extends HttpServlet {
             } else {
                 DOB = request.getParameter("DOB").trim();
             }
-            if (request.getParameter("Age") == null) {
-                Age = "0";
-            } else {
-                Age = request.getParameter("Age").trim();
-            }
             if (request.getParameter("gender") == null) {
-                gender = "male";
+                gender = "";
             } else {
                 gender = request.getParameter("gender").trim();
             }
@@ -6656,10 +6386,21 @@ public class PatientReg extends HttpServlet {
             } else {
                 EmpContact = request.getParameter("EmpContact").trim();
             }
-            if (request.getParameter("GuarantorName") == null) {
-                GuarantorName = "";
+//            if (request.getParameter("GuarantorName") == null) {
+//                GuarantorName = "";
+//            } else {
+//                GuarantorName = request.getParameter("GuarantorName").trim();
+//            }
+            if (request.getParameter("GuarantorFirstName") == null) {
+                GuarantorFirstName = "";
             } else {
-                GuarantorName = request.getParameter("GuarantorName").trim();
+                GuarantorFirstName = request.getParameter("GuarantorFirstName").trim();
+            }
+
+            if (request.getParameter("GuarantorLastName") == null) {
+                GuarantorLastName = "";
+            } else {
+                GuarantorLastName = request.getParameter("GuarantorLastName").trim();
             }
             if (request.getParameter("GuarantorDOB") == null) {
                 GuarantorDOB = "";
@@ -6816,12 +6557,12 @@ public class PatientReg extends HttpServlet {
             } else {
                 AddInfoTextArea = request.getParameter("AddInfoTextArea").trim();
             }
+            String COVIDStatus;
             if (request.getParameter("COVIDStatus_Chk") == null) {
                 COVIDStatus = "-1";
             } else {
                 COVIDStatus = request.getParameter("COVIDStatus_Chk").trim();
             }
-            //System.out.println(DoctorName + "-----:DoctorsName");
             if (request.getParameter("WorkersCompPolicy") == null) {
                 WorkersCompPolicy = 0;
             } else {
@@ -6882,10 +6623,22 @@ public class PatientReg extends HttpServlet {
             }
 
 
-            if (request.getParameter("PriInsurerName") == null) {
-                PriInsurerName = "";
+//            if (request.getParameter("PriInsurerName") == null) {
+//                PriInsurerName = "";
+//            } else {
+//                PriInsurerName = request.getParameter("PriInsurerName").trim();
+//            }
+
+            if (request.getParameter("PriInsurerFirstName") == null) {
+                PriInsurerFirstName = "";
             } else {
-                PriInsurerName = request.getParameter("PriInsurerName").trim();
+                PriInsurerFirstName = request.getParameter("PriInsurerFirstName").trim();
+            }
+
+            if (request.getParameter("PriInsurerLastName") == null) {
+                PriInsurerLastName = "";
+            } else {
+                PriInsurerLastName = request.getParameter("PriInsurerLastName").trim();
             }
             if (request.getParameter("AddressIfDifferent") == null) {
                 AddressIfDifferent = "";
@@ -6900,6 +6653,16 @@ public class PatientReg extends HttpServlet {
                 } else {
                     PrimaryDOB = "0000-00-00";
                 }
+            }
+            if (request.getParameter("PriInsurergender") == null) {
+                PriInsurergender = "";
+            } else {
+                PriInsurergender = request.getParameter("PriInsurergender").trim();
+            }
+            if (request.getParameter("Subscribergender") == null) {
+                Subscribergender = "";
+            } else {
+                Subscribergender = request.getParameter("Subscribergender").trim();
             }
             if (request.getParameter("PrimarySSN") == null) {
                 PrimarySSN = "";
@@ -6936,16 +6699,28 @@ public class PatientReg extends HttpServlet {
             } else {
                 SecondryInsurance = request.getParameter("SecondryInsurance").trim();
             }
-            if (request.getParameter("SubscriberName") == null) {
-                SubscriberName = "";
+//            if (request.getParameter("SubscriberName") == null) {
+//                SubscriberName = "";
+//            } else {
+//                SubscriberName = request.getParameter("SubscriberName").trim();
+//            }
+
+            if (request.getParameter("SubscriberFirstName") == null) {
+                SubscriberFirstName = "";
             } else {
-                SubscriberName = request.getParameter("SubscriberName").trim();
+                SubscriberFirstName = request.getParameter("SubscriberFirstName").trim();
+            }
+
+            if (request.getParameter("SubscriberLastName") == null) {
+                SubscriberLastName = "";
+            } else {
+                SubscriberLastName = request.getParameter("SubscriberLastName").trim();
             }
             if (request.getParameter("SubscriberDOB") == null) {
                 SubscriberDOB = "0000-00-00";
             } else {
-                if (SubscriberDOB.length() > 0) {
-                    SubscriberDOB = request.getParameter("DOB").trim();
+                if (request.getParameter("SubscriberDOB").length() > 0) {
+                    SubscriberDOB = request.getParameter("SubscriberDOB").trim();
                 } else {
                     SubscriberDOB = "0000-00-00";
                 }
@@ -7292,7 +7067,48 @@ public class PatientReg extends HttpServlet {
                 FrFriendFamily = request.getParameter("FrFriendFamily").trim();
             }
 
-            if (ClientId.equals("41") || ClientId.equals("42") || ClientId.equals("43")) {
+            if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                if (request.getParameter("PoxPositveChk") == null) {
+                    PoxPositveChk = "";
+                } else {
+                    PoxPositveChk = request.getParameter("PoxPositveChk").trim();
+                }
+                if (request.getParameter("PoxExposedDate") == null) {
+                    PoxExposedDate = "0000-00-00";
+                } else {
+                    PoxExposedDate = request.getParameter("PoxExposedDate").trim();
+                }
+                if (request.getParameter("RashesChk") == null) {
+                    RashesChk = "";
+                } else {
+                    RashesChk = request.getParameter("RashesChk").trim();
+                }
+                if (request.getParameter("AgeChk") == null) {
+                    AgeChk = "0";
+                } else {
+                    AgeChk = "1";
+                }
+                if (request.getParameter("AssistanceChk") == null) {
+                    AssistanceChk = "0";
+                } else {
+                    AssistanceChk = "1";
+                }
+                if (request.getParameter("FallenChk") == null) {
+                    FallenChk = "0";
+                } else {
+                    FallenChk = "1";
+                }
+                if (request.getParameter("UnsteadyChk") == null) {
+                    UnsteadyChk = "0";
+                } else {
+                    UnsteadyChk = "1";
+                }
+
+                if (request.getParameter("PoxSymChk") == null) {
+                    PoxSymChk = "0";
+                } else {
+                    PoxSymChk = "1";
+                }
                 if (request.getParameter("releaseRecord") == null) {
                     releaseRecord = "0";
                 } else {
@@ -7305,15 +7121,11 @@ public class PatientReg extends HttpServlet {
                 }
 
                 Filter_WB_SW_A = ",STDrelease = ? ,releaseRecord = ? ";
+                LifesaversExtraQues_A = ", PoxPositveChk =? , PoxExposedDate =? ,RashesChk =? ,AgeChk =? ,AssistanceChk =? ,FallenChk =? ,UnsteadyChk =? ,PoxSymChk =?  ";
+
             }
-/*            else {
-                if (ClientId.equals("27") || ClientId.equals("29")) {
-                    Filter_WB_SW_A = ",TransactionTypeIdx = ? ";
-                }
-            }*/
 
-
-            if (ClientId.equals("27") || ClientId.equals("29")) {
+            if (ClientId == 27 || ClientId == 29) {
                 Query = "Select IFNULL(ReasonVisit,'-') from " + Database + ".ReasonVisits where Id = " + ReasonVisit;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -7322,6 +7134,7 @@ public class PatientReg extends HttpServlet {
                 rset.close();
                 stmt.close();
             }
+
             int MaxVisitNumber = 0;
             int VisitId = 0;
             try {
@@ -7344,39 +7157,6 @@ public class PatientReg extends HttpServlet {
             }
             try {
                 insertPatientRegHistory(request, conn, servletContext, Database, ID, out, facilityName, helper);
-
-//                PreparedStatement MainReceipt = conn.prepareStatement(" Update " + Database + ".PatientReg  SET Title = ?," +
-//                        " FirstName = ?, LastName = ?, MiddleInitial = ?, DOB = ?, Age = ?, Gender = ?, Email = ?, PhNumber = ?, Address = ?, City = ?, " +
-//                        " State = ?, Country = ?, ZipCode = ?, SSN = ?, Occupation = ?, Employer = ?, EmpContact = ?, PriCarePhy = ?, ReasonVisit = ?, " +
-//                        " MaritalStatus = ?, Ethnicity = ?, County = ?, Address2 = ?, StreetAddress2 = ?, ViewDate=NOW() where ID = ?) ");
-//                MainReceipt.setString(1, Title);
-//                MainReceipt.setString(2, FirstName);
-//                MainReceipt.setString(3, LastName);
-//                MainReceipt.setString(4, MiddleInitial);
-//                MainReceipt.setString(5, DOB);
-//                MainReceipt.setString(6, Age);
-//                MainReceipt.setString(7, gender);
-//                MainReceipt.setString(8, Email);
-//                MainReceipt.setString(9, PhNumber);
-//                MainReceipt.setString(10, Address);
-//                MainReceipt.setString(11, City);
-//                MainReceipt.setString(12, State);
-//                MainReceipt.setString(13, Country);
-//                MainReceipt.setString(14, ZipCode);
-//                MainReceipt.setString(15, SSN);
-//                MainReceipt.setString(16, Occupation);
-//                MainReceipt.setString(17, Employer);
-//                MainReceipt.setString(18, EmpContact);
-//                MainReceipt.setString(19, PriCarePhy);
-//                MainReceipt.setString(20, ReasonVisit);
-//                MainReceipt.setString(21, MaritalStatus);
-//                MainReceipt.setString(22, Ethnicity);
-//                MainReceipt.setString(23, County);
-//                MainReceipt.setString(24, Address2);
-//                MainReceipt.setString(25, StreetAddress2);
-//                MainReceipt.setInt(26, ID);
-//                MainReceipt.executeUpdate();
-//                MainReceipt.close();
                 int _Age = getAge(LocalDate.parse(DOB));
 
                 pStmt = conn.prepareStatement("UPDATE " + Database + ".PatientReg SET Title = ?, FirstName = ?,  " +
@@ -7384,7 +7164,7 @@ public class PatientReg extends HttpServlet {
                         "Address = ?, City = ?,  State = ?, Country = ?,ZipCode = ?, SSN = ?, Occupation = ?, Employer = ?, " +
                         "EmpContact = ?, PriCarePhy = ?, ReasonVisit = ?, MaritalStatus = ?,  Ethnicity = ?, County = ?, " +
                         "Address2 = ?, StreetAddress2 = ?,ViewDate=NOW(),ReasonVisitOthers = ?," +
-                        "Status=0  " + Filter_WB_SW_A +
+                        "Status=0  " + Filter_WB_SW_A + " , EditBy=? , EditTime=NOW() " +
                         "WHERE Id = ? ");
                 pStmt.setString(1, Title);
                 pStmt.setString(2, FirstName);
@@ -7413,34 +7193,17 @@ public class PatientReg extends HttpServlet {
                 pStmt.setString(25, StreetAddress2);
                 pStmt.setString(26, ReasonVisitOthers);
 
-                if (ClientId.equals("41") || ClientId.equals("42") || ClientId.equals("43")) {
+                if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                     pStmt.setString(27, STDrelease);
                     pStmt.setString(28, releaseRecord);
-                    pStmt.setInt(29, ID);
-                } else
-                    pStmt.setInt(27, ID);
-/*                else {
-                    if (ClientId.equals("27") || ClientId.equals("29")) {
-                        pStmt.setString(27, TransactionType);
-                        pStmt.setInt(28, ID);
-                    } else
-                        pStmt.setInt(27, ID);
-                }*/
+                    pStmt.setString(29, UserId);
+                    pStmt.setInt(30, ID);
+                } else {
+                    pStmt.setString(27, UserId);
+                    pStmt.setInt(28, ID);
+                }
                 pStmt.executeUpdate();
                 pStmt.close();
-
-
-/*                Query = " UPDATE " + Database + ".PatientReg SET Title ='" + Title + "', FirstName = '" + FirstName + "', " +
-                        "LastName = '" + LastName + "', MiddleInitial = '" + MiddleInitial + "',  DOB = '" + DOB + "', " +
-                        "Age = '" + Age + "', Gender = '" + gender + "', Email = '" + Email + "', PhNumber = '" + PhNumber + "', " +
-                        "Address = '" + Address + "', City = '" + City + "',  State = '" + State + "', Country = '" + Country + "', " +
-                        "ZipCode = '" + ZipCode + "', SSN = '" + SSN + "', Occupation = '" + Occupation + "', Employer = '" + Employer + "',  " +
-                        "EmpContact = '" + EmpContact + "', PriCarePhy = '" + PriCarePhy + "', ReasonVisit = '" + ReasonVisit + "', " +
-                        "MaritalStatus = '" + MaritalStatus + "',  Ethnicity = '" + Ethnicity + "', County = '" + County + "', " +
-                        "Address2 = '" + Address2 + "', StreetAddress2 = '" + StreetAddress2 + "',ViewDate=NOW() WHERE ID = " + ID;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();*/
 
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (EditSave_New Updating PatientReg Table ^^" + facilityName + "_PatMRN#: " + MRN + " ##MES#019)", servletContext, ex, "PatientReg", "EditSave_New", conn);
@@ -7469,6 +7232,7 @@ public class PatientReg extends HttpServlet {
                     VisitId = rset.getInt(1);
                 rset.close();
                 stmt.close();
+
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (EditSave_New getting VisitNumber From PatientVisit ^^" + facilityName + "_PatMRN#: " + MRN + " ##MES#020)", servletContext, ex, "PatientReg", "EditSave_New", conn);
                 Services.DumException("EditSave_New^^" + facilityName + " ##MES#020", "PatientReg ", request, ex);
@@ -7480,7 +7244,6 @@ public class PatientReg extends HttpServlet {
                 return;
             }
             try {
-
                 pStmt = conn.prepareStatement("UPDATE " + Database + ".PatientVisit SET ReasonVisit = ? " +
                         " WHERE PatientRegId = ? and VisitNumber = ?");
                 pStmt.setString(1, ReasonVisit);
@@ -7488,12 +7251,6 @@ public class PatientReg extends HttpServlet {
                 pStmt.setInt(3, MaxVisitNumber);
                 pStmt.executeUpdate();
                 pStmt.close();
-
-                /*Query = "UPDATE " + Database + ".PatientVisit SET ReasonVisit ='" + ReasonVisit + "' " +
-                        "WHERE PatientRegId = " + ID + " and VisitNumber = " + MaxVisitNumber;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();*/
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (EditSave_New updating reason From PatientVisit ^^" + facilityName + "_PatMRN#: " + MRN + " ##MES#021)", servletContext, ex, "PatientReg", "EditSave_New", conn);
                 Services.DumException("EditSave_New^^" + facilityName + " ##MES#021", "PatientReg ", request, ex);
@@ -7508,52 +7265,14 @@ public class PatientReg extends HttpServlet {
                 if (TravelWhen.equals(null) || TravelWhen.equals("") || TravelWhen.isEmpty())
                     TravelWhen = "0000-00-00";
 
-                insertPatientReg_DetailsHistory(request, conn, servletContext, Database, ID, out, facilityName, helper);
-
-                /*PreparedStatement MainReceipt = conn.prepareStatement(
-                        "Update "+Database+".PatientReg_Details SET TravellingChk = ?,TravelWhen = ?,TravelWhere = ?,TravelHowLong = ?,COVIDExposedChk = ?," +
-                                "SympFever = ?,SympBodyAches = ?,SympSoreThroat = ?,SympFatigue = ?,SympRash = ?,SympVomiting = ?,SympDiarrhea = ?,SympCough = ?," +
-                                "SympRunnyNose = ?,SympNausea = ?,SympFluSymptoms = ?,SympEyeConjunctivitis = ?,Race = ?,CovidExpWhen = ?,SpCarePhy = ?,SympHeadache = ?," +
-                                "SympLossTaste = ?,SympShortBreath = ?,AddInfoTextArea = ?,SympCongestion = ?,Ethnicity = ?,GuarantorName = ?,GuarantorDOB = ?," +
-                                "GuarantorNumber = ?,GuarantorSSN = ?,VisitId = ?,COVIDPositveChk = ?,CovidPositiveDate = ?,GuarantorLastName = ?");
-
-                MainReceipt.executeUpdate();
-                MainReceipt.close();*/
-
-                /*                Query = "Update " + Database + ".PatientReg_Details set TravellingChk = '" + TravellingChk + "'," +
-                        "TravelWhere = '" + TravelWhere + "',  TravelHowLong = '" + TravelHowLong + "'," +
-                        "COVIDExposedChk = '" + COVIDExposedChk + "',SympFever = '" + SympFever + "',SympBodyAches = '" + SympBodyAches + "', " +
-                        "SympSoreThroat = '" + SympSoreThroat + "',SympFatigue = '" + SympFatigue + "',SympRash = '" + SympRash + "'," +
-                        "SympVomiting = '" + SympVomiting + "', SympDiarrhea = '" + SympDiarrhea + "',SympCough = '" + SympCough + "'," +
-                        "SympRunnyNose = '" + SympRunnyNose + "',SympNausea = '" + SympNausea + "', SympFluSymptoms = '" + SympFluSymptoms + "' ," +
-                        "Race = '" + Race + "',  CovidExpWhen = '" + CovidExpWhen + "', SpCarePhy = '" + SpCarePhy + "', " +
-                        "SympHeadache = '" + SympHeadache + "',  SympLossTaste = '" + SympLossTaste + "', " +
-                        "SympShortBreath = '" + SympShortBreath + "', SympCongestion = '" + SympCongestion + "',  " +
-                        "AddInfoTextArea = '" + AddInfoTextArea + "', GuarantorName = '" + GuarantorName + "', " +
-                        "GuarantorDOB = '" + GuarantorDOB + "',  GuarantorNumber = '" + GuarantorNumber + "', " +
-                        "GuarantorSSN = '" + GuarantorSSN + "' WHERE PatientRegId = " + ID;*/
-
-/*                Query = " Update " + Database + ".PatientReg_Details set TravellingChk = '" + TravellingChk + "'," +
-                        " TravelWhen = '" + TravelWhen + "',TravelWhere = '" + TravelWhere + "',  TravelHowLong = '" + TravelHowLong + "'," +
-                        " COVIDExposedChk = '" + COVIDExposedChk + "',SympFever = '" + SympFever + "',SympBodyAches = '" + SympBodyAches + "', " +
-                        " SympSoreThroat = '" + SympSoreThroat + "',SympFatigue = '" + SympFatigue + "',SympRash = '" + SympRash + "'," +
-                        " SympVomiting = '" + SympVomiting + "', SympDiarrhea = '" + SympDiarrhea + "',SympCough = '" + SympCough + "'," +
-                        " SympRunnyNose = '" + SympRunnyNose + "',SympNausea = '" + SympNausea + "', SympFluSymptoms = '" + SympFluSymptoms + "' ," +
-                        " Race = '" + Race + "',  CovidExpWhen = '" + CovidExpWhen + "', SpCarePhy = '" + SpCarePhy + "', " +
-                        " SympHeadache = '" + SympHeadache + "',  SympLossTaste = '" + SympLossTaste + "', " +
-                        " SympShortBreath = '" + SympShortBreath + "', SympCongestion = '" + SympCongestion + "',  " +
-                        " AddInfoTextArea = '" + AddInfoTextArea + "', GuarantorName = '" + GuarantorName + "', " +
-                        " GuarantorDOB = '" + GuarantorDOB + "',  GuarantorNumber = '" + GuarantorNumber + "', " +
-                        " GuarantorSSN = '" + GuarantorSSN + "', COVIDPositveChk = '" + COVIDPositveChk + "' , " +
-                        " CovidPositiveDate = '" + CovidPositiveDate + "' " +
-                        " WHERE PatientRegId = " + ID;*/
+                insertPatientReg_DetailsHistory(request, conn, servletContext, Database, ID, out, facilityName, helper, ClientId);
 
                 pStmt = conn.prepareStatement("Update " + Database + ".PatientReg_Details set TravellingChk = ?, TravelWhen = ? ,TravelWhere = ?,  TravelHowLong = ?," +
                         " COVIDExposedChk = ?, SympFever = ?, SympBodyAches = ?, SympSoreThroat = ?, SympFatigue = ?, SympRash = ?," +
                         " SympVomiting = ?, SympDiarrhea = ?,SympCough = ?,  SympRunnyNose = ?,SympNausea = ?, SympFluSymptoms = ? ," +
                         " Race = ?,  CovidExpWhen = ?, SpCarePhy = ?, SympHeadache = ?,  SympLossTaste = ?,  SympShortBreath = ?, SympCongestion = ?,  " +
-                        " AddInfoTextArea = ?, GuarantorName = ?,  GuarantorDOB = ?,  GuarantorNumber = ?, " +
-                        " GuarantorSSN = ?, COVIDPositveChk = ? ,  CovidPositiveDate = ? " +
+                        " AddInfoTextArea = ?, GuarantorFirstName = ?,  GuarantorDOB = ?,  GuarantorNumber = ?, " +
+                        " GuarantorSSN = ?, COVIDPositveChk = ? ,  CovidPositiveDate = ?,GuarantorLastName=? " + LifesaversExtraQues_A + " " +
                         " WHERE PatientRegId = ? ");
                 pStmt.setInt(1, TravellingChk);
                 pStmt.setString(2, TravelWhen);
@@ -7579,13 +7298,27 @@ public class PatientReg extends HttpServlet {
                 pStmt.setString(22, SympShortBreath);
                 pStmt.setString(23, SympCongestion);
                 pStmt.setString(24, AddInfoTextArea);
-                pStmt.setString(25, GuarantorName);
+                pStmt.setString(25, GuarantorFirstName);
                 pStmt.setString(26, GuarantorDOB);
                 pStmt.setString(27, GuarantorNumber);
                 pStmt.setString(28, GuarantorSSN);
                 pStmt.setString(29, COVIDPositveChk);
                 pStmt.setString(30, CovidPositiveDate);
-                pStmt.setInt(31, ID);
+                pStmt.setString(31, GuarantorLastName);
+
+                if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                    pStmt.setString(32, PoxPositveChk);
+                    pStmt.setString(33, PoxExposedDate);
+                    pStmt.setString(34, RashesChk);
+                    pStmt.setString(35, AgeChk);
+                    pStmt.setString(36, AssistanceChk);
+                    pStmt.setString(37, FallenChk);
+                    pStmt.setString(38, UnsteadyChk);
+                    pStmt.setString(39, PoxSymChk);
+                    pStmt.setInt(40, ID);
+                } else {
+                    pStmt.setInt(32, ID);
+                }
                 pStmt.executeUpdate();
                 pStmt.close();
 
@@ -7594,76 +7327,59 @@ public class PatientReg extends HttpServlet {
                 Services.DumException("EditSave_New^^" + facilityName + " ##MES#022", "PatientReg ", request, ex);
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("FormName", "PatientReg");
-                Parser.SetField("ActionID", "EditValues_New&MRN=" + MRN + "&ClientIndex=" + ClientIndex);
+                Parser.SetField("ActionID", "EditValues_New&MRN=" + MRN + "&ClientIndex=" + ClientId);
                 Parser.SetField("Message", "MES#022");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 return;
             }
+
+            if (ClientId == 41 || ClientId == 42 || ClientIndex == 43) {
+                if (!AssistanceChk.equals("1") && !FallenChk.equals("1") && !UnsteadyChk.equals("1") && !PoxSymChk.equals("1")) {
+                    Query = "DELETE FROM " + Database + ".Alerts  where PatientRegId = " + ID;
+                    stmt = conn.createStatement();
+                    stmt.executeUpdate(Query);
+                    stmt.close();
+                }
+            }
             try {
                 int InsuranceDataFound = 0;
                 if (!PriInsuranceName.equals("")) {
-                    //System.out.println("Inside Self Pay Chk = 1");
+                    SelfPayChk = 1;
                     Query = "Update " + Database + ".PatientReg Set SelfPayChk = 1 where ID = " + ID;
-                    stmt = conn.createStatement();
-                    stmt.executeUpdate(Query);
-                    stmt.close();
-
                 } else {
+                    SelfPayChk = 0;
                     Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + ID;
-                    stmt = conn.createStatement();
-                    stmt.executeUpdate(Query);
-                    stmt.close();
-/*                    Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + ID;
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    if (rset.next())
-                        SelfPayChk = rset.getInt(1);
-                    rset.close();
-                    stmt.close();*/
                 }
-                Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + ID;
                 stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next())
-                    SelfPayChk = rset.getInt(1);
-                rset.close();
+                stmt.executeUpdate(Query);
                 stmt.close();
 
-
                 if ((PriInsuranceName.equals("8606") || PriInsuranceName.equals("")) && (SecondryInsurance.equals("8606") || SecondryInsurance.equals(""))) {
-
+                    SelfPayChk = 0;
                     Query = "Update " + Database + ".PatientReg Set SelfPayChk = 0 where ID = " + ID;
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
                     stmt.close();
-                    Query = "Select SelfPayChk from " + Database + ".PatientReg where ID = " + ID;
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    if (rset.next())
-                        SelfPayChk = rset.getInt(1);
-                    rset.close();
-                    stmt.close();
-
 
                     pStmt = conn.prepareStatement("Update " + Database + ".InsuranceInfo SET PriInsuranceName=? , SecondryInsurance=?  WHERE PatientRegId=?");
                     pStmt.setString(1, PriInsuranceName);
                     pStmt.setString(2, SecondryInsurance);
                     pStmt.setInt(3, ID);
-//                    System.out.println("Query -> " + pStmt.toString());
                     pStmt.executeUpdate();
                     pStmt.close();
 
                 }
                 if (SelfPayChk == 1) {
                     int PatientAdmissionBundleCount = 0;
-                    if (ClientId.equals("10") || ClientId.equals("15")) {
+                    if (ClientId == 10 || ClientId == 15) {
                         Query = "Select COUNT(*) from " + Database + ".PatientAdmissionBundle where PatientRegId = " + ID;
                         stmt = conn.createStatement();
                         rset = stmt.executeQuery(Query);
-                        while (rset.next())
+                        if (rset.next())
                             PatientAdmissionBundleCount = rset.getInt(1);
                         rset.close();
                         stmt.close();
+
                         if (PatientAdmissionBundleCount > 0) {
                             Query = "Update " + Database + ".PatientAdmissionBundle set AdmissionBundle = '" + AddmissionBundle + "' " +
                                     "where PatientRegId = " + ID;
@@ -7695,10 +7411,10 @@ public class PatientReg extends HttpServlet {
                                 "MotorVehAccident = ?, PriInsurance = ?, " +
                                 "MemId = ?, GrpNumber = ?, PriInsuranceName = ?,AddressIfDifferent = ?,  PrimaryDOB = ?,  " +
                                 "PrimarySSN = ?, PatientRelationtoPrimary = ?,PrimaryOccupation = ? ,  PrimaryEmployer = ?,  " +
-                                "EmployerAddress = ? , EmployerPhone = ?, SecondryInsurance = ?,  SubscriberName = ?, " +
+                                "EmployerAddress = ? , EmployerPhone = ?, SecondryInsurance = ?, SubscriberFirstName = ?, " +
                                 "SubscriberDOB = ?, MemberID_2 = ?,GroupNumber_2 = ?,  PatientRelationshiptoSecondry = ?, " +
-                                "VisitId = ? , PriInsurerName = ?, OtherInsuranceName = ? , CorporateAccountSecIns=? , " +
-                                "CorporateAccountPriIns=?,OtherSecInsuranceName=? " +
+                                "VisitId = ? , PriInsurerFirstName  = ?, OtherInsuranceName = ? , CorporateAccountSecIns=? , " +
+                                "CorporateAccountPriIns=?,OtherSecInsuranceName=?,PriInsurerLastName=?,SubscriberLastName=?,PriInsurergender=?,Subscribergender=? " +
                                 "WHERE PatientRegId = ? ");
                         pStmt.setInt(1, WorkersCompPolicy);
                         pStmt.setInt(2, MotorVehAccident);
@@ -7718,46 +7434,33 @@ public class PatientReg extends HttpServlet {
                         pStmt.setString(13, EmployerAddress);
                         pStmt.setString(14, EmployerPhone);
                         pStmt.setString(15, SecondryInsurance);
-                        pStmt.setString(16, SubscriberName);
+                        pStmt.setString(16, SubscriberFirstName);
                         pStmt.setString(17, SubscriberDOB);
                         pStmt.setString(18, MemberID_2);
                         pStmt.setString(19, GroupNumber_2);
                         pStmt.setString(20, PatientRelationshiptoSecondry);
                         pStmt.setString(21, String.valueOf(VisitId));
-                        pStmt.setString(22, PriInsurerName);
+                        pStmt.setString(22, PriInsurerFirstName);
                         pStmt.setString(23, OtherInsuranceName);
                         pStmt.setString(24, CorporateAccountSecIns);
                         pStmt.setString(25, CorporateAccountPriIns);
                         pStmt.setString(26, OtherSecInsuranceName);
-                        pStmt.setInt(27, ID);
+                        pStmt.setString(27, PriInsurerLastName);
+                        pStmt.setString(28, SubscriberLastName);
+                        pStmt.setString(29, PriInsurergender);
+                        pStmt.setString(30, Subscribergender);
+                        pStmt.setInt(31, ID);
                         pStmt.executeUpdate();
                         pStmt.close();
-
-/*                        Query = " UPDATE " + Database + ".InsuranceInfo SET WorkersCompPolicy = " + WorkersCompPolicy + ", " +
-                                " MotorVehAccident = " + MotorVehAccident + ", PriInsurance = '" + PriInsurance + "',  " +
-                                " MemId = '" + MemId + "', GrpNumber = '" + GrpNumber + "', PriInsuranceName = '" + PriInsuranceName + "', " +
-                                " AddressIfDifferent = '" + AddressIfDifferent + "',  PrimaryDOB = '" + PrimaryDOB + "', " +
-                                " PrimarySSN = '" + PrimarySSN + "', PatientRelationtoPrimary = '" + PatientRelationtoPrimary + "', " +
-                                " PrimaryOccupation = '" + PrimaryOccupation + "',  PrimaryEmployer = '" + PrimaryEmployer + "', " +
-                                " EmployerAddress = '" + EmployerAddress + "', EmployerPhone = '" + EmployerPhone + "', " +
-                                " SecondryInsurance = '" + SecondryInsurance + "',  SubscriberName = '" + SubscriberName + "', " +
-                                " SubscriberDOB = '" + SubscriberDOB + "', MemberID_2 = '" + MemberID_2 + "', " +
-                                " GroupNumber_2 = '" + GroupNumber_2 + "',  PatientRelationshiptoSecondry = '" + PatientRelationshiptoSecondry + "', " +
-                                " PriInsurerName = '" + PriInsurerName + "', OtherInsuranceName = '" + OtherInsuranceName + "' " +
-                                " WHERE PatientRegId = " + ID;
-                        stmt = conn.createStatement();
-                        stmt.executeUpdate(Query);
-                        stmt.close();*/
-
                     } else {
                         try {
                             PreparedStatement MainReceipt = conn.prepareStatement(
                                     "INSERT INTO " + Database + ".InsuranceInfo(PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance," +
                                             "MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary," +
-                                            "PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberName," +
+                                            "PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,SecondryInsurance,SubscriberFirstName," +
                                             "SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,CreatedDate,VisitId, " +
-                                            "PriInsurerName, OtherInsuranceName , CorporateAccountPriIns , CorporateAccountSecIns,OtherSecInsuranceName)  " +
-                                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?) ");
+                                            "PriInsurerFirstName , OtherInsuranceName , CorporateAccountPriIns , CorporateAccountSecIns,OtherSecInsuranceName,PriInsurerLastName,SubscriberLastName,PriInsurergender,Subscribergender)   " +
+                                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now(),?,?,?,?,?,?,?,?,?,?) ");
                             MainReceipt.setInt(1, ID);
                             MainReceipt.setInt(2, WorkersCompPolicy);
                             MainReceipt.setInt(3, MotorVehAccident);
@@ -7770,7 +7473,6 @@ public class PatientReg extends HttpServlet {
                                 MainReceipt.setString(9, PrimaryDOB);
                             else
                                 MainReceipt.setNull(9, Types.DATE);
-                            //MainReceipt.setString(9, PrimaryDOB);
                             MainReceipt.setString(10, PrimarySSN);
                             MainReceipt.setString(11, PatientRelationtoPrimary);
                             MainReceipt.setString(12, PrimaryOccupation);
@@ -7778,17 +7480,21 @@ public class PatientReg extends HttpServlet {
                             MainReceipt.setString(14, EmployerAddress);
                             MainReceipt.setString(15, EmployerPhone);
                             MainReceipt.setString(16, SecondryInsurance);
-                            MainReceipt.setString(17, SubscriberName);
+                            MainReceipt.setString(17, SubscriberFirstName);
                             MainReceipt.setString(18, SubscriberDOB);
                             MainReceipt.setString(19, MemberID_2);
                             MainReceipt.setString(20, GroupNumber_2);
                             MainReceipt.setString(21, PatientRelationshiptoSecondry);
                             MainReceipt.setString(22, String.valueOf(VisitId));
-                            MainReceipt.setString(23, PriInsurerName);
+                            MainReceipt.setString(23, PriInsurerFirstName);
                             MainReceipt.setString(24, OtherInsuranceName);
                             MainReceipt.setString(25, CorporateAccountPriIns);
                             MainReceipt.setString(26, CorporateAccountSecIns);
                             MainReceipt.setString(27, OtherSecInsuranceName);
+                            MainReceipt.setString(28, PriInsurerLastName);
+                            MainReceipt.setString(29, SubscriberLastName);
+                            MainReceipt.setString(30, PriInsurergender);
+                            MainReceipt.setString(31, Subscribergender);
                             MainReceipt.executeUpdate();
                             MainReceipt.close();
                         } catch (Exception ex) {
@@ -7814,16 +7520,6 @@ public class PatientReg extends HttpServlet {
             }
             try {
                 insertEmergencyInfoHistory(request, conn, servletContext, Database, ID, out, facilityName, helper);
-
-
-/*                Query = "Update " + Database + ".EmergencyInfo set NextofKinName = '" + NextofKinName + "', " +
-                        "RelationToPatient = '" + RelationToPatientER + "', PhoneNumber = '" + PhoneNumberER + "',  " +
-                        "LeaveMessage = " + LeaveMessageER + ", Address = '" + AddressER + "', City = '" + CityER + "', " +
-                        "State = '" + StateER + "', Country = '" + CountryER + "', ZipCode = '" + ZipCodeER + "'  " +
-                        "where PatientRegId = " + ID;
-                stmt = conn.createStatement();
-                stmt.executeUpdate(Query);
-                stmt.close();*/
 
                 PreparedStatement MainReceipt = conn.prepareStatement(
                         "UPDATE " + Database + ".EmergencyInfo SET NextofKinName = ?, RelationToPatient = ?, PhoneNumber = ?,  " +
@@ -7854,21 +7550,7 @@ public class PatientReg extends HttpServlet {
             try {
                 insertRandomCheckInfoHistory(request, conn, servletContext, Database, ID, out, facilityName, helper);
 
-                if (ClientId.equals("27") || ClientId.equals("29")) {
-                    //insertRandomCheckInfoHistory(request, conn, servletContext, Database, ID, out, facilityName, helper);
-/*                    Query = "Update " + Database + ".RandomCheckInfo set FrVisitedBefore = " + FrVisitedBefore + ", " +
-                            "FrFamiliyVisitedBefore = " + FrFamiliyVisitedBefore + ",  FrInternet = " + FrInternet + ", " +
-                            "FrBillboard = " + FrBillboard + ",  FrGoogle = " + FrGoogle + ", " +
-                            "FrBuildingSignage = " + FrBuildingSignage + ",  FrFacebook = " + FrFacebook + ", " +
-                            "FrLivesNear = " + FrLivesNear + ", FrTwitter = " + FrTwitter + ",  FrTV = " + FrTV + ", " +
-                            "FrMapSearch = " + FrMapSearch + ", FrEvent = " + FrEvent + ", " +
-                            "FrPhysicianReferral = '" + FrPhysicianReferral + "' ,  FrNeurologyReferral = '" + FrNeurologyReferral + "',  " +
-                            "FrUrgentCareReferral = '" + FrUrgentCareReferral + "',  " +
-                            "FrOrganizationReferral = '" + FrOrganizationReferral + "', FrFriendFamily = '" + FrFriendFamily + "' " +
-                            "where PatientRegId = " + ID;
-                    stmt = conn.createStatement();
-                    stmt.executeUpdate(Query);
-                    stmt.close();*/
+                if (ClientId == 27 || ClientId == 29) {
                     pStmt = conn.prepareStatement("Update " + Database + ".RandomCheckInfo set FrVisitedBefore = ?, " +
                             "FrFamiliyVisitedBefore = ?,  FrInternet = ?, FrBillboard = ?,  FrGoogle = ?, " +
                             "FrBuildingSignage = ?,  FrFacebook = ?, FrLivesNear = ?, FrTwitter = ?,  FrTV = ?, " +
@@ -7893,34 +7575,12 @@ public class PatientReg extends HttpServlet {
                     pStmt.setString(16, FrOrganizationReferral);
                     pStmt.setString(17, FrFriendFamily);
                     pStmt.setInt(18, ID);
-                    pStmt.executeUpdate();
-                    pStmt.close();
 
                 } else {
-                    //insertRandomCheckInfoHistory(request, conn, servletContext, Database, ID, out, facilityName, helper);
-/*                    Query = "Update " + Database + ".RandomCheckInfo set ReturnPatient = " + ReturnPatient + ", Google = " + Google + ", " +
-                            "MapSearch = " + MapSearch + ", Billboard = " + Billboard + ",  OnlineReview = " + OnlineReview + ", " +
-                            "TV = " + TV + ", Website = " + Website + ", BuildingSignDriveBy = " + BuildingSignDriveBy + ", " +
-                            "Facebook = " + Facebook + ",  School = " + School + ", School_text = '" + School_text + "', " +
-                            "Twitter = " + Twitter + ", Magazine = " + Magazine + ", Magazine_text = '" + Magazine_text + "',  " +
-                            "Newspaper = " + Newspaper + ", Newspaper_text = '" + Newspaper_text + "', " +
-                            "FamilyFriend = " + FamilyFriend + ", FamilyFriend_text = '" + FamilyFriend_text + "',  " +
-                            "UrgentCare = " + UrgentCare + ", UrgentCare_text = '" + UrgentCare_text + "', " +
-                            "CommunityEvent = " + CommunityEvent + ", CommunityEvent_text = '" + CommunityEvent_text + "',  " +
-                            "Work_text = '" + Work_text + "', Physician_text = '" + Physician_text + "', " +
-                            "Other_text = '" + Other_text + "' " +
-                            "where PatientRegId = " + ID;
-                    stmt = conn.createStatement();
-                    stmt.executeUpdate(Query);
-                    stmt.close();*/
-//                    System.out.println("in the Editsave new function");
 
                     String queryTextContainer = "";
-
-                    if (ClientId.equals("41") || ClientId.equals("42") || ClientId.equals("43")) {
+                    if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                         queryTextContainer = ",Instagram_text=?,Youtube_text=?,Spotify_text=?";
-                        System.out.println("in the if condition is true ");
-
                     }
 
 
@@ -7959,7 +7619,7 @@ public class PatientReg extends HttpServlet {
                     pStmt.setString(25, Other_text);
                     pStmt.setString(26, Attorney_text);
 
-                    if (ClientId.equals("41") || ClientId.equals("42") || ClientId.equals("43")) {
+                    if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
                         pStmt.setString(27, Instagram_text);
                         pStmt.setString(28, Youtube_text);
                         pStmt.setString(29, Spotify_text);
@@ -7967,11 +7627,9 @@ public class PatientReg extends HttpServlet {
                     } else {
                         pStmt.setInt(27, ID);
                     }
-
-
-                    pStmt.executeUpdate();
-                    pStmt.close();
                 }
+                pStmt.executeUpdate();
+                pStmt.close();
             } catch (Exception ex) {
                 helper.SendEmailWithAttachment("Error in PatientReg ** (EditSave_New Error in Updating RandomCheckInfo ^^" + facilityName + "_PatMRN#: " + MRN + " ##MES#025)", servletContext, ex, "PatientReg", "EditSave_New", conn);
                 Services.DumException("EditSave_New^^" + facilityName + " ##MES#025", "PatientReg ", request, ex);
@@ -7981,14 +7639,108 @@ public class PatientReg extends HttpServlet {
                 Parser.SetField("Message", "MES#025");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
             }
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Message", "Information has been Updated!");
-            Parser.SetField("FormName", "PatientUpdateInfo");
-            Parser.SetField("MRN", "MRN: " + MRN);
-            Parser.SetField("ActionID", "GetInput&ID=" + ID);
-            Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
-            Parser.SetField("PatientName", String.valueOf(""));
-            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
+
+            if (ClientId == 8 || ClientId == 19 || ClientId == 25 || ClientId == 27 || ClientId == 29 || ClientId == 39 ||
+                    ClientId == 40 || ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".SignRequest where PatientRegId = " + ID + "";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                System.out.println("found " + found);
+                System.out.println("PatientRegId " + ID);
+                if (found > 0) {
+                    PreparedStatement MainReceipt = conn.prepareStatement(
+                            "INSERT INTO " + Database + ".SignRequest_History " +
+                                    "SELECT * FROM " + Database + ".SignRequest " +
+                                    "where PatientRegId = " + ID);
+                    MainReceipt.executeUpdate();
+                    MainReceipt.close();
+
+                    Query = "Update " + Database + ".SignRequest set isSign = 0 , SignedFrom='EDIT' " +
+                            "where PatientRegId = " + ID;
+                    stmt = conn.createStatement();
+                    stmt.executeUpdate(Query);
+                    stmt.close();
+                }
+
+                Query = "Select DirectoryName from oe.clients where ltrim(rtrim(UPPER(Id))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                String DirectoryName = null;
+                if (rset.next()) {
+                    DirectoryName = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                String temp = "";
+                switch (ClientId) {
+                    case 8:
+                        DownloadBundle orangebndle = new DownloadBundle();
+                        temp = orangebndle.GETINPUT_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT", helper);
+                        break;
+                    case 19:
+                        temp = SaveBundle_HopeER(request, out, conn, response, Database, ClientIndex, DirectoryName, PatientRegId, "EDIT", helper);
+                        break;
+                    case 25:
+                        SanMarcosBundle smbundle = new SanMarcosBundle();
+                        temp = smbundle.GETINPUTSanMarcos_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT", helper);
+                        break;
+                    case 27:
+                    case 29:
+                        FrontlineBundle obj1 = new FrontlineBundle();
+                        temp = obj1.GETINPUTFrontLine_Inside(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT", helper);
+                        break;
+                    case 39:
+                        temp = GETINPUTSchertz(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT");
+                        break;
+                    case 40:
+                        temp = GETINPUTfloresville(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT");
+                        break;
+                    case 41:
+                        temp = GETINPUTwillowbrook(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT", helper);
+                        break;
+                    case 42:
+                        temp = GETINPUTsummerwood(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT", helper);
+                        break;
+                    case 43:
+                        temp = GETINPUTheights(request, out, conn, servletContext, response, UserId, Database, ClientId, DirectoryName, ID, "EDIT", helper);
+                        break;
+                    default:
+                        break;
+                }
+
+
+                String[] arr = temp.split("~");
+                String FileName = arr[2];
+                String outputFilePath = arr[1];
+                String pageCount = arr[0];
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("MRN", "DONE");
+                Parser.SetField("FormName", "PatientReg");
+                Parser.SetField("ActionID", "GetValues&ClientIndex=" + ClientId);
+                Parser.SetField("pageCount", String.valueOf(pageCount));
+                Parser.SetField("FileName", String.valueOf(FileName));
+                Parser.SetField("PatientRegId", String.valueOf(ID));
+                Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
+                Parser.SetField("ClientIndex", String.valueOf(ClientId));
+                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageVictoria.html");
+            } else {
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("Message", "Information has been Updated!");
+                Parser.SetField("FormName", "PatientUpdateInfo");
+                Parser.SetField("MRN", "MRN: " + MRN);
+                Parser.SetField("ActionID", "GetInput&ID=" + ID);
+                Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
+                Parser.SetField("PatientName", String.valueOf(""));
+                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
+            }
         } catch (Exception ex) {
             helper.SendEmailWithAttachment("Error in PatientReg ** (EditSave_New Error in Main Catch ^^" + facilityName + "_PatMRN#: " + MRN + " ##MES#025)", servletContext, ex, "PatientReg", "EditSave_New", conn);
             Services.DumException("EditSave_New^^" + facilityName + " ##MES#025", "PatientReg ", request, ex);
@@ -8037,7 +7789,6 @@ public class PatientReg extends HttpServlet {
 
             if (PatientFound > 0) {
                 out.println(FoundMRN + "|" + PatientFound);
-                return;
             }
         } catch (Exception e) {
             if (conn == null) {
@@ -8054,18 +7805,12 @@ public class PatientReg extends HttpServlet {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
-        StringBuffer ReasonVisitS = new StringBuffer();
+        StringBuilder ReasonVisitS = new StringBuilder();
         int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
-        // String facilityName = helper.getFacilityName(request, conn, servletContext, ClientIndex);
         try {
+
             String ReasonVisit = request.getParameter("ReasonVisitSelect").trim();
-            Query = "Select dbname from oe.clients where Id = " + ClientIndex;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                Database = rset.getString(1);
-            rset.close();
-            stmt.close();
+
             if (ClientIndex == 27 || ClientIndex == 29) {
                 ReasonVisitS.append("<label><font color=\"black\">Reason For Visit </font></label>");
                 ReasonVisitS.append("<select class=\"form-control\" id=\"ReasonVisit\" name=\"ReasonVisit\" style=\"color:black;\" >");
@@ -8087,13 +7832,6 @@ public class PatientReg extends HttpServlet {
             }
             out.println(ReasonVisitS);
         } catch (Exception e) {
-/*            out.println("1");
-            out.println(Query);
-            System.out.println("Error in Getting Reasons:--" + e.getStackTrace());
-            String str = "";
-            for (int i = 0; i < (e.getStackTrace()).length; i++)
-                str = str + e.getStackTrace()[i] + "<br>";
-            out.println(str);*/
             if (conn == null) {
                 conn = Services.getMysqlConn(servletContext);
             }
@@ -8113,7 +7851,7 @@ public class PatientReg extends HttpServlet {
             Query = " SELECT ClientIndex,FirstName,LastName,MiddleInitial,DOB,Age,Gender,Email,PhNumber,Address,City,State,Country,ZipCode," +
                     "SSN,Occupation,Employer,EmpContact,PriCarePhy,ReasonVisit,SelfPayChk,CreatedDate,Title,MaritalStatus,CreatedBy,MRN," +
                     "COVIDStatus,Status,DoctorsName,sync,DateofService,ExtendedMRN,Ethnicity,County,Address2,StreetAddress2,0,EnterBy," +
-                    "EnterType,EnterIP  FROM " + database + ".PatientReg WHERE ID = " + ID;
+                    "EnterType,EnterIP, EditBy , EditTime  FROM " + database + ".PatientReg WHERE ID = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -8121,8 +7859,8 @@ public class PatientReg extends HttpServlet {
                         "INSERT INTO " + database + ".PatientRegHistory (OldPatientRegId,ClientIndex,FirstName,LastName,MiddleInitial,DOB," +
                                 "Age,Gender, Email,PhNumber,Address,City, State,Country,ZipCode,SSN,Occupation,Employer,EmpContact,PriCarePhy," +
                                 "ReasonVisit,SelfPayChk,CreatedDate,Title,MaritalStatus,CreatedBy,MRN,COVIDStatus,Status,DoctorsName,sync," +
-                                "DateofService,ExtendedMRN,Ethnicity,County,Address2,StreetAddress2,Race,EnterBy,EnterType,EnterIP) " +
-                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                "DateofService,ExtendedMRN,Ethnicity,County,Address2,StreetAddress2,Race,EnterBy,EnterType,EnterIP, EditBy , EditTime) " +
+                                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
                 pStmt.setInt(1, ID);
                 pStmt.setInt(2, rset.getInt(1));
                 pStmt.setString(3, rset.getString(2));
@@ -8164,6 +7902,8 @@ public class PatientReg extends HttpServlet {
                 pStmt.setString(39, rset.getString(38));
                 pStmt.setString(40, rset.getString(39));
                 pStmt.setString(41, rset.getString(40));
+                pStmt.setString(42, rset.getString(41));
+                pStmt.setString(43, rset.getString(42));
                 pStmt.executeUpdate();
                 pStmt.close();
             }
@@ -8179,17 +7919,28 @@ public class PatientReg extends HttpServlet {
     }
 
     private void insertPatientReg_DetailsHistory(HttpServletRequest request, Connection conn, ServletContext
-            servletContext, String database, int PatientRegId, PrintWriter out, String facilityName, UtilityHelper helper) throws
+            servletContext, String database, int PatientRegId, PrintWriter out, String facilityName, UtilityHelper helper, int ClientId) throws
             FileNotFoundException {
         String Query = "";
         Statement stmt = null;
+        String LifesaversExtraQues_D = "";
+
+        String LifesaversExtraQues_DH_A = "";
+        String LifesaversExtraQues_DH_Q = "";
         ResultSet rset = null;
         PreparedStatement pStmt = null;
+
+        if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+            LifesaversExtraQues_D = ",PoxPositveChk ,PoxExposedDate , RashesChk,AgeChk,AssistanceChk,FallenChk,UnsteadyChk,PoxSymChk";
+            LifesaversExtraQues_DH_A = ",PoxPositveChk ,PoxExposedDate , RashesChk,AgeChk,AssistanceChk,FallenChk,UnsteadyChk,PoxSymChk";
+            LifesaversExtraQues_DH_Q = ",?,?,?,?,?,?,?,?";
+        }
+
         try {
             Query = " SELECT ID,PatientRegId,MRN,TravellingChk,TravelWhen,TravelWhere,TravelHowLong,COVIDExposedChk,SympFever,SympBodyAches," +
                     "SympSoreThroat,SympFatigue,SympRash,SympVomiting,SympDiarrhea,SympCough,SympRunnyNose,SympNausea,SympFluSymptoms," +
                     "SympEyeConjunctivitis,Race,CovidExpWhen,SpCarePhy,SympHeadache,SympLossTaste,SympShortBreath,AddInfoTextArea," +
-                    "SympCongestion,Ethnicity,\n GuarantorName,GuarantorDOB,GuarantorNumber,GuarantorSSN,VisitId  " +
+                    "SympCongestion,Ethnicity,\n GuarantorFirstName,GuarantorDOB,GuarantorNumber,GuarantorSSN,VisitId,GuarantorLastName " + LifesaversExtraQues_D + " " +
                     "FROM " + database + ".PatientReg_Details " +
                     "WHERE PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
@@ -8198,15 +7949,14 @@ public class PatientReg extends HttpServlet {
                 pStmt = conn.prepareStatement(
                         "INSERT INTO " + database + ".PatientReg_DetailsHistory (OldPatientReg_DetailsID,PatientRegId,MRN,TravellingChk," +
                                 "TravelWhen, TravelWhere,TravelHowLong,COVIDExposedChk,SympFever,SympBodyAches,SympSoreThroat,SympFatigue," +
-                                "SympRash,SympVomiting,SympDiarrhea,SympCough,SympRunnyNose,\n SympNausea,SympFluSymptoms," +
-                                "SympEyeConjunctivitis,Race,CovidExpWhen,SpCarePhy,SympHeadache,SympLossTaste,\n SympShortBreath," +
-                                "AddInfoTextArea,SympCongestion,Ethnicity,GuarantorName,GuarantorDOB,\n GuarantorNumber,GuarantorSSN,VisitId) " +
-                                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                "SympRash,SympVomiting,SympDiarrhea,SympCough,SympRunnyNose, SympNausea,SympFluSymptoms," +
+                                "SympEyeConjunctivitis,Race,CovidExpWhen,SpCarePhy,SympHeadache,SympLossTaste,SympShortBreath," +
+                                "AddInfoTextArea,SympCongestion,Ethnicity,GuarantorFirstName,GuarantorDOB, GuarantorNumber,GuarantorSSN,VisitId,GuarantorLastName " + LifesaversExtraQues_DH_A + ")" +
+                                " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? " + LifesaversExtraQues_DH_Q + " ) ");
                 pStmt.setInt(1, rset.getInt(1));
                 pStmt.setInt(2, PatientRegId);
                 pStmt.setInt(3, rset.getInt(3));
                 pStmt.setInt(4, rset.getInt(4));
-                //pStmt.setString(5, rset.getString(5));
                 if (rset.getString(5) != null)
                     pStmt.setString(5, rset.getString(5));
                 else
@@ -8240,77 +7990,18 @@ public class PatientReg extends HttpServlet {
                 pStmt.setString(32, rset.getString(32));
                 pStmt.setString(33, rset.getString(33));
                 pStmt.setInt(34, rset.getInt(34));
-                pStmt.executeUpdate();
-                pStmt.close();
-            }
-        } catch (Exception ex) {
-            helper.SendEmailWithAttachment("Error in PatientReg ** (EditSave_New Error in insertPatientReg_DeatailsHistory^^" + facilityName + " ##MES#001B)", servletContext, ex, "PatientReg", "EditValues_New", conn);
-            Services.DumException("EditSave_New^^" + facilityName + " ##MES#001B", "PatientReg ", request, ex);
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("FormName", "PatientReg");
-            Parser.SetField("ActionID", "EditValues_New");
-            Parser.SetField("Message", "MES#001B");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-        }
-    }
+                pStmt.setString(35, rset.getString(35));
+                if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+                    pStmt.setString(36, rset.getString(36));
+                    pStmt.setString(37, rset.getString(37));
+                    pStmt.setString(38, rset.getString(38));
+                    pStmt.setString(39, rset.getString(39));
+                    pStmt.setString(40, rset.getString(40));
+                    pStmt.setString(41, rset.getString(41));
+                    pStmt.setString(42, rset.getString(42));
+                    pStmt.setString(43, rset.getString(43));
+                }
 
-    private void insertPatientReg_DetailsHistoryNEW(HttpServletRequest request, Connection conn, ServletContext
-            servletContext, String database, int PatientRegId, PrintWriter out, String facilityName, UtilityHelper helper) throws
-            FileNotFoundException {
-        String Query = "";
-        Statement stmt = null;
-        ResultSet rset = null;
-        PreparedStatement pStmt = null;
-        try {
-            Query = " SELECT ID,PatientRegId,MRN,TravellingChk,TravelWhere,TravelHowLong,COVIDExposedChk,SympFever,SympBodyAches," +
-                    "SympSoreThroat,SympFatigue,SympRash,SympVomiting,SympDiarrhea,SympCough,SympRunnyNose,SympNausea,SympFluSymptoms," +
-                    "SympEyeConjunctivitis,Race,CovidExpWhen,SpCarePhy,SympHeadache,SympLossTaste,SympShortBreath,AddInfoTextArea," +
-                    "SympCongestion,Ethnicity,\n GuarantorName,GuarantorDOB,GuarantorNumber,GuarantorSSN,VisitId  " +
-                    "FROM " + database + ".PatientReg_Details " +
-                    "WHERE PatientRegId = " + PatientRegId;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                pStmt = conn.prepareStatement(
-                        "INSERT INTO " + database + ".PatientReg_DetailsHistory (OldPatientReg_DetailsID,PatientRegId,MRN,TravellingChk," +
-                                "TravelWhere,TravelHowLong,COVIDExposedChk,SympFever,SympBodyAches,SympSoreThroat,SympFatigue," +
-                                "SympRash,SympVomiting,SympDiarrhea,SympCough,SympRunnyNose,\n SympNausea,SympFluSymptoms," +
-                                "SympEyeConjunctivitis,Race,CovidExpWhen,SpCarePhy,SympHeadache,SympLossTaste,\n SympShortBreath," +
-                                "AddInfoTextArea,SympCongestion,Ethnicity,GuarantorName,GuarantorDOB,\n GuarantorNumber,GuarantorSSN,VisitId) " +
-                                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
-                pStmt.setInt(1, rset.getInt(1));
-                pStmt.setInt(2, PatientRegId);
-                pStmt.setInt(3, rset.getInt(3));
-                pStmt.setInt(4, rset.getInt(4));
-                pStmt.setString(5, rset.getString(5));
-                pStmt.setString(6, rset.getString(6));
-                pStmt.setInt(7, rset.getInt(7));
-                pStmt.setString(8, rset.getString(8));
-                pStmt.setString(9, rset.getString(9));
-                pStmt.setString(10, rset.getString(10));
-                pStmt.setString(11, rset.getString(11));
-                pStmt.setString(12, rset.getString(12));
-                pStmt.setString(13, rset.getString(13));
-                pStmt.setString(14, rset.getString(14));
-                pStmt.setString(15, rset.getString(15));
-                pStmt.setString(16, rset.getString(16));
-                pStmt.setString(17, rset.getString(17));
-                pStmt.setString(18, rset.getString(18));
-                pStmt.setString(19, rset.getString(19));
-                pStmt.setString(20, rset.getString(20));
-                pStmt.setString(21, rset.getString(21));
-                pStmt.setString(22, rset.getString(22));
-                pStmt.setString(23, rset.getString(23));
-                pStmt.setString(24, rset.getString(24));
-                pStmt.setString(25, rset.getString(25));
-                pStmt.setString(26, rset.getString(26));
-                pStmt.setString(27, rset.getString(27));
-                pStmt.setString(28, rset.getString(28));
-                pStmt.setString(29, rset.getString(29));
-                pStmt.setString(30, rset.getString(30));
-                pStmt.setString(31, rset.getString(31));
-                pStmt.setString(32, rset.getString(32));
-                pStmt.setInt(33, rset.getInt(33));
                 pStmt.executeUpdate();
                 pStmt.close();
             }
@@ -8335,8 +8026,8 @@ public class PatientReg extends HttpServlet {
         try {
             Query = " SELECT ID,PatientRegId,WorkersCompPolicy,MotorVehAccident,PriInsurance,MemId,GrpNumber,PriInsuranceName," +
                     "AddressIfDifferent,PrimaryDOB,PrimarySSN,PatientRelationtoPrimary,PrimaryOccupation,PrimaryEmployer,\nEmployerAddress," +
-                    "EmployerPhone,SecondryInsurance,SubscriberName,SubscriberDOB,MemberID_2,GroupNumber_2,\nPatientRelationshiptoSecondry," +
-                    "CreatedDate,VisitId  FROM " + database + ".InsuranceInfo " +
+                    "EmployerPhone,SecondryInsurance,SubscriberFirstName,SubscriberDOB,MemberID_2,GroupNumber_2,\nPatientRelationshiptoSecondry," +
+                    "CreatedDate,VisitId,SubscriberLastName  FROM " + database + ".InsuranceInfo " +
                     "WHERE PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -8345,8 +8036,8 @@ public class PatientReg extends HttpServlet {
                         "INSERT INTO " + database + ".InsuranceInfoHistory (OldInsuranceInfoID,PatientRegId,WorkersCompPolicy," +
                                 "MotorVehAccident,\nPriInsurance,MemId,GrpNumber,PriInsuranceName,AddressIfDifferent,PrimaryDOB,PrimarySSN," +
                                 "PatientRelationtoPrimary,PrimaryOccupation,PrimaryEmployer,EmployerAddress,EmployerPhone,\nSecondryInsurance," +
-                                "SubscriberName,SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,\nCreatedDate,VisitId\n) " +
-                                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+                                "SubscriberFirstName,SubscriberDOB,MemberID_2,GroupNumber_2,PatientRelationshiptoSecondry,\nCreatedDate,VisitId,SubscriberLastName\n) " +
+                                " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
                 pStmt.setInt(1, rset.getInt(1));
                 pStmt.setInt(2, PatientRegId);
                 pStmt.setInt(3, rset.getInt(3));
@@ -8371,6 +8062,7 @@ public class PatientReg extends HttpServlet {
                 pStmt.setString(22, rset.getString(22));
                 pStmt.setString(23, rset.getString(23));
                 pStmt.setInt(24, rset.getInt(24));
+                pStmt.setString(25, rset.getString(25));
                 pStmt.executeUpdate();
                 pStmt.close();
             }
@@ -8394,7 +8086,7 @@ public class PatientReg extends HttpServlet {
         PreparedStatement pStmt = null;
         try {
             Query = " SELECT ID,PatientRegId,NextofKinName,RelationToPatient,PhoneNumber,LeaveMessage,Address,City,State,Country," +
-                    "ZipCode,CreatedDate,VisitId\n FROM " + database + ".EmergencyInfo " +
+                    "ZipCode,CreatedDate,VisitId FROM " + database + ".EmergencyInfo " +
                     "WHERE PatientRegId = " + PatientRegId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -8439,7 +8131,7 @@ public class PatientReg extends HttpServlet {
         PreparedStatement pStmt = null;
         try {
             Query = "SELECT ID,PatientRegId,ReturnPatient,Google,MapSearch,Billboard,OnlineReview,TV,Website,BuildingSignDriveBy," + //10
-                    "Facebook,\nSchool,School_text,Twitter,Magazine,Magazine_text,Newspaper,Newspaper_text,FamilyFriend,FamilyFriend_text," + //20
+                    "Facebook,School,School_text,Twitter,Magazine,Magazine_text,Newspaper,Newspaper_text,FamilyFriend,FamilyFriend_text," + //20
                     "UrgentCare,UrgentCare_text,CommunityEvent,CommunityEvent_text,Work_text,Physician_text,Other_text,CreatedDate," + //28
                     "FrVisitedBefore,FrFamiliyVisitedBefore,FrInternet,FrBillboard,FrGoogle,FrBuildingSignage,FrFacebook,FrLivesNear," + //36
                     "FrTwitter,FrTV,FrMapSearch,FrEvent,FrPhysicianReferral,FrNeurologyReferral,FrUrgentCareReferral,FrOrganizationReferral," + //44
@@ -8519,7 +8211,7 @@ public class PatientReg extends HttpServlet {
 
     public String SaveBundle_HopeER(final HttpServletRequest request, final PrintWriter out,
                                     final Connection conn, final HttpServletResponse response, final String Database, final int ClientId,
-                                    final String DirectoryName, int patientRegId, String SignedFrom) {
+                                    final String DirectoryName, int patientRegId, String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -8574,6 +8266,8 @@ public class PatientReg extends HttpServlet {
         String EmployerPhone = "";
         String SecondryInsurance = "";
         String SubscriberName = "";
+        String SubscriberFirstName = "";
+        String SubscriberLastName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
@@ -8626,6 +8320,7 @@ public class PatientReg extends HttpServlet {
         String Other_text = "";
         int SelfPayChk = 0;
         final int VerifyChkBox = 0;
+        String DOBForAge = "";
         final int ID = patientRegId;// Integer.parseInt(request.getParameter("ID").trim());
         try {
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
@@ -8638,11 +8333,19 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-')," +
+                        " IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), " +
+                        "IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-'), IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                if (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -8668,9 +8371,15 @@ public class PatientReg extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -8679,8 +8388,8 @@ public class PatientReg extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
+
                 if (!DoctorId.equals("-")) {
-//                    out.println("Inside Get Doc Name");
                     Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -8697,11 +8406,20 @@ public class PatientReg extends HttpServlet {
 //                out.println("Error In PateintReg:--" + e.getMessage());
                 out.println(Query);
             }
+
             if (SelfPayChk == 1) {
-                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+                Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-')," +
+                        "IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                        "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                        "IFNULL(PatientRelationtoPrimary,'-'), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), " +
+                        "IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), " +
+                        "CONCAT(IFNULL(SubscriberFirstName ,null), ' ', IFNULL(SubscriberLastName ,null)), " +
+                        "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,'-'), " +
+                        "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-') " +
+                        "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                if (rset.next()) {
                     WorkersCompPolicy = rset.getInt(1);
                     MotorVehAccident = rset.getInt(2);
                     if (WorkersCompPolicy == 0) {
@@ -8738,7 +8456,6 @@ public class PatientReg extends HttpServlet {
             }
             try {
                 if (!PriInsuranceName.equals("-") || PriInsuranceName.equals("")) {
-//                    out.println("Inside PriInsuranceName");
                     Query = "Select PayerName from " + Database + ".ProfessionalPayers where Id = " + PriInsuranceName;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -8752,10 +8469,13 @@ public class PatientReg extends HttpServlet {
 //                out.println("Error is PriInsurance: " + e.getMessage());
 //                out.println(Query);
             }
-            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
@@ -8765,10 +8485,16 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient = "";
                 } else {
@@ -8883,14 +8609,11 @@ public class PatientReg extends HttpServlet {
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
-            System.out.println("Your current IP address : " + ip);
-            System.out.println("Your current Hostname : " + hostname);
 //            if (hostname.trim().equals("dev-rover-01")) {
 //                inputFilePath = "";
 //            } else {
 //                inputFilePath = "/sftpdrive";
 //            }
-            System.out.println("Your current inputFilePath : " + inputFilePath);
             final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
             inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/adminsaustin.pdf";
             final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + filename;
@@ -8912,8 +8635,6 @@ public class PatientReg extends HttpServlet {
                     pdfContentByte.setTextMatrix(35.0f, 750.0f);
                     pdfContentByte.showText("MRN: " + MRN);
                     pdfContentByte.endText();
-//                    image.setAbsolutePosition(10.0f, 710.0f);
-//                    pdfContentByte.addImage(image);
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -9085,8 +8806,6 @@ public class PatientReg extends HttpServlet {
                     pdfContentByte.setTextMatrix(35.0f, 750.0f);
                     pdfContentByte.showText("MRN: " + MRN);
                     pdfContentByte.endText();
-//                    image.setAbsolutePosition(10.0f, 710.0f);
-//                    pdfContentByte.addImage(image);
                     pdfContentByte.beginText();
                     pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
                     pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -9895,7 +9614,6 @@ public class PatientReg extends HttpServlet {
                     pdfContentByte.showText("Dr. " + DoctorName);
                     pdfContentByte.endText();
 
-
                 }
                 if (i == 10) {
                     final PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
@@ -10009,7 +9727,7 @@ public class PatientReg extends HttpServlet {
 
     String GETINPUTwillowbrook(final HttpServletRequest request, final PrintWriter out, final Connection conn,
                                final ServletContext servletContext, final HttpServletResponse response, final String UserId,
-                               final String Database, final int ClientId, final String DirectoryName, int PatientRegId) {
+                               final String Database, final int ClientId, final String DirectoryName, int PatientRegId, String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -10023,6 +9741,7 @@ public class PatientReg extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -10113,12 +9832,16 @@ public class PatientReg extends HttpServlet {
         final String Other = "";
         String Other_text = "";
         String ResultPdf = "";
+        String DirectoryNameTow = "";
         String PriInsurerName = "";
+        String PriInsurerFirstName = "";
+        String PriInsurerLastName = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
         int pageCount = 0;
         final int VerifyChkBox = 0;
+        int VisitIndex = 0;
         final int ID = PatientRegId;
         try {
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
@@ -10131,11 +9854,29 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
+            Query = "Select id FROM " + Database + ".PatientVisit WHERE PatientRegId =" + ID + " ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), " +
+                        "IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                if (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -10161,17 +9902,15 @@ public class PatientReg extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 stmt.close();
-                Query = "Select name from oe.clients where Id = " + ClientId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    ClientName = rset.getString(1);
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
                 }
-                rset.close();
-                stmt.close();
+
                 if (!DoctorId.equals("-")) {
                     Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
                     stmt = conn.createStatement();
@@ -10185,14 +9924,23 @@ public class PatientReg extends HttpServlet {
                     DoctorName = "";
                 }
             } catch (Exception e) {
-                out.println("Error In PateintReg:--" + e.getMessage());
-                out.println(Query);
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
             }
             //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-')," +
+                    "IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                    "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                    "IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), " +
+                    "IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), \n" +
+                    " CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), " +
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-')," +
+                    "CONCAT(IFNULL(PriInsurerFirstName ,null), ' ', IFNULL(PriInsurerLastName ,null)) " +
+                    "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 WorkersCompPolicy = rset.getInt(1);
                 MotorVehAccident = rset.getInt(2);
                 if (WorkersCompPolicy == 0) {
@@ -10252,10 +10000,22 @@ public class PatientReg extends HttpServlet {
 //                out.println("Error is PriInsurance: " + e.getMessage());
 //                out.println(Query);
             }
-            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            Query = "Select name from oe.clients where Id = " + ClientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
+                ClientName = rset.getString(1);
+            }
+            rset.close();
+            stmt.close();
+
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
@@ -10265,10 +10025,15 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient = "";
                 } else {
@@ -10379,6 +10144,7 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             String HearAboutUsString = "";
             String HearAboutUsString2 = "";
             if (ReturnPatient.toUpperCase().equals("YES")) {
@@ -10435,8 +10201,7 @@ public class PatientReg extends HttpServlet {
             if ("".toUpperCase().equals("YES")) {
                 HearAboutUsString2 += "Others ";
             }
-            rset.close();
-            stmt.close();
+
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
@@ -10445,11 +10210,59 @@ public class PatientReg extends HttpServlet {
             } else {
                 inputFilePath = "/sftpdrive";
             }
-            final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+
+            String UID = "";
+            Image SignImages = null;
+            final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
+            final boolean exists = tmpDir.exists();
+            if (exists) {
+                Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    UID = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
+                SignImages.scaleAbsolute(80.0f, 30.0f);
+                //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+            } else {
+                SignImages = null;
+            }
+
+
+            String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
             if (SelfPayChk == 0) {
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+
+
+                filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
+
+
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/SELFPAYPATIENTPACKET.pdf";
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                if (SignedFrom.contains("REGISTRATIONSIGNED") || SignedFrom.contains("REGISTRATION")) {
+                    DirectoryNameTow = "REGISTRATION";
+                }
+
+                if (SignedFrom.contains("VISITSIGNED") || SignedFrom.contains("VISIT")) {
+                    DirectoryNameTow = "VISIT";
+                }
+
+                if (SignedFrom.contains("EDITSIGNED") || SignedFrom.contains("EDIT")) {
+                    DirectoryNameTow = "EDIT";
+                }
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
@@ -11050,6 +10863,12 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(490, 150); // set x and y co-ordinates
                         pdfContentByte.showText(Date);//"Date"); // add the text
                         pdfContentByte.endText();
+
+
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(75, 150);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -11115,6 +10934,10 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(Date);//"Date"); // add the text
                         pdfContentByte.endText();
 
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(70, 200);
+                            pdfContentByte.addImage(SignImages);
+                        }
 
                     }
 
@@ -11160,7 +10983,10 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(480, 430); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Patient Name"); // add the text
                         pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(80, 350);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         //                        pdfContentByte.beginText();
                         //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -11224,6 +11050,10 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(420.0f, 720.0f);
                         pdfContentByte.showText("Dr. " + DoctorName);
                         pdfContentByte.endText();
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(150, 100);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         //                        pdfContentByte.beginText();
                         //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -11293,11 +11123,26 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(150, 610); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Name"); // add the text
                         pdfContentByte.endText();
+
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(170, 95);
+                            pdfContentByte.addImage(SignImages);
+                        }
                     }
                 }
                 pdfStamper.close();
                 pdfReader.close();
 
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex)" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
 
 //                final File pdfFile = new File(outputFilePath);
@@ -11310,14 +11155,59 @@ public class PatientReg extends HttpServlet {
 //                while ((bytes = fileInputStream.read()) != -1) {
 //                    responseOutputStream.write(bytes);
 //                }
-            } else {
+            } else
+            {int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+                filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/INSUREDPATIENTPACKET.pdf";
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+
+                mergePdf.GETINPUT(request, response, out, conn, Database, inputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/BillingNotice.pdf", ClientId, MRN);
+                ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+                mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Announcement.pdf", ClientId, MRN);
+                ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+                mergePdf.GETINPUT(request, response, out, conn, Database, ResultPdf, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/FINANCIAL_DISCLOSURES.pdf", ClientId, MRN);
+                ResultPdf = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+
+                inputFilePath = ResultPdf;
+
+                if (PriInsuranceName.toUpperCase().contains("UNITED HEALTHCARE")) {
+//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
+
+                    String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form.pdf";
+                    String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
+
+                    ResultPdf = AttachUHC_Form(MemId, PrimaryDOB, PriInsurerName, DOS, PatientRelationtoPrimary, Date, outputFilePathTmp2, inputFilePathTmp2,
+                            request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf);
+                    inputFilePath = ResultPdf;
+                }
+
+                if (SecondryInsurance.toUpperCase().contains("UNITED HEALTHCARE")) {
+//                System.out.println("PriInsuranceName -> "+PriInsuranceName);
+
+                    String inputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/Commercial-Courtesy-Review-Auth-Form.pdf";
+                    String outputFilePathTmp2 = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/TempDir/Commercial-Courtesy-Review-Auth-Form_" + ClientId + "_" + MRN + ".pdf";
+
+                    ResultPdf = AttachUHC_Form(MemberID_2, SubscriberDOB, SubscriberName, DOS, PatientRelationshiptoSecondry, Date, outputFilePathTmp2, inputFilePathTmp2,
+                            request, response, out, conn, Database, inputFilePath, DirectoryName, ClientId, MRN, mergePdf);
+
+                    inputFilePath = ResultPdf;
+                }
+
+
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
                 pageCount = pdfReader.getNumberOfPages();
-
                 //            final GenerateBarCode barCode = new GenerateBarCode();
                 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
                 //            final Image image = Image.getInstance(BarCodeFilePath);
@@ -11681,19 +11571,19 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.RED);
-                        System.out.println("MaritalStatus -> " + MaritalStatus);
+//                        System.out.println("MaritalStatus -> " + MaritalStatus);
 
                         if (MaritalStatus.equals("Single")) {
-                            System.out.println(" Single MaritalStatus -> " + MaritalStatus);
+//                            System.out.println(" Single MaritalStatus -> " + MaritalStatus);
                             pdfContentByte.setTextMatrix(100, 563);// *SINGLE* Marital Status
                         } else if (MaritalStatus.equals("Mar")) {
-                            System.out.println("Mar MaritalStatus -> " + MaritalStatus);
+//                            System.out.println("Mar MaritalStatus -> " + MaritalStatus);
                             pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
                         } else if (MaritalStatus.equals("Wid")) {
-                            System.out.println("Wid MaritalStatus -> " + MaritalStatus);
+//                            System.out.println("Wid MaritalStatus -> " + MaritalStatus);
                             pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
                         } else if (MaritalStatus.equals("Div")) {
-                            System.out.println("Div MaritalStatus -> " + MaritalStatus);
+//                            System.out.println("Div MaritalStatus -> " + MaritalStatus);
 
                             pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
                         }
@@ -11879,7 +11769,10 @@ public class PatientReg extends HttpServlet {
                     if (i == 3) {
 
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(180, 270);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         //                        pdfContentByte.beginText();
                         //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -11946,7 +11839,10 @@ public class PatientReg extends HttpServlet {
 
                     if (i == 4) {
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(70, 200);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         //                        pdfContentByte.beginText();
                         //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -12000,7 +11896,10 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(50, 150); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Print Patient Name"); // add the text
                         pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(70, 200);
+                            pdfContentByte.addImage(SignImages);
+                        }
 
                     }
 
@@ -12045,7 +11944,10 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(490, 405); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Patient Name"); // add the text
                         pdfContentByte.endText();
-
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(80, 304);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         //                        pdfContentByte.beginText();
                         //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -12112,6 +12014,10 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(410.0f, 725.0f);
                         pdfContentByte.showText("Dr. " + DoctorName);
                         pdfContentByte.endText();
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(150, 128);
+                            pdfContentByte.addImage(SignImages);
+                        }
                         //                        pdfContentByte.beginText();
                         //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         //                        pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -12182,43 +12088,29 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(150, 585); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Name"); // add the text
                         pdfContentByte.endText();
+
+                        if (SignImages != null) {
+                            SignImages.setAbsolutePosition(170, 95);
+                            pdfContentByte.addImage(SignImages);
+                        }
                     }
                 }
                 pdfStamper.close();
                 pdfReader.close();
-
-//                final File pdfFile = new File(outputFilePath);
-//                response.setContentType("application/pdf");
-//                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-//                response.setContentLength((int) pdfFile.length());
-//                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-//                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-//                int bytes;
-//                while ((bytes = fileInputStream.read()) != -1) {
-//                    responseOutputStream.write(bytes);
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
 //                }
-
                 return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
-
-
-/*
-                System.out.println("Mouhid....");
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("outputFilePath", outputFilePath);
-//            Parser.SetField("imagelist", String.valueOf(imagelist));
-                Parser.SetField("pageCount", String.valueOf(pageCount));
-                Parser.SetField("PatientRegId", String.valueOf(ID));
-                Parser.SetField("FileName", FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-                Parser.SetField("ClientID", String.valueOf(ClientId));
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/DownloadBundleHTML.html");
-*/
-
             }
-
-//            return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
-
         } catch (Exception e) {
-            //            out.println(e.getMessage());
             System.out.println(e.getMessage());
             String str = "";
             for (int j = 0; j < e.getStackTrace().length; ++j) {
@@ -12231,11 +12123,10 @@ public class PatientReg extends HttpServlet {
 
     String GETINPUTsummerwood(final HttpServletRequest request, final PrintWriter out, final Connection conn,
                               final ServletContext servletContext, final HttpServletResponse response, final String UserId,
-                              final String Database, final int ClientId, final String DirectoryName, int PatientRegId) {
+                              final String Database, final int ClientId, final String DirectoryName, int PatientRegId, String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
-//        int PatientRegId = 0;
         String DateTime = "";
         String Date = "";
         String Time = "";
@@ -12246,6 +12137,7 @@ public class PatientReg extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -12338,9 +12230,23 @@ public class PatientReg extends HttpServlet {
         String Other_text = "";
         String ResultPdf = "";
         String PriInsurerName = "";
+        String DirectoryNameTow = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
+        int VisitIndex = 0;
+
+        if (SignedFrom.contains("REGISTRATIONSIGNED") || SignedFrom.contains("REGISTRATION")) {
+            DirectoryNameTow = "REGISTRATION";
+        }
+
+        if (SignedFrom.contains("VISITSIGNED") || SignedFrom.contains("VISIT")) {
+            DirectoryNameTow = "VISIT";
+        }
+
+        if (SignedFrom.contains("EDITSIGNED") || SignedFrom.contains("EDIT")) {
+            DirectoryNameTow = "EDIT";
+        }
         final int VerifyChkBox = 0;
         final int ID = PatientRegId;//Integer.parseInt(request.getParameter("ID").trim());
         try {
@@ -12354,11 +12260,30 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
+
+            Query = "Select id FROM " + Database + ".PatientVisit ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), " +
+                        "IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
-                while (rset.next()) {
+                if (rset.next()) {
                     PatientRegId = ID;
                     LastName = rset.getString(1).trim();
                     FirstName = rset.getString(2).trim();
@@ -12384,9 +12309,15 @@ public class PatientReg extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -12413,11 +12344,20 @@ public class PatientReg extends HttpServlet {
 //                out.println("Error In PateintReg:--" + e.getMessage());
 //                out.println(Query);
             }
-            //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-')," +
+                    "IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                    "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                    "IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), " +
+                    "IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), \n" +
+                    " CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), " +
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-')," +
+                    "CONCAT(IFNULL(PriInsurerFirstName ,null), ' ', IFNULL(PriInsurerLastName ,null)) " +
+                    "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 WorkersCompPolicy = rset.getInt(1);
                 MotorVehAccident = rset.getInt(2);
                 if (WorkersCompPolicy == 0) {
@@ -12452,10 +12392,9 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            //            }
+
             try {
                 if (SelfPayChk != 0 && !PriInsuranceName.equals("-") || !PriInsuranceName.equals("")) {
-//                    out.println("Inside PriInsuranceName");
                     Query = "Select PayerName from oe_2.ProfessionalPayers where Id = " + PriInsuranceName;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
@@ -12478,10 +12417,13 @@ public class PatientReg extends HttpServlet {
 //                out.println("Error is PriInsurance: " + e.getMessage());
 //                out.println(Query);
             }
-            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO'END,  IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 NextofKinName = rset.getString(1);
                 RelationToPatientER = rset.getString(2);
                 PhoneNumberER = rset.getString(3);
@@ -12491,10 +12433,14 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            if (rset.next()) {
                 if (rset.getInt(1) == 0) {
                     ReturnPatient = "";
                 } else {
@@ -12605,6 +12551,7 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
             String HearAboutUsString = "";
             String HearAboutUsString2 = "";
             if (ReturnPatient.toUpperCase().equals("YES")) {
@@ -12650,7 +12597,7 @@ public class PatientReg extends HttpServlet {
                 HearAboutUsString2 += "Urgent Care, ";
             }
             if (CommunityEvent.toUpperCase().equals("YES")) {
-                HearAboutUsString2 += "Comminuty Event, ";
+                HearAboutUsString2 += "Community Event, ";
             }
             if ("".toUpperCase().equals("YES")) {
                 HearAboutUsString2 += "Work, ";
@@ -12661,8 +12608,7 @@ public class PatientReg extends HttpServlet {
             if ("".toUpperCase().equals("YES")) {
                 HearAboutUsString2 += "Others ";
             }
-            rset.close();
-            stmt.close();
+
             String inputFilePath = "";
             final InetAddress ip = InetAddress.getLocalHost();
             final String hostname = ip.getHostName();
@@ -12672,36 +12618,47 @@ public class PatientReg extends HttpServlet {
                 inputFilePath = "/sftpdrive";
             }
 
-            if (SelfPayChk == 0) {
-
-                String UID = "";
-                Image SignImages = null;
-                final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
-                final boolean exists = tmpDir.exists();
-                if (exists) {
-                    Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    if (rset.next()) {
-                        UID = rset.getString(1);
-                    }
-                    rset.close();
-                    stmt.close();
-
-                    SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
-                    SignImages.scaleAbsolute(80.0f, 30.0f);
-                    //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
-                } else {
-                    SignImages = null;
+            String filename = "";
+            String UID = "";
+            Image SignImages = null;
+            final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
+            final boolean exists = tmpDir.exists();
+            if (exists) {
+                Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    UID = rset.getString(1);
                 }
+                rset.close();
+                stmt.close();
+
+                SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
+                SignImages.scaleAbsolute(80.0f, 30.0f);
+                //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+            } else {
+                SignImages = null;
+            }
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+            filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";//outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+
+            if (SelfPayChk == 0) {
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/SELFPAYPATIENTPACKET.pdf";
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
                 pageCount = pdfReader.getNumberOfPages();
-                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+//                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
 
                 //            final GenerateBarCode barCode = new GenerateBarCode();
                 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
@@ -12781,12 +12738,6 @@ public class PatientReg extends HttpServlet {
                         }
                         pdfContentByte.showText("*"); // *YES* PATIENT BEFORE add the text
                         pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(259, 545); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *NO* PATIENT BEFORE add the text
-                        //                        pdfContentByte.endText();
 
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -12894,38 +12845,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.endText();
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 125); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // Radio advertisement add the text
-                        //                        pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(23.25f, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Former patient recommendation add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(239.25f, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Employer  add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // GOOGLE add the text
-                        //                        pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(23.25f, 83); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Insurance Company recommendation add the text
-                        //                        pdfContentByte.endText();
                         if (!Newspaper_text.equals("")) {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -12935,13 +12854,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.endText();
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 83); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // Yelp add the text
-                        //                        pdfContentByte.endText();
-
                         if (TV.toUpperCase().equals("YES")) {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -12950,14 +12862,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.showText("*"); //  TV Advertisement add the text
                             pdfContentByte.endText();
                         }
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(239.25f, 63); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Marketing/Public Relation Representative  add the text
-                        //                        pdfContentByte.endText();
-
                     }
 
                     if (i == 2) {
@@ -13077,14 +12981,19 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.RED);
-                        if (MaritalStatus.equals("Single")) {
-                            pdfContentByte.setTextMatrix(100, 558);// *SINGLE* Marital Status
-                        } else if (MaritalStatus.equals("Mar")) {
-                            pdfContentByte.setTextMatrix(152, 558);// *Married* Marital Status
-                        } else if (MaritalStatus.equals("Wid")) {
-                            pdfContentByte.setTextMatrix(283.5f, 558);// *Widowed* Marital Status
-                        } else if (MaritalStatus.equals("Div")) {
-                            pdfContentByte.setTextMatrix(215, 558);// *Divorced* Marital Status
+                        switch (MaritalStatus) {
+                            case "Single":
+                                pdfContentByte.setTextMatrix(100, 558);// *SINGLE* Marital Status
+                                break;
+                            case "Mar":
+                                pdfContentByte.setTextMatrix(152, 558);// *Married* Marital Status
+                                break;
+                            case "Wid":
+                                pdfContentByte.setTextMatrix(283.5f, 558);// *Widowed* Marital Status
+                                break;
+                            case "Div":
+                                pdfContentByte.setTextMatrix(215, 558);// *Divorced* Marital Status
+                                break;
                         }
                         pdfContentByte.showText("*"); // *SINGLE* Marital Status add the text
                         pdfContentByte.endText();
@@ -13115,15 +13024,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(135, 470); // set x and y co-ordinates
                         pdfContentByte.showText(Physician);//"Physician"); // add the text
                         pdfContentByte.endText();
-
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(240, 520); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
 
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
@@ -13178,20 +13078,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(PrimaryDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 340); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(440, 340); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -13232,20 +13118,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(400, 260); // set x and y co-ordinates
                         pdfContentByte.showText(SubscriberDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 250); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(460, 250); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
 
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
@@ -13362,8 +13234,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(450, 140); // set x and y co-ordinates
                         pdfContentByte.showText(Date);//"Date"); // add the text
                         pdfContentByte.endText();
-
-
                     }
 
                     if (i == 5) {
@@ -13414,12 +13284,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.addImage(SignImages);
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(80, 350); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -13481,12 +13345,7 @@ public class PatientReg extends HttpServlet {
                             SignImages.setAbsolutePosition(150, 100);
                             pdfContentByte.addImage(SignImages);
                         }
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 100); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
+
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -13554,58 +13413,35 @@ public class PatientReg extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+
+
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
 
-//                final File pdfFile = new File(outputFilePath);
-//                response.setContentType("application/pdf");
-//                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-//                response.setContentLength((int) pdfFile.length());
-//                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-//                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-//                int bytes;
-//                while ((bytes = fileInputStream.read()) != -1) {
-//                    responseOutputStream.write(bytes);
-//                }
             } else {
-                String UID = "";
-                Image SignImages = null;
-                final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
-                final boolean exists = tmpDir.exists();
-                if (exists) {
-                    Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    if (rset.next()) {
-                        UID = rset.getString(1);
-                    }
-                    rset.close();
-                    stmt.close();
 
-                    SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
-                    SignImages.scaleAbsolute(80.0f, 30.0f);
-                    //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
-                } else {
-                    SignImages = null;
-                }
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/INSUREDPATIENTPACKET.pdf";
-                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+//                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
                 pageCount = pdfReader.getNumberOfPages();
-                //            final GenerateBarCode barCode = new GenerateBarCode();
-                //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
-                //            final Image image = Image.getInstance(BarCodeFilePath);
-                //            image.scaleAbsolute(150.0f, 30.0f);
                 // loop on all the PDF pages
                 // i is the pdfPageNumber
                 for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
 
                     if (i == 1) {
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-
                         //LABEL
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
@@ -13668,7 +13504,7 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.setTextMatrix(217, 525);// *YES* PATIENT BEFORE add the text
                         } else {
                             pdfContentByte.setTextMatrix(259, 525);
-                            ;// *NO* PATIENT BEFORE add the text
+                            // *NO* PATIENT BEFORE add the text
                         }
                         pdfContentByte.setTextMatrix(217, 525); // set x and y co-ordinates
                         pdfContentByte.showText("*"); // *YES* PATIENT BEFORE add the text
@@ -13781,38 +13617,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.endText();
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 125); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // Radio advertisement add the text
-                        //                        pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(23.25f, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Former patient recommendation add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(239.25f, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Employer  add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // GOOGLE add the text
-                        //                        pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(23.25f, 83); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Insurance Company recommendation add the text
-                        //                        pdfContentByte.endText();
                         if (!Newspaper_text.equals("")) {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -13822,13 +13626,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.endText();
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 83); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // Yelp add the text
-                        //                        pdfContentByte.endText();
-
                         if (TV.toUpperCase().equals("YES")) {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -13837,8 +13634,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.showText("*"); //  TV Advertisement add the text
                             pdfContentByte.endText();
                         }
-
-
                     }
 
                     if (i == 2) {
@@ -13957,42 +13752,23 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.RED);
-                        System.out.println("MaritalStatus -> " + MaritalStatus);
 
-                        if (MaritalStatus.equals("Single")) {
-                            System.out.println(" Single MaritalStatus -> " + MaritalStatus);
-                            pdfContentByte.setTextMatrix(100, 563);// *SINGLE* Marital Status
-                        } else if (MaritalStatus.equals("Mar")) {
-                            System.out.println("Mar MaritalStatus -> " + MaritalStatus);
-                            pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
-                        } else if (MaritalStatus.equals("Wid")) {
-                            System.out.println("Wid MaritalStatus -> " + MaritalStatus);
-                            pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
-                        } else if (MaritalStatus.equals("Div")) {
-                            System.out.println("Div MaritalStatus -> " + MaritalStatus);
-
-                            pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
+                        switch (MaritalStatus) {
+                            case "Single":
+                                pdfContentByte.setTextMatrix(100, 563);// *SINGLE* Marital Status
+                                break;
+                            case "Mar":
+                                pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
+                                break;
+                            case "Wid":
+                                pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
+                                break;
+                            case "Div":
+                                pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
+                                break;
                         }
                         pdfContentByte.showText("*"); // *SINGLE* Marital Status add the text
                         pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *Married* Marital Status add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *Divorced* Marital Status add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *Widowed* Sex add the text
-                        //                        pdfContentByte.endText();
 
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
@@ -14075,20 +13851,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(PrimaryDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 348); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(440, 348); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -14130,20 +13892,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(SubscriberDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 255); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(460, 255); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -14155,14 +13903,6 @@ public class PatientReg extends HttpServlet {
                     if (i == 3) {
 
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(180, 270); // set x and y co-ordinates
-//                        pdfContentByte.showText("Signature"); // add the text
-//                        pdfContentByte.endText();
-
 
                         //LABEL
                         pdfContentByte.beginText();
@@ -14222,14 +13962,6 @@ public class PatientReg extends HttpServlet {
 
                     if (i == 4) {
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(70, 200); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
-
 
                         //LABEL
                         pdfContentByte.beginText();
@@ -14322,12 +14054,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Patient Name"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(80, 315); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -14354,9 +14080,6 @@ public class PatientReg extends HttpServlet {
                     if (i == 6) {
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
 
-
-//                    image.setAbsolutePosition(10.0f, 710.0f);
-//                    pdfContentByte.addImage(image);
                         //LABEL
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
@@ -14388,12 +14111,7 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(410.0f, 725.0f);
                         pdfContentByte.showText("Dr. " + DoctorName);
                         pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 128); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
+
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -14462,17 +14180,17 @@ public class PatientReg extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex)" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 return pdfReader.getNumberOfPages() + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
-//
-//                final File pdfFile = new File(outputFilePath);
-//                response.setContentType("application/pdf");
-//                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-//                response.setContentLength((int) pdfFile.length());
-//                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-//                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-//                int bytes;
-//                while ((bytes = fileInputStream.read()) != -1) {
-//                    responseOutputStream.write(bytes);
 //                }
             }
 
@@ -14491,7 +14209,7 @@ public class PatientReg extends HttpServlet {
 
     String GETINPUTheights(final HttpServletRequest request, final PrintWriter out, final Connection conn,
                            final ServletContext servletContext, final HttpServletResponse response, final String UserId,
-                           final String Database, final int ClientId, final String DirectoryName, int PatientRegId) {
+                           final String Database, final int ClientId, final String DirectoryName, int PatientRegId, String SignedFrom, UtilityHelper helper) {
         Statement stmt = null;
         ResultSet rset = null;
         String Query = "";
@@ -14506,6 +14224,7 @@ public class PatientReg extends HttpServlet {
         String MiddleInitial = "";
         String MaritalStatus = "";
         String DOB = "";
+        String DOBForAge = "";
         String Age = "";
         String gender = "";
         String Email = "";
@@ -14595,13 +14314,28 @@ public class PatientReg extends HttpServlet {
         final String Physician = "";
         String Physician_text = "";
         final String Other = "";
+        String DirectoryNameTow = "";
         String Other_text = "";
         String ResultPdf = "";
         String PriInsurerName = "";
         String[] PriInsurer;
         MergePdf mergePdf = new MergePdf();
         int SelfPayChk = 0;
+        int VisitIndex = 0;
         final int VerifyChkBox = 0;
+        if (SignedFrom.contains("REGISTRATIONSIGNED") || SignedFrom.contains("REGISTRATION")) {
+            DirectoryNameTow = "REGISTRATION";
+        }
+
+        if (SignedFrom.contains("VISITSIGNED") || SignedFrom.contains("VISIT")) {
+            System.out.println("VISITSIGNED");
+            DirectoryNameTow = "VISIT";
+        }
+
+        if (SignedFrom.contains("EDITSIGNED") || SignedFrom.contains("EDIT")) {
+            System.out.println("EDITSIGNED");
+            DirectoryNameTow = "EDIT";
+        }
         final int ID = PatientRegId;//Integer.parseInt(request.getParameter("ID").trim());
         try {
             Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
@@ -14614,8 +14348,24 @@ public class PatientReg extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
+            Query = "Select id FROM " + Database + ".PatientVisit where PatientRegId =" + ID + " ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
             try {
-                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T'),DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  From " + Database + ".PatientReg Where ID = " + ID;
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), IFNULL(Gender, '-')," +
+                        " IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-')," +
+                        " IFNULL(Employer,'-'), IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-')," +
+                        " IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-') , IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')" +
+                        "  From " + Database + ".PatientReg Where ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -14644,9 +14394,16 @@ public class PatientReg extends HttpServlet {
                     ClientIndex = rset.getInt(21);
                     DOS = rset.getString(22);
                     DoctorId = rset.getString(23);
+                    DOBForAge = rset.getString(24);
                 }
                 rset.close();
                 stmt.close();
+
+                if (!DOB.equals("")) {
+                    Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+                }
+
+
                 Query = "Select name from oe.clients where Id = " + ClientId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -14674,7 +14431,8 @@ public class PatientReg extends HttpServlet {
 //                out.println(Query);
             }
             //            if (SelfPayChk == 1) {
-            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), IFNULL(SubscriberName,'-'), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), IFNULL(PriInsurerName,null) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-'),IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), \n" +
+                    " CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), CONCAT(IFNULL(PriInsurerFirstName ,null), ' ', IFNULL(PriInsurerLastName ,null)) from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -14935,6 +14693,7 @@ public class PatientReg extends HttpServlet {
             if (SelfPayChk == 0) {
 
                 String UID = "";
+                String filename = "";
                 Image SignImages = null;
                 final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
                 final boolean exists = tmpDir.exists();
@@ -14954,14 +14713,26 @@ public class PatientReg extends HttpServlet {
                 } else {
                     SignImages = null;
                 }
+
+
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+                filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/SELFPAYPATIENTPACKET.pdf";
 
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
                 pageCount = pdfReader.getNumberOfPages();
-                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+//                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
 
                 //            final GenerateBarCode barCode = new GenerateBarCode();
                 //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
@@ -15493,20 +15264,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(SubscriberDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 250); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(460, 250); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -15674,12 +15431,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.addImage(SignImages);
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(80, 350); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -15741,12 +15492,7 @@ public class PatientReg extends HttpServlet {
                             SignImages.setAbsolutePosition(150, 100);
                             pdfContentByte.addImage(SignImages);
                         }
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 100); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
+
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -15814,18 +15560,18 @@ public class PatientReg extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pageCount);
+                MainReceipt.setInt(4, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
                 return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
 
-//                final File pdfFile = new File(outputFilePath);
-//                response.setContentType("application/pdf");
-//                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-//                response.setContentLength((int) pdfFile.length());
-//                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-//                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-//                int bytes;
-//                while ((bytes = fileInputStream.read()) != -1) {
-//                    responseOutputStream.write(bytes);
-//                }
             } else {
                 String UID = "";
                 Image SignImages = null;
@@ -15847,17 +15593,28 @@ public class PatientReg extends HttpServlet {
                 } else {
                     SignImages = null;
                 }
+
+                int found = 0;
+                Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    found = rset.getInt(1);
+                }
+                stmt.close();
+                rset.close();
+                String filename = null;
+
+                filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
+
+
                 inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/INSUREDPATIENTPACKET.pdf";
-                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
-                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+//                final String filename = FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+                final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
                 final OutputStream fos = new FileOutputStream(new File(outputFilePath));
                 final PdfReader pdfReader = new PdfReader(inputFilePath);
                 final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
                 pageCount = pdfReader.getNumberOfPages();
-                //            final GenerateBarCode barCode = new GenerateBarCode();
-                //            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
-                //            final Image image = Image.getInstance(BarCodeFilePath);
-                //            image.scaleAbsolute(150.0f, 30.0f);
                 // loop on all the PDF pages
                 // i is the pdfPageNumber
                 for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
@@ -15928,7 +15685,7 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.setTextMatrix(217, 525);// *YES* PATIENT BEFORE add the text
                         } else {
                             pdfContentByte.setTextMatrix(259, 525);
-                            ;// *NO* PATIENT BEFORE add the text
+                            // *NO* PATIENT BEFORE add the text
                         }
                         pdfContentByte.setTextMatrix(217, 525); // set x and y co-ordinates
                         pdfContentByte.showText("*"); // *YES* PATIENT BEFORE add the text
@@ -16041,38 +15798,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.endText();
                         }
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 125); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // Radio advertisement add the text
-                        //                        pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(23.25f, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Former patient recommendation add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(239.25f, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Employer  add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 103); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // GOOGLE add the text
-                        //                        pdfContentByte.endText();
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(23.25f, 83); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); //  Insurance Company recommendation add the text
-                        //                        pdfContentByte.endText();
                         if (!Newspaper_text.equals("")) {
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
@@ -16081,13 +15806,6 @@ public class PatientReg extends HttpServlet {
                             pdfContentByte.showText("*"); //  Newspaper  add the text
                             pdfContentByte.endText();
                         }
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(381, 83); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // Yelp add the text
-                        //                        pdfContentByte.endText();
 
                         if (TV.toUpperCase().equals("YES")) {
                             pdfContentByte.beginText();
@@ -16217,42 +15935,27 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.RED);
-                        System.out.println("MaritalStatus -> " + MaritalStatus);
 
-                        if (MaritalStatus.equals("Single")) {
-                            System.out.println(" Single MaritalStatus -> " + MaritalStatus);
-                            pdfContentByte.setTextMatrix(100, 563);// *SINGLE* Marital Status
-                        } else if (MaritalStatus.equals("Mar")) {
-                            System.out.println("Mar MaritalStatus -> " + MaritalStatus);
-                            pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
-                        } else if (MaritalStatus.equals("Wid")) {
-                            System.out.println("Wid MaritalStatus -> " + MaritalStatus);
-                            pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
-                        } else if (MaritalStatus.equals("Div")) {
-                            System.out.println("Div MaritalStatus -> " + MaritalStatus);
+                        switch (MaritalStatus) {
+                            case "Single":
+                                pdfContentByte.setTextMatrix(100, 563);// *SINGLE* Marital Status
 
-                            pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
+                                break;
+                            case "Mar":
+                                pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
+
+                                break;
+                            case "Wid":
+                                pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
+
+                                break;
+                            case "Div":
+                                pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
+
+                                break;
                         }
                         pdfContentByte.showText("*"); // *SINGLE* Marital Status add the text
                         pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(152, 563); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *Married* Marital Status add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(215, 563); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *Divorced* Marital Status add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.RED);
-                        //                        pdfContentByte.setTextMatrix(283.5f, 563); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("*"); // *Widowed* Sex add the text
-                        //                        pdfContentByte.endText();
 
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
@@ -16335,20 +16038,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(PrimaryDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 348); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(440, 348); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -16390,20 +16079,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(SubscriberDOB);//"DOB"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 255); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Subscriber’s Address"); // add the text
-                        //                        pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(460, 255); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("PhNumber"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -16415,14 +16090,6 @@ public class PatientReg extends HttpServlet {
                     if (i == 3) {
 
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-//                        pdfContentByte.beginText();
-//                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-//                        pdfContentByte.setColorFill(BaseColor.BLACK);
-//                        pdfContentByte.setTextMatrix(180, 270); // set x and y co-ordinates
-//                        pdfContentByte.showText("Signature"); // add the text
-//                        pdfContentByte.endText();
-
 
                         //LABEL
                         pdfContentByte.beginText();
@@ -16482,15 +16149,6 @@ public class PatientReg extends HttpServlet {
 
                     if (i == 4) {
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(70, 200); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
-
-
                         //LABEL
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
@@ -16523,7 +16181,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText("Dr. " + DoctorName);
                         pdfContentByte.endText();
 
-
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -16536,8 +16193,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(50, 150); // set x and y co-ordinates
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Print Patient Name"); // add the text
                         pdfContentByte.endText();
-
-
                     }
 
                     if (i == 5) {
@@ -16582,12 +16237,6 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Patient Name"); // add the text
                         pdfContentByte.endText();
 
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(80, 315); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -16613,10 +16262,6 @@ public class PatientReg extends HttpServlet {
 
                     if (i == 6) {
                         PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-
-//                    image.setAbsolutePosition(10.0f, 710.0f);
-//                    pdfContentByte.addImage(image);
                         //LABEL
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 8.0f);
@@ -16648,12 +16293,7 @@ public class PatientReg extends HttpServlet {
                         pdfContentByte.setTextMatrix(410.0f, 725.0f);
                         pdfContentByte.showText("Dr. " + DoctorName);
                         pdfContentByte.endText();
-                        //                        pdfContentByte.beginText();
-                        //                        pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
-                        //                        pdfContentByte.setColorFill(BaseColor.BLACK);
-                        //                        pdfContentByte.setTextMatrix(150, 128); // set x and y co-ordinates
-                        //                        pdfContentByte.showText("Signature"); // add the text
-                        //                        pdfContentByte.endText();
+
                         pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -16722,18 +16362,21 @@ public class PatientReg extends HttpServlet {
                 }
                 pdfStamper.close();
                 pdfReader.close();
-                return pdfReader.getNumberOfPages() + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
-//
-//                final File pdfFile = new File(outputFilePath);
-//                response.setContentType("application/pdf");
-//                response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
-//                response.setContentLength((int) pdfFile.length());
-//                final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-//                final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
-//                int bytes;
-//                while ((bytes = fileInputStream.read()) != -1) {
-//                    responseOutputStream.write(bytes);
+
+//                if (SignedFrom.contains("SIGNED")) {
+                PreparedStatement MainReceipt = conn.prepareStatement(
+                        "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                                " VALUES (? ,? ,? ,now(),?,?) ");
+                MainReceipt.setString(1, MRN);
+                MainReceipt.setInt(2, ID);
+                MainReceipt.setString(3, filename);
+                MainReceipt.setInt(4, pdfReader.getNumberOfPages());
+                MainReceipt.setInt(5, VisitIndex);
+                MainReceipt.executeUpdate();
+                MainReceipt.close();
 //                }
+
+                return pdfReader.getNumberOfPages() + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
             }
 
 
@@ -16747,6 +16390,1844 @@ public class PatientReg extends HttpServlet {
             System.out.println(str);
         }
         return "";
+    }
+
+
+    String GETINPUTSchertz(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int patientRegId, String SignedFrom) {
+        String DirectoryNameTow = "";
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        int PatientRegId = 0;
+        String DateTime = "";
+        String Date = "";
+        String Time = "";
+        String Title = "";
+        String FirstName = "";
+        String FirstNameNoSpaces = "";
+        String LastName = "";
+        String MiddleInitial = "";
+        String MaritalStatus = "";
+        String DOB = "";
+        String Age = "";
+        String gender = "";
+        String Email = "";
+        String PhNumber = "";
+        String Address = "";
+        String CityStateZip = "";
+        final String State = "";
+        final String Country = "";
+        final String ZipCode = "";
+        String SSN = "";
+        String Occupation = "";
+        String Employer = "";
+        String EmpContact = "";
+        String PriCarePhy = "";
+        String ReasonVisit = "";
+        String MRN = "";
+        int ClientIndex = 0;
+        int pageCount = 0;
+        String ClientName = "";
+        String DOS = "";
+        String DoctorId = null;
+        String DoctorName = null;
+        int WorkersCompPolicy = 0;
+        String WorkersCompPolicyString = "Is this a worker\u2019s comp policy: YES/NO";
+        int MotorVehAccident = 0;
+        String MotorVehAccidentString = "Is this a Motor Vehicle Accident : YES/NO";
+        String PriInsurance = "";
+        String MemId = "";
+        String GrpNumber = "";
+        String PriInsuranceName = "";
+        String AddressIfDifferent = "";
+        String PrimaryDOB = "";
+        String PrimarySSN = "";
+        String PatientRelationtoPrimary = "";
+        String PrimaryOccupation = "";
+        String PrimaryEmployer = "";
+        String EmployerAddress = "";
+        String EmployerPhone = "";
+        String SecondryInsurance = "";
+        String SubscriberName = "";
+        String SubscriberDOB = "";
+        String MemberID_2 = "";
+        String GroupNumber_2 = "";
+        String PatientRelationshiptoSecondry = "";
+        String NextofKinName = "";
+        String RelationToPatientER = "";
+        String PhoneNumberER = "";
+        final int LeaveMessageER = 0;
+        String AddressER = "";
+        final String CityER = "";
+        final String StateER = "";
+        String LeaveMessageERString = "";
+        String CityStateZipER = "";
+        final String CountryER = "";
+        final String ZipCodeER = "";
+        final String DateConcent = "";
+        final String WitnessConcent = "";
+        final String PatientBehalfConcent = "";
+        final String RelativeSignConcent = "";
+        final String DateConcent2 = "";
+        final String WitnessConcent2 = "";
+        final String PatientSignConcent = "";
+        String ReturnPatient = "";
+        String Google = "";
+        String MapSearch = "";
+        String Billboard = "";
+        String OnlineReview = "";
+        String TV = "";
+        String Website = "";
+        String BuildingSignDriveBy = "";
+        String Facebook = "";
+        String School = "";
+        String School_text = "";
+        String Twitter = "";
+        String Magazine = "";
+        String Magazine_text = "";
+        String Newspaper = "";
+        String Newspaper_text = "";
+        String FamilyFriend = "";
+        String FamilyFriend_text = "";
+        String UrgentCare = "";
+        String UrgentCare_text = "";
+        String CommunityEvent = "";
+        String CommunityEvent_text = "";
+        final String Work = "";
+        String Work_text = "";
+        final String Physician = "";
+        String Physician_text = "";
+        final String Other = "";
+        String Other_text = "";
+        String ResultPdf = "";
+        String PriInsurerName = "";
+        String[] PriInsurer;
+        MergePdf mergePdf = new MergePdf();
+        int SelfPayChk = 0;
+        int VisitIndex = 0;
+        final int VerifyChkBox = 0;
+        if (SignedFrom.contains("REGISTRATIONSIGNED") || SignedFrom.contains("REGISTRATION")) {
+            DirectoryNameTow = "REGISTRATION";
+        }
+
+        if (SignedFrom.contains("VISITSIGNED") || SignedFrom.contains("VISIT")) {
+            DirectoryNameTow = "VISIT";
+        }
+
+        if (SignedFrom.contains("EDITSIGNED") || SignedFrom.contains("EDIT")) {
+            DirectoryNameTow = "EDIT";
+        }
+        final int ID = patientRegId;//Integer.parseInt(request.getParameter("ID").trim());
+        try {
+            Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                DateTime = rset.getString(1);
+                Date = rset.getString(2);
+                Time = rset.getString(3);
+            }
+            rset.close();
+            stmt.close();
+
+            Query = "Select id FROM " + Database + ".PatientVisit where PatientRegId =" + ID + " ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+            try {
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), " +
+                        "IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    PatientRegId = ID;
+                    LastName = rset.getString(1).trim();
+                    FirstName = rset.getString(2).trim();
+                    FirstNameNoSpaces = FirstName.replaceAll("\\s+", "");
+                    MiddleInitial = rset.getString(3).trim();
+                    Title = rset.getString(4).trim();
+                    MaritalStatus = rset.getString(5);
+                    DOB = rset.getString(6);
+                    Age = rset.getString(7);
+                    gender = rset.getString(8);
+                    Address = rset.getString(9);
+                    CityStateZip = rset.getString(10);
+                    PhNumber = rset.getString(11);
+                    SSN = rset.getString(12);
+                    Occupation = rset.getString(13);
+                    Employer = rset.getString(14);
+                    EmpContact = rset.getString(15);
+                    PriCarePhy = rset.getString(16);
+                    Email = rset.getString(17);
+                    ReasonVisit = rset.getString(18);
+                    SelfPayChk = rset.getInt(19);
+                    MRN = rset.getString(20);
+                    ClientIndex = rset.getInt(21);
+                    DOS = rset.getString(22);
+                    DoctorId = rset.getString(23);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!DoctorId.equals("-")) {
+                    Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorId;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        DoctorName = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                } else {
+                    DoctorName = "";
+                }
+            } catch (Exception e) {
+                out.println("Error In PateintReg:--" + e.getMessage());
+                out.println(Query);
+            }
+//            if (SelfPayChk == 1) {
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-')," +
+                    "IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                    "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                    "IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), " +
+                    "IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), " +
+                    "CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), " +
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), " +
+                    "CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
+                    "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                WorkersCompPolicy = rset.getInt(1);
+                MotorVehAccident = rset.getInt(2);
+                if (WorkersCompPolicy == 0) {
+                    WorkersCompPolicyString = "NO";
+                } else {
+                    WorkersCompPolicyString = "YES";
+                }
+                if (MotorVehAccident == 0) {
+                    MotorVehAccidentString = "NO";
+                } else {
+                    MotorVehAccidentString = "YES";
+                }
+                PriInsurance = rset.getString(3);
+                MemId = rset.getString(4);
+                GrpNumber = rset.getString(5);
+                PriInsuranceName = rset.getString(6);
+                AddressIfDifferent = rset.getString(7);
+                PrimaryDOB = rset.getString(8);
+                PrimarySSN = rset.getString(9);
+                PatientRelationtoPrimary = rset.getString(10);
+                PrimaryOccupation = rset.getString(11);
+                PrimaryEmployer = rset.getString(12);
+                EmployerAddress = rset.getString(13);
+                EmployerPhone = rset.getString(14);
+                SecondryInsurance = rset.getString(15);
+                SubscriberName = rset.getString(16);
+                SubscriberDOB = rset.getString(17);
+                PatientRelationshiptoSecondry = rset.getString(18);
+                MemberID_2 = rset.getString(19);
+                GroupNumber_2 = rset.getString(20);
+                PriInsurerName = rset.getString(21);
+            }
+            rset.close();
+            stmt.close();
+//            }
+            try {
+                if (SelfPayChk != 0 && !PriInsuranceName.equals("-") || !PriInsuranceName.equals("")) {
+                    Query = "Select PayerName from oe_2.ProfessionalPayers where Id =" + PriInsuranceName;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        PriInsuranceName = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+                if (SelfPayChk != 0 && !SecondryInsurance.equals("-") || !SecondryInsurance.equals("") || SecondryInsurance != null) {
+                    Query = "Select PayerName from oe_2.ProfessionalPayers where Id =" + SecondryInsurance;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        SecondryInsurance = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+            } catch (Exception e) {
+//                out.println("Error is PriInsurance: " + e.getMessage());
+//                out.println(Query);
+            }
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                NextofKinName = rset.getString(1);
+                RelationToPatientER = rset.getString(2);
+                PhoneNumberER = rset.getString(3);
+                LeaveMessageERString = rset.getString(4);
+                AddressER = rset.getString(5);
+                CityStateZipER = rset.getString(6);
+            }
+            rset.close();
+            stmt.close();
+
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                if (rset.getInt(1) == 0) {
+                    ReturnPatient = "";
+                } else {
+                    ReturnPatient = "YES";
+                }
+                if (rset.getInt(2) == 0) {
+                    Google = "";
+                } else {
+                    Google = "YES";
+                }
+                if (rset.getInt(3) == 0) {
+                    MapSearch = "";
+                } else {
+                    MapSearch = "YES";
+                }
+                if (rset.getInt(4) == 0) {
+                    Billboard = "";
+                } else {
+                    Billboard = "YES";
+                }
+                if (rset.getInt(5) == 0) {
+                    OnlineReview = "";
+                } else {
+                    OnlineReview = "YES";
+                }
+                if (rset.getInt(6) == 0) {
+                    TV = "";
+                } else {
+                    TV = "YES";
+                }
+                if (rset.getInt(7) == 0) {
+                    Website = "";
+                } else {
+                    Website = "YES";
+                }
+                if (rset.getInt(8) == 0) {
+                    BuildingSignDriveBy = "";
+                } else {
+                    BuildingSignDriveBy = "YES";
+                }
+                if (rset.getInt(9) == 0) {
+                    Facebook = "";
+                } else {
+                    Facebook = "YES";
+                }
+                if (rset.getInt(10) == 0) {
+                    School = "";
+                    School_text = "";
+                } else {
+                    School = "YES";
+                    School_text = rset.getString(11);
+                }
+                if (rset.getInt(12) == 0) {
+                    Twitter = "";
+                } else {
+                    Twitter = "YES";
+                }
+                if (rset.getInt(13) == 0) {
+                    Magazine = "";
+                    Magazine_text = "";
+                } else {
+                    Magazine = "YES";
+                    Magazine_text = rset.getString(14);
+                }
+                if (rset.getInt(15) == 0) {
+                    Newspaper = "";
+                    Newspaper_text = "";
+                } else {
+                    Newspaper = "YES";
+                    Newspaper_text = rset.getString(16);
+                }
+                if (rset.getInt(17) == 0) {
+                    FamilyFriend = "";
+                    FamilyFriend_text = "";
+                } else {
+                    FamilyFriend = "YES";
+                    FamilyFriend_text = rset.getString(18);
+                }
+                if (rset.getInt(19) == 0) {
+                    UrgentCare = "";
+                    UrgentCare_text = "";
+                } else {
+                    UrgentCare = "YES";
+                    UrgentCare_text = rset.getString(20);
+                }
+                if (rset.getInt(21) == 0) {
+                    CommunityEvent = "";
+                    CommunityEvent_text = "";
+                } else {
+                    CommunityEvent = "YES";
+                    CommunityEvent_text = rset.getString(22);
+                }
+                if (rset.getString(23) == "" || rset.getString(23) == null) {
+                    Work_text = "";
+                } else {
+                    Work_text = rset.getString(23);
+                }
+                if (rset.getString(24) == "" || rset.getString(24) == null) {
+                    Physician_text = "";
+                } else {
+                    Physician_text = rset.getString(24);
+                }
+                if (rset.getString(25) == "" || rset.getString(25) == null) {
+                    Other_text = "";
+                } else {
+                    Other_text = rset.getString(25);
+                }
+            }
+            rset.close();
+            stmt.close();
+
+            String HearAboutUsString = "";
+            String HearAboutUsString2 = "";
+            if (ReturnPatient.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Return Patient, ";
+            }
+            if (Google.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Google, ";
+            }
+            if (MapSearch.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Map Search, ";
+            }
+            if (OnlineReview.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Online Review, ";
+            }
+            if (TV.toUpperCase().equals("YES")) {
+                HearAboutUsString += "TV, ";
+            }
+            if (Website.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Website, ";
+            }
+            if (BuildingSignDriveBy.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Building Sign, ";
+            }
+            if (Facebook.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Facebook, ";
+            }
+            if (School.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "School, ";
+            }
+            if (Twitter.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Twitter, ";
+            }
+            if (Magazine.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Magazine, ";
+            }
+            if (Newspaper.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Newspaper, ";
+            }
+            if (FamilyFriend.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Friend / Family, ";
+            }
+            if (UrgentCare.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Urgent Care, ";
+            }
+            if (CommunityEvent.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Comminuty Event, ";
+            }
+            if ("".toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Work, ";
+            }
+            if ("".toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Physician, ";
+            }
+            if ("".toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Others ";
+            }
+
+            String inputFilePath = "";
+            final InetAddress ip = InetAddress.getLocalHost();
+            final String hostname = ip.getHostName();
+            if (hostname.trim().equals("rover-01")) {
+                inputFilePath = "";
+            } else {
+                inputFilePath = "/sftpdrive";
+            }
+
+            inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/PatientRegForm.pdf";
+
+            if (MotorVehAccident == 1) {
+                mergePdf.GETINPUT(request, response, out, conn, Database, inputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/MVAForm.pdf", ClientId, MRN);
+                inputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+            }
+
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+
+            String filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
+            final OutputStream fos = new FileOutputStream(new File(outputFilePath));
+            final PdfReader pdfReader = new PdfReader(inputFilePath);
+            final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+            pageCount = pdfReader.getNumberOfPages();
+//            final GenerateBarCode barCode = new GenerateBarCode();
+//            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
+//            final Image image = Image.getInstance(BarCodeFilePath);
+//            image.scaleAbsolute(150.0f, 30.0f);
+            // loop on all the PDF pages
+            // i is the pdfPageNumber
+            for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
+                if (i == 1) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+
+                    /////////////////////////////////////Patient Information//////////////////////////////////////////////////
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(70, 640); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date "); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 600); // set x and y co-ordinates
+                    pdfContentByte.showText(LastName);//"Last Name"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(185, 600); // set x and y co-ordinates
+                    pdfContentByte.showText(FirstName);//"First Name"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(315, 600); // set x and y co-ordinates
+                    pdfContentByte.showText(MiddleInitial);//"Middle"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 605); // set x and y co-ordinates
+                    pdfContentByte.showText(Title);//"Title"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(450, 602); // set x and y co-ordinates
+                    pdfContentByte.showText(MaritalStatus);//"Marital Status"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(60, 580); // set x and y co-ordinates
+                    pdfContentByte.showText(SSN);//"SSN"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 580); // set x and y co-ordinates
+                    pdfContentByte.showText(PhNumber);//"PhNumber"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 580); // set x and y co-ordinates
+                    pdfContentByte.showText(DOB);//"BirthDate"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(480, 580); // set x and y co-ordinates
+                    pdfContentByte.showText(gender);//"Sex"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 560); // set x and y co-ordinates
+                    pdfContentByte.showText(Address);//"Address"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 560); // set x and y co-ordinates
+                    pdfContentByte.showText(CityStateZip);//"City/State/Zip"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(430, 560); // set x and y co-ordinates
+                    pdfContentByte.showText(Email);//"Email"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 540); // set x and y co-ordinates
+                    pdfContentByte.showText(Employer);//"Employer"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 540); // set x and y co-ordinates
+                    pdfContentByte.showText(EmpContact);//"Employer Ph"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(375, 540); // set x and y co-ordinates
+                    pdfContentByte.showText(EmployerAddress);//"Employer Address"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 520); // set x and y co-ordinates
+                    pdfContentByte.showText(Physician);//"PCP"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 495); // set x and y co-ordinates
+                    pdfContentByte.showText(HearAboutUsString);//"Heard about us1"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 485); // set x and y co-ordinates
+                    pdfContentByte.showText(HearAboutUsString2);//"Heard about us2"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(135, 450); // set x and y co-ordinates
+                    pdfContentByte.showText(WorkersCompPolicyString);//"Yes/NO");//"WC"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(340, 450); // set x and y co-ordinates
+                    pdfContentByte.showText(MotorVehAccidentString);//"Yes/NO");//"MVA"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 425); // set x and y co-ordinates
+                    pdfContentByte.showText(PriInsuranceName);//"Primary Insurance"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(PriInsurerName);//"Subscriber’s Last Name"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(330, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(PrimarySSN);//"Subscriber’s Social Security"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(480, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(PrimaryDOB);//"Subscriber’s Birth Date:"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 375); // set x and y co-ordinates
+                    pdfContentByte.showText(MemId);//"Member Id Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 375); // set x and y co-ordinates
+                    pdfContentByte.showText(GrpNumber);//"Group Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(380, 375); // set x and y co-ordinates
+                    pdfContentByte.showText(PatientRelationtoPrimary);//"Patient’s relationship"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 355); // set x and y co-ordinates
+                    pdfContentByte.showText(SecondryInsurance);//"Secondary Insurance"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 335); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberName);//"Subscriber’s Last Name"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(480, 335); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberDOB); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 315); // set x and y co-ordinates
+                    pdfContentByte.showText(MemberID_2);//"Member Id Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 315); // set x and y co-ordinates
+                    pdfContentByte.showText(GroupNumber_2);//"Group Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(380, 315); // set x and y co-ordinates
+                    pdfContentByte.showText(PatientRelationshiptoSecondry);//"Patient’s relationship"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 130); // set x and y co-ordinates
+                    pdfContentByte.showText(NextofKinName);//"Name of Relative"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(290, 130); // set x and y co-ordinates
+                    pdfContentByte.showText(RelationToPatientER);//"Relationship"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(410, 130); // set x and y co-ordinates
+                    pdfContentByte.showText(PhoneNumberER);//"Home Phone"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(520, 130); // set x and y co-ordinates
+                    pdfContentByte.showText(LeaveMessageERString);//"Leave Msg"); // add the text
+                    pdfContentByte.endText();
+                }
+
+                if (i == 2) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510, 75); // set x and y co-ordinates
+                    pdfContentByte.showText(FirstName);//"Patient’s Initial"); // add the text
+                    pdfContentByte.endText();
+                }
+
+                if (i == 3) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(80, 120); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390, 120); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440, 100); // set x and y co-ordinates
+                    pdfContentByte.showText(RelationToPatientER);//"Relationship"); // add the text
+                    pdfContentByte.endText();
+
+                }
+
+                if (i == 5) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(155, 450); // set x and y co-ordinates
+                    pdfContentByte.showText(SecondryInsurance);//"Secondary health insurance"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(145, 425); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberName);//"Subscriber Name"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(400, 425); // set x and y co-ordinates
+                    pdfContentByte.showText(DOB);//"DOB"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(145, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(MemberID_2);//"Member ID"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(300, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(GroupNumber_2);//"Group No"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(430, 140); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(430, 85); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+
+                }
+            }
+            pdfStamper.close();
+            pdfReader.close();
+
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+            return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+
+        } catch (Exception e) {
+//            out.println(e.getMessage());
+            System.out.println(e.getMessage());
+            String str = "";
+            for (int j = 0; j < e.getStackTrace().length; ++j) {
+                str = str + e.getStackTrace()[j] + "<br>";
+            }
+            System.out.println(str);
+        }
+        return "";
+    }
+
+    String GETINPUTfloresville(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final HttpServletResponse response, final String UserId, final String Database, final int ClientId, final String DirectoryName, int patientRegId, String SignedFrom) {
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+        int PatientRegId = 0;
+        String DateTime = "";
+        String Date = "";
+        String Time = "";
+        String Title = "";
+        String FirstName = "";
+        String FirstNameNoSpaces = "";
+        String LastName = "";
+        String MiddleInitial = "";
+        String MaritalStatus = "";
+        String DOB = "";
+        String Age = "";
+        String gender = "";
+        String Email = "";
+        String PhNumber = "";
+        String Address = "";
+        String CityStateZip = "";
+        final String State = "";
+        final String Country = "";
+        final String ZipCode = "";
+        String SSN = "";
+        String Occupation = "";
+        String Employer = "";
+        String EmpContact = "";
+        String PriCarePhy = "";
+        String ReasonVisit = "";
+        String MRN = "";
+        int ClientIndex = 0;
+        int pageCount = 0;
+        String ClientName = "";
+        String DOS = "";
+        String DoctorId = null;
+        String DoctorName = null;
+        int WorkersCompPolicy = 0;
+        String WorkersCompPolicyString = "Is this a worker\u2019s comp policy: YES/NO";
+        int MotorVehAccident = 0;
+        String MotorVehAccidentString = "Is this a Motor Vehicle Accident : YES/NO";
+        String PriInsurance = "";
+        String MemId = "";
+        String GrpNumber = "";
+        String PriInsuranceName = "";
+        String AddressIfDifferent = "";
+        String PrimaryDOB = "";
+        String PrimarySSN = "";
+        String PatientRelationtoPrimary = "";
+        String PrimaryOccupation = "";
+        String PrimaryEmployer = "";
+        String EmployerAddress = "";
+        String EmployerPhone = "";
+        String SecondryInsurance = "";
+        String SubscriberName = "";
+        String SubscriberDOB = "";
+        String MemberID_2 = "";
+        String GroupNumber_2 = "";
+        String PatientRelationshiptoSecondry = "";
+        String NextofKinName = "";
+        String RelationToPatientER = "";
+        String PhoneNumberER = "";
+        final int LeaveMessageER = 0;
+        String AddressER = "";
+        final String CityER = "";
+        final String StateER = "";
+        String LeaveMessageERString = "";
+        String CityStateZipER = "";
+        final String CountryER = "";
+        final String ZipCodeER = "";
+        final String DateConcent = "";
+        final String WitnessConcent = "";
+        final String PatientBehalfConcent = "";
+        final String RelativeSignConcent = "";
+        final String DateConcent2 = "";
+        final String WitnessConcent2 = "";
+        final String PatientSignConcent = "";
+        String ReturnPatient = "";
+        String Google = "";
+        String MapSearch = "";
+        String Billboard = "";
+        String OnlineReview = "";
+        String TV = "";
+        String Website = "";
+        String BuildingSignDriveBy = "";
+        String Facebook = "";
+        String School = "";
+        String School_text = "";
+        String Twitter = "";
+        String Magazine = "";
+        String Magazine_text = "";
+        String Newspaper = "";
+        String Newspaper_text = "";
+        String FamilyFriend = "";
+        String FamilyFriend_text = "";
+        String UrgentCare = "";
+        String UrgentCare_text = "";
+        String CommunityEvent = "";
+        String CommunityEvent_text = "";
+        final String Work = "";
+        String Work_text = "";
+        final String Physician = "";
+        String Physician_text = "";
+        final String Other = "";
+        String Other_text = "";
+        String ResultPdf = "";
+        String PriInsurerName = "";
+        String[] PriInsurer;
+        MergePdf mergePdf = new MergePdf();
+        int SelfPayChk = 0;
+        int VisitIndex = 0;
+        String DirectoryNameTow = "";
+        final int VerifyChkBox = 0;
+        final int ID = patientRegId;//Integer.parseInt(request.getParameter("ID").trim());
+        try {
+            Query = "select date_format(now(),'%Y%m%d%H%i%s'), DATE_FORMAT(now(), '%m/%d/%Y'), DATE_FORMAT(now(), '%T')";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                DateTime = rset.getString(1);
+                Date = rset.getString(2);
+                Time = rset.getString(3);
+            }
+            rset.close();
+            stmt.close();
+
+
+            Query = "Select id FROM " + Database + ".PatientVisit where PatientRegId = " + ID + " ORDER BY CreatedDate DESC LIMIT 1";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                VisitIndex = rset.getInt(1);
+
+            }
+            rset.close();
+            stmt.close();
+            try {
+                Query = " Select IFNULL(LastName,'-'), IFNULL(FirstName,'-'), IFNULL(MiddleInitial,'-'), IFNULL(Title,'-'), " +
+                        "IFNULL(MaritalStatus, '-'),  IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'), '-'),  IFNULL(Age, '0'), " +
+                        "IFNULL(Gender, '-'), IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-'), " +
+                        "IFNULL(PhNumber,'-'), IFNULL(SSN,'-'), IFNULL(Occupation,'-'), IFNULL(Employer,'-'), " +
+                        "IFNULL(EmpContact,'-'), IFNULL(PriCarePhy,'-'), IFNULL(Email,'-'),  IFNULL(ReasonVisit,'-'), " +
+                        "IFNULL(SelfPayChk,0), IFNULL(MRN,0), ClientIndex, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
+                        "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')), IFNULL(DoctorsName,'-')  " +
+                        "From " + Database + ".PatientReg Where ID = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    PatientRegId = ID;
+                    LastName = rset.getString(1).trim();
+                    FirstName = rset.getString(2).trim();
+                    FirstNameNoSpaces = FirstName.replaceAll("\\s+", "");
+                    MiddleInitial = rset.getString(3).trim();
+                    Title = rset.getString(4).trim();
+                    MaritalStatus = rset.getString(5);
+                    DOB = rset.getString(6);
+                    Age = rset.getString(7);
+                    gender = rset.getString(8);
+                    Address = rset.getString(9);
+                    CityStateZip = rset.getString(10);
+                    PhNumber = rset.getString(11);
+                    SSN = rset.getString(12);
+                    Occupation = rset.getString(13);
+                    Employer = rset.getString(14);
+                    EmpContact = rset.getString(15);
+                    PriCarePhy = rset.getString(16);
+                    Email = rset.getString(17);
+                    ReasonVisit = rset.getString(18);
+                    SelfPayChk = rset.getInt(19);
+                    MRN = rset.getString(20);
+                    ClientIndex = rset.getInt(21);
+                    DOS = rset.getString(22);
+                    DoctorId = rset.getString(23);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!DoctorId.equals("-")) {
+                    Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) " +
+                            "from " + Database + ".DoctorsList where Id = " + DoctorId;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        DoctorName = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                } else {
+//                    out.println("Inside Get Doc Name empty");
+                    DoctorName = "";
+                }
+            } catch (Exception e) {
+//                out.println("Error In PateintReg:--" + e.getMessage());
+//                out.println(Query);
+            }
+//            if (SelfPayChk == 1) {
+            Query = " Select IFNULL(WorkersCompPolicy,0), IFNULL(MotorVehAccident,0), IFNULL(PriInsurance,'-')," +
+                    "IFNULL(MemId,'-'), IFNULL(GrpNumber,'-'),  IFNULL(PriInsuranceName,'-'), IFNULL(AddressIfDifferent,'-'), " +
+                    "IFNULL(DATE_FORMAT(PrimaryDOB,'%m/%d/%Y'),'-'), IFNULL(PrimarySSN,'-'),  " +
+                    "IFNULL(PatientRelationtoPrimary,''), IFNULL(PrimaryOccupation,'-'), IFNULL(PrimaryEmployer,'-'), " +
+                    "IFNULL(EmployerAddress,'-'),  IFNULL(EmployerPhone, '-'), IFNULL(SecondryInsurance,'-'), " +
+                    "CONCAT(IFNULL(SubscriberFirstName,null), ' ', IFNULL(SubscriberLastName,null)), " +
+                    "IFNULL(DATE_FORMAT(SubscriberDOB,'%m/%d/%Y'),'-'),  IFNULL(PatientRelationshiptoSecondry,''), " +
+                    "IFNULL(MemberID_2,'-'), IFNULL(GroupNumber_2,'-'), " +
+                    "CONCAT(IFNULL(PriInsurerFirstName,null), ' ', IFNULL(PriInsurerLastName,null)) " +
+                    "from " + Database + ".InsuranceInfo  where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                WorkersCompPolicy = rset.getInt(1);
+                MotorVehAccident = rset.getInt(2);
+                if (WorkersCompPolicy == 0) {
+                    WorkersCompPolicyString = "NO";
+                } else {
+                    WorkersCompPolicyString = "YES";
+                }
+                if (MotorVehAccident == 0) {
+                    MotorVehAccidentString = "NO";
+                } else {
+                    MotorVehAccidentString = "YES";
+                }
+                PriInsurance = rset.getString(3);
+                MemId = rset.getString(4);
+                GrpNumber = rset.getString(5);
+                PriInsuranceName = rset.getString(6);
+                AddressIfDifferent = rset.getString(7);
+                PrimaryDOB = rset.getString(8);
+                PrimarySSN = rset.getString(9);
+                PatientRelationtoPrimary = rset.getString(10);
+                PrimaryOccupation = rset.getString(11);
+                PrimaryEmployer = rset.getString(12);
+                EmployerAddress = rset.getString(13);
+                EmployerPhone = rset.getString(14);
+                SecondryInsurance = rset.getString(15);
+                SubscriberName = rset.getString(16);
+                SubscriberDOB = rset.getString(17);
+                PatientRelationshiptoSecondry = rset.getString(18);
+                MemberID_2 = rset.getString(19);
+                GroupNumber_2 = rset.getString(20);
+                PriInsurerName = rset.getString(21);
+            }
+            rset.close();
+            stmt.close();
+//            }
+            try {
+                if (SelfPayChk != 0 && !PriInsuranceName.equals("-") || !PriInsuranceName.equals("")) {
+                    Query = "Select PayerName from oe_2.ProfessionalPayers where Id = " + PriInsuranceName;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        PriInsuranceName = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                    Query = "Select PayerName from oe_2.ProfessionalPayers where Id =" + SecondryInsurance;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        SecondryInsurance = rset.getString(1);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+            } catch (Exception e) {
+//                out.println("Error is PriInsurance: " + e.getMessage());
+//                out.println(Query);
+            }
+            Query = "Select IFNULL(NextofKinName,'-'), IFNULL(RelationToPatient,'-'), IFNULL(PhoneNumber,'-'), " +
+                    "CASE WHEN LeaveMessage = 1 THEN 'YES' WHEN LeaveMessage = 0 THEN 'NO' ELSE ' YES / NO' END,  " +
+                    "IFNULL(Address,'-'), IFNULL(CONCAT(City,' / ', State, ' / ', ZipCode),'-') " +
+                    "from " + Database + ".EmergencyInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                NextofKinName = rset.getString(1);
+                RelationToPatientER = rset.getString(2);
+                PhoneNumberER = rset.getString(3);
+                LeaveMessageERString = rset.getString(4);
+                AddressER = rset.getString(5);
+                CityStateZipER = rset.getString(6);
+            }
+            rset.close();
+            stmt.close();
+
+            Query = " Select ReturnPatient, Google, MapSearch, Billboard, OnlineReview, TV, Website, BuildingSignDriveBy, " +
+                    "Facebook, School, IFNULL(School_text ,'-'), Twitter, Magazine, IFNULL(Magazine_text,'-'), Newspaper, " +
+                    "IFNULL(Newspaper_text,'-'), FamilyFriend, IFNULL(FamilyFriend_text,'-'), UrgentCare, " +
+                    "IFNULL(UrgentCare_text,'-'), CommunityEvent, IFNULL(CommunityEvent_text,'-'),  IFNULL(Work_text,'-'), " +
+                    "IFNULL(Physician_text, '-'), IFNULL(Other_text,'-') " +
+                    "from " + Database + ".RandomCheckInfo where PatientRegId = " + ID;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                if (rset.getInt(1) == 0) {
+                    ReturnPatient = "";
+                } else {
+                    ReturnPatient = "YES";
+                }
+                if (rset.getInt(2) == 0) {
+                    Google = "";
+                } else {
+                    Google = "YES";
+                }
+                if (rset.getInt(3) == 0) {
+                    MapSearch = "";
+                } else {
+                    MapSearch = "YES";
+                }
+                if (rset.getInt(4) == 0) {
+                    Billboard = "";
+                } else {
+                    Billboard = "YES";
+                }
+                if (rset.getInt(5) == 0) {
+                    OnlineReview = "";
+                } else {
+                    OnlineReview = "YES";
+                }
+                if (rset.getInt(6) == 0) {
+                    TV = "";
+                } else {
+                    TV = "YES";
+                }
+                if (rset.getInt(7) == 0) {
+                    Website = "";
+                } else {
+                    Website = "YES";
+                }
+                if (rset.getInt(8) == 0) {
+                    BuildingSignDriveBy = "";
+                } else {
+                    BuildingSignDriveBy = "YES";
+                }
+                if (rset.getInt(9) == 0) {
+                    Facebook = "";
+                } else {
+                    Facebook = "YES";
+                }
+                if (rset.getInt(10) == 0) {
+                    School = "";
+                    School_text = "";
+                } else {
+                    School = "YES";
+                    School_text = rset.getString(11);
+                }
+                if (rset.getInt(12) == 0) {
+                    Twitter = "";
+                } else {
+                    Twitter = "YES";
+                }
+                if (rset.getInt(13) == 0) {
+                    Magazine = "";
+                    Magazine_text = "";
+                } else {
+                    Magazine = "YES";
+                    Magazine_text = rset.getString(14);
+                }
+                if (rset.getInt(15) == 0) {
+                    Newspaper = "";
+                    Newspaper_text = "";
+                } else {
+                    Newspaper = "YES";
+                    Newspaper_text = rset.getString(16);
+                }
+                if (rset.getInt(17) == 0) {
+                    FamilyFriend = "";
+                    FamilyFriend_text = "";
+                } else {
+                    FamilyFriend = "YES";
+                    FamilyFriend_text = rset.getString(18);
+                }
+                if (rset.getInt(19) == 0) {
+                    UrgentCare = "";
+                    UrgentCare_text = "";
+                } else {
+                    UrgentCare = "YES";
+                    UrgentCare_text = rset.getString(20);
+                }
+                if (rset.getInt(21) == 0) {
+                    CommunityEvent = "";
+                    CommunityEvent_text = "";
+                } else {
+                    CommunityEvent = "YES";
+                    CommunityEvent_text = rset.getString(22);
+                }
+                if (rset.getString(23) == "" || rset.getString(23) == null) {
+                    Work_text = "";
+                } else {
+                    Work_text = rset.getString(23);
+                }
+                if (rset.getString(24) == "" || rset.getString(24) == null) {
+                    Physician_text = "";
+                } else {
+                    Physician_text = rset.getString(24);
+                }
+                if (rset.getString(25) == "" || rset.getString(25) == null) {
+                    Other_text = "";
+                } else {
+                    Other_text = rset.getString(25);
+                }
+            }
+            rset.close();
+            stmt.close();
+
+            String HearAboutUsString = "";
+            String HearAboutUsString2 = "";
+            if (ReturnPatient.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Return Patient, ";
+            }
+            if (Google.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Google, ";
+            }
+            if (MapSearch.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Map Search, ";
+            }
+            if (OnlineReview.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Online Review, ";
+            }
+            if (TV.toUpperCase().equals("YES")) {
+                HearAboutUsString += "TV, ";
+            }
+            if (Website.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Website, ";
+            }
+            if (BuildingSignDriveBy.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Building Sign, ";
+            }
+            if (Facebook.toUpperCase().equals("YES")) {
+                HearAboutUsString += "Facebook, ";
+            }
+            if (School.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "School, ";
+            }
+            if (Twitter.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Twitter, ";
+            }
+            if (Magazine.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Magazine, ";
+            }
+            if (Newspaper.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Newspaper, ";
+            }
+            if (FamilyFriend.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Friend / Family, ";
+            }
+            if (UrgentCare.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Urgent Care, ";
+            }
+            if (CommunityEvent.toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Comminuty Event, ";
+            }
+            if ("".toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Work, ";
+            }
+            if ("".toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Physician, ";
+            }
+            if ("".toUpperCase().equals("YES")) {
+                HearAboutUsString2 += "Others ";
+            }
+
+            String inputFilePath = "";
+            final InetAddress ip = InetAddress.getLocalHost();
+            final String hostname = ip.getHostName();
+            if (hostname.trim().equals("rover-01")) {
+                inputFilePath = "";
+            } else {
+                inputFilePath = "/sftpdrive";
+            }
+
+            inputFilePath += "/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/PATIENTREGISTRATIONFORMFLORESVILLE.pdf";
+
+//        if (MotorVehAccident == 1) {
+//            mergePdf.GETINPUT(request, response, out, conn, Database, inputFilePath, "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/" + DirectoryName + "/MVAForm.pdf", ClientId, MRN);
+//            inputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/Result_" + ClientId + "_" + MRN + ".pdf";
+//        }
+
+            String UID = "";
+            Image SignImages = null;
+            final File tmpDir = new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
+            final boolean exists = tmpDir.exists();
+            if (exists) {
+                Query = "Select UID from " + Database + ".SignRequest where PatientRegId = " + ID;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    UID = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+
+                SignImages = Image.getInstance("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_0_" + ID + ".png");
+                SignImages.scaleAbsolute(80.0f, 30.0f);
+                //outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + FirstNameNoSpaces + LastName + ID + "_" + UID + "_.pdf";
+            } else {
+                SignImages = null;
+            }
+
+            int found = 0;
+            Query = "Select Count(*) from " + Database + ".BundleHistory where PatientRegId=" + PatientRegId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                found = rset.getInt(1);
+            }
+            stmt.close();
+            rset.close();
+
+
+            if (SignedFrom.contains("REGISTRATIONSIGNED") || SignedFrom.contains("REGISTRATION")) {
+                DirectoryNameTow = "REGISTRATION";
+            }
+
+            if (SignedFrom.contains("VISITSIGNED") || SignedFrom.contains("VISIT")) {
+                DirectoryNameTow = "VISIT";
+            }
+
+            if (SignedFrom.contains("EDITSIGNED") || SignedFrom.contains("EDIT")) {
+                DirectoryNameTow = "EDIT";
+            }
+
+
+            String filename = FirstNameNoSpaces + "_" + PatientRegId + "_" + found + "_" + SignedFrom + ".pdf";
+            final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/" + DirectoryName + "/" + DirectoryNameTow + "/" + filename;
+            final OutputStream fos = new FileOutputStream(new File(outputFilePath));
+            final PdfReader pdfReader = new PdfReader(inputFilePath);
+            final PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+            pageCount = pdfReader.getNumberOfPages();
+//            final GenerateBarCode barCode = new GenerateBarCode();
+//            final String BarCodeFilePath = barCode.GetBarCode(request, out, conn, servletContext, UserId, Database, ClientId, MRN);
+//            final Image image = Image.getInstance(BarCodeFilePath);
+//            image.scaleAbsolute(150.0f, 30.0f);
+            // loop on all the PDF pages
+            // i is the pdfPageNumber
+            for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
+
+                if (i == 1) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+
+                    /////////////////////////////////////Patient Information//////////////////////////////////////////////////
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(80, 700); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date "); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 655); // set x and y co-ordinates
+                    pdfContentByte.showText(LastName);//"Last Name"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(185, 655); // set x and y co-ordinates
+                    pdfContentByte.showText(FirstName);//"First Name"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(310, 655); // set x and y co-ordinates
+                    pdfContentByte.showText(MiddleInitial);//"Middle"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(355, 668); // set x and y co-ordinates
+                    pdfContentByte.showText("Title: ");//"Title"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 655); // set x and y co-ordinates
+                    pdfContentByte.showText(Title);//"Title"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(450, 655); // set x and y co-ordinates
+                    pdfContentByte.showText(MaritalStatus);//"Marital Status"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(60, 620); // set x and y co-ordinates
+                    pdfContentByte.showText(SSN);//"SSN"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 620); // set x and y co-ordinates
+                    pdfContentByte.showText(PhNumber);//"PhNumber"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(365, 620); // set x and y co-ordinates
+                    pdfContentByte.showText(DOB);//"BirthDate"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(480, 620); // set x and y co-ordinates
+                    pdfContentByte.showText(gender);//"Sex"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 590); // set x and y co-ordinates
+                    pdfContentByte.showText(Address);//"Address"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 590); // set x and y co-ordinates
+                    pdfContentByte.showText(CityStateZip);//"City/State/Zip"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(420, 590); // set x and y co-ordinates
+                    pdfContentByte.showText(Email);//"Email"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 555); // set x and y co-ordinates
+                    pdfContentByte.showText(Employer);//"Employer"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 555); // set x and y co-ordinates
+                    pdfContentByte.showText(EmployerPhone);//"Employer Ph"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(375, 555); // set x and y co-ordinates
+                    pdfContentByte.showText(EmployerAddress);//"Employer Address"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 525); // set x and y co-ordinates
+                    pdfContentByte.showText(Physician);//"PCP"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 495); // set x and y co-ordinates
+                    pdfContentByte.showText(HearAboutUsString);//"Heard about us1"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 485); // set x and y co-ordinates
+                    pdfContentByte.showText(HearAboutUsString2);//"Heard about us2"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 425); // set x and y co-ordinates
+                    pdfContentByte.showText(PriInsuranceName);//"Primary Insurance"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(PriInsurerName);//"Subscriber’s Last Name"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(325, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(PrimarySSN);//"Subscriber’s Social Security"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460, 400); // set x and y co-ordinates
+                    pdfContentByte.showText(PrimaryDOB);//"Subscriber’s Birth Date:"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 372); // set x and y co-ordinates
+                    pdfContentByte.showText(MemId);//"Member Id Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 372); // set x and y co-ordinates
+                    pdfContentByte.showText(GrpNumber);//"Group Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(380, 372); // set x and y co-ordinates
+                    pdfContentByte.showText(PatientRelationtoPrimary);//"Patient’s relationship"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 350); // set x and y co-ordinates
+                    pdfContentByte.showText(SecondryInsurance);//"Secondary Insurance"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 320); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberName);//"Subscriber’s Last Name"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460, 320); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberDOB);//"Subscriber’s Birth Date:"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 292); // set x and y co-ordinates
+                    pdfContentByte.showText(MemberID_2);//"Member Id Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(240, 292); // set x and y co-ordinates
+                    pdfContentByte.showText(GroupNumber_2);//"Group Number"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(380, 292); // set x and y co-ordinates
+                    pdfContentByte.showText(PatientRelationshiptoSecondry);//"Patient’s relationship"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(50, 105); // set x and y co-ordinates
+                    pdfContentByte.showText(NextofKinName);//"Name of Relative"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(290, 105); // set x and y co-ordinates
+                    pdfContentByte.showText(RelationToPatientER);//"Relationship"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(410, 105); // set x and y co-ordinates
+                    pdfContentByte.showText(PhoneNumberER);//"Home Phone"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(520, 105); // set x and y co-ordinates
+                    pdfContentByte.showText(LeaveMessageERString);//"Leave Msg"); // add the text
+                    pdfContentByte.endText();
+                }
+
+                if (i == 2) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(510, 115); // set x and y co-ordinates
+                    pdfContentByte.showText(FirstName);//"Patient’s Initial"); // add the text
+                    pdfContentByte.endText();
+                }
+
+                if (i == 3) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(70, 170);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(80, 120); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(390, 120); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(440, 90); // set x and y co-ordinates
+                    pdfContentByte.showText(PatientRelationtoPrimary);//"Relationship"); // add the text
+                    pdfContentByte.endText();
+
+                }
+
+                if (i == 4) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(155, 540); // set x and y co-ordinates
+                    pdfContentByte.showText(SecondryInsurance);//"Secondary health insurance"); // add the text
+                    pdfContentByte.endText();
+
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(145, 505); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberName);//"Subscriber Name"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(460, 505); // set x and y co-ordinates
+                    pdfContentByte.showText(SubscriberDOB);//"DOB"); // add the text
+                    pdfContentByte.endText();
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(145, 480); // set x and y co-ordinates
+                    pdfContentByte.showText(MemberID_2);//"Member ID"); // add the text
+                    pdfContentByte.endText();
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(145, 450); // set x and y co-ordinates
+                    pdfContentByte.showText(GroupNumber_2);//"Group No"); // add the text
+                    pdfContentByte.endText();
+
+
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(180, 225);
+                        pdfContentByte.addImage(SignImages);
+                    }
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(435, 225); // set x and y co-ordinates
+                    pdfContentByte.showText(Date);//"Date"); // add the text
+                    pdfContentByte.endText();
+
+
+                }
+
+                if (i == 5) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+
+                    pdfContentByte.beginText();
+                    pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
+                    pdfContentByte.setColorFill(BaseColor.BLACK);
+                    pdfContentByte.setTextMatrix(80, 370); // set x and y co-ordinates
+                    pdfContentByte.showText(FirstName + " " + MiddleInitial + " " + LastName);//"Patient Name"); // add the text
+                    pdfContentByte.endText();
+
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(120, 300);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                }
+
+                if (i == 6) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150, 140);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                }
+
+                if (i == 7) {
+                    PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
+                    if (SignImages != null) {
+                        SignImages.setAbsolutePosition(150, 185);
+                        pdfContentByte.addImage(SignImages);
+                    }
+                }
+
+            }
+            pdfStamper.close();
+            pdfReader.close();
+//        final File pdfFile = new File(outputFilePath);
+//        response.setContentType("application/pdf");
+//        response.addHeader("Content-Disposition", "inline; filename=" + FirstNameNoSpaces + LastName + ID + "_" + DateTime + ".pdf");
+//        response.setContentLength((int) pdfFile.length());
+//        final FileInputStream fileInputStream = new FileInputStream(pdfFile);
+//        final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+//        int bytes;
+//        while ((bytes = fileInputStream.read()) != -1) {
+//            responseOutputStream.write(bytes);
+//        }
+            PreparedStatement MainReceipt = conn.prepareStatement(
+                    "INSERT INTO " + Database + ".BundleHistory (MRN ,PatientRegId ,BundleName ,CreatedDate,PgCount,VisitIndex )" +
+                            " VALUES (? ,? ,? ,now(),?,?) ");
+            MainReceipt.setString(1, MRN);
+            MainReceipt.setInt(2, ID);
+            MainReceipt.setString(3, filename);
+            MainReceipt.setInt(4, pageCount);
+            MainReceipt.setInt(5, VisitIndex);
+            MainReceipt.executeUpdate();
+            MainReceipt.close();
+            return pageCount + "~" + outputFilePath + "~" + filename;//FirstNameNoSpaces + "_" + ID + "_" + DateTime + ".pdf";
+        } catch (Exception e) {
+//            out.println(e.getMessage());
+            System.out.println(e.getMessage());
+            String str = "";
+            for (int j = 0; j < e.getStackTrace().length; ++j) {
+                str = str + e.getStackTrace()[j] + "<br>";
+            }
+            System.out.println(str);
+        }
+        return "";
+
     }
 
 }

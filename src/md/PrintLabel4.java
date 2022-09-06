@@ -22,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
-import java.time.Period;
 
 @SuppressWarnings("Duplicates")
 public class PrintLabel4 extends HttpServlet {
@@ -37,11 +36,6 @@ public class PrintLabel4 extends HttpServlet {
 
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         this.HandleRequest(request, response);
-    }
-
-    public static int getAge(LocalDate dob) {
-        LocalDate curDate = LocalDate.now();
-        return Period.between(dob, curDate).getYears();
     }
 
     public void HandleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
@@ -99,11 +93,12 @@ public class PrintLabel4 extends HttpServlet {
                 GETINPUTVictoria(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex);
             } else if (ActionID.compareTo("GETINPUT_frontline") == 0) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Print Labels Option ", "Click on Print Lable Option from View Patients Tab for Victoria", FacilityIndex);
-                GETINPUT_frontline(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex);
+                GETINPUT_frontline(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex,helper);
             } else if (ActionID.compareTo("GETINPUT_dynamo1") == 0) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Print Labels Option ", "Click on Print Lable Option from View Patients Tab for Victoria", FacilityIndex);
                 GETINPUT_dynamo1(request, response, out, conn, DatabaseName, context, UserId, FacilityIndex, DirectoryName);
             }
+
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
             out.flush();
@@ -161,17 +156,19 @@ public class PrintLabel4 extends HttpServlet {
                 DirectoryName = "Sublime";
             }
 
+            System.out.println("in the getinput ");
             Query = "SELECT a.ID, a.ClientIndex, a.FirstName, a.LastName, a.MiddleInitial, " +
                     "IFNULL(DATE_FORMAT(a.DOB,'%m/%d/%Y'),''), IFNULL(a.Age,''), a.Gender, a.MRN, " +
                     "IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'),DATE_FORMAT(a.CreatedDate,'%m/%d/%Y'))," +
-                    "date_format(now(),'%Y%m%d%H%i%s'), IFNULL(a.DoctorsName, '-'),IFNULL(DATE_FORMAT(a.DOB,'%Y-%m-%d'),'') ," +
-                    "IFNULL(a.ReasonVisit,''),IFNULL(a.SelfPayChk,9),IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'-')," +
-                    "IFNULL(b.OtherInsuranceName,'-'),IFNULL(b.PriInsuranceName,'-') " +
+                    "date_format(now(),'%Y%m%d%H%i%s'), IFNULL(a.DoctorsName, '-'),IFNULL(DATE_FORMAT(a.DOB,'%Y-%m-%d'),'') ,IFNULL(a.ReasonVisit,''),IFNULL(a.SelfPayChk,9),IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'-'),IFNULL(b.OtherInsuranceName,'-'),IFNULL(b.PriInsuranceName,'-') " +
                     "FROM   " + Database + ".PatientReg a " +
-                    "LEFT JOIN " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId " +
-                    "LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.id  where a.ID= '" + ID + "'";
+                    "LEFT JOIN " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.id  where a.ID= '" + ID + "'";
+
+            System.out.println("in the getinput Query" + Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
+
+            System.out.println("in the getinput Query" + Query);
             while (rset.next()) {
                 ClientIndex = rset.getString(2);
                 FirstName = rset.getString(3);
@@ -200,8 +197,9 @@ public class PrintLabel4 extends HttpServlet {
             rset.close();
             stmt.close();
 
+
             if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
+                Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
             }
 
             Query = "Select name,DirectoryName from oe.clients where Id = " + ClientIndex;
@@ -215,7 +213,7 @@ public class PrintLabel4 extends HttpServlet {
             stmt.close();
 
             if (!DoctorsId.equals("-")) {
-                Query = "Select CONCAT( DoctorsLastName, ',',DoctorsFirstName) from " + Database + ".DoctorsList where Id = " + DoctorsId;
+                Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorsId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
@@ -270,7 +268,7 @@ public class PrintLabel4 extends HttpServlet {
                     else if (OtherInsuranceName.length() > 20)
                         OtherInsuranceName = OtherInsuranceName.substring(0, 20);
                     else
-                        OtherInsuranceName = OtherInsuranceName.substring(0, OtherInsuranceName.length());
+                        OtherInsuranceName = OtherInsuranceName;
                 }
                 if (InsuranceName.equals("-") == false) {
 
@@ -279,7 +277,7 @@ public class PrintLabel4 extends HttpServlet {
                     else if (InsuranceName.length() > 20)
                         InsuranceName = InsuranceName.substring(0, 20);
                     else
-                        InsuranceName = InsuranceName.substring(0, InsuranceName.length());
+                        InsuranceName = InsuranceName;
                 }
             }
         } catch (Exception ex3) {
@@ -312,18 +310,11 @@ public class PrintLabel4 extends HttpServlet {
                         }
 
 
-                        if (InsuranceName.equals("-") == false) {
-
-                            if (InsuranceName.length() > 30)
-                                InsuranceName = InsuranceName.substring(0, 30);
-                            else if (InsuranceName.length() > 20)
-                                InsuranceName = InsuranceName.substring(0, 20);
-                            else
-                                InsuranceName = InsuranceName.substring(0, InsuranceName.length());
-                        }
-
-
                         if (ClientId == 41 || ClientId == 42 || ClientId == 43) {
+
+
+                            System.out.println("in the Lifesaver");
+
 
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
@@ -376,6 +367,7 @@ public class PrintLabel4 extends HttpServlet {
                                         pdfContentByte.showText("INS: " + OtherInsuranceName + "");
                                     } else {
                                         pdfContentByte.showText("INS: " + OtherInsuranceName + "...");
+                                        System.out.println("\n\nINS: " + OtherInsuranceName + "...");
                                     }
                                     break;
 
@@ -384,6 +376,7 @@ public class PrintLabel4 extends HttpServlet {
                                         pdfContentByte.showText("INS: " + InsuranceName + "");
                                     } else {
                                         pdfContentByte.showText("INS: " + InsuranceName + "...");
+                                        System.out.println("\n\nINS: " + InsuranceName + "...");
                                     }
                                     break;
                             }
@@ -961,6 +954,8 @@ public class PrintLabel4 extends HttpServlet {
 
 
                         } else {
+
+                            System.out.println("out of  the Lifesaver");
                             pdfContentByte.beginText();
                             pdfContentByte.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 9.0f);
                             pdfContentByte.setColorFill(BaseColor.BLACK);
@@ -1768,7 +1763,7 @@ public class PrintLabel4 extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=" + MRN + "_" + DateTime + ".pdf");
             response.setContentLength((int) pdfFile.length());
             FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -1822,7 +1817,6 @@ public class PrintLabel4 extends HttpServlet {
         String MRN = null;
         String CreatedDate = null;
         String DirectoryName = "";
-        String DOBForAge = "";
         try {
             if (ClientId == 8) {
                 DirectoryName = "Orange";
@@ -1837,8 +1831,7 @@ public class PrintLabel4 extends HttpServlet {
             }
             Query = "SELECT ID, ClientIndex, FirstName, LastName, MiddleInitial, " +
                     "DATE_FORMAT(DOB,'%m/%d/%Y'), Age, Gender, MRN, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
-                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-')," +
-                    "IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'')  " +
+                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-') " +
                     "FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -1854,7 +1847,6 @@ public class PrintLabel4 extends HttpServlet {
                 CreatedDate = rset.getString(10);
                 DateTime = rset.getString(11);
                 DoctorsId = rset.getString(12);
-                DOBForAge = rset.getString(13);
             }
             rset.close();
             stmt.close();
@@ -1867,7 +1859,7 @@ public class PrintLabel4 extends HttpServlet {
             rset.close();
             stmt.close();
             if (!DoctorsId.equals("-")) {
-                Query = "Select CONCAT(DoctorsLastName, ',' , DoctorsFirstName) " +
+                Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) " +
                         "from " + Database + ".DoctorsList where Id = " + DoctorsId;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -1880,10 +1872,6 @@ public class PrintLabel4 extends HttpServlet {
         } catch (Exception ex3) {
         }
         try {
-            if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
-            }
-
             //final String inputFilePath = "/sftpdrive/opt/apache-tomcat-7.0.65/webapps/oe/TemplatePdf/label01_Victoria.pdf";
             final String outputFilePath = "/sftpdrive/AdmissionBundlePdf/Labels/" + DirectoryName + "/" + MRN + LastName + ID + "_" + DateTime + ".pdf";
             final OutputStream fos = new FileOutputStream(new File(outputFilePath));
@@ -2261,7 +2249,7 @@ public class PrintLabel4 extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=" + MRN + "_" + DateTime + ".pdf");
             response.setContentLength((int) pdfFile.length());
             final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            final OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -2284,7 +2272,7 @@ public class PrintLabel4 extends HttpServlet {
         }
     }
 
-    private void GETINPUT_frontline(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId) {
+    private void GETINPUT_frontline(HttpServletRequest request, HttpServletResponse response, PrintWriter out, Connection conn, String Database, ServletContext servletContext, String UserId, int ClientId, UtilityHelper helper) {
         final String ID = request.getParameter("ID");
         Statement stmt = null;
         ResultSet rset = null;
@@ -2298,12 +2286,12 @@ public class PrintLabel4 extends HttpServlet {
         String FirstName = null;
         String LastName = null;
         String DOB = null;
+        String DOBForAge = null;
         String Age = null;
         String Gender = null;
         String MRN = null;
         String CreatedDate = null;
         String DirectoryName = "";
-        String DOBForAge = "";
         try {
             if (ClientId == 8) {
                 DirectoryName = "Orange";
@@ -2318,9 +2306,7 @@ public class PrintLabel4 extends HttpServlet {
             }
             Query = "SELECT ID, ClientIndex, FirstName, LastName, MiddleInitial, IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'),''), " +
                     "IFNULL(Age,''), Gender, MRN, IFNULL(DATE_FORMAT(DateofService,'%m/%d/%Y %T')," +
-                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), " +
-                    "IFNULL(DoctorsName, '-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') " +
-                    "FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
+                    "DATE_FORMAT(CreatedDate,'%m/%d/%Y %T')),date_format(now(),'%Y%m%d%H%i%s'), IFNULL(DoctorsName, '-'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') FROM   " + Database + ".PatientReg where ID= '" + ID + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
@@ -2339,6 +2325,11 @@ public class PrintLabel4 extends HttpServlet {
             }
             rset.close();
             stmt.close();
+
+            if (!DOB.equals("")) {
+                Age = String.valueOf(helper.getAge(LocalDate.parse(DOBForAge)));
+            }
+
             Query = "Select name from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -2358,10 +2349,6 @@ public class PrintLabel4 extends HttpServlet {
         } catch (Exception ex3) {
         }
         try {
-            if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
-            }
-
             //String inputFilePath = "/sftpdrive/opt/apache-tomcat-8.5.61/webapps/oe/TemplatePdf/label01.pdf";
             String outputFilePath = "/sftpdrive/AdmissionBundlePdf/Labels/" + DirectoryName + "/" + MRN + LastName + ID + "_" + DateTime + ".pdf";
             OutputStream fos = new FileOutputStream(new File(outputFilePath));
@@ -2724,7 +2711,7 @@ public class PrintLabel4 extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=" + MRN + "_" + DateTime + ".pdf");
             response.setContentLength((int) pdfFile.length());
             FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -2870,7 +2857,7 @@ public class PrintLabel4 extends HttpServlet {
             response.addHeader("Content-Disposition", "inline; filename=Lables_" + MRN + "_" + DateTime + ".pdf");
             response.setContentLength((int) pdfFile.length());
             final FileInputStream fileInputStream = new FileInputStream(pdfFile);
-            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            final OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -2907,7 +2894,6 @@ public class PrintLabel4 extends HttpServlet {
         String ReasonVisit = "";
         String InsuranceName = "";
         String VisitNumber = "";
-        String DOBForAge = "";
         try {
 //            if (ClientId == 8) {
 //                DirectoryName = "Orange";
@@ -2928,19 +2914,17 @@ public class PrintLabel4 extends HttpServlet {
 //            		+ " IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'') FROM   " + Database + ".PatientReg a "
 //            		+ "INNER JOIN \"+Database + \".InsuranceInfo b ON a.ID = b.PatientRegId INNER JOIN \"+Database + \".ProfessionalPayers c "
 //            		+ "ON b.PriInsuranceName = c.Id where a.ID= '" + ID + "'";
-            Query = "SELECT IFNULL(a.ID,''),IFNULL(a.ClientIndex,''),IFNULL(a.FirstName,''),IFNULL(a.LastName,'') ," +
-                    "IFNULL(a.MiddleInitial,'') , DATE_FORMAT(a.DOB,'%m/%d/%Y'),IFNULL( a.Age,'') ,\r\n" +
-                    "IFNULL(  a.Gender,'')   ,IFNULL( a.MRN,''), IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'), \r\n" +
-                    "DATE_FORMAT(a.CreatedDate,'%m/%d/%Y')),date_format(now(),'%Y%m%d%H%i%s'),\r\n" +
-                    "IFNULL(a.DoctorsName, ' '),IFNULL(a.SelfPayChk,9),IFNULL(a.ReasonVisit,''),\r\n" +
-                    "IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),''),IFNULL(DATE_FORMAT(a.DOB,'%Y-%m-%d'),'') " +
-                    " FROM " + Database + ".PatientReg a \r\n" +
-                    " LEFT JOIN  " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId " +
-                    " LEFT JOIN " + Database + ".ProfessionalPayers c ON b.PriInsuranceName = c.Id " +
-                    " where a.ID= '" + ID + "'";
+            Query = "SELECT IFNULL(a.ID,''),IFNULL(a.ClientIndex,''),IFNULL(a.FirstName,''),IFNULL(a.LastName,'') ,IFNULL(a.MiddleInitial,'') , DATE_FORMAT(a.DOB,'%m/%d/%Y'),IFNULL( a.Age,'') ,\r\n"
+                    + "         IFNULL(  a.Gender,'')   ,IFNULL( a.MRN,''), IFNULL(DATE_FORMAT(a.DateofService,'%m/%d/%Y'), \r\n"
+                    + "            		DATE_FORMAT(a.CreatedDate,'%m/%d/%Y')),date_format(now(),'%Y%m%d%H%i%s'),\r\n"
+                    + "            		 IFNULL(a.DoctorsName, ' '),IFNULL(a.SelfPayChk,9),IFNULL(a.ReasonVisit,''),\r\n"
+                    + "            	IFNULL(LTRIM(rtrim(REPLACE(c.PayerName,'Servicing States','') )),'') FROM   " + Database + ".PatientReg a \r\n"
+                    + "            		LEFT JOIN  " + Database + ".InsuranceInfo b ON a.ID = b.PatientRegId LEFT JOIN " + Database + ".ProfessionalPayers c \r\n"
+                    + "            		ON b.PriInsuranceName = c.Id where a.ID= '" + ID + "'";
+
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            while (rset.next()) {
                 ClientIndex = rset.getString(2);
                 FirstName = rset.getString(3);
                 LastName = rset.getString(4);
@@ -2955,25 +2939,21 @@ public class PrintLabel4 extends HttpServlet {
                 SelfPayChk = rset.getInt(13);
                 ReasonVisit = rset.getString(14);
                 InsuranceName = rset.getString(15);
-                DOBForAge = rset.getString(16);
             }
             rset.close();
             stmt.close();
-
-/*            Query = "Select name from oe.clients where Id = " + ClientIndex;
+            Query = "Select name from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            while (rset.next()) {
                 ClientName = rset.getString(1);
             }
             rset.close();
-            stmt.close();*/
-
-            Query = "Select CONCAT(DoctorsLastName , ', ', DoctorsFirstName) " +
-                    "from " + Database + ".DoctorsList where Id = " + DoctorsId;
+            stmt.close();
+            Query = "Select CONCAT(DoctorsFirstName, ' ', DoctorsLastName) from " + Database + ".DoctorsList where Id = " + DoctorsId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            while (rset.next()) {
                 DoctorsName = rset.getString(1);
             }
             rset.close();
@@ -3017,9 +2997,6 @@ public class PrintLabel4 extends HttpServlet {
         } catch (Exception ex3) {
         }
         try {
-            if (!DOB.equals("")) {
-                Age = String.valueOf(getAge(LocalDate.parse(DOBForAge)));
-            }
 
             final String inputFilePath = "/sftpdrive/AdmissionBundlePdf/Labels/" + DirectoryName + "/" + MRN + LastName + ID + "_" + ".pdf";
 
@@ -3097,7 +3074,7 @@ public class PrintLabel4 extends HttpServlet {
             final FileInputStream fileInputStream = new FileInputStream(pdfFile);
 
 
-            final OutputStream responseOutputStream = (OutputStream) response.getOutputStream();
+            final OutputStream responseOutputStream = response.getOutputStream();
             int bytes;
             while ((bytes = fileInputStream.read()) != -1) {
                 responseOutputStream.write(bytes);
@@ -3110,4 +3087,6 @@ public class PrintLabel4 extends HttpServlet {
             System.out.println(str);
         }
     }
+
+
 }

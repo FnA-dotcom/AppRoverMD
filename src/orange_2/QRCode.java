@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class QRCode {
 
-    public static void main(String[] args) throws WriterException, IOException {
+    public static void main(String[] args) throws WriterException, IOException{
         String qrCodeData = "123456789012";
         String filePath = "d://QRCode.png";
         String charset = "UTF-8"; // or "ISO-8859-1"

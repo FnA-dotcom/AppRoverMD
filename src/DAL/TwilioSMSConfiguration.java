@@ -80,9 +80,8 @@ public class TwilioSMSConfiguration {
         String msg = "";
         //int maxSMSIndex = 0;
         try {
-//            System.out.println(" UserIdx --> " + UserIdx);
-            String AuthFactor[] = getTwilioAuthorization(req, conn, context);
-            String SenderDetails[] = getSenderDetails(req, conn, context, UserIdx, facilityIdx);
+            String[] AuthFactor = getTwilioAuthorization(req, conn, context);
+            String[] SenderDetails = getSenderDetails(req, conn, context, UserIdx, facilityIdx);
 
             System.out.println("Sending Message....");
 //            System.out.println(" FROM --> " + SenderDetails[0]);

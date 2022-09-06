@@ -10,26 +10,28 @@ import java.util.Map;
 
 public class QRCode {
 
-    public static void main(String[] args) throws WriterException, IOException {
-        String qrCodeData = "123456789012";
-        String filePath = "d://QRCode.png";
-        String charset = "UTF-8"; // or "ISO-8859-1"
-        Map hintMap = new HashMap();
-        //hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
-        hintMap.put(EncodeHintType.CHARACTER_SET, "utf-8");
-        hintMap.put(EncodeHintType.CHARACTER_SET, 0);
+	public static void main(String[] args) throws WriterException, IOException{
+		String qrCodeData = "123456789012";
+		String filePath = "d://QRCode.png";
+		String charset = "UTF-8"; // or "ISO-8859-1"
+		Map hintMap = new HashMap();
+		//hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+		hintMap.put(EncodeHintType.CHARACTER_SET, "utf-8");
+		hintMap.put(EncodeHintType.CHARACTER_SET,0);
 //		createQRCode(qrCodeData, filePath, charset, hintMap, 100, 200);
 
-        //	generateEAN13BarcodeImage();
-        System.out.println("QR Code image created successfully!");
+	//	generateEAN13BarcodeImage();
+		System.out.println("QR Code image created successfully!");
 
 //		System.out.println("Data read from QR Code: "+ readQRCode(filePath, charset, hintMap));
 
 
-    }
 
-    // QRCode.genbarcode("/opt/logs/barcode/"+mrn,mrn);
-    public static String genbarcode(String filePath, String qrCodeData, int x, int y) {
+	}
+
+	// QRCode.genbarcode("/opt/logs/barcode/"+mrn,mrn);
+	public static String genbarcode(String filePath,String qrCodeData, int x, int y)
+	{
 //		//String qrCodeData = "123456789012";
 //		//String filePath = "d://QRCode.png";
 //		String charset = "UTF-8"; // or "ISO-8859-1"
@@ -52,8 +54,8 @@ public class QRCode {
 //			e.printStackTrace();
 //			return done;
 //		}
-        return "";
-    }
+		return "";
+	}
 //	public static BufferedImage generateEAN13BarcodeImage(String barcodeText) throws Exception {
 //	    EAN13Writer barcodeWriter = new EAN13Writer();
 //	    BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.EAN_13, 300, 150);

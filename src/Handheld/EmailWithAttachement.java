@@ -51,7 +51,7 @@ public class EmailWithAttachement {
 
 
         } catch (Exception Ex) {
-            SendEmailWithAttachmentNN("Main Section", "Error In Transaction report", "Message Body", Ex, "Transactionreport", "TransactionPassword");
+           SendEmailWithAttachmentNN("Main Section", "Error In Transaction report", "Message Body", Ex, "Transactionreport", "TransactionPassword");
 
         }
     }

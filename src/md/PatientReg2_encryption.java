@@ -18,13 +18,17 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.*;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Calendar;
 import java.util.HashMap;
 
 @SuppressWarnings("Duplicates")
-public class PatientReg2_20OCT2021 extends HttpServlet {
-    //private PreparedStatement pStmt = null;
+public class PatientReg2_encryption extends HttpServlet {
+    private PreparedStatement pStmt = null;
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -158,8 +162,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             Parser.SetField("Year", String.valueOf(Year));
             Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
             if (ClientIndex == 9) {
-                //Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Forms/PatientRegFormVictoria_2.html");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PatientRegFormVictoria_2.html");
+                Parser.GenerateHtml(out, String.valueOf(String.valueOf(Services.GetHtmlPath(this.getServletContext()))) + "Forms/PatientRegFormVictoria_2.html");
             } else if (ClientIndex == 28) {
                 Parser.GenerateHtml(out, String.valueOf(String.valueOf(Services.GetHtmlPath(this.getServletContext()))) + "Forms/PatientRegFormERDallas.html");
             }
@@ -347,7 +350,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
         String WCPAdjudicatorFaxPhoneNumber = null;
         String MotorVehicleAccidentChk = "0";
         String AutoInsuranceInformationChk = "0";
-        String AIIDateofAccident = "";
+        String AIIDateofAccident = null;
         String AIIAutoClaim = null;
         String AIIAccidentLocationAddress = null;
         String AIIAccidentLocationAddress2 = null;
@@ -452,16 +455,6 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
         String RecInitial = "";
         int VisitId = 0;
         try {
-            Query = "Select Id, dbname from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                ClientIndex = rset.getInt(1);
-                Database = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
-
             facilityName = helper.getFacilityName(request, conn, servletContext, ClientIndex);
             if (request.getParameter("Title") == null) {
                 Title = "Mr.";
@@ -517,33 +510,6 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             } else {
                 gender = request.getParameter("gender").trim();
             }
-
-
-            int PatientFound = 0;
-            String FoundMRN = "";
-            Query = " Select COUNT(*), IFNULL(MRN,0) from " + Database + ".PatientReg  " +
-                    "where Status = 0 and ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstName.trim() + "')))  and " +
-                    "ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastName.trim() + "'))) and DOB = '" + DOB + "'";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                PatientFound = rset.getInt(1);
-                FoundMRN = rset.getString(2);
-            }
-            rset.close();
-            stmt.close();
-
-            if (PatientFound > 0) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("Title", "Patient Already Found. MRN: " + FoundMRN);
-                Parser.SetField("Text", "Please Proceed to Front Desk with the MRN.");
-                Parser.SetField("FormName", "PatientReg2");
-                Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientId + "");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/Warning.html");
-                return;
-            }
-
-
             if (request.getParameter("Email") == null) {
                 Email = "";
             } else {
@@ -848,7 +814,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     WCPDateofInjury = "0000-00-00";
                 } else {
                     WCPDateofInjury = request.getParameter("WCPDateofInjury").trim();
-//                    WCPDateofInjury = String.valueOf(String.valueOf(WCPDateofInjury.substring(6, 10))) + "-" + WCPDateofInjury.substring(0, 2) + "-" + WCPDateofInjury.substring(3, 5);
+                    WCPDateofInjury = String.valueOf(String.valueOf(WCPDateofInjury.substring(6, 10))) + "-" + WCPDateofInjury.substring(0, 2) + "-" + WCPDateofInjury.substring(3, 5);
                 }
                 if (request.getParameter("WCPCaseNo") == null) {
                     WCPCaseNo = "";
@@ -1047,7 +1013,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                         AIIDateofAccident = "0000-00-00";
                     } else {
                         AIIDateofAccident = request.getParameter("AIIDateofAccident").trim();
-//                        AIIDateofAccident = String.valueOf(String.valueOf(AIIDateofAccident.substring(6, 10))) + "-" + AIIDateofAccident.substring(0, 2) + "-" + AIIDateofAccident.substring(3, 5);
+                        AIIDateofAccident = String.valueOf(String.valueOf(AIIDateofAccident.substring(6, 10))) + "-" + AIIDateofAccident.substring(0, 2) + "-" + AIIDateofAccident.substring(3, 5);
                     }
                     if (request.getParameter("AIIAutoClaim") == null) {
                         AIIAutoClaim = "";
@@ -1652,7 +1618,15 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             rset.close();
             stmt.close();
             try {
-
+                Query = "Select Id, dbname from oe.clients where ltrim(rtrim(UPPER(name))) = ltrim(rtrim(UPPER('" + ClientId + "')))";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    ClientIndex = rset.getInt(1);
+                    Database = rset.getString(2);
+                }
+                rset.close();
+                stmt.close();
                 Query = "Select MRN from " + Database + ".PatientReg order by ID desc limit 1 ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -1789,7 +1763,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                 Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
                 Parser.SetField("Message", "MES#004");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-                //return;
+                return;
             }
 
             try {
@@ -1839,11 +1813,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                 MainReceipt.setInt(24, Integer.parseInt(MotorVehicleAccidentChk));
                 MainReceipt.setInt(25, Integer.parseInt(HealthInsuranceChk));
                 MainReceipt.setInt(26, Integer.parseInt(SympChkCOVID));
-                //MainReceipt.setString(27, DateSympOnset);
-                if (!DateSympOnset.equals(""))
-                    MainReceipt.setString(27, DateSympOnset);
-                else
-                    MainReceipt.setNull(27, Types.DATE);
+                MainReceipt.setString(27, DateSympOnset);
                 MainReceipt.setString(28, SympFever);
                 MainReceipt.setString(29, SympCough);
                 MainReceipt.setString(30, SympShortBreath);
@@ -1872,26 +1842,13 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                 Parser.SetField("Message", "MES#005");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
                 Services.DumException("PatientReg2", "SaveDataVictoriaError 4- Insertion PatientReg_Details Table :", request, e, this.getServletContext());
-                //return;
+                return;
             }
             if (WorkersCompPolicyChk.equals("1")) {
                 try {
-                    final PreparedStatement MainReceipt = conn.prepareStatement(
-                            " INSERT INTO " + Database + ".Patient_WorkCompPolicy (PatientRegId,WCPDateofInjury,WCPCaseNo," +
-                                    "WCPGroupNo,WCPMemberId,WCPInjuryRelatedAutoMotorAccident,WCPInjuryRelatedWorkRelated," +
-                                    "WCPInjuryRelatedOtherAccident,WCPInjuryRelatedNoAccident,WCPInjuryOccurVehicle," +
-                                    "WCPInjuryOccurWork,WCPInjuryOccurHome,WCPInjuryOccurOther,WCPInjuryDescription," +
-                                    "WCPHRFirstName,WCPHRLastName,WCPHRPhoneNumber,WCPHRAddress,WCPHRCity,WCPHRState," +
-                                    "WCPHRZipCode,WCPPlanName,WCPCarrierName,WCPPayerPhoneNumber,WCPCarrierAddress," +
-                                    "WCPCarrierCity,WCPCarrierState,WCPCarrierZipCode,WCPAdjudicatorFirstName," +
-                                    "WCPAdjudicatorLastName,WCPAdjudicatorPhoneNumber,WCPAdjudicatorFaxPhoneNumber,CreatedDate)" +
-                                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Patient_WorkCompPolicy (PatientRegId,WCPDateofInjury,WCPCaseNo,WCPGroupNo,WCPMemberId,WCPInjuryRelatedAutoMotorAccident,WCPInjuryRelatedWorkRelated,WCPInjuryRelatedOtherAccident,WCPInjuryRelatedNoAccident,WCPInjuryOccurVehicle,WCPInjuryOccurWork,WCPInjuryOccurHome,WCPInjuryOccurOther,WCPInjuryDescription,WCPHRFirstName,WCPHRLastName,WCPHRPhoneNumber,WCPHRAddress,WCPHRCity,WCPHRState,WCPHRZipCode,WCPPlanName,WCPCarrierName,WCPPayerPhoneNumber,WCPCarrierAddress,WCPCarrierCity,WCPCarrierState,WCPCarrierZipCode,WCPAdjudicatorFirstName,WCPAdjudicatorLastName,WCPAdjudicatorPhoneNumber,WCPAdjudicatorFaxPhoneNumber,CreatedDate) \n VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                     MainReceipt.setInt(1, PatientRegId);
-                    //MainReceipt.setString(2, WCPDateofInjury);
-                    if (!WCPDateofInjury.equals(""))
-                        MainReceipt.setString(2, WCPDateofInjury);
-                    else
-                        MainReceipt.setNull(2, Types.DATE);
+                    MainReceipt.setString(2, WCPDateofInjury);
                     MainReceipt.setString(3, WCPCaseNo);
                     MainReceipt.setString(4, WCPGroupNo);
                     MainReceipt.setString(5, WCPMemberId);
@@ -1932,35 +1889,17 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
                     Parser.SetField("Message", "MES#006");
                     Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-                    //return;
+                    return;
                 }
             }
             if (MotorVehicleAccidentChk.equals("1")) {
                 try {
-                    final PreparedStatement MainReceipt = conn.prepareStatement(
-                            "INSERT INTO " + Database + ".Patient_AutoInsuranceInfo (PatientRegId,AutoInsuranceInformationChk," +
-                                    "AIIDateofAccident,AIIAutoClaim,AIIAccidentLocationAddress,AIIAccidentLocationCity," +
-                                    "AIIAccidentLocationState,AIIAccidentLocationZipCode,AIIRoleInAccident," +
-                                    "AIITypeOfAutoIOnsurancePolicy,AIIPrefixforReponsibleParty,AIIFirstNameforReponsibleParty," +
-                                    "AIIMiddleNameforReponsibleParty,AIILastNameforReponsibleParty,AIISuffixforReponsibleParty," +
-                                    "AIICarrierResponsibleParty,AIICarrierResponsiblePartyAddress,AIICarrierResponsiblePartyCity," +
-                                    "AIICarrierResponsiblePartyState,AIICarrierResponsiblePartyZipCode," +
-                                    "AIICarrierResponsiblePartyPhoneNumber,AIICarrierResponsiblePartyPolicyNumber," +
-                                    "AIIResponsiblePartyAutoMakeModel,AIIResponsiblePartyLicensePlate," +
-                                    "AIIFirstNameOfYourPolicyHolder,AIILastNameOfYourPolicyHolder," +
-                                    "AIINameAutoInsuranceOfYourVehicle,AIIYourInsuranceAddress,AIIYourInsuranceCity," +
-                                    "AIIYourInsuranceState,AIIYourInsuranceZipCode,AIIYourInsurancePhoneNumber," +
-                                    "AIIYourInsurancePolicyNo,AIIYourLicensePlate,AIIYourCarMakeModelYear,CreatedDate) " +
-                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
+                    final PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".Patient_AutoInsuranceInfo (PatientRegId,AutoInsuranceInformationChk,AIIDateofAccident,AIIAutoClaim,AIIAccidentLocationAddress,AIIAccidentLocationCity,AIIAccidentLocationState,AIIAccidentLocationZipCode,AIIRoleInAccident,AIITypeOfAutoIOnsurancePolicy,AIIPrefixforReponsibleParty,AIIFirstNameforReponsibleParty,AIIMiddleNameforReponsibleParty,AIILastNameforReponsibleParty,AIISuffixforReponsibleParty,AIICarrierResponsibleParty,AIICarrierResponsiblePartyAddress,AIICarrierResponsiblePartyCity,AIICarrierResponsiblePartyState,AIICarrierResponsiblePartyZipCode,AIICarrierResponsiblePartyPhoneNumber,AIICarrierResponsiblePartyPolicyNumber,AIIResponsiblePartyAutoMakeModel,AIIResponsiblePartyLicensePlate,AIIFirstNameOfYourPolicyHolder,AIILastNameOfYourPolicyHolder,AIINameAutoInsuranceOfYourVehicle,AIIYourInsuranceAddress,AIIYourInsuranceCity,AIIYourInsuranceState,AIIYourInsuranceZipCode,AIIYourInsurancePhoneNumber,AIIYourInsurancePolicyNo,AIIYourLicensePlate,AIIYourCarMakeModelYear,CreatedDate) \n VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                     MainReceipt.setInt(1, PatientRegId);
                     MainReceipt.setInt(2, Integer.parseInt(AutoInsuranceInformationChk));
-                    //MainReceipt.setString(3, AIIDateofAccident);
-                    if (!AIIDateofAccident.equals(""))
-                        MainReceipt.setString(3, AIIDateofAccident);
-                    else
-                        MainReceipt.setNull(3, Types.DATE);
+                    MainReceipt.setString(3, AIIDateofAccident);
                     MainReceipt.setString(4, AIIAutoClaim);
-                    MainReceipt.setString(5, AIIAccidentLocationAddress + " " + AIIAccidentLocationAddress2);
+                    MainReceipt.setString(5, String.valueOf(String.valueOf(AIIAccidentLocationAddress)) + " " + AIIAccidentLocationAddress2);
                     MainReceipt.setString(6, AIIAccidentLocationCity);
                     MainReceipt.setString(7, AIIAccidentLocationState);
                     MainReceipt.setString(8, AIIAccidentLocationZipCode);
@@ -1972,7 +1911,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     MainReceipt.setString(14, AIILastNameforReponsibleParty);
                     MainReceipt.setString(15, AIISuffixforReponsibleParty);
                     MainReceipt.setString(16, AIICarrierResponsibleParty);
-                    MainReceipt.setString(17, AIICarrierResponsiblePartyAddress + " " + AIICarrierResponsiblePartyAddress2);
+                    MainReceipt.setString(17, String.valueOf(String.valueOf(AIICarrierResponsiblePartyAddress)) + " " + AIICarrierResponsiblePartyAddress2);
                     MainReceipt.setString(18, AIICarrierResponsiblePartyCity);
                     MainReceipt.setString(19, AIICarrierResponsiblePartyState);
                     MainReceipt.setString(20, AIICarrierResponsiblePartyZipCode);
@@ -2001,7 +1940,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
                     Parser.SetField("Message", "MES#007");
                     Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-//                    return;
+                    return;
                 }
             }
             if (HealthInsuranceChk.equals("1")) {
@@ -2043,7 +1982,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
                     Parser.SetField("Message", "MES#008");
                     Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-//                    return;
+                    return;
                 }
             }
             try {
@@ -2101,7 +2040,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                 Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
                 Parser.SetField("Message", "MES#009");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-//                return;
+                return;
             }
             String PatientName = null;
             Query = "Select CONCAT(Title,' ',FirstName,' ',MiddleInitial,' ',LastName) from " + Database + ".PatientReg where ID = " + PatientRegId;
@@ -2140,8 +2079,8 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             Parser.SetField("ClientId", String.valueOf(ClientId));
             Parser.GenerateHtml(out, String.valueOf(String.valueOf(Services.GetHtmlPath(servletContext))) + "Exception/Message.html");
         } catch (Exception e2) {
-            helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Main Catch ^^" + facilityName + " ##MES#010)", servletContext, e2, "PatientReg2", "SaveDataVictoria", conn);
-            Services.DumException("PatientReg2", "SaveDataVictoria -- " + Query + " ", request, e2, this.getServletContext());
+            helper.SendEmailWithAttachment("Error in PatientReg2 ** (SaveDataVictoria Main Catch ^^" + facilityName + " ##MES#009)", servletContext, e2, "PatientReg2", "SaveDataVictoria", conn);
+            Services.DumException("PatientReg2", "SaveDataVictoria", request, e2, this.getServletContext());
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "PatientReg2");
             Parser.SetField("ActionID", "Victoria_2&ClientId=" + ClientIndex + "");
@@ -2420,7 +2359,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             }
             try {
                 Query = " Select IFNULL(Title,''), IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(MiddleInitial, ''), " +
-                        "IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),''),  IFNULL(Age,''), IFNULL(Gender, ''), IFNULL(Email,''), " +
+                        "IFNULL(DATE_FORMAT(DOB,'%m/%d/%Y'),''),  IFNULL(Age,''), IFNULL(Gender, ''), IFNULL(Email,''), " +
                         "IFNULL(SUBSTRING(PhNumber, 1, 3),''),  IFNULL(SUBSTRING(PhNumber, 4, 10),''), IFNULL(Address,''), " +
                         "IFNULL(City,''), IFNULL(State,''), IFNULL(Country,''), IFNULL(ZipCode,''), IFNULL(SSN,''), " +
                         "IFNULL(Occupation,''), IFNULL(Employer,''), IFNULL(EmpContact, ''), IFNULL(PriCarePhy,''), " +
@@ -2470,7 +2409,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                         " IFNULL(GuarantorEmployerAddress,''), IFNULL(GuarantorEmployerCity,''), IFNULL(GuarantorEmployerState,''),  " +
                         " IFNULL(GuarantorEmployerZipCode, ''), IFNULL(WorkersCompPolicyChk,'0'), IFNULL(MotorVehicleAccidentChk, '0'), " +
                         " IFNULL(HealthInsuranceChk, '0'),  IFNULL(GuarantorEmployerPhNumber,''), IFNULL(Race,''),IFNULL(SympChkCOVID,0), " +
-                        " IFNULL(DATE_FORMAT(DateSympOnset,'%Y-%m-%d'),''), IFNULL(SympFever,'0'), IFNULL(SympCough,'0'), IFNULL(SympShortBreath,'0'), " +
+                        " IFNULL(DATE_FORMAT(DateSympOnset,'%m/%d/%Y'),''), IFNULL(SympFever,'0'), IFNULL(SympCough,'0'), IFNULL(SympShortBreath,'0'), " +
                         " IFNULL(SympFatigue,'0'), IFNULL(SympMuscBodyAches,'0'), IFNULL(SympHeadache,'0'), IFNULL(SympLossTaste,'0'), " +
                         " IFNULL(SympSoreThroat,'0'), IFNULL(SympCongestionRunNos,'0'), IFNULL(SympNauseaVomit,'0'), IFNULL(SympDiarrhea,'0'), " +
                         " IFNULL(SympPerPainChest,'0'), IFNULL(SympNewConfusion,'0'), IFNULL(SympInabWake,'0'), IFNULL(SympOthers,'0'), " +
@@ -2532,7 +2471,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             }
             try {
                 if (WorkersCompPolicyChk.equals("1")) {
-                    Query = " Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%Y-%m-%d'),''), IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''),  IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), IFNULL(WCPInjuryRelatedOtherAccident,''),  IFNULL(WCPInjuryRelatedNoAccident,''), IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''),  IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), IFNULL(WCPHRLastName,''),  IFNULL(SUBSTRING(WCPHRPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPHRPhoneNumber, 4, 10),''), IFNULL(WCPHRAddress,''), IFNULL(WCPHRCity,''),  IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), IFNULL(WCPCarrierName,''),  IFNULL(SUBSTRING(WCPPayerPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPPayerPhoneNumber, 4, 10),''), IFNULL(WCPCarrierAddress,''),  IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), IFNULL(WCPAdjudicatorFirstName,''),  IFNULL(WCPAdjudicatorLastName,''), IFNULL(SUBSTRING(WCPAdjudicatorPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPAdjudicatorPhoneNumber, 4, 10),''),  IFNULL(SUBSTRING(WCPAdjudicatorFaxPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPAdjudicatorFaxPhoneNumber, 4, 10),'')  from " + Database + ".Patient_WorkCompPolicy where PatientRegId = " + PatientRegId + " ";
+                    Query = " Select IFNULL(DATE_FORMAT(WCPDateofInjury,'%m/%d/%Y'),''), IFNULL(WCPCaseNo,''), IFNULL(WCPGroupNo,''), IFNULL(WCPMemberId,''),  IFNULL(WCPInjuryRelatedAutoMotorAccident,''), IFNULL(WCPInjuryRelatedWorkRelated,''), IFNULL(WCPInjuryRelatedOtherAccident,''),  IFNULL(WCPInjuryRelatedNoAccident,''), IFNULL(WCPInjuryOccurVehicle,''), IFNULL(WCPInjuryOccurWork,''), IFNULL(WCPInjuryOccurHome,''),  IFNULL(WCPInjuryOccurOther,''), IFNULL(WCPInjuryDescription,''), IFNULL(WCPHRFirstName,''), IFNULL(WCPHRLastName,''),  IFNULL(SUBSTRING(WCPHRPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPHRPhoneNumber, 4, 10),''), IFNULL(WCPHRAddress,''), IFNULL(WCPHRCity,''),  IFNULL(WCPHRState,''), IFNULL(WCPHRZipCode,''), IFNULL(WCPPlanName,''), IFNULL(WCPCarrierName,''),  IFNULL(SUBSTRING(WCPPayerPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPPayerPhoneNumber, 4, 10),''), IFNULL(WCPCarrierAddress,''),  IFNULL(WCPCarrierCity,''), IFNULL(WCPCarrierState,''), IFNULL(WCPCarrierZipCode,''), IFNULL(WCPAdjudicatorFirstName,''),  IFNULL(WCPAdjudicatorLastName,''), IFNULL(SUBSTRING(WCPAdjudicatorPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPAdjudicatorPhoneNumber, 4, 10),''),  IFNULL(SUBSTRING(WCPAdjudicatorFaxPhoneNumber, 1, 3),''), IFNULL(SUBSTRING(WCPAdjudicatorFaxPhoneNumber, 4, 10),'')  from " + Database + ".Patient_WorkCompPolicy where PatientRegId = " + PatientRegId + " ";
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -2580,7 +2519,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             }
             try {
                 if (MotorVehicleAccidentChk.equals("1")) {
-                    Query = " SELECT IFNULL(AutoInsuranceInformationChk,''), IFNULL(DATE_FORMAT(AIIDateofAccident,'%Y-%m-%d'), ''), IFNULL(AIIAutoClaim,''),  IFNULL(AIIAccidentLocationAddress, ''), IFNULL(AIIAccidentLocationCity, ''), IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''),  IFNULL(AIIRoleInAccident, ''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), IFNULL(AIIPrefixforReponsibleParty, ''), IFNULL(AIIFirstNameforReponsibleParty, ''),  IFNULL(AIIMiddleNameforReponsibleParty, ''), IFNULL(AIILastNameforReponsibleParty, ''), IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''),  IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''),  IFNULL(SUBSTRING(AIICarrierResponsiblePartyPhoneNumber, 1, 3),''),IFNULL(SUBSTRING(AIICarrierResponsiblePartyPhoneNumber, 4, 10),''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''),  IFNULL(AIIResponsiblePartyAutoMakeModel, ''), IFNULL(AIIResponsiblePartyLicensePlate,''), IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder, ''),  IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress, ''), IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''),  IFNULL(AIIYourInsuranceZipCode, ''), IFNULL(SUBSTRING(AIIYourInsurancePhoneNumber, 1, 3),''), IFNULL(SUBSTRING(AIIYourInsurancePhoneNumber, 4, 10),''),  IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'')  from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = " + PatientRegId;
+                    Query = " SELECT IFNULL(AutoInsuranceInformationChk,''), IFNULL(DATE_FORMAT(AIIDateofAccident,'%m/%d/%Y'), ''), IFNULL(AIIAutoClaim,''),  IFNULL(AIIAccidentLocationAddress, ''), IFNULL(AIIAccidentLocationCity, ''), IFNULL(AIIAccidentLocationState,''), IFNULL(AIIAccidentLocationZipCode,''),  IFNULL(AIIRoleInAccident, ''), IFNULL(AIITypeOfAutoIOnsurancePolicy,''), IFNULL(AIIPrefixforReponsibleParty, ''), IFNULL(AIIFirstNameforReponsibleParty, ''),  IFNULL(AIIMiddleNameforReponsibleParty, ''), IFNULL(AIILastNameforReponsibleParty, ''), IFNULL(AIISuffixforReponsibleParty,''), IFNULL(AIICarrierResponsibleParty,''),  IFNULL(AIICarrierResponsiblePartyAddress,''), IFNULL(AIICarrierResponsiblePartyCity,''), IFNULL(AIICarrierResponsiblePartyState,''), IFNULL(AIICarrierResponsiblePartyZipCode,''),  IFNULL(SUBSTRING(AIICarrierResponsiblePartyPhoneNumber, 1, 3),''),IFNULL(SUBSTRING(AIICarrierResponsiblePartyPhoneNumber, 4, 10),''), IFNULL(AIICarrierResponsiblePartyPolicyNumber,''),  IFNULL(AIIResponsiblePartyAutoMakeModel, ''), IFNULL(AIIResponsiblePartyLicensePlate,''), IFNULL(AIIFirstNameOfYourPolicyHolder,''), IFNULL(AIILastNameOfYourPolicyHolder, ''),  IFNULL(AIINameAutoInsuranceOfYourVehicle,''), IFNULL(AIIYourInsuranceAddress, ''), IFNULL(AIIYourInsuranceCity,''), IFNULL(AIIYourInsuranceState,''),  IFNULL(AIIYourInsuranceZipCode, ''), IFNULL(SUBSTRING(AIIYourInsurancePhoneNumber, 1, 3),''), IFNULL(SUBSTRING(AIIYourInsurancePhoneNumber, 4, 10),''),  IFNULL(AIIYourInsurancePolicyNo,''), IFNULL(AIIYourLicensePlate,''), IFNULL(AIIYourCarMakeModelYear,'')  from " + Database + ".Patient_AutoInsuranceInfo where PatientRegId = " + PatientRegId;
                     stmt = conn.createStatement();
                     rset = stmt.executeQuery(Query);
                     if (rset.next()) {
@@ -2733,22 +2672,22 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                 AIIDateofAccident = "";
             }
             if (Title.toUpperCase().equals("MR")) {
-                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required onchange=\"disableGenderOption(this.value);\" >\n<option value=\"\"  disabled >Select Title</option>\n<option value=\"Mr\" selected >Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
+                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required>\n<option value=\"\">Select Title</option>\n<option value=\"Mr\" selected >Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
             } else if (Title.toUpperCase().equals("MISS")) {
-                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required onchange=\"disableGenderOption(this.value);\">\n<option value=\"\"  disabled >Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\" selected >Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
+                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required>\n<option value=\"\">Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\" selected >Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
             } else if (Title.toUpperCase().equals("MRS")) {
-                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required onchange=\"disableGenderOption(this.value);\" >\n<option value=\"\" disabled >Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\" selected >Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
+                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required>\n<option value=\"\">Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\" selected >Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
             } else if (Title.toUpperCase().equals("MS")) {
-                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required onchange=\"disableGenderOption(this.value);\" >\n<option value=\"\"  disabled >Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\" selected >Ms</option>\n</select>");
+                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required>\n<option value=\"\">Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\" selected >Ms</option>\n</select>");
             } else {
-                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required onchange=\"disableGenderOption(this.value);\" >\n<option value=\"\"  disabled >Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
+                TitleBuffer.append("<select class=\"form-control\" id=\"Title\" name=\"Title\" style=\"color:black;\" required>\n<option value=\"\">Select Title</option>\n<option value=\"Mr\">Mr.</option>\n<option value=\"Miss\">Miss</option>\n<option value=\"Mrs\">Mrs</option>\n<option value=\"Ms\">Ms</option>\n</select>");
             }
             if (gender.toUpperCase().equals("MALE")) {
-                GenderBuffer.append("<select class=\"form-control\" id=\"gender\" name=\"gender\" required style=\"color:black;\" required >\n<option value=\"\"  disabled >Select Gender</option>\n<option value=\"male\" selected>Male</option>\n<option value=\"female\"  disabled >Female</option>\n</select>");
+                GenderBuffer.append("<select class=\"form-control\" id=\"gender\" name=\"gender\" required style=\"color:black;\" required >\n<option value=\"\">Select Gender</option>\n<option value=\"male\" selected>Male</option>\n<option value=\"female\">Female</option>\n</select>");
             } else if (gender.toUpperCase().equals("FEMALE")) {
-                GenderBuffer.append("<select class=\"form-control\" id=\"gender\" name=\"gender\" required style=\"color:black;\" required >\n<option value=\"\"  disabled >Select Gender</option>\n<option value=\"male\"  disabled >Male</option>\n<option value=\"female\" selected>Female</option>\n</select>");
+                GenderBuffer.append("<select class=\"form-control\" id=\"gender\" name=\"gender\" required style=\"color:black;\" required >\n<option value=\"\">Select Gender</option>\n<option value=\"male\" >Male</option>\n<option value=\"female\" selected>Female</option>\n</select>");
             } else {
-                GenderBuffer.append("<select class=\"form-control\" id=\"gender\" name=\"gender\" required style=\"color:black;\" required >\n<option value=\"\"  disabled >Select Gender</option>\n<option value=\"male\" >Male</option>\n<option value=\"female\" >Female</option>\n</select>");
+                GenderBuffer.append("<select class=\"form-control\" id=\"gender\" name=\"gender\" required style=\"color:black;\" required >\n<option value=\"\">Select Gender</option>\n<option value=\"male\" >Male</option>\n<option value=\"female\" >Female</option>\n</select>");
             }
             if (MaritalStatus.toUpperCase().equals("SINGLE")) {
                 MaritalStatusBuffer.append("<select class=\"form-control\" id=\"MaritalStatus\" name=\"MaritalStatus\" style=\"color:black;\">\n<option value=\"Single\" selected>Single</option>\n<option value=\"Mar\">Mar</option>\n<option value=\"Div\">Div</option>\n<option value=\"Sep\">Sep</option>\n<option value=\"Wid\">Wid</option>\n</select>");
@@ -3694,7 +3633,6 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
         ResultSet rset = null;
         String Query = "";
         String Database = "";
-        PreparedStatement pStmt = null;
         final String MRN = request.getParameter("MRN").trim();
         final int ClientId = Integer.parseInt(request.getParameter("ClientId").trim());
         final String ExtendedMRN = "0";
@@ -3968,7 +3906,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     DOB = "0000-00-00";
                 } else {
                     DOB = request.getParameter("DOB").trim();
-//                    DOB = String.valueOf(String.valueOf(DOB.substring(6, 10))) + "-" + DOB.substring(0, 2) + "-" + DOB.substring(3, 5);
+                    DOB = String.valueOf(String.valueOf(DOB.substring(6, 10))) + "-" + DOB.substring(0, 2) + "-" + DOB.substring(3, 5);
                 }
                 if (request.getParameter("Age") == null) {
                     Age = "";
@@ -4075,11 +4013,10 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                     DateSympOnset = "0000-00-00";
                 } else {
                     DateSympOnset = request.getParameter("DateSympOnset").trim();
-                    /*if (DateSympOnset.length() > 0)
-                        //DateSympOnset = DateSympOnset.substring(6, 10) + "-" + DateSympOnset.substring(0, 2) + "-" + DateSympOnset.substring(3, 5);
-                        DateSympOnset = request.getParameter("DateSympOnset").trim();
+                    if (DateSympOnset.length() > 0)
+                        DateSympOnset = DateSympOnset.substring(6, 10) + "-" + DateSympOnset.substring(0, 2) + "-" + DateSympOnset.substring(3, 5);
                     else
-                        DateSympOnset = "0000-00-00";*/
+                        DateSympOnset = "0000-00-00";
                 }
 
                 if (request.getParameter("SympFever") == null) {
@@ -4292,7 +4229,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                         WCPDateofInjury = "0000-00-00";
                     } else {
                         WCPDateofInjury = request.getParameter("WCPDateofInjury").trim();
-//                        WCPDateofInjury = String.valueOf(String.valueOf(WCPDateofInjury.substring(6, 10))) + "-" + WCPDateofInjury.substring(0, 2) + "-" + WCPDateofInjury.substring(3, 5);
+                        WCPDateofInjury = String.valueOf(String.valueOf(WCPDateofInjury.substring(6, 10))) + "-" + WCPDateofInjury.substring(0, 2) + "-" + WCPDateofInjury.substring(3, 5);
                     }
                     if (request.getParameter("WCPCaseNo") == null) {
                         WCPCaseNo = "";
@@ -4491,7 +4428,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                             AIIDateofAccident = "0000-00-00";
                         } else {
                             AIIDateofAccident = request.getParameter("AIIDateofAccident").trim();
-//                            AIIDateofAccident = String.valueOf(String.valueOf(AIIDateofAccident.substring(6, 10))) + "-" + AIIDateofAccident.substring(0, 2) + "-" + AIIDateofAccident.substring(3, 5);
+                            AIIDateofAccident = String.valueOf(String.valueOf(AIIDateofAccident.substring(6, 10))) + "-" + AIIDateofAccident.substring(0, 2) + "-" + AIIDateofAccident.substring(3, 5);
                         }
                         if (request.getParameter("AIIAutoClaim") == null) {
                             AIIAutoClaim = "";
@@ -5237,11 +5174,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                 pStmt.setString(23, MotorVehicleAccidentChk);
                 pStmt.setString(24, HealthInsuranceChk);
                 pStmt.setString(25, SympChkCOVID);
-                //pStmt.setString(26, DateSympOnset);
-                if (!DateSympOnset.equals(""))
-                    pStmt.setString(26, DateSympOnset);
-                else
-                    pStmt.setNull(26, Types.DATE);
+                pStmt.setString(26, DateSympOnset);
                 pStmt.setString(27, SympFever);
                 pStmt.setString(28, SympCough);
                 pStmt.setString(29, SympShortBreath);
@@ -5330,12 +5263,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                                 "WCPCarrierCity= ?, WCPCarrierState = ?, WCPCarrierZipCode=?, WCPAdjudicatorFirstName=?," +
                                 "WCPAdjudicatorLastName= ?, WCPAdjudicatorPhoneNumber = ?, WCPAdjudicatorFaxPhoneNumber=? " +
                                 "where PatientRegId = ? ");
-//                        pStmt.setString(1, WCPDateofInjury);
-                        if (!WCPDateofInjury.equals(""))
-                            pStmt.setString(1, WCPDateofInjury);
-                        else
-                            pStmt.setNull(1, Types.DATE);
-
+                        pStmt.setString(1, WCPDateofInjury);
                         pStmt.setString(2, WCPCaseNo);
                         pStmt.setString(3, WCPGroupNo);
                         pStmt.setString(4, WCPMemberId);
@@ -5382,11 +5310,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                                             "WCPAdjudicatorFaxPhoneNumber,CreatedDate)" +
                                             " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                             MainReceipt.setInt(1, PatientRegId);
-                            //MainReceipt.setString(2, WCPDateofInjury);
-                            if (!WCPDateofInjury.equals(""))
-                                MainReceipt.setString(2, WCPDateofInjury);
-                            else
-                                MainReceipt.setNull(2, Types.DATE);
+                            MainReceipt.setString(2, WCPDateofInjury);
                             MainReceipt.setString(3, WCPCaseNo);
                             MainReceipt.setString(4, WCPGroupNo);
                             MainReceipt.setString(5, WCPMemberId);
@@ -5513,11 +5437,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                                 "AIIYourInsurancePolicyNo = ?, AIIYourLicensePlate = ?, AIIYourCarMakeModelYear = ? " +
                                 "where PatientRegId = ?");
                         pStmt.setInt(1, Integer.parseInt(AutoInsuranceInformationChk));
-//                        pStmt.setString(2, AIIDateofAccident);
-                        if (!AIIDateofAccident.equals(""))
-                            pStmt.setString(2, AIIDateofAccident);
-                        else
-                            pStmt.setNull(2, Types.DATE);
+                        pStmt.setString(2, AIIDateofAccident);
                         pStmt.setString(3, AIIAutoClaim);
                         pStmt.setString(4, AIIAccidentLocationAddress + " " + AIIAccidentLocationAddress2);
                         pStmt.setString(5, AIIAccidentLocationCity);
@@ -5570,11 +5490,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
                                             " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now()) ");
                             MainReceipt.setInt(1, PatientRegId);
                             MainReceipt.setInt(2, Integer.parseInt(AutoInsuranceInformationChk));
-                            //MainReceipt.setString(3, AIIDateofAccident);
-                            if (!AIIDateofAccident.equals(""))
-                                MainReceipt.setString(3, AIIDateofAccident);
-                            else
-                                MainReceipt.setNull(3, Types.DATE);
+                            MainReceipt.setString(3, AIIDateofAccident);
                             MainReceipt.setString(4, AIIAutoClaim);
                             MainReceipt.setString(5, AIIAccidentLocationAddress + " " + AIIAccidentLocationAddress2);
                             MainReceipt.setString(6, AIIAccidentLocationCity);
@@ -5874,7 +5790,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
             LastName = request.getParameter("LastName").trim();
             DOB = request.getParameter("DOB").trim();
-
+            System.out.println(DOB);
             Query = "Select dbname from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -5883,7 +5799,6 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             }
             rset.close();
             stmt.close();
-
             int PatientFound = 0;
             String FoundMRN = "";
             Query = " Select COUNT(*), IFNULL(MRN,0) from " + Database + ".PatientReg  where Status = 0 and ltrim(rtrim(UPPER(FirstName))) = ltrim(rtrim(UPPER('" + FirstName.trim() + "')))  and ltrim(rtrim(UPPER(LastName))) = ltrim(rtrim(UPPER('" + LastName.trim() + "'))) and DOB = '" + DOB + "'";
@@ -6014,8 +5929,8 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             responseJSON.put("StateCode", State);
             responseJSON.put("IsValidDOB", true);
             responseJSON.put("Zipcode", ZipCode);
-            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString((Object) responseJSON);
-//            System.out.println("Request: " + Request);
+            Request = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJSON);
+            System.out.println("Request: " + Request);
             final String BaseURL = "https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1";
             final String Mask = "";
             final URL url = new URL("https://victoriacovid.com/api/CovidPatient/CreatePatient/?UserId=1");
@@ -6028,7 +5943,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             uc.setAllowUserInteraction(false);
             uc.setDoOutput(true);
             final OutputStream os = uc.getOutputStream();
-            os.write(Request.getBytes("UTF-8"));
+            os.write(Request.getBytes(StandardCharsets.UTF_8));
             os.close();
             uc.connect();
             final InputStream is = uc.getInputStream();
@@ -6037,7 +5952,7 @@ public class PatientReg2_20OCT2021 extends HttpServlet {
             is.read(response2);
             reply = new String(response2);
             reply = reply.trim();
-//            System.out.println("Reply: " + reply);
+            System.out.println("Reply: " + reply);
         } catch (Exception e) {
             final String Message = "0";
             Services.DumException("PatientReg2", "InsertCOVIDReg 0", request, e, this.getServletContext());

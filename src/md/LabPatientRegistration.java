@@ -190,9 +190,11 @@ public class LabPatientRegistration extends HttpServlet {
             if (request.getHeader("origin") == null) {
                 out.println("InValid Request!");
                 return;
-            } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
+            } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") == 0) {
+            //} else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") == 0) {
                 session = Createsession(UCID, request, context);
-            } else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
+            } else if (request.getHeader("origin").compareTo("https://app.rovermd.com:8443") != 0) {
+            //} else if (request.getHeader("origin").compareTo("https://app1.rovermd.com:8443") != 0) {
                 out.println("InValid Request!");
                 return;
             }
@@ -365,20 +367,6 @@ public class LabPatientRegistration extends HttpServlet {
         response.setContentType("text/html");
         UtilityHelper helper = new UtilityHelper();
         try {
-
-//            UserId = "rover.lab";//session.getAttribute("UserId").toString();
-//            DatabaseName = "roverlab";//session.getAttribute("DatabaseName").toString();
-//            DirectoryName = "roverlab";//session.getAttribute("DirectoryName").toString();
-//            FacilityIndex = 36;//Integer.parseInt(session.getAttribute("FacilityIndex").toString());
-
-//            conn = Services.GetConnection(context, 1);
-//            if (conn == null) {
-//                Parsehtm parsehtm = new Parsehtm(request);
-//                parsehtm = new Parsehtm(request);
-//                parsehtm.SetField("Error", "Unable to connect. Our team is looking into it!");
-//                parsehtm.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
-//                return;
-//            }
             Query = "select isVerified from " + DatabaseName + ".PatientReg where MRN='" + mrn + "'";
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -391,8 +379,6 @@ public class LabPatientRegistration extends HttpServlet {
                 stmt.executeUpdate(Query);
                 stmt.close();
 
-//                System.out.println("Email verified...");
-//                System.out.println("zur Patient updated 1");
                 request.setAttribute("ActionID", "OKK");
                 Parsehtm parsehtm = new Parsehtm(request);
                 parsehtm.SetField("EmailVerified", "Verified");
@@ -422,104 +408,6 @@ public class LabPatientRegistration extends HttpServlet {
         }
     }
 
-    void GetValuesOLDTABISH(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext servletContext, UtilityHelper helper) throws FileNotFoundException {
-
-        String facilityName = "";
-        try {
-            Statement stmt = null;
-            ResultSet rset = null;
-            String Query = "";
-            String Date = "";
-            String PRF_name = "";
-            StringBuffer Month = new StringBuffer();
-            StringBuffer Day = new StringBuffer();
-            StringBuffer Year = new StringBuffer();
-            StringBuffer ProfessionalPayersList = new StringBuffer();
-            int ClientIndex = 36;
-            facilityName = helper.getFacilityName(request, conn, servletContext, ClientIndex);
-
-            Query = "Select Date_format(now(),'%Y-%m-%d')";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                Date = rset.getString(1);
-            rset.close();
-            stmt.close();
-
-            Query = "Select PRF_name from oe.clients where Id = " + ClientIndex;
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next())
-                PRF_name = rset.getString(1);
-            rset.close();
-            stmt.close();
-
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where id  in (902,8289,8297,123,127,5800,1259,2700,5978,389,2337,1460,2348,3901,2583,2588,2393,955,64,1545,3646,8589,200,201,202,203,204,205,206,207,3649,5978,8206,4763,3465,3466,3467,3468,41,387,388,389,697,698,4757, 8605, 8606, 8254, 2560) " +
-                    " AND Status != 100 group by PayerId";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            ProfessionalPayersList.append("<option value=''>Select Insurance</option>");
-            while (rset.next())
-                ProfessionalPayersList.append("<option value=\"" + rset.getString(1) + "\">" + rset.getString(3) + "</option>");
-            rset.close();
-            stmt.close();
-
-            Query = "Select Id, PayerId, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from oe_2.ProfessionalPayers " +
-                    "where PayerName like  '%Texas%' OR PayerName like '%TX%' AND Status != 100";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next())
-                ProfessionalPayersList.append("<option value=\"" + rset.getString(1) + "\">" + rset.getString(3) + "</option>");
-            rset.close();
-            stmt.close();
-
-            String[] month = {
-                    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-                    "Nov", "Dec"};
-            int day = 1;
-            int year = Calendar.getInstance().get(1);
-            int i;
-            for (i = 1; i <= month.length; i++) {
-                if (i < 10)
-                    Month.append("<option value=0" + i + ">" + month[i - 1] + "</option>");
-                else
-                    Month.append("<option value=" + i + ">" + month[i - 1] + "</option>");
-            }
-            for (i = 1; i <= 31; i++) {
-                if (i < 10)
-                    Day.append("<option value=0" + i + ">" + i + "</option>");
-                else
-                    Day.append("<option value=" + i + ">" + i + "</option>");
-            }
-            for (i = 1901; i <= year; i++) {
-                if (i == year) {
-                    Year.append("<option value=" + i + " selected>" + i + "</option>");
-                } else {
-                    Year.append("<option value=" + i + ">" + i + "</option>");
-                }
-            }
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Date", String.valueOf(Date));
-            Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
-            Parser.SetField("ClientIndex_logo", String.valueOf(ClientIndex));
-            Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
-            Parser.SetField("ProfessionalPayersList2", String.valueOf(ProfessionalPayersList));
-            Parser.SetField("Month", String.valueOf(Month));
-            Parser.SetField("Day", String.valueOf(Day));
-            Parser.SetField("Year", String.valueOf(Year));
-            Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Forms/PRF_files/" + PRF_name);
-        } catch (Exception ex) {
-            helper.SendEmailWithAttachment("Error in LabPatientRegistration ** (GetValues^^" + facilityName + ")", servletContext, ex, "LabPatientRegistration", "GetValues", conn);
-            Services.DumException("GetValues^^" + facilityName + "", "LabPatientRegistration ", request, ex);
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("FormName", "ManagementDashboard");
-            Parser.SetField("ActionID", "GetInput");
-            Parser.SetField("Message", "MES#001");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Exception/ExceptionMessage.html");
-        }
-    }
-
     void GetValues(HttpServletRequest request, PrintWriter out, ServletContext servletContext, UtilityHelper helper, Connection conn, String Database) throws FileNotFoundException {
 
         String facilityName = "";
@@ -534,6 +422,7 @@ public class LabPatientRegistration extends HttpServlet {
             StringBuffer Year = new StringBuffer();
             StringBuilder TestList = new StringBuilder();
             StringBuilder LocationList = new StringBuilder();
+            StringBuffer CarrierNameList = new StringBuffer();
             int ClientIndex = 36;
             String loc = "0";
             String st = "0";
@@ -616,8 +505,20 @@ public class LabPatientRegistration extends HttpServlet {
             rset.close();
             stmt.close();
 
+            Query = "Select Id, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from " + Database + ".ProfessionalPayers  " +
+                    "WHERE Status != 100 ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            CarrierNameList.append("<option value='' selected>Select</option>");
+            CarrierNameList.append("<option value=\"8605\" >Other</option>");
+            while (rset.next())
+                CarrierNameList.append("<option value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+            System.out.println("Query  " + Query);
+            rset.close();
+            stmt.close();
+
             Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("Date", String.valueOf(Date));
+            Parser.SetField("Date", Date);
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
             Parser.SetField("ClientIndex_logo", String.valueOf(ClientIndex));
             Parser.SetField("loc", loc);
@@ -626,6 +527,7 @@ public class LabPatientRegistration extends HttpServlet {
             Parser.SetField("Day", String.valueOf(Day));
             Parser.SetField("Location", String.valueOf(Day));
             Parser.SetField("Year", String.valueOf(Year));
+            Parser.SetField("CarrierNameList", String.valueOf(CarrierNameList));
             Parser.SetField("rqtype", rqType);
             Parser.SetField("TestList", TestList.toString());
             Parser.SetField("LocationList", LocationList.toString());
@@ -812,6 +714,7 @@ public class LabPatientRegistration extends HttpServlet {
         String SendReportTo = "";
         String PCFR = "";
         String TestType = "";
+        String OtherInsurance = "";
 
 
         String AddressIfDifferent = "";
@@ -825,6 +728,7 @@ public class LabPatientRegistration extends HttpServlet {
         String SecondryInsurance = "";
         String SubscriberName = "";
         String SubscriberDOB = "";
+        String OtherParty = "";
         String MemberID_2 = "";
         String GroupNumber_2 = "";
         String PatientRelationshiptoSecondry = "";
@@ -1054,6 +958,12 @@ public class LabPatientRegistration extends HttpServlet {
                         RespParty = valuemap.get("RespParty").trim();
                     }
 
+                    if (valuemap.get("OtherParty") == null) {
+                        OtherParty = "";
+                    } else {
+                        OtherParty = valuemap.get("OtherParty").trim();
+                    }
+
                     if (valuemap.get("Carrier") == null) {
                         Carrier = "";
                     } else {
@@ -1246,6 +1156,11 @@ public class LabPatientRegistration extends HttpServlet {
                     } else {
                         StateID = valuemap.get("StateID").trim();
                     }
+                    if (valuemap.get("OtherInsurance") == null) {
+                        OtherInsurance = "";
+                    } else {
+                        OtherInsurance = valuemap.get("OtherInsurance").trim();
+                    }
 
                 } catch (Exception ex) {
                     helper.SendEmailWithAttachment("Error in LabPatientRegistration ** (SaveData^^" + facilityName + " ##MES#002)", servletContext, ex, "LabPatientRegistration", "SaveData", conn);
@@ -1326,12 +1241,12 @@ public class LabPatientRegistration extends HttpServlet {
                                 " Test ,AtTestSite ,TestingLocation ," +
                                 " Insured ,RespParty ,CarrierName ,GrpNumber ,MemID ,InsuranceIDFront ,InsuranceIDBack ," +
                                 " HaveSymptoms ,SympFever ,SympDiarrhea ,SympHeadache ,SympCongestion ,SympShortBreath ,SympBodyache ,SympChills ,SympFatigue ,SympSoreThroat ,SympRunnyNose ,SympDiffBreathin ,SympNausea ,SympLossSmellTaste ,FullyVaccinated ,HaveExposed ,FirstTimeCovid ,HealthCareEmp ,InICU ,InHospital ,IsPregnant ,IsResident ,HaveCloseContact ,HaveParticipated ,HaveAsked ,DateOfSymp ,MRN ,ExtendedMRN ,Status ,CreatedDate," +
-                                " DOB,ZipCode,UserIP,StageIdx,SendReportTo, SSN, DrivingLicense, StateId)  " +
+                                " DOB,ZipCode,UserIP,StageIdx,SendReportTo, SSN, DrivingLicense, StateId,OtherPartyName,OthInsurance)  " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " +
                                 "?, ?, ?, " +
                                 "?, ?, ?, ?, ?, ?, ?, " +
                                 "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " +
-                                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(),?,?,?,0,?, ?,?,?) ");
+                                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(),?,?,?,0,?, ?,?,?,?,?) ");
                 MainReceipt.setString(1, FirstName);
                 MainReceipt.setString(2, LastName);
                 MainReceipt.setString(3, MiddleInitial);
@@ -1392,6 +1307,8 @@ public class LabPatientRegistration extends HttpServlet {
                 MainReceipt.setString(57, SSN);
                 MainReceipt.setString(58, DrivingLicense);
                 MainReceipt.setString(59, StateID);
+                MainReceipt.setString(60, OtherParty);
+                MainReceipt.setString(61, OtherInsurance);
                 //MainReceipt.setString(56, sampleType);
 //                System.out.println("INSERTION *** " + MainReceipt.toString());
                 MainReceipt.executeUpdate();
@@ -1587,17 +1504,16 @@ public class LabPatientRegistration extends HttpServlet {
             stmt.close();
 
             String link = "Thank You " + PatientName + ". Your Registration number is " + MRN + " \n" +
-                    "<a href=\"https://app1.rovermd.com:8443/md/people/" + MRN + "\">Verify User</a>";
+                    "<a href=\"https://app.rovermd.com:8443/md/people/" + MRN + "\">Verify User</a>";
+                    //"<a href=\"https://app1.rovermd.com:8443/md/people/" + MRN + "\">Verify User</a>";
 
 //            String link = "Thank You " + PatientName + ". Your Registration number is " + MRN + " \n" +
 //                    "<a href=\"https://app1.rovermd.com:8443/md/md.LabPatientRegistration?ActionID=updatePatientReg&MRN=" + MRN + "\">Verify User</a>";
 
 //            TwilioSMSConfiguration smsConfiguration = new TwilioSMSConfiguration();
 //            smsConfiguration.sendTwilioMessages_roverLab(request, conn, servletContext, Sms, ClientIndex, PtPhNumber, 202, Database);
-            System.out.println("Sending an email from Reg Option ... ");
             helper.SendEmailRoverLab("", "RoverLab Covid Registration", link, PtEmail, conn, servletContext, MRN, PatientName, ClientId);
             String temp = SaveBundle(request, out, conn, Database, DirectoryName, PatientRegId);
-//            out.print("temp "+ temp);
             String[] arr = temp.split("~");
             String FileName = arr[2];
             String outputFilePath = arr[1];
@@ -1844,7 +1760,7 @@ public class LabPatientRegistration extends HttpServlet {
                     pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                     pdfContentByte.setColorFill(BaseColor.BLACK);
                     pdfContentByte.setTextMatrix(370, 685); // set x and y co-ordinates
-                    pdfContentByte.showText("Dr, Joel Persall"); // add the text
+                    pdfContentByte.showText("Dr.Bauer, Michael"); // add the text
                     pdfContentByte.endText();
 
                     pdfContentByte.beginText();
@@ -2734,7 +2650,7 @@ public class LabPatientRegistration extends HttpServlet {
             while (en.hasMoreElements()) {
                 key = (String) en.nextElement();
 
-                //System.out.println("key ->> " + key);
+//                System.out.println("key ->> "+key);
                 if (key.startsWith("PatientRegId")) {
                     PatientRegId = (String) d.get(key);
                 } else if (key.startsWith("imagedataURLbtnIdHdn")) {
@@ -2785,7 +2701,7 @@ public class LabPatientRegistration extends HttpServlet {
                     //String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/frontline/img_" + i + "_" + PatientRegId + ".png");
                     if (isValid(new File("/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png"))) {
                         String ImageTransparent = this.MakeTransparent(out, "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png", "/sftpdrive/AdmissionBundlePdf/SignImg/" + DirectoryName + "/img_" + i + "_" + PatientRegId + "_" + Ordering[i] + ".png");
-                        if (ImageTransparent.trim().toUpperCase().equals("CONVERTED")) {
+                        if (ImageTransparent.trim().equalsIgnoreCase("CONVERTED")) {
                             Message = " and Transparency DONE";
                         } else {
                             Message = " and Image Created";
@@ -2801,12 +2717,12 @@ public class LabPatientRegistration extends HttpServlet {
                         Parser.SetField("MRN", "Invalid Signature");
 //                        Parser.SetField("FormName", "PatientReg");
 //                        Parser.SetField("ActionID", "GetValues&ClientIndex=36");
-                        Parser.SetField("pageCount", String.valueOf(pageCount));
-                        Parser.SetField("FileName", String.valueOf(outputFilePath));
-                        Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
-                        Parser.SetField("outputFilePath", String.valueOf(outputFilePath));
+                        Parser.SetField("pageCount", pageCount);
+                        Parser.SetField("FileName", outputFilePath);
+                        Parser.SetField("PatientRegId", PatientRegId);
+                        Parser.SetField("outputFilePath", outputFilePath);
                         Parser.SetField("ClientIndex", "36");
-                        Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageRoverLab.html");
+                        Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Exception/MessageRoverLab.html");
                         return;
                     }
 //                    out.print("\n After ");
@@ -2837,7 +2753,7 @@ public class LabPatientRegistration extends HttpServlet {
             ps.setString(1, PatientRegId);
             rset = ps.executeQuery();
             if (rset.next()) {
-                if (rset.getString(1).toUpperCase().equals("NO"))
+                if (rset.getString(1).equalsIgnoreCase("NO"))
                     isSelfPay = true;
             }
             rset.close();
@@ -2845,37 +2761,25 @@ public class LabPatientRegistration extends HttpServlet {
 //
             if (isSelfPay) {
                 Parsehtm Parser = new Parsehtm(request);
-//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
                 Parser.SetField("Message", "Thank You for Registration");
                 Parser.SetField("FormName", "LabPatientRegistration");
                 Parser.SetField("ActionID", "PayNow&i=" + MRN + "&j=" + rqType + "&k=" + OrderId);
-                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_ROVERLABPayment.html");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Exception/Message_ROVERLABPayment.html");
                 return;
             }
 
-
-//                System.out.println("**** RQ TYPE **** " + rqType);
-//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
-//                Parser.SetField("FormName", "DownloadBundle");
-//                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_W.html");            if(
-//            System.out.println("Just before successs -->> rqType " + rqType);
+            Parsehtm Parser = new Parsehtm(request);
             if (rqType.equals("nullGetValues")) {
-                Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Message", "Thank You for Registration ");
                 Parser.SetField("WEB", WEB);
-                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_RoverLab.html");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Exception/Message_RoverLab.html");
             } else {
-                Parsehtm Parser = new Parsehtm(request);
-//                Parser.SetField("Message", "Done! Signed PDF is Ready " + Message);
                 Parser.SetField("Message", "Document has been signed successfully! ");
                 Parser.SetField("FormName", "LabPatientRegistration");
                 Parser.SetField("ActionID", "GetValues");
-                Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(this.getServletContext())) + "Exception/Message_ROVERLAB.html");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Exception/Message_ROVERLAB.html");
             }
-
-
         } catch (Exception var11) {
-
             out.println(var11.getMessage());
             String str = "";
             for (int i = 0; i < var11.getStackTrace().length; ++i) {
@@ -3034,6 +2938,8 @@ public class LabPatientRegistration extends HttpServlet {
         String ZipCode = "";
         String FirstNameNoSpaces = "";
         String sampleType = "";
+        String OtherInsurance = "";
+        String CarrierNumber = "";
 
         String HaveSymptoms = "";
         String DateOfSymp = "";
@@ -3081,7 +2987,7 @@ public class LabPatientRegistration extends HttpServlet {
                         " WHERE a.ID = " + ID;*/
                 Query = " Select a.FirstName ,a.LastName ,a.MiddleInitial ,a.Gender ,a.PhNumber ,a.Email ," +
                         "a.Address ,a.City ,a.State ,a.County ,a.Ethnicity ,a.Race ,b.TestName ,a.AtTestSite ," +
-                        "c.Location ,a.Insured ,a.RespParty ,a.CarrierName ,a.GrpNumber ,a.MemID ," +
+                        "c.Location ,a.Insured ,a.RespParty ,LTRIM(rtrim(REPLACE(d.PayerName,'Servicing States','') )) ,a.GrpNumber ,a.MemID ," +
                         "a.ExtendedMRN ,a.Status ,a.CreatedDate ,a.EditBy ,a.Edittime ,a.DOB ,a.ZipCode," +
                         "a.HaveSymptoms,a.DateOfSymp,a.FirstTimeCovid,a.HealthCareEmp,a.IsPregnant,a.InICU," +
                         "a.InHospital,a.sampleType,a.IsResident," +
@@ -3091,10 +2997,11 @@ public class LabPatientRegistration extends HttpServlet {
                         "SUBSTRING(DATE_FORMAT(a.DateOfSymp,'%d'),2,1) AS Dayy1, \n" +
                         "SUBSTRING(DATE_FORMAT(a.DateOfSymp,'%y'),1,1) AS Yearr1,\n" +
                         "SUBSTRING(DATE_FORMAT(a.DateOfSymp,'%y'),2,1) AS Yearr2," +
-                        "a.SSN,a.DrivingLicense,a.StateID " +
+                        "a.SSN,a.DrivingLicense,a.StateID ,a.OthInsurance,a.CarrierName" +
                         "  From " + Database + ".PatientReg a " +
                         " INNER JOIN " + Database + ".ListofTests b ON a.Test = b.Id " +
                         " INNER JOIN " + Database + ".Locations c ON a.TestingLocation = c.Id " +
+                        " INNER JOIN " + Database + ".ProfessionalPayers d ON a.CarrierName = d.Id " +
                         " WHERE a.ID = " + ID;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -3141,10 +3048,17 @@ public class LabPatientRegistration extends HttpServlet {
                     SSN = rset.getString(43);
                     DrivingLicense = rset.getString(44);
                     StateID = rset.getString(45);
+                    OtherInsurance = rset.getString(46);
+                    CarrierNumber = rset.getString(47);
                 }
                 rset.close();
                 stmt.close();
 
+
+
+
+Address = (Address.length() >60 ?  Address.substring(0, 50) : Address.substring(0, Address.length()));
+                OtherInsurance = (OtherInsurance.length() >60 ?  OtherInsurance.substring(0, 50) : OtherInsurance.substring(0, OtherInsurance.length()));
 
 //                try {
 //                    Query = "Select PayerName from oe.ProfessionalPayers where Id = " + PriInsuranceName;
@@ -3408,7 +3322,12 @@ public class LabPatientRegistration extends HttpServlet {
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(80, 555); // set x and y co-ordinates
-                        pdfContentByte.showText(" "); // Insurance
+                        if(CarrierNumber.equals("8605")){
+                            pdfContentByte.showText(OtherInsurance); // Insurance
+                        }else{
+                        pdfContentByte.showText(CarrierName); // Insurance
+                        }
+
                         pdfContentByte.endText();
 
                         pdfContentByte.beginText();
@@ -3979,7 +3898,7 @@ public class LabPatientRegistration extends HttpServlet {
                     UploadPath = "/sftpdrive/AdmissionBundlePdf/Attachment/" + DirectoryName + "/";
                     filename = filename.replaceAll("\\s+", "");
 
-                    File fe = new File(String.valueOf(String.valueOf(UploadPath)) + filename);
+                    File fe = new File(UploadPath + filename);
                     if (fe.exists())
                         fe.delete();
                     FileOutputStream fouts = new FileOutputStream(fe);
@@ -4281,6 +4200,7 @@ public class LabPatientRegistration extends HttpServlet {
         String Country = "";
         String ZipCode = "";
         String Ethnicity = "";
+        String OtherParty = "";
         String Race = "";
         String County = "";
         StringBuffer testAtSiteBuff = new StringBuffer();
@@ -4289,6 +4209,7 @@ public class LabPatientRegistration extends HttpServlet {
         StringBuffer carrier = new StringBuffer();
         StringBuffer RaceBuff = new StringBuffer();
         StringBuffer TestsBuff = new StringBuffer();
+        StringBuffer CarrierNameBuff = new StringBuffer();
         StringBuffer LocationBuff = new StringBuffer();
         StringBuffer genderBuff = new StringBuffer();
         StringBuffer ethinicityBuff = new StringBuffer();
@@ -4297,6 +4218,7 @@ public class LabPatientRegistration extends HttpServlet {
         String AtTestSite = "";
         String TestingLocation = "";
         String sampleType = "";
+        String OtherInsurance = "";
         String Insured = "";
         String RespParty = "";
         String CarrierName = "";
@@ -4356,6 +4278,7 @@ public class LabPatientRegistration extends HttpServlet {
         String HaveAskedNo = "";
         String IsPregnantYes = "";
         String IsPregnantNo = "";
+        String CarrierNameId = "";
 
 
         String facilityName = helper.getFacilityName(request, conn, servletContext, ClientId);
@@ -4367,7 +4290,7 @@ public class LabPatientRegistration extends HttpServlet {
                     "GrpNumber ,MemID ,ExtendedMRN ,Status ,CreatedDate ,EditBy ," + //26
                     "Edittime,ID as PatRegIdx, IFNULL(County,'')," + //29
                     "Patientconsent, ContactConsent, DrivingLicense, StateId,  " +//33
-                    "HaveSymptoms ,SympFever ,SympDiarrhea ,SympHeadache ,SympCongestion ,SympShortBreath ,SympBodyache ,SympChills ,SympFatigue ,SympSoreThroat ,SympRunnyNose ,SympDiffBreathin ,SympNausea ,SympLossSmellTaste ,FullyVaccinated ,HaveExposed ,FirstTimeCovid ,HealthCareEmp ,InICU ,InHospital ,IsPregnant ,IsResident ,HaveCloseContact ,HaveParticipated ,HaveAsked ,DateOfSymp" +
+                    "HaveSymptoms ,SympFever ,SympDiarrhea ,SympHeadache ,SympCongestion ,SympShortBreath ,SympBodyache ,SympChills ,SympFatigue ,SympSoreThroat ,SympRunnyNose ,SympDiffBreathin ,SympNausea ,SympLossSmellTaste ,FullyVaccinated ,HaveExposed ,FirstTimeCovid ,HealthCareEmp ,InICU ,InHospital ,IsPregnant ,IsResident ,HaveCloseContact ,HaveParticipated ,HaveAsked ,DateOfSymp,IFNULL(OtherPartyName, ''),IFNULL(OthInsurance, '') " +
                     " FROM roverlab.PatientReg WHERE MRN =" + MRN;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -4427,6 +4350,8 @@ public class LabPatientRegistration extends HttpServlet {
                 HaveParticipated = rset.getString(57);
                 HaveAsked = rset.getString(58);
                 DateOfSymp = rset.getString(59);
+                OtherParty = rset.getString(60);
+                OtherInsurance = rset.getString(61);
 
             }
             rset.close();
@@ -4563,17 +4488,43 @@ public class LabPatientRegistration extends HttpServlet {
                     break;
             }
 
-            switch (CarrierName) {
-                case "Self":
-                    carrier.append("<option value=\"Self\" selected>Self</option> <option value=\" Other \"> Other</option>");
-                    break;
-                case "Other":
-                    carrier.append("<option value=\"Self\" >Self</option> <option value=\" Other \" selected> Other</option>");
-                    break;
-                default:
-                    carrier.append("<option value=\"Self\" >Self</option> <option value=\" Other \"> Other</option>");
-                    break;
+
+            Query = "Select Id, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) From " + Database + ".ProfessionalPayers a " +
+
+                    "WHERE PayerName LIKE '%TEXAS%' OR PayerName LIKE '%TX%' " +
+                    "AND Status != 100 ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            CarrierNameBuff.append("<option value=''>Select</option>");
+
+            if (CarrierName.equals("8605")) {
+                CarrierNameBuff.append("<option value=\"8605\" selected>Other</option>");
+            } else {
+                CarrierNameBuff.append("<option  value=\"8605\">Other</option>");
             }
+            //System.out.println("PriInsuranceName -> " + PriInsuranceName);
+            while (rset.next()) {
+
+                if (CarrierName.equals(rset.getString(1))) {
+                    CarrierNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(2) + "</option>");
+                } else {
+                    CarrierNameBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(2) + "</option>");
+                }
+            }
+            rset.close();
+            stmt.close();
+//
+//            switch (CarrierName) {
+//                case "Self":
+//                    carrier.append("<option value=\"Self\" selected>Self</option> <option value=\" Other \"> Other</option>");
+//                    break;
+//                case "Other":
+//                    carrier.append("<option value=\"Self\" >Self</option> <option value=\" Other \" selected> Other</option>");
+//                    break;
+//                default:
+//                    carrier.append("<option value=\"Self\" >Self</option> <option value=\" Other \"> Other</option>");
+//                    break;
+//            }
 
 
             //Sysmptoms SQLException
@@ -4848,10 +4799,10 @@ public class LabPatientRegistration extends HttpServlet {
 
 
             Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("LastName", String.valueOf(LastName));
+            Parser.SetField("LastName", LastName);
             Parser.SetField("sampleType", String.valueOf(sampleType));
-            Parser.SetField("FirstName", String.valueOf(FirstName));
-            Parser.SetField("MiddleInitial", String.valueOf(MiddleInitial));
+            Parser.SetField("FirstName", FirstName);
+            Parser.SetField("MiddleInitial", MiddleInitial);
             Parser.SetField("DOB", String.valueOf(DOB));
             Parser.SetField("genderBuff", String.valueOf(genderBuff));
             Parser.SetField("Email", String.valueOf(Email));
@@ -4860,7 +4811,7 @@ public class LabPatientRegistration extends HttpServlet {
             Parser.SetField("City", String.valueOf(City));
             Parser.SetField("State", String.valueOf(State));
             Parser.SetField("County", String.valueOf(County));
-            Parser.SetField("Country", String.valueOf(Country));
+            Parser.SetField("Country", Country);
             Parser.SetField("ZipCode", String.valueOf(ZipCode));
             Parser.SetField("EthnicityBuff", String.valueOf(ethinicityBuff));
             Parser.SetField("RaceBuff", String.valueOf(RaceBuff));
@@ -4870,64 +4821,67 @@ public class LabPatientRegistration extends HttpServlet {
             Parser.SetField("insuredBuff", String.valueOf(insuredBuff));
             Parser.SetField("ClientId", String.valueOf(ClientId));
             Parser.SetField("PatientRegId", String.valueOf(PatientRegId));
+            Parser.SetField("CarrierNameBuff", String.valueOf(CarrierNameBuff));
             Parser.SetField("MRN", MRN);
             Parser.SetField("County", County);
             Parser.SetField("Test", _testName);
             Parser.SetField("RespParty", respParty.toString());
-            Parser.SetField("CarrierName", carrier.toString());
+            Parser.SetField("CarrierName", CarrierName);
             Parser.SetField("GrpNumber", GrpNumber);
             Parser.SetField("MemID", MemID);
             Parser.SetField("Insured", Insured);
             Parser.SetField("DrivingLicense", DrivingLicense);
             Parser.SetField("StateId", StateId);
             Parser.SetField("orderId", orderId);
+            Parser.SetField("OtherParty", OtherParty);
+            Parser.SetField("OtherInsurance", OtherInsurance);
 
 
             //Symptom Section
 
-            Parser.SetField("HaveSymptoms", String.valueOf(HaveSymptoms));
-            Parser.SetField("HaveSymptomsYes", String.valueOf(HaveSymptomsYes));
-            Parser.SetField("HaveSymptomsNo", String.valueOf(HaveSymptomsNo));
-            Parser.SetField("SympFever", String.valueOf(SympFever));
-            Parser.SetField("SympDiarrhea", String.valueOf(SympDiarrhea));
-            Parser.SetField("SympHeadache", String.valueOf(SympHeadache));
-            Parser.SetField("SympCongestion", String.valueOf(SympCongestion));
-            Parser.SetField("SympShortBreath", String.valueOf(SympShortBreath));
-            Parser.SetField("SympBodyache", String.valueOf(SympBodyache));
+            Parser.SetField("HaveSymptoms", HaveSymptoms);
+            Parser.SetField("HaveSymptomsYes", HaveSymptomsYes);
+            Parser.SetField("HaveSymptomsNo", HaveSymptomsNo);
+            Parser.SetField("SympFever", SympFever);
+            Parser.SetField("SympDiarrhea", SympDiarrhea);
+            Parser.SetField("SympHeadache", SympHeadache);
+            Parser.SetField("SympCongestion", SympCongestion);
+            Parser.SetField("SympShortBreath", SympShortBreath);
+            Parser.SetField("SympBodyache", SympBodyache);
 
-            Parser.SetField("SympChills", String.valueOf(SympChills));
-            Parser.SetField("SympFatigue", String.valueOf(SympFatigue));
-            Parser.SetField("SympSoreThroat", String.valueOf(SympSoreThroat));
-            Parser.SetField("SympRunnyNose", String.valueOf(SympRunnyNose));
-            Parser.SetField("SympDiffBreathin", String.valueOf(SympDiffBreathin));
-            Parser.SetField("SympNausea", String.valueOf(SympNausea));
-            Parser.SetField("SympLossSmellTaste", String.valueOf(SympLossSmellTaste));
+            Parser.SetField("SympChills", SympChills);
+            Parser.SetField("SympFatigue", SympFatigue);
+            Parser.SetField("SympSoreThroat", SympSoreThroat);
+            Parser.SetField("SympRunnyNose", SympRunnyNose);
+            Parser.SetField("SympDiffBreathin", SympDiffBreathin);
+            Parser.SetField("SympNausea", SympNausea);
+            Parser.SetField("SympLossSmellTaste", SympLossSmellTaste);
             Parser.SetField("DateOfSymp", String.valueOf(DateOfSymp));
 
             //yed no options
-            Parser.SetField("FullyVaccinated", String.valueOf(FullyVaccinated));
-            Parser.SetField("FullyVaccinatedYes", String.valueOf(FullyVaccinatedYes));
-            Parser.SetField("FullyVaccinatedNo", String.valueOf(FullyVaccinatedNo));
-            Parser.SetField("HaveExposedYes", String.valueOf(HaveExposedYes));
-            Parser.SetField("HaveExposedNo", String.valueOf(HaveExposedNo));
-            Parser.SetField("FirstTimeCovidYes", String.valueOf(FirstTimeCovidYes));
-            Parser.SetField("FirstTimeCovidNo", String.valueOf(FirstTimeCovidNo));
-            Parser.SetField("HealthCareEmpYes", String.valueOf(HealthCareEmpYes));
-            Parser.SetField("HealthCareEmpNo", String.valueOf(HealthCareEmpNo));
-            Parser.SetField("InICUYes", String.valueOf(InICUYes));
-            Parser.SetField("InICUNo", String.valueOf(InICUNo));
-            Parser.SetField("InHospitalYes", String.valueOf(InHospitalYes));
-            Parser.SetField("InHospitalNo", String.valueOf(InHospitalNo));
-            Parser.SetField("IsResidentYes", String.valueOf(IsResidentYes));
-            Parser.SetField("IsResidentNo", String.valueOf(IsResidentNo));
-            Parser.SetField("HaveCloseContactYes", String.valueOf(HaveCloseContactYes));
-            Parser.SetField("HaveCloseContactNo", String.valueOf(HaveCloseContactNo));
-            Parser.SetField("HaveParticipatedYes", String.valueOf(HaveParticipatedYes));
-            Parser.SetField("HaveParticipatedNo", String.valueOf(HaveParticipatedNo));
-            Parser.SetField("HaveAskedYes", String.valueOf(HaveAskedYes));
-            Parser.SetField("HaveAskedNo", String.valueOf(HaveAskedNo));
-            Parser.SetField("IsPregnantYes", String.valueOf(IsPregnantYes));
-            Parser.SetField("IsPregnantNo", String.valueOf(IsPregnantNo));
+            Parser.SetField("FullyVaccinated", FullyVaccinated);
+            Parser.SetField("FullyVaccinatedYes", FullyVaccinatedYes);
+            Parser.SetField("FullyVaccinatedNo", FullyVaccinatedNo);
+            Parser.SetField("HaveExposedYes", HaveExposedYes);
+            Parser.SetField("HaveExposedNo", HaveExposedNo);
+            Parser.SetField("FirstTimeCovidYes", FirstTimeCovidYes);
+            Parser.SetField("FirstTimeCovidNo", FirstTimeCovidNo);
+            Parser.SetField("HealthCareEmpYes", HealthCareEmpYes);
+            Parser.SetField("HealthCareEmpNo", HealthCareEmpNo);
+            Parser.SetField("InICUYes", InICUYes);
+            Parser.SetField("InICUNo", InICUNo);
+            Parser.SetField("InHospitalYes", InHospitalYes);
+            Parser.SetField("InHospitalNo", InHospitalNo);
+            Parser.SetField("IsResidentYes", IsResidentYes);
+            Parser.SetField("IsResidentNo", IsResidentNo);
+            Parser.SetField("HaveCloseContactYes", HaveCloseContactYes);
+            Parser.SetField("HaveCloseContactNo", HaveCloseContactNo);
+            Parser.SetField("HaveParticipatedYes", HaveParticipatedYes);
+            Parser.SetField("HaveParticipatedNo", HaveParticipatedNo);
+            Parser.SetField("HaveAskedYes", HaveAskedYes);
+            Parser.SetField("HaveAskedNo", HaveAskedNo);
+            Parser.SetField("IsPregnantYes", IsPregnantYes);
+            Parser.SetField("IsPregnantNo", IsPregnantNo);
 
 
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Forms/Edit/CovidRegEdit.html");
@@ -4950,6 +4904,8 @@ public class LabPatientRegistration extends HttpServlet {
         String RespParty = "";
         String Carrier = "";
         String GrpNumber = "";
+        String OtherParty = "";
+        String OtherInsurance = "";
         String MemId = "";
         String InsuranceConsent = "";
         int _InsCons = 0;
@@ -4981,6 +4937,19 @@ public class LabPatientRegistration extends HttpServlet {
         System.out.println("haveIns " + haveIns);
         if (haveIns.equals("Yes")) {
             RespParty = request.getParameter("RespParty").trim();
+
+            if (request.getParameter("OtherParty") == null) {
+                OtherParty = "";
+            } else {
+                OtherParty = request.getParameter("OtherParty").trim();
+            }
+            if (request.getParameter("OtherInsurance") == null) {
+                OtherInsurance = "";
+            } else {
+                OtherInsurance = request.getParameter("OtherInsurance").trim();
+            }
+
+            System.out.println("In Save Edit Other Insurance--->" + OtherInsurance);
             Carrier = request.getParameter("Carrier").trim();
             GrpNumber = request.getParameter("GrpNumber").trim();
             MemId = request.getParameter("MemId").trim();
@@ -5011,7 +4980,7 @@ public class LabPatientRegistration extends HttpServlet {
                             " Status = 0 ,ModifiedDate =  NOW()," +
                             " DOB = ?, ZipCode = ?,UserIP = ?, sampleType = ?," +
                             " ModifiedBy = ?, Patientconsent = ? , " +
-                            " Contactconsent = ?, InsuranceConsent = ?  " +
+                            " Contactconsent = ?, InsuranceConsent = ? ,OtherPartyName = ?, OthInsurance = ?  " +
                             " WHERE ID = ? ");
             pStmt.setString(1, FirstName);
             pStmt.setString(2, LastName);
@@ -5041,7 +5010,10 @@ public class LabPatientRegistration extends HttpServlet {
             pStmt.setInt(25, _PatCons);
             pStmt.setInt(26, _ContCons);
             pStmt.setInt(27, _InsCons);
-            pStmt.setInt(28, PatientRegId);
+            pStmt.setString(28, OtherParty);
+            pStmt.setString(29, OtherInsurance);
+            pStmt.setInt(30, PatientRegId);
+
 //            System.out.println("UPDATE *** " + pStmt.toString());
             pStmt.executeUpdate();
             pStmt.close();
@@ -5060,8 +5032,8 @@ public class LabPatientRegistration extends HttpServlet {
         Parser.SetField("FormName", "PatientRegRoverLab");
         Parser.SetField("ActionID", "PatientUpdateInformation&ID=" + PatientRegId + "&orderId=" + orderId);
         Parser.SetField("ClientId", String.valueOf(ClientId));
-        Parser.SetField("MRN", String.valueOf(MRN));
-        Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
+        Parser.SetField("MRN", MRN);
+        Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Exception/Message.html");
 
 /*
         int orderIdx = 0;
@@ -5143,22 +5115,18 @@ public class LabPatientRegistration extends HttpServlet {
                     " INNER JOIN " + Database + ".TestOrder b ON a.ID = b.PatRegIdx \n" +
                     "WHERE a.status = 0 and " +
                     "CONCAT(a.FirstName,a.LastName,a.PhNumber,a.MRN,IFNULL(DATE_FORMAT(a.DOB,'%m-%d-%Y'),''),b.OrderNum) like \"%" + Patient + "%\" ";
-
-            //stmt = conn.createStatement();
+//            PatientList.append("<select class=\"form-control\" id=\"PatientId\" name=\"PatientId\" onchange=\"OpenPatients(" + rset.getInt(1) + "," + rset.getInt(9) + ");\">");
+            PatientList.append("<select class=\"form-control\" id=\"PatientId\" name=\"PatientId\" onchange=\"OpenPatients(this.value);\">");
+            PatientList.append("<option value=''> Please Select Below Patient </option>");
             pStmt = conn.prepareStatement(Query);
             rset = pStmt.executeQuery();
             while (rset.next()) {
-                if (i == 0) {
-                    PatientList.append("<select class=\"form-control\" id=\"PatientId\" name=\"PatientId\" onchange=\"OpenPatients(" + rset.getInt(1) + "," + rset.getInt(9) + ");\">");
-                    PatientList.append("<option value=''> Please Select Below Patient </option>");
-                }
-                PatientList.append("<option value=" + rset.getInt(1) + ">" + rset.getString(2) + " | " + rset.getString(3) + " | " + rset.getString(4) + " | " + rset.getString(5) + " | " + rset.getString(6) + " | " + rset.getString(7) + " </option>");
-                i++;
+                PatientList.append("<option value=" + rset.getInt(1) + "," + rset.getInt(9) + ">" + rset.getString(2) + " | " + rset.getString(3) + " | " + rset.getString(4) + " | " + rset.getString(5) + " | " + rset.getString(6) + " | " + rset.getString(7) + " </option>");
             }
             rset.close();
             pStmt.close();
             PatientList.append("</select>");
-            out.println(PatientList.toString());
+            out.println(PatientList);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -5230,6 +5198,15 @@ public class LabPatientRegistration extends HttpServlet {
             Statement stmt = null;
             ResultSet rset = null;
             String Query = "";
+            String CarrierName = "";
+            String Insured = "";
+            String GrpNumber = "";
+            String MemID = "";
+            String ResParty = "";
+            String DrivingLicense = "";
+            String OtherInsurance = "";
+            String StateId = "";
+            String OtherPartyName = "";
             int ClientIndex = Integer.parseInt(request.getParameter("ClientIndex").trim());
             int PatRegIdx = Integer.parseInt(request.getParameter("PatRegIdx").trim());
             int FoundMRN = Integer.parseInt(request.getParameter("FoundMRN").trim());
@@ -5237,6 +5214,9 @@ public class LabPatientRegistration extends HttpServlet {
 
             StringBuilder TestList = new StringBuilder();
             StringBuilder LocationList = new StringBuilder();
+            StringBuffer CarrierNameBuff = new StringBuffer();
+            StringBuffer ResPartybuff = new StringBuffer();
+            StringBuffer insuredbuff = new StringBuffer();
 
             Query = "Select dbname from oe.clients where Id = " + ClientIndex;
             stmt = conn.createStatement();
@@ -5271,9 +5251,104 @@ public class LabPatientRegistration extends HttpServlet {
             rset.close();
             stmt.close();
 
+            Query = "SELECT  CarrierName,IFNULL(RespParty,''),IFNULL(OtherPartyName,''),Insured,IFNULL(DrivingLicense,''),IFNULL(StateId,''),IFNULL(GrpNumber,'') ,IFNULL(MemID,''),IFNULL(OthInsurance,'')   FROM " + Database + ".PatientReg " +
+                    "WHERE Status = 0 And MRN =" + FoundMRN;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+
+            while (rset.next()) {
+                CarrierName = rset.getString(1);
+                ResParty = rset.getString(2);
+                OtherPartyName = rset.getString(3);
+                Insured = rset.getString(4);
+                DrivingLicense = rset.getString(5);
+                StateId = rset.getString(6);
+                GrpNumber = rset.getString(7);
+                MemID = rset.getString(8);
+                OtherInsurance = rset.getString(9);
+            }
+            System.out.println("Select query " + Query);
+            rset.close();
+            stmt.close();
+
+            System.out.println("CarrierName  " + CarrierName);
+            System.out.println("ResParty  " + ResParty);
+            System.out.println("OtherPartyName  " + OtherPartyName);
+            System.out.println("Insured  " + Insured);
+            System.out.println("DrivingLicense  " + DrivingLicense);
+            System.out.println("StateId  " + StateId);
+            System.out.println("GrpNumber  " + GrpNumber);
+            System.out.println("MemID  " + MemID);
+            System.out.println("OtherInsurance  " + OtherInsurance);
+
+            Query = "Select Id, LTRIM(rtrim(REPLACE(PayerName,'Servicing States','') )) from " + Database + ".ProfessionalPayers a " +
+
+                    "WHERE PayerName LIKE '%TEXAS%' OR PayerName LIKE '%TX%' " +
+                    "AND Status != 100 ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            CarrierNameBuff.append("<option value=''>Select</option>");
+            if (CarrierName.equals("8605")) {
+                CarrierNameBuff.append("<option value=\"8605\" selected>Other</option>");
+            } else {
+                CarrierNameBuff.append("<option  value=\"8605\">Other</option>");
+            }
+            //System.out.println("PriInsuranceName -> " + PriInsuranceName);
+            while (rset.next()) {
+                if (CarrierName.equals(rset.getString(1))) {
+                    CarrierNameBuff.append("<option value=" + rset.getString(1) + " selected>" + rset.getString(2) + "</option>");
+                } else {
+                    CarrierNameBuff.append("<option value=" + rset.getString(1) + ">" + rset.getString(2) + "</option>");
+                }
+            }
+            rset.close();
+            stmt.close();
+
+
+            switch (Insured) {
+                case "No":
+                    insuredbuff.append("<div> <label class=\"radio-inline\"> <input type=\"radio\" name=\"haveIns\" value=\"No\" checked required onclick=\"HideDiv('insuranceDiv');showNonInsuranceDiv('0');\"> NO </label> <label class=\"radio-inline\" style=\"margin-left:70px\"> <input type=\"radio\" name=\"haveIns\" value=\"Yes\" onclick=\"ShowDiv('insuranceDiv');showNonInsuranceDiv('1');\"> Yes </label> </div>\n");
+                    break;
+                case "Yes":
+                    insuredbuff.append("<div> <label class=\"radio-inline\"> <input type=\"radio\" name=\"haveIns\" value=\"No\" required onclick=\"HideDiv('insuranceDiv');showNonInsuranceDiv('0');\"> NO </label> <label class=\"radio-inline\" style=\"margin-left:70px\"> <input type=\"radio\" name=\"haveIns\" value=\"Yes\" checked onclick=\"ShowDiv('insuranceDiv');showNonInsuranceDiv('1');\"> Yes </label> </div>\n");
+                    break;
+                default:
+                    insuredbuff.append("<div> <label class=\"radio-inline\"> <input type=\"radio\" name=\"haveIns\" value=\"No\" required onclick=\"HideDiv('insuranceDiv');\"> NO </label> <label class=\"radio-inline\" style=\"margin-left:70px\"> <input type=\"radio\" name=\"haveIns\" value=\"Yes\" onclick=\"ShowDiv('insuranceDiv');\"> Yes </label> </div>\n");
+                    break;
+            }
+
+
+            switch (ResParty) {
+                case "Self":
+                    ResPartybuff.append("<option value=\"Self\" selected>Self</option> <option value=\" Spouse \"> Spouse</option> <option value=\" Child \"> Child</option> <option value=\" Other \"> Other</option>");
+                    break;
+                case "Spouse":
+                    ResPartybuff.append("<option value=\"Self\" >Self</option> <option value=\" Spouse \" selected> Spouse</option> <option value=\" Child \"> Child</option> <option value=\" Other \"> Other</option>");
+                    break;
+                case "Child":
+                    ResPartybuff.append("<option value=\"Self\" >Self</option> <option value=\" Spouse \"> Spouse</option> <option value=\" Child \" selected> Child</option> <option value=\" Other \"> Other</option>");
+                    break;
+                case "Other":
+                    ResPartybuff.append("<option value=\"Self\" >Self</option> <option value=\" Spouse \"> Spouse</option> <option value=\" Child \"> Child</option> <option value=\" Other \" selected> Other</option>");
+                    break;
+                default:
+                    ResPartybuff.append("<option value=\"Self\">Self</option> <option value=\" Spouse \"> Spouse</option> <option value=\" Child \"> Child</option> <option value=\" Other \"> Other</option>");
+                    break;
+            }
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FullName", FullName);
+            Parser.SetField("DrivingLicense", DrivingLicense);
+            Parser.SetField("StateId", StateId);
+            Parser.SetField("ResParty", ResParty);
+            Parser.SetField("GrpNumber", GrpNumber);
+            Parser.SetField("MemID", MemID);
+            Parser.SetField("Insured", Insured);
+            Parser.SetField("OtherInsurance", OtherInsurance);
+            Parser.SetField("OtherPartyName", OtherPartyName);
+            Parser.SetField("CarrierNameBuff", String.valueOf(CarrierNameBuff));
+            Parser.SetField("insuredbuff", String.valueOf(insuredbuff));
             Parser.SetField("ClientIndex", String.valueOf(ClientIndex));
+            Parser.SetField("ResPartybuff", String.valueOf(ResPartybuff));
             Parser.SetField("PatRegIdx", String.valueOf(PatRegIdx));
             Parser.SetField("FoundMRN", String.valueOf(FoundMRN));
             Parser.SetField("TestList", TestList.toString());
@@ -5382,7 +5457,7 @@ public class LabPatientRegistration extends HttpServlet {
                         UploadPath = "/sftpdrive/AdmissionBundlePdf/Attachment/" + DirectoryName + "/ExistingPatDoc/";
                         filename = filename.replaceAll("\\s+", "");
 
-                        File fe = new File(String.valueOf(String.valueOf(UploadPath)) + filename);
+                        File fe = new File(UploadPath + filename);
                         if (fe.exists())
                             fe.delete();
                         FileOutputStream fouts = new FileOutputStream(fe);
@@ -5527,6 +5602,7 @@ public class LabPatientRegistration extends HttpServlet {
         String PSSNtext = "";
         String SSLtext = "";
         String SIDtext = "";
+        String OtherInsurance = "";
 
 
         String InternationalTravel = "";
@@ -5576,6 +5652,7 @@ public class LabPatientRegistration extends HttpServlet {
         String EmployerAddress = "";
         String EmployerPhone = "";
         String SecondryInsurance = "";
+        String OtherParty = "";
         String SubscriberName = "";
         String SubscriberDOB = "";
         String MemberID_2 = "";
@@ -5878,7 +5955,17 @@ public class LabPatientRegistration extends HttpServlet {
         } else {
             SendReportTo = valuemap.get("SendReportTo").trim();
         }
-
+        if (valuemap.get("OtherParty") == null) {
+            OtherParty = "";
+        } else {
+            OtherParty = valuemap.get("OtherParty").trim();
+        }
+        if (valuemap.get("OtherInsurance") == null) {
+            OtherInsurance = "";
+        } else {
+            OtherInsurance = valuemap.get("OtherInsurance").trim();
+        }
+        System.out.println("OtherInsurance " + OtherInsurance);
         PreparedStatement pStmt = null;
         String ClientIp = helper.getClientIp(request);
         try {
@@ -5892,7 +5979,7 @@ public class LabPatientRegistration extends HttpServlet {
                     " SympLossSmellTaste ,FullyVaccinated ,HaveExposed ,FirstTimeCovid ,HealthCareEmp , " +
                     " InICU ,InHospital ,IsPregnant ,IsResident ,HaveCloseContact ,HaveParticipated , " +
                     " HaveAsked ,DateOfSymp ,MRN ,ExtendedMRN ,Status ,CreatedDate, " +
-                    " DOB,ZipCode,UserIP,StageIdx,SendReportTo " +
+                    " DOB,ZipCode,UserIP,StageIdx,SendReportTo ,IFNULL(OtherPartyName,''),IFNULL(OthInsurance,'')  " +
                     " FROM roverlab.PatientReg WHERE ID = " + PatRegIdx;
 //            System.out.println("QUERY123 --> " + Query);
             stmt = conn.createStatement();
@@ -5909,12 +5996,12 @@ public class LabPatientRegistration extends HttpServlet {
                                     " SympNausea ,SympLossSmellTaste ,FullyVaccinated ,HaveExposed ,FirstTimeCovid ,HealthCareEmp , " +
                                     " InICU ,InHospital ,IsPregnant ,IsResident ,HaveCloseContact ,HaveParticipated ,HaveAsked , " +
                                     " DateOfSymp ,MRN ,ExtendedMRN ,Status ,CreatedDate," +
-                                    " DOB,ZipCode,UserIP,StageIdx,SendReportTo,OldPatRegIdx)  " +
+                                    " DOB,ZipCode,UserIP,StageIdx,SendReportTo,OtherPartyName,OthInsurance,OldPatRegIdx)  " +
                                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " +
                                     "?, ?, ?, " +
                                     "?, ?, ?, ?, ?, ?, ?, " +
                                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " +
-                                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(),?,?,?,?,?,?) ");
+                                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(),?,?,?,?,?,?,?,?) ");
                     MainReceipt.setString(1, rset.getString(1)); //FirstName
                     MainReceipt.setString(2, rset.getString(2));//LastName
                     MainReceipt.setString(3, rset.getString(3));//MiddleInitial
@@ -5971,7 +6058,10 @@ public class LabPatientRegistration extends HttpServlet {
                     MainReceipt.setString(54, rset.getString(56));//ClientIp
                     MainReceipt.setString(55, rset.getString(57));//StageIdx
                     MainReceipt.setString(56, rset.getString(58));//SendReportTo
-                    MainReceipt.setInt(57, PatRegIdx);//SendReportTo
+                    MainReceipt.setString(57, rset.getString(59));//OtherPartyName
+                    MainReceipt.setString(58, rset.getString(60));//OtherInsurance
+                    MainReceipt.setInt(59, PatRegIdx);//SendReportTo
+
 //                    System.out.println("INSERTION *** " + MainReceipt.toString());
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
@@ -6003,7 +6093,7 @@ public class LabPatientRegistration extends HttpServlet {
                             " SympLossSmellTaste = ? ,FullyVaccinated = ? ,HaveExposed  = ?," +
                             " FirstTimeCovid  = ?,HealthCareEmp = ? , " +
                             " InICU = ? ,InHospital = ? ,IsPregnant = ? ,IsResident = ? ," +
-                            " HaveCloseContact = ? ,HaveParticipated = ?,HaveAsked = ? ,DateOfSymp= ?  " +
+                            " HaveCloseContact = ? ,HaveParticipated = ?,HaveAsked = ? ,DateOfSymp= ?,OtherPartyName=?,OthInsurance = ?  " +
                             " WHERE ID = ? ");
             pStmt.setString(1, TesttingLoc);
             pStmt.setString(2, haveIns);
@@ -6048,9 +6138,9 @@ public class LabPatientRegistration extends HttpServlet {
             pStmt.setString(38, massGather);
             pStmt.setString(39, askedBy);
             pStmt.setString(40, sympDate);
-
-            pStmt.setInt(41, PatRegIdx);
-//            System.out.println("UPDATE *** " + pStmt.toString());
+            pStmt.setString(41, OtherParty);
+            pStmt.setString(42, OtherInsurance);
+            pStmt.setInt(43, PatRegIdx);
             pStmt.executeUpdate();
             pStmt.close();
         } catch (Exception ex) {
@@ -6275,7 +6365,7 @@ public class LabPatientRegistration extends HttpServlet {
             ps = conn.prepareStatement("Select TestIdx FROM " + Database + ".Tests " +
                     "  WHERE OrderID=?");
             ps.setString(1, OrderIdx);
-            System.out.println("Query ->> " + ps.toString());
+            System.out.println("Query ->> " + ps);
             rset = ps.executeQuery();
             while (rset.next()) {
                 if (rset.getInt(1) == 1 || rset.getInt(1) == 2) {
@@ -6287,8 +6377,8 @@ public class LabPatientRegistration extends HttpServlet {
             ps.close();
 
             Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("PatientMRN", String.valueOf(PatientMRN));
-            Parser.SetField("InvoiceNo", String.valueOf(PatientMRN));
+            Parser.SetField("PatientMRN", PatientMRN);
+            Parser.SetField("InvoiceNo", PatientMRN);
             Parser.SetField("UserId", String.valueOf(UserId));
             Parser.SetField("CDRList", String.valueOf(CDRList));
             Parser.SetField("ClientIndex", String.valueOf(ClientId));
@@ -6485,9 +6575,9 @@ public class LabPatientRegistration extends HttpServlet {
                 Paid = 1;
 //                }
 
-                TotalAmount=CCAmount;
+                TotalAmount = CCAmount;
 
-                InvoiceNo = SaveInvoice(out,conn,userId,database,PatientMRN,TotalAmount,OrderId);
+                InvoiceNo = SaveInvoice(out, conn, userId, database, PatientMRN, TotalAmount, OrderId);
 
                 payments.insertInvoiceMasterHistory(request, conn, servletContext, database, PatientMRN, InvoiceNo, UserIP);
 

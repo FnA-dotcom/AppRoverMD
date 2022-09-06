@@ -12,8 +12,10 @@ import java.io.OutputStream;
 
 
 /**
- * How to Add Text To Existing PDF in java
- * Example Using iText library - core java tutorial
+ *
+ *  How to Add Text To Existing PDF in java
+ *  Example Using iText library - core java tutorial
+ *
  */
 public class AddTextToExistingPDF {
 
@@ -24,15 +26,15 @@ public class AddTextToExistingPDF {
 //        String outputFilePath = "C:\\Users\\Dev\\Desktop\\PrimescopeV3_NEW.pdf"; // New file
 
 
-        String inputFilePath = "C:\\Users\\momehmood\\Downloads\\result_template.pdf"; // Existing file
-        String outputFilePath = "C:\\Users\\momehmood\\Downloads\\result_template_new.pdf"; // New file
+        String inputFilePath = "C:\\Users\\momehmood\\Desktop\\ORIGINALS\\manifestFormat.pdf"; // Existing file
+        String outputFilePath = "C:\\Users\\momehmood\\Desktop\\ORIGINALS\\manifestFormat-NEW.pdf"; // New file
         OutputStream fos = new FileOutputStream(new File(outputFilePath));
 
 
         PdfReader pdfReader = new PdfReader(inputFilePath);
         int pages = pdfReader.getNumberOfPages();
-        System.out.println("No of Pages: -- " + pages);
-        PdfStamper pdfStamper = new PdfStamper(pdfReader, fos);
+        System.out.println("No of Pages: -- "+pages);
+        PdfStamper pdfStamper3 = new PdfStamper(pdfReader, fos);
 
 
         // loop on all the PDF pages
@@ -40,133 +42,75 @@ public class AddTextToExistingPDF {
         for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
 
             if (i == 1) {
-                PdfContentByte pdfContentByte = pdfStamper.getOverContent(i);
-
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(345, 715); // set x and y co-ordinates
-                pdfContentByte.showText("CLIA ID :  45D2212719"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(445, 715); // set x and y co-ordinates
-                pdfContentByte.showText("Lab Director : Shiraz Pirali, MD"); // add the text
-                pdfContentByte.endText();
-
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(20, 685); // set x and y co-ordinates
-                pdfContentByte.showText("Member Name "); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(205, 685); // set x and y co-ordinates
-                pdfContentByte.showText("DOB"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(275, 685); // set x and y co-ordinates
-                pdfContentByte.showText("GENDER"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(345, 685); // set x and y co-ordinates
-                pdfContentByte.showText("ACCESSION#"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(409, 685); // set x and y co-ordinates
-                pdfContentByte.showText("COLLECTED"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(495, 685); // set x and y co-ordinates
-                pdfContentByte.showText("RECEIVED"); // add the text
-                pdfContentByte.endText();
-
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(20, 655); // set x and y co-ordinates
-                pdfContentByte.showText("Date Of Service"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(205, 655); // set x and y co-ordinates
-                pdfContentByte.showText("LOCATION"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(495, 655); // set x and y co-ordinates
-                pdfContentByte.showText("REPORTED"); // add the text
-                pdfContentByte.endText();
+                final PdfContentByte pdfContentByte3 = pdfStamper3.getOverContent(i);
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(120.0f, 590.0f);
+                pdfContentByte3.showText("NAME");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(300.0f, 590.0f);
+                pdfContentByte3.showText("DOB");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(485.0f, 590.0f);
+                pdfContentByte3.showText("HISubscriberRelationtoPatient");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(150.0f, 565.0f);
+                pdfContentByte3.showText("HIPrimaryInsurance");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(150.0f, 540.0f);
+                pdfContentByte3.showText("HISubscriberPolicyNo");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(150.0f, 520.0f);
+                pdfContentByte3.showText("DOS");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(150.0f, 420.0f);
+                pdfContentByte3.showText("Name");
+                pdfContentByte3.endText();
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(380.0f, 420.0f);
+                pdfContentByte3.showText("Victoria ER");
+                pdfContentByte3.endText();
 
 
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(20, 620); // set x and y co-ordinates
-                pdfContentByte.showText("SARS-CoV-2 RT-PCR (Aries)"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(20, 610); // set x and y co-ordinates
-                pdfContentByte.showText("Sample Type: Nasopharyngeal Swab"); // add the text
-                pdfContentByte.endText();
-
-
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.WHITE);
-                pdfContentByte.setTextMatrix(25, 580); // set x and y co-ordinates
-                pdfContentByte.showText("Result Summary: Tests Performed, Non-Detected"); // add the text
-                pdfContentByte.endText();
-
-
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(20, 545); // set x and y co-ordinates
-                pdfContentByte.showText("Test Name"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(230, 545); // set x and y co-ordinates
-                pdfContentByte.showText("Result"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(315, 545); // set x and y co-ordinates
-                pdfContentByte.showText("Comments"); // add the text
-                pdfContentByte.endText();
-                pdfContentByte.beginText();
-                pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.TIMES_BOLD, BaseFont.CP1257, BaseFont.EMBEDDED), 9); // set fonts zine and name
-                pdfContentByte.setColorFill(BaseColor.BLACK);
-                pdfContentByte.setTextMatrix(495, 545); // set x and y co-ordinates
-                pdfContentByte.showText("SEE"); // add the text
-                pdfContentByte.endText();
-
+//                if (SignImages != null) {
+//                    SignImages.setAbsolutePosition(100.0f, 160.0f);
+//                    pdfContentByte3.addImage(SignImages);
+//                }
+                pdfContentByte3.beginText();
+                pdfContentByte3.setFontAndSize(BaseFont.createFont("Times-Roman", "Cp1257", true), 10.0f);
+                pdfContentByte3.setColorFill(BaseColor.BLACK);
+                pdfContentByte3.setTextMatrix(440.0f, 160.0f);
+                pdfContentByte3.showText("Date");
+                pdfContentByte3.endText();
             }
 
 
         }
 
-        pdfStamper.close(); //close pdfStamper
+        pdfStamper3.close(); //close pdfStamper
 
-        System.out.println("Modified PDF created in >> " + outputFilePath);
+        System.out.println("Modified PDF created in >> "+ outputFilePath);
 
     }
 

@@ -9,22 +9,49 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@SuppressWarnings("Duplicates")
 public class hl7loopsender implements Runnable {
     private static boolean SignonDone;
-    private static int TraceNo;
-
-    static {
-        hl7loopsender.SignonDone = false;
-    }
-
     private Socket sock;
     private boolean done;
+    private static int TraceNo;
 
     public hl7loopsender(final Socket socket) {
         this.done = false;
         this.sock = socket;
         hl7loopsender.TraceNo = 0;
+    }
+
+    static {
+        hl7loopsender.SignonDone = false;
+    }
+
+    @Override
+    public void run() {
+        final byte[] lenbuf = new byte[2];
+        final Connection conn = null;
+        final Statement hstmt = null;
+        final ResultSet hrset = null;
+        final String Query = "";
+        try {
+            System.out.println("In Read Thread  ..........");
+            this.sock.getInputStream().read(lenbuf);
+            final int size = (lenbuf[0] & 0xFF) << 8 | (lenbuf[1] & 0xFF);
+            final byte[] buf = new byte[size];
+            final int readsize = this.sock.getInputStream().read(buf);
+            System.out.println("Message received from Server: " + new String(buf));
+        } catch (Exception ex) {
+            ex.printStackTrace(System.out);
+            System.out.println("Exception in Client Thread run method   : " + ex.getMessage());
+            final String[] a = null;
+            try {
+                Thread.sleep(20000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                System.out.println("going for Reconnection");
+            }
+            main(a);
+        }
+        System.out.println("Read Thread Ends....");
     }
 
     public static void main(final String[] args) {
@@ -359,35 +386,6 @@ public class hl7loopsender implements Runnable {
             System.out.println("GetConnection: " + e.getMessage());
             return null;
         }
-    }
-
-    @Override
-    public void run() {
-        final byte[] lenbuf = new byte[2];
-        final Connection conn = null;
-        final Statement hstmt = null;
-        final ResultSet hrset = null;
-        final String Query = "";
-        try {
-            System.out.println("In Read Thread  ..........");
-            this.sock.getInputStream().read(lenbuf);
-            final int size = (lenbuf[0] & 0xFF) << 8 | (lenbuf[1] & 0xFF);
-            final byte[] buf = new byte[size];
-            final int readsize = this.sock.getInputStream().read(buf);
-            System.out.println("Message received from Server: " + new String(buf));
-        } catch (Exception ex) {
-            ex.printStackTrace(System.out);
-            System.out.println("Exception in Client Thread run method   : " + ex.getMessage());
-            final String[] a = null;
-            try {
-                Thread.sleep(20000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                System.out.println("going for Reconnection");
-            }
-            main(a);
-        }
-        System.out.println("Read Thread Ends....");
     }
 
     protected void stop() {

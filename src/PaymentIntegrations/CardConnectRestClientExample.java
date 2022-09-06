@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
@@ -51,22 +52,18 @@ public class CardConnectRestClientExample {
 //    private static final String PASSWORD = "sHC!x7pL!3YGDu!jdDk4";
 
     //Frontline-ER -- White Rock
-/*    private static final String ENDPOINT = "https://boltgw.cardconnect.com/cardconnect/rest/";
+    private static final String ENDPOINT = "https://boltgw.cardconnect.com/cardconnect/rest/";
     private static final String USERNAME = "frontlin";
-    private static final String PASSWORD = "w6vu$HGc$5VeW5$b7uwy";*/
+    private static final String PASSWORD = "w6vu$HGc$5VeW5$b7uwy";
 
     //Frontline-ER -- Richmond
 /*    private static final String ENDPOINT = "https://boltgw.cardconnect.com/cardconnect/rest/";
     private static final String USERNAME = "frontlin";
     private static final String PASSWORD = "avZ!dg5@sAF#udR4vUWh";*/
 
-    //Golden Triangle -GTEC-Orange
-    private static final String ENDPOINT = "https://boltgw.cardconnect.com/cardconnect/rest/";
+/*    private static final String ENDPOINT = "https://boltgw.cardconnect.com/cardconnect/rest/";
     private static final String USERNAME = "goldentr";
-    private static final String PASSWORD = "Cu!!!U32cmXb9kHkaFWS";
-    //E-CHK
-//    private static final String USERNAME = "goldeapi";
-//    private static final String PASSWORD = "cb!h5R9B@tq3gFQ#AjRk";
+    private static final String PASSWORD = "Cu!!!U32cmXb9kHkaFWS";*/
     //EXCEL ER ODESSA
 /*    private static final String ENDPOINT = "https://boltgw.cardconnect.com/cardconnect/rest/";
     private static final String USERNAME = "excelero";
@@ -123,12 +120,6 @@ public class CardConnectRestClientExample {
         //* TRIPLE PAYMENT ISSUE
         //refundTransaction("150375249241");
         //refundTransaction("150933749351");
-        //3-feb-2022
-        //voidTransaction("034128062194");
-
-        //5-May-2022-- Voiding correct transaction of Orange. It was made from check. Now, they want us to cash back the customer
-        voidTransaction("094298078540");
-
         //Odessa - 06-07-2021
         //Double Payment Issue
         //refundTransaction("681615072466");
@@ -159,7 +150,11 @@ public class CardConnectRestClientExample {
         //refundTransaction("258224260152");
 
         //Victoria 23-Sept-21
-        //refundTransaction("266377039522");
+//        refundTransaction("266377039522");
+
+        //Frontline 1-3-2022 MOUHID
+        refundTransaction("551337077056");
+
 
 
         //Abid
@@ -209,9 +204,6 @@ public class CardConnectRestClientExample {
         {
             "account" : "4444333322221111"
         }*/
-
-        //Inquire Check Transactions
-        //inquireTransaction("293203064497");
     }
 
     public static String gettoken() {
@@ -339,8 +331,8 @@ public class CardConnectRestClientExample {
     /**
      * Authorize Transaction REST Example
      *
-     * @param token
      * @return
+     * @param token
      */
     public static String authTransaction2(String token) {
         System.out.println("\nAuthorization Request");
@@ -667,10 +659,7 @@ public class CardConnectRestClientExample {
         // Merchant ID
         //request.put("merchid", "496407339886");
         //Odessa
-        //request.put("merchid", "496407339886");
-        //request.put("merchid", "496406685883");
-        //Orange-ECHK
-        request.put("merchid", "496405167883");
+        request.put("merchid", "496407339886");
         // Transaction amount
         request.put("amount", "0");
         // Transaction currency
@@ -709,7 +698,7 @@ public class CardConnectRestClientExample {
         //Richmond
         //request.put("merchid", "496409008885");
         //Victoria
-        request.put("merchid", "496406685883");
+//        request.put("merchid", "496406685883");
         //Odessa
         //request.put("merchid", "496407339886");
         //LongView
@@ -717,11 +706,11 @@ public class CardConnectRestClientExample {
         //Naco
         //request.put("merchid", "496412107880");
         //WhiteRock
-        //request.put("merchid", "496407709880");
+        request.put("merchid", "496407709880");
         //Testing Device
         //request.put("merchid", "496407356880");
         // Transaction amount
-        request.put("amount", "250.00");
+        request.put("amount", "200.00");
         // Transaction currency
         request.put("currency", "USD");
         // Return Reference code from authorization request
@@ -747,8 +736,7 @@ public class CardConnectRestClientExample {
      */
     public static void inquireTransaction(String retref) {
         System.out.println("\nInquire Transaction Request");
-        //Orange
-        String merchid = "496405167883";
+        String merchid = "496160873888";
 
         // Create the CardConnect REST client
         CardConnectRestClient client = new CardConnectRestClient(ENDPOINT, USERNAME, PASSWORD);
@@ -998,7 +986,7 @@ public class CardConnectRestClientExample {
             connection.connect();
             if (strJson != null && !"".equals(strJson.trim())) {
                 os = connection.getOutputStream();
-                os.write(strJson.getBytes("UTF-8"));
+                os.write(strJson.getBytes(StandardCharsets.UTF_8));
             }
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String line;

@@ -203,23 +203,23 @@ public class DownloadPatientsExcel extends HttpServlet {
                 out.println("<td class=\"fieldm\"><font face=\"Arial\" color=\"#FFFFFF\"><b>Reason Of Visit</b></font></td>");
                 out.println("<td class=\"fieldm\"><font face=\"Arial\" color=\"#FFFFFF\"><b>Date of Service</b></font></td></tr>");
 
-                if (ClientId == 9 || ClientId == 28) {
+                if(ClientId == 9 || ClientId == 28){
                     Query = " SELECT CONCAT(IFNULL(Title,''),' ',IFNULL(FirstName,''),' ',IFNULL(MiddleInitial,''),' ',IFNULL(LastName,'')), DATE_FORMAT(a.DOB,'%m/%d/%Y'),IFNULL(a.PhNumber,'')," +
                             " IFNULL(a.MRN, 0),IFNULL(z.ReasonVisit, '-'),a.ID, " +
                             " IFNULL(DATE_FORMAT(z.DateofService,'%m/%d/%Y %T'),DATE_FORMAT(z.CreatedDate,'%m/%d/%Y %T'))," +
                             " CASE WHEN a.COVIDStatus = 1 THEN 'POSITIVE' WHEN a.COVIDStatus = 0 THEN 'NEGATIVE' WHEN a.COVIDStatus = - 1 THEN 'NONE' ELSE 'NONE' END, " +
                             " a.SelfPayChk, IFNULL(a.Email, '-'), IFNULL(a.Address, '-'), IFNULL(b.HIPrimaryInsurance, '-'), IFNULL(a.City, '-'), IFNULL(a.State, '-'), " +
                             " IFNULL(a.ZipCode, '-') " +
-                            " FROM " + Database + ".PatientReg a " +
-                            " LEFT JOIN " + Database + ".Patient_HealthInsuranceInfo b ON a.ID = b.PatientRegId\n" +
-                            "INNER JOIN " + Database + ".PatientVisit z ON z.PatientRegId = a.ID " +
-                            " WHERE a. STATUS = 0 " +
-                            "AND DATE_FORMAT(z.DateofService,'%Y-%m-%d %T') BETWEEN '" + FromDate + " 00:00:00' AND '" + ToDate + " 23:59:59' " +
+                            " FROM "+Database+".PatientReg a " +
+                            " LEFT JOIN "+Database+".Patient_HealthInsuranceInfo b ON a.ID = b.PatientRegId\n" +
+                            "INNER JOIN "+Database+".PatientVisit z ON z.PatientRegId = a.ID " +
+                            " WHERE a. STATUS = 0 "+
+                            "AND DATE_FORMAT(z.DateofService,'%Y-%m-%d %T') BETWEEN '"+FromDate+" 00:00:00' AND '"+ToDate+" 23:59:59' "+
 //                            " AND z.DateofService >= '" + FromDate + " 00:00:00'\n" +
 //                            " AND z.DateofService <= '" + ToDate + " 23:59:59'\n" +
-                            " ORDER BY a.ID DESC ";
+                            " ORDER BY a.ID DESC " ;
 
-                } else {
+                }else {
                     Query = " SELECT CONCAT(IFNULL(Title,''),' ',IFNULL(FirstName,''),' ',IFNULL(MiddleInitial,''),' ',IFNULL(LastName,'')), DATE_FORMAT(a.DOB,'%m/%d/%Y'),\n" +
                             "a.PhNumber,\n" +
                             " IFNULL(a.MRN, 0),\n" +
@@ -258,7 +258,7 @@ public class DownloadPatientsExcel extends HttpServlet {
                             "INNER JOIN " + Database + ".PatientVisit z ON z.MRN = a.MRN\n" +
                             "WHERE\n" +
                             "a.STATUS = 0\n" +
-                            "AND DATE_FORMAT(z.DateofService,'%Y-%m-%d %T') BETWEEN '" + FromDate + " 00:00:00' AND '" + ToDate + " 23:59:59' " +
+                            "AND DATE_FORMAT(z.DateofService,'%Y-%m-%d %T') BETWEEN '"+FromDate+" 00:00:00' AND '"+ToDate+" 23:59:59' "+
 //                            "AND z.DateofService >= '" + FromDate + " 00:00:00'\n" +
 //                            "AND z.DateofService <= '" + ToDate + " 23:59:59'\n" +
                             "ORDER BY ID DESC";

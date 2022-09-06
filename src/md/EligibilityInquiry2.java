@@ -24,11 +24,24 @@ import java.util.Date;
 
 @SuppressWarnings("Duplicates")
 public class EligibilityInquiry2 extends HttpServlet {
-    Integer ScreenIndex = 8;
     private Statement stmt = null;
     private ResultSet rset = null;
     private String Query = "";
     private Connection conn = null;
+    Integer ScreenIndex = 8;
+
+
+    public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
+    }
+
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        this.handleRequest(request, response);
+    }
 
     private static void pushLogs(String Message, Exception exp) {
         try {
@@ -52,201 +65,6 @@ public class EligibilityInquiry2 extends HttpServlet {
         } catch (Exception localException) {
         }
         return null;
-    }
-
-    private static String GetExceptionFileName() {
-        int temp = 0;
-        try {
-            Date dt = GetDate();
-            NumberFormat nf = new DecimalFormat("#00");
-
-            return nf.format(dt.getYear() + 1900) + "_" + nf.format(dt.getMonth() + 1) + "_" + nf.format(dt.getDate()) + ".log";
-        } catch (Exception e) {
-            return "invalid filename " + e.getMessage();
-        }
-    }
-
-    public void init(final ServletConfig config) throws ServletException {
-        super.init(config);
-    }
-
-    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        this.handleRequest(request, response);
-    }
-
-    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        this.handleRequest(request, response);
-    }
-
-    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        String UserId;
-        int FacilityIndex;
-        String DatabaseName;
-        PrintWriter out = new PrintWriter(response.getOutputStream());
-        Services supp = new Services();
-
-        String ActionID;
-        ServletContext context = null;
-        context = this.getServletContext();
-
-        try {
-            HttpSession session = request.getSession(false);
-            UtilityHelper helper = new UtilityHelper();
-
-            boolean validSession = helper.checkSession(request, context, session, out);
-            if (!validSession) {
-                out.flush();
-                out.close();
-                return;
-            }
-
-            UserId = session.getAttribute("UserId").toString();
-            DatabaseName = session.getAttribute("DatabaseName").toString();
-            FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
-            int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
-
-            try {
-/*                boolean ValidSession = FacilityLogin.checkSession(out, request, context, response);
-                if (!ValidSession) {
-                    out.flush();
-                    out.close();
-                    return;
-                }*/
-                if (UserId.equals("")) {
-                    Parsehtm Parser = new Parsehtm(request);
-                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
-                    out.flush();
-                    out.close();
-                    return;
-                }
-            } catch (Exception excp) {
-                conn = null;
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("FormName", "ManagementDashboard");
-                Parser.SetField("ActionID", "GetInput");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
-            }
-
-            ActionID = request.getParameter("ActionID").trim();
-            conn = Services.getMysqlConn(context);
-
-            if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, this.ScreenIndex)) {
-//                out.println("You are not Authorized to access this page");
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("Message", "You are not Authorized to access this page");
-                Parser.SetField("FormName", "ManagementDashboard");
-                Parser.SetField("ActionID", "GetInput");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
-                return;
-            }
-
-
-            if (conn == null) {
-                Parsehtm Parser = new Parsehtm(request);
-                Parser.SetField("Error", "Unable to connect. Our team is looking into it!");
-                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
-                return;
-            }
-            switch (ActionID) {
-                case "EligibilityGetInput":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2", "Input Fields Details", FacilityIndex);
-                    this.EligibilityGetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "GetDetails":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Patient Details", "Get Patient Details and Auto Fill the Input Fields", FacilityIndex);
-                    this.GetDetails(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "GetResponse":
-                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Get Insurance Information", "Get Insurance Info, Response from finaltrizetto And eireponse Class", FacilityIndex);
-                    this.GetResponse(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                default:
-                    helper.deleteUserSession(request, conn, session.getId());
-                    //Invalidating Session.
-                    session.invalidate();
-                    Parsehtm Parser = new Parsehtm(request);
-                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
-                    break;
-            }
-        } catch (Exception Ex) {
-            Services.DumException("EligibilityInquiry2", "Handle Request", request, Ex, getServletContext());
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("FormName", "ManagementDashboard");
-            Parser.SetField("ActionID", "GetInput");
-            Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
-            out.flush();
-            out.close();
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            out.flush();
-            out.close();
-        }
-    }
-
-    private void EligibilityGetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
-        ResultSet rset = null;
-        Statement stmt = null;
-        String Query = "";
-        final StringBuffer PatientList = new StringBuffer();
-        final StringBuffer ServiceType = new StringBuffer();
-        final StringBuffer PayProcedureList = new StringBuffer();
-        final StringBuffer InstitutionalPayerList = new StringBuffer();
-        final StringBuffer ProfessionalPayersList = new StringBuffer();
-        try {
-            Query = "Select MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) " +
-                    "from " + Database + ".PatientReg where status = 0";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            PatientList.append("<option class=Inner value='0'>Please Select Patient</option>");
-            while (rset.next()) {
-                PatientList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + " (" + rset.getString(1) + ")</option>");
-            }
-            rset.close();
-            stmt.close();
-            Query = "Select ServiceId, ServiceName from " + Database + ".ServiceType";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            ServiceType.append("<option class=Inner value='-1'>All</option>");
-            while (rset.next()) {
-                ServiceType.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(1) + " - " + rset.getString(2) + "</option>");
-            }
-            rset.close();
-            stmt.close();
-            Query = "Select PayerId, PayerProcedure from " + Database + ".PayerProcedures";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                PayProcedureList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
-            }
-            rset.close();
-            stmt.close();
-            Query = "Select PayerId, PayerName from " + Database + ".ProfessionalPayers order by status";
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            while (rset.next()) {
-                ProfessionalPayersList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
-            }
-            rset.close();
-            stmt.close();
-
-            final Parsehtm Parser = new Parsehtm(request);
-            Parser.SetField("PatientList", String.valueOf(PatientList));
-            Parser.SetField("ServiceType", String.valueOf(ServiceType));
-            Parser.SetField("PayProcedureList", String.valueOf(PayProcedureList));
-            Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
-            Parser.SetField("ClientIndex", String.valueOf(ClientId));
-            Parser.SetField("UserId", String.valueOf(UserId));
-            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(servletContext)) + "Forms/EligibilityGetInput2.html");
-        } catch (Exception ex) {
-            pushLogs("Error in EligibilityGetInput in main : ", ex);
-            out.println("Error:-" + ex.getMessage());
-        }
     }
 
     private void GetDetails(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
@@ -341,6 +159,187 @@ public class EligibilityInquiry2 extends HttpServlet {
         }
     }
 
+    private static String GetExceptionFileName() {
+        int temp = 0;
+        try {
+            Date dt = GetDate();
+            NumberFormat nf = new DecimalFormat("#00");
+
+            return nf.format(dt.getYear() + 1900) + "_" + nf.format(dt.getMonth() + 1) + "_" + nf.format(dt.getDate()) + ".log";
+        } catch (Exception e) {
+            return "invalid filename " + e.getMessage();
+        }
+    }
+
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        String UserId;
+        int FacilityIndex;
+        String DatabaseName;
+        PrintWriter out = new PrintWriter(response.getOutputStream());
+        Services supp = new Services();
+
+        String ActionID;
+        ServletContext context = null;
+        context = this.getServletContext();
+
+        try {
+            HttpSession session = request.getSession(false);
+            UtilityHelper helper = new UtilityHelper();
+
+            boolean validSession = helper.checkSession(request, context, session, out);
+            if (!validSession) {
+                out.flush();
+                out.close();
+                return;
+            }
+
+            UserId = session.getAttribute("UserId").toString();
+            DatabaseName = session.getAttribute("DatabaseName").toString();
+            FacilityIndex = Integer.parseInt(session.getAttribute("FacilityIndex").toString());
+            int UserIndex = Integer.parseInt(session.getAttribute("UserIndex").toString());
+
+            try {
+/*                boolean ValidSession = FacilityLogin.checkSession(out, request, context, response);
+                if (!ValidSession) {
+                    out.flush();
+                    out.close();
+                    return;
+                }*/
+                if (UserId.equals("")) {
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/SessionTimeOut.html");
+                    out.flush();
+                    out.close();
+                    return;
+                }
+            } catch (Exception excp) {
+                conn = null;
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("FormName","ManagementDashboard");
+                Parser.SetField("ActionID","GetInput");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
+            }
+
+            ActionID = request.getParameter("ActionID").trim();
+            conn = Services.getMysqlConn(context);
+
+            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
+//                out.println("You are not Authorized to access this page");
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("Message", "You are not Authorized to access this page");
+                Parser.SetField("FormName", "ManagementDashboard");
+                Parser.SetField("ActionID", "GetInput");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
+                return;
+            }
+
+
+            if (conn == null) {
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.SetField("Error", "Unable to connect. Our team is looking into it!");
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
+                return;
+            }
+            switch (ActionID) {
+                case "EligibilityGetInput":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2", "Input Fields Details", FacilityIndex);
+                    this.EligibilityGetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetDetails":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Patient Details", "Get Patient Details and Auto Fill the Input Fields", FacilityIndex);
+                    this.GetDetails(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                case "GetResponse":
+                    supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Insurance Eligibility Inquiry 2 Get Insurance Information", "Get Insurance Info, Response from finaltrizetto And eireponse Class", FacilityIndex);
+                    this.GetResponse(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+                    break;
+                default:
+                    helper.deleteUserSession(request, conn, session.getId());
+                    //Invalidating Session.
+                    session.invalidate();
+                    Parsehtm Parser = new Parsehtm(request);
+                    Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
+                    break;
+            }
+        } catch (Exception Ex) {
+            Services.DumException("EligibilityInquiry2", "Handle Request", request, Ex, getServletContext());
+            Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("FormName","ManagementDashboard");
+            Parser.SetField("ActionID","GetInput");
+            Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ExceptionMessage.html");
+            out.flush();
+            out.close();
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            out.flush();
+            out.close();
+        }
+    }
+
+    private void EligibilityGetInput(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
+        ResultSet rset = null;
+        Statement stmt = null;
+        String Query = "";
+        final StringBuffer PatientList = new StringBuffer();
+        final StringBuffer ServiceType = new StringBuffer();
+        final StringBuffer PayProcedureList = new StringBuffer();
+        final StringBuffer InstitutionalPayerList = new StringBuffer();
+        final StringBuffer ProfessionalPayersList = new StringBuffer();
+        try {
+            Query = "Select MRN, CONCAT(Title, ' ' , FirstName, ' ', MiddleInitial, ' ', LastName) from " + Database + ".PatientReg where status = 0";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            PatientList.append("<option class=Inner value='0'>Please Select Patient</option>");
+            while (rset.next()) {
+                PatientList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + " (" + rset.getString(1) + ")</option>");
+            }
+            rset.close();
+            stmt.close();
+            Query = "Select ServiceId, ServiceName from " + Database + ".ServiceType";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            ServiceType.append("<option class=Inner value='-1'>All</option>");
+            while (rset.next()) {
+                ServiceType.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(1) + " - " + rset.getString(2) + "</option>");
+            }
+            rset.close();
+            stmt.close();
+            Query = "Select PayerId, PayerProcedure from " + Database + ".PayerProcedures";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            while (rset.next()) {
+                PayProcedureList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+            }
+            rset.close();
+            stmt.close();
+            Query = "Select PayerId, PayerName from " + Database + ".ProfessionalPayers order by status";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            while (rset.next()) {
+                ProfessionalPayersList.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+            }
+            rset.close();
+            stmt.close();
+            final Parsehtm Parser = new Parsehtm(request);
+            Parser.SetField("PatientList", String.valueOf(PatientList));
+            Parser.SetField("ServiceType", String.valueOf(ServiceType));
+            Parser.SetField("PayProcedureList", String.valueOf(PayProcedureList));
+            Parser.SetField("ProfessionalPayersList", String.valueOf(ProfessionalPayersList));
+            Parser.SetField("ClientIndex", String.valueOf(ClientId));
+            Parser.SetField("UserId", String.valueOf(UserId));
+            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(servletContext)) + "Forms/EligibilityGetInput2.html");
+        } catch (Exception ex) {
+            pushLogs("Error in EligibilityGetInput in main : ", ex);
+            out.println("Error:-" + ex.getMessage());
+        }
+    }
+
     private void GetResponse(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
         ResultSet rset = null;
         Statement stmt = null;
@@ -402,8 +401,8 @@ public class EligibilityInquiry2 extends HttpServlet {
                 MainReceipt.setString(10, GediPayerID);
                 MainReceipt.setString(11, UserId);
                 MainReceipt.setString(12, ResponseType);
-                MainReceipt.setInt(13, ClientId);
-                MainReceipt.setInt(14, 1);
+                MainReceipt.setInt(13,ClientId);
+                MainReceipt.setInt(14,1);
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
             } catch (Exception ex) {

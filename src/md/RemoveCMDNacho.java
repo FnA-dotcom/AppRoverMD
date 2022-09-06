@@ -22,6 +22,8 @@ import java.util.*;
 @SuppressWarnings("Duplicates")
 public class RemoveCMDNacho extends HttpServlet {
     private Connection conn = null;
+    Integer ScreenIndex = 26;
+
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -73,6 +75,16 @@ public class RemoveCMDNacho extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
+
+//            if(!helper.AuthorizeScreen(request,out,conn,context,UserId,this.ScreenIndex)){
+////                out.println("You are not Authorized to access this page");
+//                Parsehtm Parser = new Parsehtm(request);
+//                Parser.SetField("Message", "You are not Authorized to access this page");
+//                Parser.SetField("FormName", "ManagementDashboard");
+//                Parser.SetField("ActionID", "GetInput");
+//                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
+//                return;
+//            }
 
             switch (ServiceRequests) {
                 case "GetInput":
@@ -407,7 +419,7 @@ public class RemoveCMDNacho extends HttpServlet {
                         "State, Country, ZipCode, SSN, Occupation, Employer, EmpContact, PriCarePhy, ReasonVisit, SelfPayChk, CreatedDate, " +
                         "Title, MaritalStatus, CreatedBy, MRN, COVIDStatus, Status, DoctorsName, sync, DateofService, ExtendedMRN, County, " +
                         "Ethnicity, Address2, StreetAddress2, EnterBy, EnterType, EnterIP, ViewDate, RegisterFrom " +
-                        "FROM nacogdoches.PatientReg WHERE MRN = " + MRN;
+                        "FROM nacogdoches.PatientReg WHERE MRN = " + MRN ;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -477,7 +489,7 @@ public class RemoveCMDNacho extends HttpServlet {
                 stmt.close();
 
                 Query = "Select Id, MRN, PatientRegId, ReasonVisit, VisitNumber, DoctorId, DateofService, CreatedDate, CreatedBy " +
-                        "from nacogdoches.PatientVisit where MRN = " + MRN;
+                        "from nacogdoches.PatientVisit where MRN = " + MRN ;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -516,7 +528,7 @@ public class RemoveCMDNacho extends HttpServlet {
                         "SympNausea, SympFluSymptoms, SympEyeConjunctivitis, Race, CovidExpWhen, SpCarePhy, SympHeadache, SympLossTaste, " +
                         "SympShortBreath, AddInfoTextArea, SympCongestion, Ethnicity, GuarantorName, GuarantorDOB, GuarantorNumber, " +
                         "GuarantorSSN, VisitId, COVIDPositveChk, CovidPositiveDate, GuarantorLastName " +
-                        "from nacogdoches.PatientReg_Details where MRN = " + MRN;
+                        "from nacogdoches.PatientReg_Details where MRN = " + MRN ;
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -581,7 +593,7 @@ public class RemoveCMDNacho extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN;
+                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN ;
                 stmt0 = conn.createStatement();
                 rset0 = stmt0.executeQuery(Query0);
                 if (rset0.next()) {
@@ -628,7 +640,7 @@ public class RemoveCMDNacho extends HttpServlet {
                 stmt0.close();
 
 
-                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN;
+                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN ;
                 stmt0 = conn.createStatement();
                 rset0 = stmt0.executeQuery(Query0);
                 if (rset0.next()) {
@@ -717,7 +729,7 @@ public class RemoveCMDNacho extends HttpServlet {
                 rset0.close();
                 stmt0.close();
 
-                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN;
+                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN ;
                 stmt0 = conn.createStatement();
                 rset0 = stmt0.executeQuery(Query0);
                 if (rset0.next()) {
@@ -729,7 +741,7 @@ public class RemoveCMDNacho extends HttpServlet {
                 rset0.close();
                 stmt0.close();
 
-                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN;
+                Query0 = "SELECT ID FROM nacogdoches.PatientReg WHERE MRN = " + MRN ;
                 stmt0 = conn.createStatement();
                 rset0 = stmt0.executeQuery(Query0);
                 if (rset0.next()) {
@@ -741,17 +753,17 @@ public class RemoveCMDNacho extends HttpServlet {
                 rset0.close();
                 stmt0.close();
 
-                Query = "DELETE FROM nacogdoches.PatientReg WHERE MRN = " + MRN;
+                Query = "DELETE FROM nacogdoches.PatientReg WHERE MRN = " + MRN ;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
 
-                Query = "DELETE FROM nacogdoches.PatientVisit WHERE MRN = " + MRN;
+                Query = "DELETE FROM nacogdoches.PatientVisit WHERE MRN = " + MRN ;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();
 
-                Query = "DELETE FROM nacogdoches.PatientReg_Details WHERE MRN = " + MRN;
+                Query = "DELETE FROM nacogdoches.PatientReg_Details WHERE MRN = " + MRN ;
                 stmt = conn.createStatement();
                 stmt.executeUpdate(Query);
                 stmt.close();

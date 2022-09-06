@@ -1,10 +1,13 @@
 package Testing;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.time.LocalDate;
 
 public class DateCheck {
+    private static Connection conn = null;
+    private static PreparedStatement pStmt = null;
+    private static String Query = "";
 
     public static void main(String[] args) {
         try {
@@ -19,27 +22,26 @@ public class DateCheck {
             pStmt.setNull(1, Types.DATE);
             pStmt.executeUpdate();
 
+
             System.out.println("CHECK THE TABLE");*/
-/*            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-            DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("HH:mm:ss a");
-            LocalDateTime now = LocalDateTime.now();
-            System.out.println(dtf.format(now));
-            System.out.println(dtf2.format(now));
 
-            String pattern = "yyyy-MM-dd HH:mm:ss";
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-            Date NDOS = (Date) simpleDateFormat.parse("2021-12-21T01:15");
-            System.out.println("DOS " + NDOS);*/
+            String contract_term = "12";
+            LocalDate date = LocalDate.parse("2020-05-03");
+            // Displaying date
+            System.out.println("Date : " + date);
+            // Add 2 months to the date
+            LocalDate newDate = date.plusMonths(Integer.parseInt(contract_term));
+            System.out.println("New Date : " + newDate);
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm", Locale.US);
-            String strLocalDate = "2021-12-21T01:15";
-            LocalDateTime localDate = LocalDateTime.parse(strLocalDate, formatter);
 
-            System.out.println(localDate);
-            System.out.println(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(localDate));
-            System.out.println(DateTimeFormatter.ofPattern("HH:mm yyyy-MM-dd ").format(localDate));
+//            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+//            DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("HH:mm:ss a");
+//            LocalDateTime now = LocalDateTime.now();
+//            System.out.println(dtf.format(now));
+//            System.out.println(dtf2.format(now));
 
         } catch (Exception e) {
+            conn = null;
             System.out.println("Exception excp conn: " + e.getMessage());
             return;
         }

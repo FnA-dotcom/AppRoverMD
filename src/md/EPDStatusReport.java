@@ -6,10 +6,7 @@ import Parsehtm.Parsehtm;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -20,11 +17,13 @@ import java.sql.Statement;
 
 @SuppressWarnings("Duplicates")
 public class EPDStatusReport extends HttpServlet {
-    Integer ScreenIndex = 21;
     private Statement stmt = null;
     private ResultSet rset = null;
     private String Query = "";
     private Connection conn = null;
+
+    Integer ScreenIndex = 21;
+
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -36,6 +35,62 @@ public class EPDStatusReport extends HttpServlet {
 
     public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
         this.handleRequest(request, response);
+    }
+
+    public void handleRequestOLD(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+        String Database = "";
+        String Query = "";
+        int ClientId = 0;
+        final String ActionID = request.getParameter("ActionID").trim();
+        response.setContentType("text/html");
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
+        final Services supp = new Services();
+        ServletContext context = null;
+        context = this.getServletContext();
+        conn = Services.getMysqlConn(context);
+        String UserId = "";
+        try {
+            final Cookie[] cookies = request.getCookies();
+            for (Cookie cooky : cookies) {
+                final String cName = cooky.getName();
+                final String cValue = cooky.getValue();
+                if (cName.equals("UserId")) {
+                    UserId = cValue;
+                }
+            }
+            Query = "Select ClientId from oe.sysusers where ltrim(rtrim(UPPER(UserId))) = ltrim(rtrim(UPPER('" + UserId + "')))";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                ClientId = rset.getInt(1);
+            }
+            rset.close();
+            stmt.close();
+
+            Query = "Select dbname from oe.clients where Id = " + ClientId;
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                Database = rset.getString(1);
+            }
+            rset.close();
+            stmt.close();
+            UtilityHelper helper = new UtilityHelper();
+            if (ActionID.equals("GetInput")) {
+                GetInput(request, out, conn, context, UserId, ClientId, helper);
+            } else {
+                Parsehtm Parser = new Parsehtm(request);
+                Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/ErrorMaintenance.html");
+            }
+            try {
+                conn.close();
+            } catch (Exception ex) {
+            }
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            out.println(e.getMessage());
+        }
     }
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -80,7 +135,7 @@ public class EPDStatusReport extends HttpServlet {
             }
 
 
-            if (!helper.AuthorizeScreen(request, out, conn, context, UserIndex, this.ScreenIndex)) {
+            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
 //                out.println("You are not Authorized to access this page");
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Message", "You are not Authorized to access this page");
@@ -106,7 +161,7 @@ public class EPDStatusReport extends HttpServlet {
                     break;
             }
         } catch (Exception Ex) {
-            helper.SendEmailWithAttachment("Error in EPD Status Report ** (handleRequest)", context, Ex, "EPDStatusReport", "handleRequest", conn);
+            helper.SendEmailWithAttachment("Error in EPD Status Report ** (handleRequest)",  context, Ex, "EPDStatusReport", "handleRequest", conn);
             Services.DumException("EPDStatusReport", "Handle Request", request, Ex, getServletContext());
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "ManagementDashboard");
@@ -132,7 +187,7 @@ public class EPDStatusReport extends HttpServlet {
             Parsehtm Parser = new Parsehtm(request);
             Parser.GenerateHtml(out, Services.GetHtmlPath(servletContext) + "Reports/EPDStatusInput.html");
         } catch (Exception Ex) {
-            helper.SendEmailWithAttachment("Error in EPD Status Report ** (GetInput)", servletContext, Ex, "EPDStatusReport", "GetInput", conn);
+            helper.SendEmailWithAttachment("Error in EPD Status Report ** (GetInput)",  servletContext, Ex, "EPDStatusReport", "GetInput", conn);
             Services.DumException("EPDStatusReport", "GetInput", request, Ex, getServletContext());
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("FormName", "ManagementDashboard");

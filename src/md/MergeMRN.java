@@ -44,6 +44,8 @@ public class MergeMRN extends HttpServlet {
 
         try {
             HttpSession session = request.getSession(false);
+
+
             boolean validSession = helper.checkSession(request, context, session, out);
             if (!validSession) {
                 out.flush();
@@ -643,7 +645,7 @@ public class MergeMRN extends HttpServlet {
             success = true;
         } catch (SQLException e) {
             e.printStackTrace();
-            success = false;
+            success =  false;
         } finally {
             rset.close();
             ps.close();
@@ -738,53 +740,69 @@ public class MergeMRN extends HttpServlet {
     }
 
     private boolean insertHistoryPatientReg(Connection conn, String database, String oldMRN) throws SQLException {
+        PreparedStatement ps = null;
         boolean success;
-        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO " + database + ".PatientReg_History " +
-                "(ID ,ClientIndex ,FirstName ,LastName ,MiddleInitial ,DOB ,Age ,Gender ,Email ,PhNumber ,Address ,City ,State ,Country ,ZipCode ,SSN ,Occupation ,Employer ,EmpContact ," +
-                "PriCarePhy ,ReasonVisit ,SelfPayChk ,CreatedDate ,Title ,MaritalStatus ,CreatedBy ,MRN ,COVIDStatus ,Status ,DoctorsName ,sync ,DateofService ,ExtendedMRN ,Ethnicity ," +
-                "County ,Address2 ,StreetAddress2 ,EnterBy ,EnterType ,EnterIP ,Race ,RegisterFrom ,ViewDate ,ReasonVisitOthers ,EditBy ,Edittime) " +
+        try {
+            ps = conn.prepareStatement("INSERT INTO " + database + ".PatientReg_History " +
+                    "(ID ,ClientIndex ,FirstName ,LastName ,MiddleInitial ,DOB ,Age ,Gender ,Email ,PhNumber ,Address ,City ,State ,Country ,ZipCode ,SSN ,Occupation ,Employer ,EmpContact ," +
+                    "PriCarePhy ,ReasonVisit ,SelfPayChk ,CreatedDate ,Title ,MaritalStatus ,CreatedBy ,MRN ,COVIDStatus ,Status ,DoctorsName ,sync ,DateofService ,ExtendedMRN ,Ethnicity ," +
+                    "County ,Address2 ,StreetAddress2 ,EnterBy ,EnterType ,EnterIP ,Race ,RegisterFrom ,ViewDate ,ReasonVisitOthers ,EditBy ,Edittime) " +
 
-                " SELECT ID ,ClientIndex ,FirstName ,LastName ,MiddleInitial ,DOB ,Age ,Gender ,Email ,PhNumber ,Address ,City ,State ,Country ,ZipCode ,SSN ,Occupation ,Employer ,EmpContact ," +
-                "PriCarePhy ,ReasonVisit ,SelfPayChk ,CreatedDate ,Title ,MaritalStatus ,CreatedBy ,MRN ,COVIDStatus ,Status ,DoctorsName ,sync ,DateofService ,ExtendedMRN ,Ethnicity " +
-                ",County ,Address2 ,StreetAddress2 ,EnterBy ,EnterType ,EnterIP ,Race ,RegisterFrom ,ViewDate ,ReasonVisitOthers ,EditBy ,Edittime" +
-                " FROM " + database + ".PatientReg " +
-                " WHERE MRN = " + oldMRN)) {
+                    " SELECT ID ,ClientIndex ,FirstName ,LastName ,MiddleInitial ,DOB ,Age ,Gender ,Email ,PhNumber ,Address ,City ,State ,Country ,ZipCode ,SSN ,Occupation ,Employer ,EmpContact ," +
+                    "PriCarePhy ,ReasonVisit ,SelfPayChk ,CreatedDate ,Title ,MaritalStatus ,CreatedBy ,MRN ,COVIDStatus ,Status ,DoctorsName ,sync ,DateofService ,ExtendedMRN ,Ethnicity " +
+                    ",County ,Address2 ,StreetAddress2 ,EnterBy ,EnterType ,EnterIP ,Race ,RegisterFrom ,ViewDate ,ReasonVisitOthers ,EditBy ,Edittime" +
+                    " FROM " + database + ".PatientReg " +
+                    " WHERE MRN = " + oldMRN);
             ps.executeUpdate();
             success = true;
         } catch (SQLException e) {
             System.out.println("insertHistoryPatientReg ERROR -> " + e.getMessage());
             e.printStackTrace();
             success = false;
+        } finally {
+            ps.close();
         }
         return success;
     }
 
     private boolean MrnExist(Connection conn, String Database, String _MRN) throws SQLException {
+        PreparedStatement ps = null;
+        ResultSet rset = null;
         boolean MrnExist = false;
 
-        try (PreparedStatement ps = conn.prepareStatement(
-                "Select MRN from " + Database + ".PatientReg where MRN =" + _MRN);
-             ResultSet rset = ps.executeQuery()) {
+        try {
             //if new mrn exist already
+            ps = conn.prepareStatement("Select MRN from " + Database + ".PatientReg where MRN =" + _MRN);
+            rset = ps.executeQuery();
             MrnExist = rset.next();
         } catch (SQLException e) {
             System.out.println("MrnExist ERROR -> " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            ps.close();
+            rset.close();
         }
 
         return MrnExist;
     }
 
     private boolean isLast(Connection conn, String Database, String _MRN) throws SQLException {
+        PreparedStatement ps = null;
+        ResultSet rset = null;
         boolean isLast = false;
 
-        try (PreparedStatement ps = conn.prepareStatement(
-                "Select MRN from " + Database + ".PatientReg ORDER BY Id DESC LIMIT 1"); ResultSet rset = ps.executeQuery()) {
+        try {
+
+            ps = conn.prepareStatement("Select MRN from " + Database + ".PatientReg ORDER BY Id DESC LIMIT 1");
+            rset = ps.executeQuery();
             if (rset.next()) {
                 isLast = rset.getString(1).equals(_MRN);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            ps.close();
+            rset.close();
         }
         return isLast;
     }

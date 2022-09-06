@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,9 +23,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class RequestReport extends HttpServlet {
-/*    private Statement stmt = null;
+    private Statement stmt = null;
     private ResultSet rset = null;
-    private String Query = "";*/
+    private String Query = "";
 
 
     public void init(final ServletConfig config) throws ServletException {
@@ -53,7 +52,7 @@ public class RequestReport extends HttpServlet {
         int ClientId = 0;
         final String ActionID = request.getParameter("ActionID").trim();
         response.setContentType("text/html");
-        final PrintWriter out = new PrintWriter((OutputStream) response.getOutputStream());
+        final PrintWriter out = new PrintWriter(response.getOutputStream());
         final Services supp = new Services();
         ServletContext context = null;
         context = this.getServletContext();
@@ -62,16 +61,16 @@ public class RequestReport extends HttpServlet {
         try {
             if (ActionID.equals("GetReport")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get request table report", "Open oe request Report Screen", ClientId);
-                this.GetReport(request, out, conn, context, UserId, Database, ClientId, helper);
+                this.GetReport(request, out, conn, context, UserId, Database, ClientId,helper);
             }
             if (ActionID.equals("sendToEPDfromRequest")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get request table report", "Open oe request Report Screen", ClientId);
-                this.sendToEPDFromRequestReport(request, out, conn, context, helper);
+                this.sendToEPDFromRequestReport(request, out, conn, context,helper);
             }
             if (ActionID.equals("skipEPDrequest")) {
                 supp.Dologing(UserId, conn, request.getRemoteAddr(), ActionID, "Get request table report", "Open oe request Report Screen", ClientId);
-                this.skipEPDrequest(request, out, conn, context, helper);
-            } else {
+                this.skipEPDrequest(request, out, conn, context,helper);
+            }else {
                 out.println("Under Development");
             }
             try {
@@ -92,9 +91,9 @@ public class RequestReport extends HttpServlet {
         StringBuffer Header = new StringBuffer();
         StringBuffer Footer = new StringBuffer();
         StringBuffer CDRList = new StringBuffer();
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
+        Statement stmt1 = null;
+        String Query1 = "";
+
         try {
 
 
@@ -118,7 +117,7 @@ public class RequestReport extends HttpServlet {
             CDRList.append("<tbody style=\"color:black;\">");
 
             Query = "Select a.Id, a.msg, a.requestdate, a.posttime, a.status, a.RequestType, a.mrn, a.flag, a.ClientIndex,  a.Response, " +
-                    "a.ResponseCode, a.MSCID,b.name \n" +
+                    "a.ResponseCode, a.MSCID,b.name,a.EmailSent \n" +
                     " from oe.request a " +
                     " STRAIGHT_JOIN oe.clients b ON a.ClientIndex = b.Id " +
                     " order by Id desc limit 50";
@@ -126,8 +125,8 @@ public class RequestReport extends HttpServlet {
             rset = stmt.executeQuery(Query);
             while (rset.next()) {
                 if (rset.getString(10) == null) {
-                    CDRList.append("<tr style=\"background-color: #FF7C60;\"><td> <button  onclick=\"sendEPD(" + rset.getInt(7) + ", " + rset.getInt(9) + ")\"  class=\"btn btn-info btn-md\"> <font color=\"FFFFFF\"> RESEND </font></button>" +
-                            " <br><br><br> <button  onclick=\"SkipEPD(" + rset.getInt(1) + ")\"  class=\"btn btn-info btn-md\"> <font color=\"FFFFFF\"> SKIP </font></button></td>");
+                    CDRList.append("<tr style=\"background-color: #FF7C60;\"><td> <button  onclick=\"sendEPD("+rset.getInt(7)+", "+rset.getInt(9)+")\"  class=\"btn btn-info btn-md\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Resend To EPowerDoc\" > <font color=\"FFFFFF\" > RESEND </font></button>" +
+                            " <br><br><br> <button  onclick=\"SkipEPD("+rset.getInt(1)+")\"  class=\"btn btn-info btn-md\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Skip this Patient\" > <font color=\"FFFFFF\" > SKIP </font></button></td>");
                     //CDRList.append("<td align=left>" + rset.getString(9) + "</td>\n");
                     CDRList.append("<td align=left>" + rset.getInt(7) + "</td>");
                     CDRList.append("<td align=left>" + rset.getString(13) + "</td>\n");
@@ -144,7 +143,7 @@ public class RequestReport extends HttpServlet {
                     CDRList.append("</tr>");
 
 
-                    if (Is5minutesCrosed(rset.getInt(1), conn, out)) {
+                    if(Is5minutesCrosed(rset.getInt(1),conn,out) && (rset.getInt(14)==0)){
 //                        helper.SendEmail("",,"The Patient with Following details are not crossing over:\n" +
 //                                "\t<table style='border-style: solid;'>\n" +
 //                                "\t\t<thead>\n" +
@@ -160,8 +159,7 @@ public class RequestReport extends HttpServlet {
 //                                "\t\t\t<td>"+rset.getString(12)+"</td></tr>\n" +
 //                                "\t\t</tbody>\n" +
 //                                "\t</table>");
-                        String Subject = "Patient Not crossing over to EPD";
-                        ;
+                        String Subject="Patient Not crossing over to EPD";
                         String Body = "The Patient with Following details are not crossing over:\n " +
                                 "\t<table style='border-style: solid;'>\n" +
                                 "\t\t<thead>\n" +
@@ -171,18 +169,23 @@ public class RequestReport extends HttpServlet {
                                 "\t\t\t<th>MSCID</th>\n" +
                                 "\t\t</thead>\n" +
                                 "\t\t<tbody>\n" +
-                                "\t\t\t<tr style=\"background-color: #FF7C60;\" ><td>" + rset.getString(7) + "</td>\n" +
-                                "\t\t\t<td>" + rset.getString(13) + "</td>\n" +
-                                "\t\t\t<td>" + rset.getString(3) + "</td>\n" +
-                                "\t\t\t<td>" + rset.getString(12) + "</td></tr>\n" +
+                                "\t\t\t<tr style=\"background-color: #FF7C60;\" ><td>"+rset.getString(7)+"</td>\n" +
+                                "\t\t\t<td>"+rset.getString(13)+"</td>\n" +
+                                "\t\t\t<td>"+rset.getString(3)+"</td>\n" +
+                                "\t\t\t<td>"+rset.getString(12)+"</td></tr>\n" +
                                 "\t\t</tbody>\\n\" +\n" +
                                 "\t</table>";
-                        helper.SendEmail_RequestReport(conn, Subject, Body);
+                        helper.SendEmail_RequestReport(conn,Subject,Body);
+                        Query1= "UPDATE oe.request SET EmailSent=1 WHERE id='"+rset.getInt(1)+"'";
+
+                        stmt1 = conn.createStatement();
+                        stmt1.executeUpdate(Query1);
+                        stmt1.close();
                     }
 
                 } else {
-                    CDRList.append("<tr style=\"background-color: 60FF66;\"><td> <button  onclick=\"sendEPD(" + rset.getInt(7) + ", " + rset.getInt(9) + ")\"  class=\"btn btn-info btn-md\"> <font color=\"FFFFFF\"> RESEND </font></button> " +
-                            " <br><br><br> <button  onclick=\"SkipEPD(" + rset.getInt(1) + ")\"  class=\"btn btn-info btn-md\"> <font color=\"FFFFFF\"> SKIP </font></button></td>");
+                    CDRList.append("<tr style=\"background-color: 60FF66;\"><td> <button  onclick=\"sendEPD("+rset.getInt(7)+", "+rset.getInt(9)+")\"  class=\"btn btn-info btn-md\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Resend To EPowerDoc\" disabled> <font color=\"FFFFFF\"> RESEND </font></button> " +
+                            " <br><br><br> <button  onclick=\"SkipEPD("+rset.getInt(1)+")\"  class=\"btn btn-info btn-md\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Skip this Patient\" disabled> <font color=\"FFFFFF\"> SKIP </font></button></td>");
 //                    CDRList.append("<td align=left>" + rset.getString(9) + "</td>\n");
                     CDRList.append("<td align=left>" + rset.getInt(7) + "</td>");
                     CDRList.append("<td align=left>" + rset.getString(13) + "</td>\n");
@@ -255,10 +258,10 @@ public class RequestReport extends HttpServlet {
         StringBuilder StatusReport = new StringBuilder();
 
         try {
-            Query = "SELECT dbname from oe.clients where Id=" + ClientID;
+            Query = "SELECT dbname from oe.clients where Id="+ClientID;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            if (rset.next()) {
+            if(rset.next()){
                 DATABASE = rset.getString(1);
             }
             rset.close();
@@ -318,7 +321,7 @@ public class RequestReport extends HttpServlet {
             }
 
             msg = "MSH|^~\\&||665|ADT|3344|" + MSH7 + "||ADT^A04|" + MSH7 + "|P|2.3\r\n" + "EVN|A04|20200707020302|||XXX^^^^^^^^488 \r\n" + "PID|1||" + MRN + "||" + FirstName + "^" + LastName + "^" + MiddleInitial + "||" + DOB + "|" + gender + "||W|" + Address + "^^" + City + "^" + State + "^" + ZipCode + "|" + PhNumber + "|" + PhNumber + "||ENGLISH|M|001||" + SSN + "|||||||||||N \r\n" + "PV1||3^E/R^02|||||194501^TOWNSHEND^PETE|194502^DALTREY^ROGER|194506^ROGERS^PAUL|E|||||||194501^TOWNSHEND^PETE|3||BB1||||||||||||||||G|||||||||\r\n" + "IN1|1|SELF-PAY^SELF PAY|SELF PAY|SELF PAY||PFO Sequence 99 Self P|||||||||4";
-            String CurrDate = helper.getCurrDate(request, conn);
+            String CurrDate = helper.getCurrDate(request,conn);
             int Result = helper.saveRequestEPD(request, msg, Integer.parseInt(MRN), CurrDate, ClientID, conn, servletContext);
 //            out.println("ID :"+Result);
 
@@ -350,14 +353,14 @@ public class RequestReport extends HttpServlet {
         }
     }
 
-    private void skipEPDrequest(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, UtilityHelper helper) {
+    private void skipEPDrequest(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext,UtilityHelper helper) {
         Statement stmt = null;
         String Query = "";
         int ID = Integer.parseInt(request.getParameter("ID").trim());
 //        out.println("ID"+ID);
         try {
             stmt = conn.createStatement();
-            Query = "Update oe.request set status = 2  where id=" + ID;
+            Query = "Update oe.request set status = 2  where id="+ID;
             stmt.execute(Query);
             out.println("1|");
         } catch (Exception e) {
@@ -375,7 +378,7 @@ public class RequestReport extends HttpServlet {
         }
     }
 
-    private boolean Is5minutesCrosed(int ID, final Connection conn, final PrintWriter out) {
+    private boolean Is5minutesCrosed(int ID,final Connection conn , final PrintWriter out){
         Statement stmt1 = null;
         ResultSet rset1 = null;
         String Query1 = "";
@@ -383,18 +386,18 @@ public class RequestReport extends HttpServlet {
         ResultSet rset2 = null;
         String Query2 = "";
         try {
-            Query2 = "SELECT requestdate FROM oe.request WHERE id=" + ID;
+            Query2 = "SELECT requestdate FROM oe.request WHERE id="+ID;
             stmt2 = conn.createStatement();
             rset2 = stmt2.executeQuery(Query2);
 //            System.out.println("Query : "+Query2);
-            if (rset2.next()) {
-                Query1 = "SELECT TIMESTAMPDIFF(SECOND ,'" + rset2.getString(1) + "',NOW())/60";
-                stmt1 = conn.createStatement();
-                rset1 = stmt1.executeQuery(Query1);
+            if(rset2.next()){
+                Query1 = "SELECT TIMESTAMPDIFF(SECOND ,'"+rset2.getString(1)+"',NOW())/60";
+                stmt1= conn.createStatement();
+                rset1= stmt1.executeQuery(Query1);
 //                System.out.println("Query1 : "+Query1);
-                if (rset1.next()) {
+                if(rset1.next()){
 //                    System.out.println("time diff : "+rset1.getDouble(1));
-                    if (6 >= rset1.getDouble(1) && rset1.getDouble(1) >= 5) {
+                    if( 6 >= rset1.getDouble(1) && rset1.getDouble(1) >= 5){
 //                        System.out.println("Yes!");
                         return true;
                     }

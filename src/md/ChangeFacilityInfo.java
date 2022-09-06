@@ -18,11 +18,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 
-@SuppressWarnings("Duplicates")
 public class ChangeFacilityInfo extends HttpServlet {
 
-    Integer ScreenIndex = 31;
     private Connection conn = null;
+    Integer ScreenIndex = 31;
+
 
     public void init(final ServletConfig config) throws ServletException {
         super.init(config);
@@ -47,9 +47,10 @@ public class ChangeFacilityInfo extends HttpServlet {
         ServletContext context = null;
         context = this.getServletContext();
         UtilityHelper helper = new UtilityHelper();
-        int UserIndex = 0;
+        int UserIndex=0;
         try {
             HttpSession session = request.getSession(false);
+
 
             boolean validSession = helper.checkSession(request, context, session, out);
             if (!validSession) {
@@ -76,7 +77,7 @@ public class ChangeFacilityInfo extends HttpServlet {
             ActionID = request.getParameter("ActionID").trim();
             conn = Services.getMysqlConn(context);
 
-/*            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
+            if(!helper.AuthorizeScreen(request,out,conn,context,UserIndex,this.ScreenIndex)){
 //                out.println("You are not Authorized to access this page");
                 Parsehtm Parser = new Parsehtm(request);
                 Parser.SetField("Message", "You are not Authorized to access this page");
@@ -84,7 +85,7 @@ public class ChangeFacilityInfo extends HttpServlet {
                 Parser.SetField("ActionID", "GetInput");
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "Exception/Message.html");
                 return;
-            }*/
+            }
 
             if (conn == null) {
                 Parsehtm Parser = new Parsehtm(request);
@@ -92,16 +93,12 @@ public class ChangeFacilityInfo extends HttpServlet {
                 Parser.GenerateHtml(out, Services.GetHtmlPath(context) + "FacilityLogin.html");
                 return;
             }
-            switch (ActionID) {
-                case "GetInput":
-                    GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                case "SaveChangeFacilityInfo":
-                    SaveChangeFacilityInfo(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
-                    break;
-                default:
-                    out.println("Under Development");
-                    break;
+            if (ActionID.equals("GetInput")) {
+                GetInput(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+            }else if (ActionID.equals("SaveChangeFacilityInfo")) {
+                SaveChangeFacilityInfo(request, out, conn, context, UserId, DatabaseName, FacilityIndex);
+            } else {
+                out.println("Under Development");
             }
         } catch (Exception e) {
             out.println("Exception in main... " + e.getMessage());
@@ -139,10 +136,10 @@ public class ChangeFacilityInfo extends HttpServlet {
         try {
 
             Query = "Select Id, FullName, Address, NPI, Phone from oe.clients " +
-                    "where Id=" + ClientId;
+                    "where Id="+ClientId ;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
-            while (rset.next()) {
+            while (rset.next()){
                 Id = rset.getString(1);
                 FacilityName = rset.getString(2);
                 Address = rset.getString(3);
@@ -165,8 +162,7 @@ public class ChangeFacilityInfo extends HttpServlet {
             e.getStackTrace();
         }
     }
-
-    private void SaveChangeFacilityInfo(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
+    void SaveChangeFacilityInfo(final HttpServletRequest request, final PrintWriter out, final Connection conn, final ServletContext servletContext, final String UserId, final String Database, final int ClientId) {
         try {
             String FacilityName = request.getParameter("FacilityName").trim();
             String Address = request.getParameter("Address").trim();
@@ -174,7 +170,8 @@ public class ChangeFacilityInfo extends HttpServlet {
             String NPI = request.getParameter("NPI").trim();
 
 
-            PreparedStatement MainReceipt = conn.prepareStatement("UPDATE  oe.clients  SET NPI = '" + NPI + "', FullName = '" + FacilityName + "' , Address='" + Address + "' , Phone='" + Phone + "' WHERE Id=" + ClientId);
+
+            PreparedStatement MainReceipt = conn.prepareStatement("UPDATE  oe.clients  SET NPI = '"+ NPI +"', FullName = '"+FacilityName+"' , Address='"+Address+"' , Phone='"+Phone+"' WHERE Id="+ClientId);
             MainReceipt.executeUpdate();
             MainReceipt.close();
             Parsehtm Parser = new Parsehtm(request);

@@ -23,7 +23,6 @@ import java.util.*;
 
 @SuppressWarnings("Duplicates")
 public class UploadFacilitiesData extends HttpServlet {
-    private Connection conn = null;
 
     public static int getAge(LocalDate dob) {
         LocalDate curDate = LocalDate.now();
@@ -43,6 +42,7 @@ public class UploadFacilitiesData extends HttpServlet {
     }
 
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
         String UserId;
         int FacilityIndex;
         String DatabaseName;

@@ -2,11 +2,15 @@ package md;
 
 import Handheld.UtilityHelper;
 import Parsehtm.Parsehtm;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfStamper;
+import org.json.simple.JSONValue;
 import org.pb.x12.Context;
 import org.pb.x12.Loop;
 import org.pb.x12.Segment;
@@ -22,6 +26,7 @@ import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.sql.*;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,6 +37,20 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("Duplicates")
 public class InsClaimTesting extends HttpServlet {
+    public void init(final ServletConfig config) throws ServletException {
+        super.init(config);
+    }
+
+    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        handleRequest(request, response);
+    }
+
+
+
+    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
+        handleRequest(request, response);
+    }
+
     private static boolean isValid(final String npi) {
 //Picked last digit for Matching check digit at the end
         final char lastDigit = npi.charAt(9);
@@ -84,6 +103,1225 @@ public class InsClaimTesting extends HttpServlet {
         LocalDate curDate = LocalDate.now();
         return Period.between(dob, curDate).getYears();
     }
+
+//    public void Institutional_EDIFile(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper, String DirectoryName, HttpServletResponse response) {
+//        Instant start = Instant.now();
+//        String ClientIP = helper.getClientIp(request);
+//        int i = 0, j = 0, k = 0;
+//        int Found = 0;
+//        String ChargeMasterTableName = "";
+//        String InterControlNo = "";
+//        int PatientRegId = Integer.parseInt(request.getParameter("PatientRegId").trim());
+//        String ClaimNumber = request.getParameter("ClaimNumber").trim();
+////int ClaimType = Integer.parseInt(request.getParameter("ClaimType").trim());
+//        int VisitId = Integer.parseInt(request.getParameter("VisitId").trim());
+//        String DateTime = "";
+//        String DateNow = "";
+//        String PatientFirstName = "";
+//        String PatientLastName = "";
+//        String DOB = "";
+//        String Gender = "";
+//        String PriInsuredName = "";
+//        String TaxanomySpecialty = "";
+//        int ClaimInfoMasterId = 0;
+//        int SelfPayChk = 0;
+//        String ClientAddress = "";
+//        String ClientCity = "";
+//        String ClientTaxID = "";
+//        String ClientState = "";
+//        String ClientZipCode = "";
+//        String ClientPhone = "";
+//        String ClientNPI = "";
+//
+////Claim Basic Info Variable
+//        String RefNumber = "";
+//        String TypeBillText = "";
+//        String PatientName = "";
+//        String PatientMRN = "";
+//        String AcctNo = "";
+//        String PhNumber = "";
+//        String Email = "";
+//        String Address = "";
+//        String City = "";
+//        String State = "";
+//        String StateCode = "";
+//        String ZipCode = "";
+//        String DOS = "";
+//        String UploadDate = "";
+//        String AttendingProviderLastName = "";
+//        String AttendingProviderFirstName = "";
+//        String AttendingProviderNPI = "";
+//        String AttendingProvider_Taxonomy = "";
+//        String BillingProvidersLastName = "";
+//        String BillingProvidersFirstName = "";
+//        String BillingProvidersNPI = "";
+//        String BillingProvider_Taxonomy  = "";
+//        String OperatingProviderLastName = "";
+//        String OperatingProviderFirstName = "";
+//        String OperatingProviderNPI = "";
+//        String ClientName = "";
+//        String PriInsuranceName = "";
+//        String PriInsuranceNameId = "";
+//        String MemId = "";
+//        String PolicyType = "";
+//        String GrpNumber = "";
+//        String SecondaryInsurance = "";
+//        String SecondaryInsuranceId = "";
+//        String SecondaryInsuranceMemId = "";
+//        String SecondaryInsuranceGrpNumber = "";
+//        String CreationDate = "";
+//        String ClaimType = "";
+//        String ClaimCreateDate = "";
+//        String ClaimCreateTime = "";
+////
+////        //Charges Variables
+//        double TotalChargeAmount = 0.00;
+////        String ChargesTableCount = "0";
+////        String ChargesString = "";
+////
+////Additional Info Variable
+//        String StatmentCoverFromDateAddInfo = "";
+//        String StatmentCoverToDateAddInfo = "";
+//        String AdmissionDateAddInfo = "";
+//        String AdmissionHourAddInfo = "";
+//        String AdmissionTypeAddInfo = "";
+//        String AdmissionSourceAddInfo = "";
+//        String DischargeHourAddInfo = "";
+//        String PatientStatusAddInfo = "";
+//        String DelayReasonCodeAddInfo = "";
+//        String EmploymentStatusAddInfo = "";
+//        String AutoAccidentAddInfo = "";
+//        String OtherAccidentAddInfo = "";
+//        String PPSAddInfo = "";
+//        String RemarksAddInfo = "";
+//        String AutoAccident_StateAddInfo = "";
+//        String ReleaseInfoAddInfo = "";
+//        String AssofBenifitAddInfo = "";
+//        String ProvAccAssigAddInfo = "";
+////
+////Information Codes variable
+//        String PrincipalDiagInfoCodes = "";
+//        String POAInfoCodes = "";
+//        String AdmittingDiagInfoCodes = "";
+//        String PrincipalProcedureInfoCodes = "";
+//        String PrincipalProcedureDateInfoCodes = "";
+//        String ExternalCauseInjuryTableCount = "0";
+//        String ExternalCauseInjuryString = "";
+//        String ReasonVisitTableCount = "0";
+//        String ReasonVisitString = "";
+//        String OtherDiagnosisString = "";
+//        String OtherDiagnosisTableCount = "0";
+//        StringBuffer ErrorMsgs = new StringBuffer();
+//        final String NPI_REGEX = "[0-9]{10}";
+//        String PatientRelationtoPrimary = "";
+//        String PriFillingIndicator = "";
+//
+//        String Payer_Address = "";
+//        String Payer_City = "";
+//        String Payer_State = "";
+//        String Payer_Zip = "";
+//        String timesSubmitted = "";
+//
+//
+//        String PatientControlNumber = "";
+//
+//
+//
+//        Statement stmt = null;
+//        ResultSet rset = null;
+//        String Query = "";
+//
+//        try {
+//            DecimalFormat df = new DecimalFormat("#.##");
+//            Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), IFNULL(Phone,''),IFNULL(NPI,''), IFNULL(TaxanomySpecialty,''), IFNULL(TaxID,'') from oe.clients" +
+//                    " where Id = " + ClientId;
+//            ////system.out.println(Query);
+//            stmt = conn.createStatement();
+//            rset = stmt.executeQuery(Query);
+//            if (rset.next()) {
+//                ClientAddress = rset.getString(1);
+//                ClientCity = rset.getString(2);
+//                ClientState = rset.getString(3);
+//                ClientZipCode = rset.getString(4);
+//                ClientPhone = rset.getString(5);
+//                ClientNPI = rset.getString(6);
+//                TaxanomySpecialty = rset.getString(7);
+//                ClientTaxID = rset.getString(8);
+//            }
+//            rset.close();
+//            stmt.close();
+//
+//            //Validating NPI
+////            if (ClientNPI.matches(NPI_REGEX)) {
+////                if(isValid(ClientNPI)) ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
+////                else ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+////                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+////            } else {
+////                ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+////                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+////            }
+//
+//
+//            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster " +
+//                    " where Status = 0 and PatientRegId = " + PatientRegId + " and VisitId = " + VisitId +
+//                    " and ClaimNumber = '" + ClaimNumber + "'";
+//            ////system.out.println(Query);
+//            stmt = conn.createStatement();
+//            rset = stmt.executeQuery(Query);
+//            if (rset.next()) {
+//                Found = rset.getInt(1);
+//            }
+//            rset.close();
+//            stmt.close();
+//
+//            if (Found == 0) {
+//                out.println("Please Save Claim First and then Create EDI");
+//                return;
+//            } else {
+//
+//                Query = "Select IFNULL(MAX(InterControlNo),'') from " + Database + ".ClaimInfoMaster ";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    InterControlNo = rset.getString(1);
+//                }
+//                rset.close();
+//                stmt.close();
+////out.println("InterControlNo;---1-----"+InterControlNo);
+//                if (InterControlNo.equals("")) {
+//                    //out.println("inside 1 icn");
+//                    InterControlNo = "100000001";
+//                } else if (InterControlNo.length() > 9) {
+//                    //out.println("inside 2 icn");
+//                    InterControlNo = "100000001";
+//                } else {
+//                    //out.println("inside 3 icn");
+//                    InterControlNo = String.valueOf((Integer.parseInt(InterControlNo) + 1));
+//                }
+////out.println("InterControlNo;---2----"+InterControlNo);
+//                try {
+//                    PreparedStatement MainReceipt = conn.prepareStatement(
+//                            "Update " + Database + ".ClaimInfoMaster Set InterControlNo = ? " +
+//                                    " where PatientRegId = ? and VisitId = ? and ClaimNumber = ? ");
+//                    MainReceipt.setString(1, (InterControlNo));
+//                    MainReceipt.setInt(2, PatientRegId);
+//                    MainReceipt.setInt(3, VisitId);
+//                    MainReceipt.setString(4, ClaimNumber);
+//                    //out.println("MainReceipt:--"+MainReceipt.toString());
+//                    MainReceipt.executeUpdate();
+//                    MainReceipt.close();
+//
+//                } catch (Exception e) {
+//                    out.println(e.getMessage());
+//                    helper.SendEmailWithAttachment("Error in UpdatingtInstitionalEDI ** (AddInfo^^ MES#ICN)", context, e, "AddInfo", "InstitutuionalEDI", conn);
+//                    Services.DumException("AddInfo", "InstitionalEDI", request, e);
+//                }
+//
+//
+//                Query = "Select ChargeMasterTableName from oe.clients where ID = " + ClientId;
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    ChargeMasterTableName = rset.getString(1).trim();
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                Query = "Select IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), " +
+//                        "IFNULL(DATE_FORMAT(DOB,'%Y%m%d'),''), DATE_FORMAT(NOW(),'%d%m%y%k%i%s'), IFNULL(Gender,''), DATE_FORMAT(NOW(),'%m%d%y'), " +
+//                        "IFNULL(SelfPayChk,'0')" +
+//                        " from " + Database + ".PatientReg where ID = " + PatientRegId;
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    PatientFirstName = rset.getString(1);
+//                    PatientLastName = rset.getString(2);
+//                    Address = rset.getString(3);
+//                    City = rset.getString(4);
+//                    State = rset.getString(5);
+//                    ZipCode = rset.getString(6);
+//                    DOB = rset.getString(7);
+//                    DateTime = rset.getString(8);
+//                    Gender = rset.getString(9).trim();
+//                    DateNow = rset.getString(10);
+//                    SelfPayChk = rset.getInt(11);
+//                }
+//                rset.close();
+//                stmt.close();
+//                if (!Gender.equals("")) {
+//                    Gender = Gender.substring(0, 1).toUpperCase();
+//                } else {
+//                    Gender = "";
+//                }
+//
+//                if (SelfPayChk == 1) {
+//                    Query = "Select IFNULL(PriInsurerName,''),IFNULL(PatientRelationtoPrimary,'') from " + Database + ".InsuranceInfo where PatientRegId = " + PatientRegId;
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    if (rset.next()) {
+//                        PriInsuredName = rset.getString(1);
+//                        PatientRelationtoPrimary = rset.getString(2);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//
+//                    if (PriInsuredName.equals("")) {
+//                        PriInsuredName = PatientLastName + ", " + PatientFirstName;
+//                    }
+//
+//                } else {
+//                    PriInsuredName = PatientLastName + ", " + PatientFirstName;
+//                }
+//
+//
+//                if (!State.equals("")) {
+//                    if (State.length() > 2) {
+//                        Query = "Select IFNULL(StateCode,'') from " + Database + ".StateList where ltrim(rtrim(Upper(StateName))) = ltrim(rtrim(UPPER('" + State + "')))";
+//                        stmt = conn.createStatement();
+//                        rset = stmt.executeQuery(Query);
+//                        if (rset.next()) {
+//                            StateCode = rset.getString(1);
+//                        }
+//                        rset.close();
+//                        stmt.close();
+//                    } else {
+//                        StateCode = State.toUpperCase();
+//                    }
+//
+//                } else {
+//                    StateCode = "";
+//                }
+//
+//                Query = "Select a.Id,IFNULL(RefNumber,''), IFNULL(a.TypeBillText,''), IFNULL(a.PatientName,''), IFNULL(a.PatientMRN,''), " +
+//                        " IFNULL(a.AcctNo,''), IFNULL(a.PhNumber,''), " +
+//                        " IFNULL(a.Email,''), IFNULL(a.Address,''), IFNULL(a.DOS,''), " +
+//                        " IFNULL(b.DoctorsLastName,''), IFNULL(b.DoctorsFirstName,'') , IFNULL(b.NPI,'') as AttendingNPI, " +
+//                        " IFNULL(c.DoctorsLastName,''), IFNULL(c.DoctorsFirstName,''), IFNULL(c.NPI,'') as BillingNPI, " +
+//                        " IFNULL(LTRIM(rtrim(REPLACE(d.PayerName,'Servicing States','') )),'') as PriInsuranceName, IFNULL(a.MEMId,''), IFNULL(a.PolicyType,''), IFNULL(a.GrpNumber,''), " +
+//                        " IFNULL(LTRIM(rtrim(REPLACE(e.PayerName,'Servicing States','') )),'') as SecondaryInsurance, " +
+//                        " IFNULL(a.SecondaryInsuranceMemId,''), IFNULL(a.SecondaryInsuranceGrpNumber,''), IFNULL(ClientName,''), " +
+//                        " IFNULL(f.DoctorsLastName,''), IFNULL(f.DoctorsFirstName,''), IFNULL(f.NPI,'') as OperatingProvider, " +
+//                        " DATE_FORMAT(a.CreatedDate,'%Y%m%d'), CASE WHEN a.ClaimType = 1 THEN 'CI' WHEN a.ClaimType = 2 THEN 'CP' ELSE 'CL' END, " +
+//                        " DATE_FORMAT(a.CreatedDate,'%y%m%d'), DATE_FORMAT(a.CreatedDate,'%H%i'), IFNULL(d.PayerID,''), IFNULL(e.PayerID,''),IFNULL(c.TaxonomySpecialty,''),IFNULL(e.ClaimIndicator_I,'')," +
+//                        " IFNULL(d.Address,''),IFNULL(d.City,''),IFNULL(d.State,''),IFNULL(d.Zip,''),IFNULL(timesSubmitted,0), IFNULL(b.TaxonomySpecialty,'') " +
+//                        " from " + Database + ".ClaimInfoMaster a " +
+//                        " LEFT JOIN " + Database + ".DoctorsList b on a.AttendingProvider = b.Id " +
+//                        " LEFT JOIN " + Database + ".DoctorsList c on a.BillingProviders = c.Id " +
+//                        " LEFT JOIN ClaimMasterDB.ProfessionalPayersWithFC d on a.PriInsuranceNameId = d.Id " +
+//                        " LEFT JOIN ClaimMasterDB.ProfessionalPayersWithFC e on a.SecondaryInsuranceId = e.Id " +
+////                        " LEFT JOIN oe_2.ProfessionalPayers d on a.PriInsuranceNameId = d.Id " +
+////                        " LEFT JOIN oe_2.ProfessionalPayers e on a.SecondaryInsuranceId = e.Id " +
+//                        " LEFT JOIN " + Database + ".DoctorsList f on a.OperatingProvider = f.Id " +
+//                        "  where a.PatientRegId = " + PatientRegId + " and a.VisitId = " + VisitId + " and a.ClaimNumber = '" + ClaimNumber + "'";
+//                ////system.out.println(Query);
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    ClaimInfoMasterId = rset.getInt(1);
+//                    RefNumber = rset.getString(2);
+//                    TypeBillText = rset.getString(3);
+//                    PatientName = rset.getString(4).replaceAll(" ", "").replaceAll("'", "");
+//                    PatientMRN = rset.getString(5);
+//                    AcctNo = rset.getString(6);
+//                    PhNumber = rset.getString(7);
+//                    Email = rset.getString(8);
+//                    //Address = rset.getString(9);
+//                    DOS = rset.getString(10).replaceAll("/", "");
+//                    AttendingProviderLastName = rset.getString(11);
+//                    AttendingProviderFirstName = rset.getString(12);
+//                    AttendingProviderNPI = rset.getString(13);
+//                    BillingProvidersLastName = rset.getString(14);
+//                    BillingProvidersFirstName = rset.getString(15);
+//                    BillingProvidersNPI = rset.getString(16);
+//                    PriInsuranceName =  (rset.getString(17).replaceAll(":", " ")).trim().replaceAll("&", "");
+//                    MemId = rset.getString(18);
+//                    PolicyType = rset.getString(19);
+//                    GrpNumber = rset.getString(20);
+//                    SecondaryInsurance = rset.getString(21);
+//                    SecondaryInsuranceMemId = rset.getString(22);
+//                    SecondaryInsuranceGrpNumber = rset.getString(23);
+//                    ClientName = rset.getString(24);
+//                    OperatingProviderLastName = rset.getString(25);
+//                    OperatingProviderFirstName = rset.getString(26);
+//                    OperatingProviderNPI = rset.getString(27);
+//                    CreationDate = rset.getString(28);
+//                    ClaimType = rset.getString(29);
+//                    ClaimCreateDate = rset.getString(30);
+//                    ClaimCreateTime = rset.getString(31);
+//                    PriInsuranceNameId = rset.getString(32);
+//                    SecondaryInsuranceId = rset.getString(33);
+//                    BillingProvider_Taxonomy = rset.getString(34);
+//                    PriFillingIndicator = rset.getString(35);
+//                    Payer_Address = rset.getString(36);
+//                    Payer_City = rset.getString(37);
+//                    Payer_State = rset.getString(38);
+//                    Payer_Zip = rset.getString(39);
+//                    timesSubmitted = rset.getString(40) + 1;
+//                    AttendingProvider_Taxonomy = rset.getString(41);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                Query = "Select IFNULL(StatmentCoverFromDateAddInfo,''), IFNULL(StatmentCoverToDateAddInfo,''), " +
+//                        " IFNULL(AdmissionDateAddInfo,''), IFNULL(AdmissionHourAddInfo,''), IFNULL(AdmissionTypeAddInfo,''), " +
+//                        " IFNULL(AdmissionSourceAddInfo,''), IFNULL(DischargeHourAddInfo,''), IFNULL(PatientStatusAddInfo,''), IFNULL(DelayReasonCodeAddInfo,'')," +
+//                        " IFNULL(EmploymentStatusAddInfo,''), IFNULL(AutoAccidentAddInfo,''), IFNULL(OtherAccidentAddInfo,''), IFNULL(PPSAddInfo,''), " +
+//                        " IFNULL(RemarksAddInfo,''), IFNULL(AutoAccident_StateAddInfo,''), IFNULL(ReleaseInfoAddInfo,''), IFNULL(AssofBenifitAddInfo,''), " +
+//                        " IFNULL(ProvAccAssigAddInfo,'') " +
+//                        " from " + Database + ".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    StatmentCoverFromDateAddInfo = rset.getString(1);
+//                    StatmentCoverToDateAddInfo = rset.getString(2);
+//                    AdmissionDateAddInfo = rset.getString(3);
+//                    AdmissionHourAddInfo = rset.getString(4);
+//                    AdmissionTypeAddInfo = rset.getString(5);
+//                    AdmissionSourceAddInfo = rset.getString(6);
+//                    DischargeHourAddInfo = rset.getString(7);
+//                    PatientStatusAddInfo = rset.getString(8);
+//                    DelayReasonCodeAddInfo = rset.getString(9);
+//                    EmploymentStatusAddInfo = rset.getString(10);
+//                    AutoAccidentAddInfo = rset.getString(11);
+//                    OtherAccidentAddInfo = rset.getString(12);
+//                    PPSAddInfo = rset.getString(13);
+//                    RemarksAddInfo = rset.getString(14);
+//                    AutoAccident_StateAddInfo = rset.getString(15);
+//                    ReleaseInfoAddInfo = rset.getString(16);
+//                    AssofBenifitAddInfo = rset.getString(17);
+//                    ProvAccAssigAddInfo = rset.getString(18);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (!StatmentCoverFromDateAddInfo.equals("")) {
+//                    StatmentCoverFromDateAddInfo = StatmentCoverFromDateAddInfo.replaceAll("/", "");
+//                    StatmentCoverFromDateAddInfo = StatmentCoverFromDateAddInfo.substring(4, 8) + StatmentCoverFromDateAddInfo.substring(0, 2) + StatmentCoverFromDateAddInfo.substring(2, 4);
+//                }
+//                if (!StatmentCoverToDateAddInfo.equals("")) {
+//                    StatmentCoverToDateAddInfo = StatmentCoverToDateAddInfo.replaceAll("/", "");
+//                    StatmentCoverToDateAddInfo = StatmentCoverToDateAddInfo.substring(4, 8) + StatmentCoverToDateAddInfo.substring(0, 2) + StatmentCoverToDateAddInfo.substring(2, 4);
+//                }
+//                if (!AdmissionDateAddInfo.equals("")) {
+//                    AdmissionDateAddInfo = AdmissionDateAddInfo.replaceAll("/", "");
+//                    AdmissionDateAddInfo = AdmissionDateAddInfo.substring(4, 8) + AdmissionDateAddInfo.substring(0, 2) + AdmissionDateAddInfo.substring(2, 4);
+//                }
+//
+//                Query = "Select IFNULL(PrincipalDiagInfoCodes,''), IFNULL(POAInfoCodes,''), IFNULL(AdmittingDiagInfoCodes,''), " +
+//                        " IFNULL(PrincipalProcedureInfoCodes,''), IFNULL(PrincipalProcedureDateInfoCodes,'') " +
+//                        "from " + Database + ".ClaimInformationCode where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    PrincipalDiagInfoCodes = rset.getString(1);
+//                    POAInfoCodes = rset.getString(2);
+//                    AdmittingDiagInfoCodes = rset.getString(3);
+//                    PrincipalProcedureInfoCodes = rset.getString(4);
+//                    PrincipalProcedureDateInfoCodes = rset.getString(5);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (!PrincipalDiagInfoCodes.equals("")) {
+//                    if (PrincipalDiagInfoCodes.contains(".")) {
+//                        PrincipalDiagInfoCodes = PrincipalDiagInfoCodes.replace(".", "");
+//                    }
+//                }
+//                if (!AdmittingDiagInfoCodes.equals("")) {
+//                    if (AdmittingDiagInfoCodes.contains(".")) {
+//                        AdmittingDiagInfoCodes = AdmittingDiagInfoCodes.replace(".", "");
+//                    }
+//                }
+//                if (!PrincipalProcedureInfoCodes.equals("")) {
+//                    if (PrincipalProcedureInfoCodes.contains(".")) {
+//                        PrincipalProcedureInfoCodes = PrincipalProcedureInfoCodes.replace(".", "");
+//                    }
+//                }
+//
+//                String ST02 = "";
+//
+//                if (ClaimNumber.length() > 4) {
+//                    ST02 = ClaimNumber.substring(ClaimNumber.length() - 4);
+//                } else {
+//                    ST02 = "0222";
+//                }
+//
+//                StringBuilder ISA = new StringBuilder();
+//                StringBuilder GS = new StringBuilder();
+//                StringBuilder ST = new StringBuilder();
+//                StringBuilder BHT = new StringBuilder();
+//                StringBuilder NM1 = new StringBuilder();
+//                StringBuilder PER = new StringBuilder();
+//                StringBuilder NM1_2 = new StringBuilder();
+//                StringBuilder HL_1 = new StringBuilder();
+//                StringBuilder PRV_BI = new StringBuilder();
+//                StringBuilder NM1_3 = new StringBuilder();
+//                StringBuilder N3_1 = new StringBuilder();
+//                StringBuilder N4_1 = new StringBuilder();
+//                StringBuilder REF_1 = new StringBuilder();
+//                StringBuilder HL_2 = new StringBuilder();
+//                StringBuilder SBR = new StringBuilder();
+//                StringBuilder NM1_4 = new StringBuilder();
+//                StringBuilder N3_2 = new StringBuilder();
+//                StringBuilder N4_2 = new StringBuilder();
+//                StringBuilder DMG = new StringBuilder();
+//                StringBuilder NM1_5 = new StringBuilder();
+//                StringBuilder N3_3 = new StringBuilder();
+//                StringBuilder N4_3 = new StringBuilder();
+//                StringBuilder CLM = new StringBuilder();
+//                StringBuilder DTP_1 = new StringBuilder();
+//                StringBuilder DTP_2 = new StringBuilder();
+//                StringBuilder DTP_3 = new StringBuilder();
+//                StringBuilder CL1 = new StringBuilder();
+//                StringBuilder REF_2 = new StringBuilder();
+//                StringBuilder HI_1_ABK = new StringBuilder();
+//                StringBuilder HI_1_ABJ = new StringBuilder();
+//                StringBuilder HI_1_ABN = new StringBuilder();
+//                StringBuilder HI_1_APR = new StringBuilder();
+//                StringBuilder HI_1_ABF = new StringBuilder();
+//                StringBuilder HI_1_BBR = new StringBuilder();
+//                StringBuilder HI_1_BBQ = new StringBuilder();
+//                StringBuilder HI_1_BI = new StringBuilder();
+//                StringBuilder HI_1_BH = new StringBuilder();
+//                StringBuilder HI_1_BE = new StringBuilder();
+//                StringBuilder HI_1_BG = new StringBuilder();
+//                StringBuilder NM1_6 = new StringBuilder();
+//                StringBuilder PRV_AT = new StringBuilder();
+//                StringBuilder NM1_7 = new StringBuilder();
+//                StringBuilder N3_4 = new StringBuilder();
+//                StringBuilder N4_4 = new StringBuilder();
+//                StringBuilder LX1 = new StringBuilder();
+//                StringBuilder SV2_1 = new StringBuilder();
+//                StringBuilder SE = new StringBuilder();
+//                StringBuilder GE = new StringBuilder();
+//                StringBuilder IEA = new StringBuilder();
+//
+//
+//
+//
+//                int TagCount = 0;
+///*
+//                ISA.append("ISA*00*          *00*          *ZZ*AV09311993     *01*030240928      *" + ClaimCreateDate + "*" + ClaimCreateTime + "*^*00501*" + InterControlNo + "*1*T*:~\n");
+//                //GS.append("GS*HC*p920700*ECGCLAIMS*20210625*155544*000000001*X*005010X223A2~\n");
+//                GS.append("GS*HC*AV09311993*030240928*" + CreationDate + "*" + ClaimCreateTime + "*" + InterControlNo + "*X*005010X223A2~\n");
+//                ST.append("ST*837*" + ST02 + "*005010X223A2~\n");
+//                BHT.append("BHT*0019*00*1*" + CreationDate + "*" + ClaimCreateTime + "*CH~\n");
+//                NM1.append("NM1*41*2*" + AttendingProviderLastName + " " + AttendingProviderFirstName + "*****46*009207651653~\n");
+//                PER.append("PER*IC*" + BillingProvidersLastName + " " + BillingProvidersFirstName + "*TE*2812800911*FX*2812800041~\n");
+//                NM1_2.append("NM1*40*2*MCKHBOC*****46*0001~\n");
+//                HL_1.append("HL*1**20*1~\n");
+//                PRV_BI.append("PRV*BI*PXC*" + TaxanomySpecialty + "~\n");
+//                NM1_3.append("NM1*85*2*" + ClientName + ",*****XX*" + ClientNPI + "~\n");
+//                N3_1.append("N3*" + ClientAddress + "~\n");
+//                N4_1.append("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode + "~\n");
+//                REF_1.append("REF*EI*" + ClientTaxID + "~\n");
+//                HL_2.append("HL*2*1*22*0~\n");
+//                SBR.append("SBR*P*18*" + GrpNumber + "******" + ClaimType + "~\n");
+//                NM1_4.append("NM1*IL*1*" + PatientLastName + "*" + PatientFirstName + "*" + "" + "***MI*" + MemId + "~\n");
+//                N3_2.append("N3*" + Address + "~\n");
+//                N4_2.append("N4*" + City + "*" + State + "*" + ZipCode + "~\n");
+//                DMG.append("DMG*D8*" + DOB + "*" + Gender + "~\n");
+//                NM1_5.append("NM1*PR*2*" + (PriInsuranceName.contains("\n") ? PriInsuranceName.replaceAll("\n", "") : PriInsuranceName) + "*****PI*" + PriInsuranceNameId + "~\n");
+//                N3_3.append("N3*" + "17154 butte creek road" + "~\n");//Insurance Street Address
+//                N4_3.append("N4*" + "HOUSTON" + "*" + "TX" + "*" + "77090" + "~\n");//Insurance City, Insurance State, Insurance ZipCode
+//
+//*/
+//
+//                TagCount = 20;
+////out.println("TagCount--1--"+TagCount);
+//                int foundExtCauseInj = 0;
+//                int foundReasVisit = 0;
+//                int foundOthDiag = 0;
+//                int foundOthProc = 0;
+//                int foundOccSpan = 0;
+//                int foundOcc = 0;
+//                int foundValCode = 0;
+//                int foundConCode = 0;
+//                Query = "Select Count(*) from " + Database + ".ClaimInfoCodeExtCauseInj where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    foundExtCauseInj = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//                if (foundExtCauseInj > 0) {
+//                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeExtCauseInj where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        HI_1_ABN.append("HI*ABN:" + Code + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--2--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//                }
+//
+//                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeReasVisit where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                if (rset.next()) {
+//                    foundReasVisit = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (foundReasVisit > 0) {
+//                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeReasVisit where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        HI_1_APR.append("HI*APR:" + Code + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--3--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//                }
+//
+//                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOthDiag where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                while (rset.next()) {
+//                    foundOthDiag = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (foundOthDiag > 0) {
+//                    Query = "Select IFNULL(Code,''), IFNULL(PQA,'') from " + Database + ".ClaimInfoCodeOthDiag where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        HI_1_ABF.append("HI*ABF:" + Code + ":::::::" + rset.getString(2) + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--4--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//                }
+//
+//                if (PrincipalProcedureDateInfoCodes.equals("")) {
+//                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes;
+//                } else if (PrincipalProcedureDateInfoCodes.contains("/")) {
+//                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes.replaceAll("/", "");
+//                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes.substring(4, 8) + PrincipalProcedureDateInfoCodes.substring(0, 2) + PrincipalProcedureDateInfoCodes.substring(2, 4);
+//                } else {
+//                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes;
+//                }
+//                if (!PrincipalProcedureInfoCodes.equals("")) {
+//                    HI_1_BBR.append("HI*BBR:" + PrincipalProcedureInfoCodes + "*" + PrincipalProcedureDateInfoCodes + "~\n");
+//                    TagCount++;
+//                    //out.println("TagCount--5--" + TagCount);
+//                }
+//
+//                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOthProcedure where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                while (rset.next()) {
+//                    foundOthProc = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (foundOthProc > 0) {
+//                    Query = "Select IFNULL(Code,''), IFNULL(Date,'') from " + Database + ".ClaimInfoCodeOthProcedure where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        String Date = "";
+//                        if (rset.getString(2).equals("")) {
+//                            Date = rset.getString(2);
+//                        } else if (rset.getString(2).contains("/")) {
+//                            Date = rset.getString(2).replaceAll("/", "");
+//                            Date = Date.substring(4, 8) + Date.substring(0, 2) + Date.substring(2, 4);
+//                        } else {
+//                            Date = rset.getString(2);
+//                        }
+//                        HI_1_BBQ.append("HI*BBQ:" + Code + ":" + Date + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--6--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//                }
+//
+////                Query = "Select COUNT(*) from "+Database+".ClaimInfoCodeOccSpan where ClaimInfoMasterId = "+ClaimInfoMasterId + " " +
+////                        " and ClaimNumber = '"+ClaimNumber+"'";
+////                stmt = conn.createStatement();
+////                rset = stmt.executeQuery(Query);
+////                while(rset.next()) {
+////                    foundOccSpan = rset.getInt(1);
+////                }
+////                rset.close();
+////                stmt.close();
+////
+////                if(foundOccSpan > 0 ){
+////                    Query = "Select IFNULL(Code,''), IFNULL(FromDate,''), IFNULL(ToDate,'') from " + Database + ".ClaimInfoCodeOccSpan where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+////                            " and ClaimNumber = '" + ClaimNumber + "'";
+////                    stmt = conn.createStatement();
+////                    rset = stmt.executeQuery(Query);
+////                    while (rset.next()) {
+////                        String Code = "";
+////                        if(rset.getString(1).contains(".")){
+////                            Code = rset.getString(1).replace(".","");
+////                        }else{
+////                            Code = rset.getString(1);
+////                        }
+////                        String FromDate = "";String ToDate = "";
+////                        if(rset.getString(2).equals("")){
+////                            FromDate = rset.getString(2);
+////                        }else if(rset.getString(2).contains("/")){
+////                            FromDate = rset.getString(2).replaceAll("/","");
+////                            FromDate = FromDate.substring(4,8)+FromDate.substring(0,2)+FromDate.substring(2,4);
+////                        }else {
+////                            FromDate = rset.getString(2);
+////                        }
+////                        if(rset.getString(3).equals("")){
+////                            ToDate = rset.getString(3);
+////                        }else if(rset.getString(3).contains("/")){
+////                            ToDate = rset.getString(3).replaceAll("/","");
+////                            ToDate = ToDate.substring(4,8)+ToDate.substring(0,2)+ToDate.substring(2,4);
+////                        }else {
+////                            ToDate = rset.getString(3);
+////                        }
+////                        HI_1_BI.append("HI*BI:" + Code+ "*" + FromDate + "-"+ ToDate+"~\n");
+////                    }
+////                    rset.close();
+////                    stmt.close();
+////                }
+//
+//                Query = "Select COUNT(*) from " + Database + ".ClaimInfoOccurance where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                while (rset.next()) {
+//                    foundOcc = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (foundOcc > 0) {
+//                    Query = "Select IFNULL(Code,''), IFNULL(Date,'') from " + Database + ".ClaimInfoOccurance where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        String Date = "";
+//                        if (rset.getString(2).equals("")) {
+//                            Date = rset.getString(2);
+//                        } else if (rset.getString(2).contains("/")) {
+//                            Date = rset.getString(2).replaceAll("/", "");
+//                            Date = Date.substring(4, 8) + Date.substring(0, 2) + Date.substring(2, 4);
+//                        } else {
+//                            Date = rset.getString(2);
+//                        }
+//                        HI_1_BH.append("HI*BH:" + Code + "*" + Date + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--7--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//
+//                }
+//
+//                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeValueCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                while (rset.next()) {
+//                    foundValCode = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (foundValCode > 0) {
+//                    Query = "Select IFNULL(Code,''), IFNULL(Amount,'') from " + Database + ".ClaimInfoCodeValueCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        String Amount = "";
+//                        if (rset.getString(2).contains(".")) {
+//                            Amount = rset.getString(2).replace(".", "");
+//                        } else {
+//                            Amount = rset.getString(2);
+//                        }
+////                        HI_1_BE.append("HI*BE:" + rset.getString(1) + ":" + (rset.getString(2).equals("") ? rset.getString(2) : rset.getString(2).replaceAll(".","")) + "^\n");
+//                        HI_1_BE.append("HI*BE:" + Code + "*" + Amount + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--8--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//
+//                }
+//
+//                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeConditionCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                        " and ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                while (rset.next()) {
+//                    foundConCode = rset.getInt(1);
+//                }
+//                rset.close();
+//                stmt.close();
+//
+//                if (foundConCode > 0) {
+//                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeConditionCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+//                            " and ClaimNumber = '" + ClaimNumber + "'";
+//                    stmt = conn.createStatement();
+//                    rset = stmt.executeQuery(Query);
+//                    while (rset.next()) {
+//                        String Code = "";
+//                        if (rset.getString(1).contains(".")) {
+//                            Code = rset.getString(1).replace(".", "");
+//                        } else {
+//                            Code = rset.getString(1);
+//                        }
+//                        HI_1_BG.append("HI*BG:" + Code + "~\n");
+//                        TagCount++;
+//                        //out.println("TagCount--9--"+TagCount);
+//                    }
+//                    rset.close();
+//                    stmt.close();
+//
+//                }
+//
+//
+//                //out.println("TagCount---10--"+TagCount);
+//
+//                int iCount = 1;
+//                String TotalChrgeAmt = "";
+//                Query = "Select IFNULL(a.RevCode,''), IFNULL(a.HCPCSProcedure,''), IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), " +
+//                        "IFNULL(a.Mod4,''), CASE WHEN a.DescriptionFrom = 0 THEN b.ShortDescription WHEN a.DescriptionFrom = 1 THEN c.Description ELSE c.Description END, " +
+//                        "IFNULL(a.Amount,''), IFNULL(a.Units,'') from " + Database + ".ClaimChargesInfo a " +
+//                        " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCSProcedure = b.CPTCode " +
+//                        " LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
+//                        "where a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNumber + "'";
+//                stmt = conn.createStatement();
+//                rset = stmt.executeQuery(Query);
+//                while (rset.next()) {
+//                    String HCPCSProcedure = "";
+//                    String Units = "";
+//                    if (rset.getString(2).contains(".")) {
+//                        HCPCSProcedure = rset.getString(2).replace(".", "");
+//                    } else {
+//                        HCPCSProcedure = rset.getString(2);
+//                    }
+//                    String Amount = "";
+//                    if (rset.getString(8).contains(".")) {
+//                        //Amount = rset.getString(8).replace(".","");
+//                        Amount = rset.getString(8).substring(0, rset.getString(8).indexOf("."));
+//                    } else {
+//                        Amount = rset.getString(8);
+//                    }
+//                    Units = rset.getString(9);
+//                    if (Units.contains(".")) {
+//                        //Units = Units.replace(".","");
+//                        Units = Units.substring(0, Units.indexOf("."));
+//                    }
+//                    SV2_1.append("LX*" + iCount + "~\n" + "SV2*" + rset.getString(1) + "*HC:" + HCPCSProcedure + ":" + rset.getString(3) + ":" + rset.getString(4) + ":" + rset.getString(5) + ":" + rset.getString(6) + ":" + rset.getString(7) + "*" + Amount + "*UN*" + Units + "~\n");
+//                    TotalChargeAmount += Double.parseDouble(Amount);
+//                    TagCount = TagCount + 2;
+//                    //out.println("TagCount---11--"+TagCount);
+//                    iCount++;
+//                }
+//                rset.close();
+//                stmt.close();
+//                TotalChrgeAmt = String.valueOf(TotalChargeAmount);
+//
+//                if (TotalChrgeAmt.contains(".")) {
+//                    TotalChrgeAmt = (TotalChrgeAmt.substring(0, TotalChrgeAmt.indexOf(".")));
+//                }
+//                //system.out.println(TotalChrgeAmt);
+//
+//                CLM.append("CLM*915243155*" + TotalChrgeAmt + "***22:A:1*" + ProvAccAssigAddInfo + "*" + AssofBenifitAddInfo + "*" + ReleaseInfoAddInfo + "*" + ReleaseInfoAddInfo + "~\n");
+//                //DTP_1.append("DTP*096*TM*" + DischargeHourAddInfo + "00~\n");
+//                DTP_2.append("DTP*434*RD8*" + StatmentCoverFromDateAddInfo + "-" + StatmentCoverToDateAddInfo + "~\n");
+//                //DTP_3.append("DTP*435*DT*" + AdmissionDateAddInfo + "" + AdmissionHourAddInfo + "00~\n");
+//                CL1.append("CL1*1*9*" + AdmissionTypeAddInfo + "~\n");
+//                REF_2.append("REF*EA*" + PatientMRN + "~\n");
+//                HI_1_ABK.append("HI*ABK:" + PrincipalDiagInfoCodes + ":::::::" + POAInfoCodes + "~\n");
+//                //HI_1_ABJ.append("HI*ABJ:" + AdmittingDiagInfoCodes + "~\n");
+//                NM1_6.append("NM1*71*1*" + AttendingProviderLastName + "*" + AttendingProviderFirstName + "****XX*" + AttendingProviderNPI + "~\n");
+//                PRV_AT.append("PRV*AT*PXC*TaxonomySpeciality_Provider~\n");
+//                NM1_7.append("NM1*77*2*" + ClientName + "*****XX*" + ClientNPI + "~\n");
+//                N3_4.append("N3*" + ClientAddress + "~\n");
+//                N4_4.append("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode + "~\n");
+//
+//                TagCount = TagCount + 11;
+//                //out.println("TagCount---12--"+TagCount);
+//                SE.append("SE*" + TagCount + "*" + ST02 + "~\n");
+//                GE.append("GE*1*" + InterControlNo + "~\n");
+//                IEA.append("IEA*1*" + InterControlNo + "~\n");
+//
+//
+//                String Organization = null;
+//                String Organization_Tel = null;
+//                String Organization_Email = null;
+//
+//                PreparedStatement ps = conn.prepareStatement("SELECT Organization , Tel , Email FROM oe.CompanyCredentials where Id = 1");
+//                rset = ps.executeQuery();
+//                if (rset.next()) {
+//                    Organization = rset.getString(1);
+//                    Organization_Tel = rset.getString(2);
+//                    Organization_Email = rset.getString(3);
+//                }
+//                rset.close();
+//                ps.close();
+//
+//                Context c = new Context('~', '*', ':');
+//                HashMap<String, Integer> ISATAG = new HashMap<String, Integer>();
+//                int ClaimTypes = 1; //1 prof , 2 inst
+//                int HLCounter = 1;
+//                String ClaimTypeIdentifier = "005010X223A2";// 005010X222A1 Prof , 005010X223A2 Inst
+//
+//                ISATAG.put("0000-ISA01-AuthorizationInfoQualifier-00",2);
+//                ISATAG.put("0000-ISA02-AuthorizationInformation-",10);
+//                ISATAG.put("0000-ISA03-SecurityInformationQualifier-00",2);
+//                ISATAG.put("0000-ISA04-SecurityInformation-          ",10);
+//                ISATAG.put("0000-ISA05-Interchange ID Qualifier-ZZ",2);
+//                ISATAG.put("0000-ISA06-Interchange Sender ID (*)-BS01834        ",15);
+//                ISATAG.put("0000-ISA07-Interchange ID Qualifier-ZZ",2);
+//                ISATAG.put("0000-ISA08-Interchange Receiver ID-33477          ",15);
+//                ISATAG.put("0000-ISA09-InterchangeDate-140205",6);
+//                ISATAG.put("0000-ISA10-InterchangeTime-1452",4);
+//                ISATAG.put("0000-ISA11-RepetitionSeparator-^",1);
+//                ISATAG.put("0000-ISA12-InterchangeControlVersionNumber-00501",5);
+//                ISATAG.put("0000-ISA13-InterchangeControlNumber-100000467",9);
+//                ISATAG.put("0000-ISA14-AcknowledgmentRequested-0",1);
+//                ISATAG.put("0000-ISA15-Usage Indicator-T",1);
+//                ISATAG.put("0000-ISA16-ComponentElementSeparator-:~",1);
+//
+//
+//                HashMap<Integer,String> ISAValue=new HashMap<Integer, String>();
+//
+//                ISAValue.put(0,"ISA");
+//                ISAValue.put(1,"00");
+//                ISAValue.put(2," " );
+//                ISAValue.put(3,"00");
+//                ISAValue.put(4," ");
+//                ISAValue.put(5,"ZZ");
+//                ISAValue.put(6,"BS01834");
+//                ISAValue.put(7,"ZZ");
+//                ISAValue.put(8,"33477");
+//                ISAValue.put(9,"140205");
+//                ISAValue.put(10,"1452");
+//                ISAValue.put(11,"^");
+//                ISAValue.put(12,"00501");
+//                ISAValue.put(13,"000987654");
+//                ISAValue.put(14,"0");
+//                ISAValue.put(15,"T");
+//                ISAValue.put(16,":");
+//
+//                X12 x12 = new X12(c);
+//                Loop loop_isa = x12.addChild("ISA");
+//
+//                // add segment
+//                loop_isa.addSegment("ISA*00*          *00*          *ZZ*SENDERID       *ZZ*RECEIVERID    *"+CreationDate+"*"+ClaimCreateTime+"*U*00401*"+InterControlNo+"*0*T*:");
+//
+//                for (String key : ISATAG.keySet()) {
+//                    //   //system.out.println(key);
+//                    String temp[]=key.split("-");
+//                    int elementid=Integer.parseInt(getOnlyDigits(temp[1]));
+//                    int len= ISATAG.get(key);
+//                    // //system.out.println(elementid);
+//                    // //system.out.println(len);
+//                    loop_isa.getSegment(0).setElement(elementid, ISAValue.get(elementid),len);
+//                }
+//
+//                //Transaction Set Header (ST)
+//                // Add GS child loop to ISA loop
+//                Loop loop_gs = loop_isa.addChild("GS");
+//                // Add GS segment directly as a string
+//                loop_gs.addSegment("GS*HC*AZ08260*0048*"+ClaimCreateDate+"*"+ClaimCreateTime+"*"+InterControlNo+"*X*"+ClaimTypeIdentifier);
+//
+//                Loop loop_st = loop_gs.addChild("ST");
+//                loop_st.addSegment("ST*837*"+InterControlNo+"*"+ClaimTypeIdentifier);
+//                loop_st.addSegment("BHT*0019*00*" + ClaimCreateDate + ClaimCreateTime +"*"+ ClaimCreateDate +"*"+ClaimCreateTime+"*CH~");
+//                //loop_st.addSegment("TRN*1*0000000000*1999999999");
+//                //loop_st.addSegment("DTM*111*20090915");
+//
+//
+//                //1000A SUBMITTER NAME
+//
+//                Loop loop_1000A = loop_st.addChild("1000A");
+//                loop_1000A.addSegment("NM1*41*2*"+Organization+"*****46*12345");
+//                loop_1000A.addSegment("PER*IC*"+Organization+"*TE*"+Organization_Tel+"*EM*"+Organization_Email);
+//
+//
+//                String RecieverInsurance = "MEDICARE";
+//                String RecieverInsurance_IdentificationCode = "00120";
+//
+//                //1000B RECEIVER NAME
+//                Loop loop_1000B = loop_st.addChild("1000B");
+//                loop_1000B.addSegment("NM1*40*2*"+RecieverInsurance+"*****46*"+RecieverInsurance_IdentificationCode);
+//                loop_1000B.addSegment("N1*PE*FI*888888888*P.O.BOX 456*SHINE CITY*GREEN STATE*ZIP*EARTH");
+//
+//
+//
+//                //2000A BILLING PROVIDER
+//                Loop loop_2000 = loop_st.addChild("2000");
+//                loop_2000.addSegment("HL*"+HLCounter+"**20*1"); //HL BILLING PROVIDER HIERARCHICAL LEVEL
+//                loop_2000.addSegment("PRV*BI*PXC*"+BillingProvider_Taxonomy); //PRV BILLING PROVIDER SPECIALTY
+//
+//                String BillingProvider_Address = "225 MAIN STREET BARKLEY BUILDING";
+//                String BillingProvider_State = "PA";
+//                String BillingProvider_ZipCode = "17111";
+//                String BillingProvider_City = "CENTERVILLE";
+//                String BillingProvider_TaxID = "567891234";
+//                String BillingProvider_Tel = "5678912342";
+//
+//                //2010AA BILLING PROVIDER NAME
+//                Loop loop_2010_1 = loop_2000.addChild("2010");
+//                loop_2010_1.addSegment("NM1*85**"+BillingProvidersLastName+"*"+BillingProvidersFirstName+"****XX*9876540809");//NM1 BILLING PROVIDER NAME INCLUDING NATIONAL PROVIDER ID
+//                loop_2010_1.addSegment("N3*"+BillingProvider_Address); //N3 BILLING PROVIDER ADDRESS
+//                loop_2010_1.addSegment("N4*"+BillingProvider_City+"*"+BillingProvider_State+"*"+BillingProvider_ZipCode);//N4 BILLING PROVIDER LOCATION
+//                loop_2010_1.addSegment("REF*EI*"+ClientTaxID); //REF BILLING PROVIDER TAX IDENTIFICATION NUMBER
+//                loop_2010_1.addSegment("PER*IC*"+BillingProvidersLastName+"*TE*"+BillingProvider_Tel);//PER BILLING PROVIDER CONTACT INFORMATION
+//
+//
+//
+//                String PayerResponsibilityCode = "P";
+//                String InsuranceTypeCode = "";//required when sbr02 is S and FC is MA or MB
+//                String PatientRelationshipCode = null;
+//
+//
+//                if (PatientRelationtoPrimary.equals("Self")) {
+//                    PatientRelationshipCode = "18";
+//                } else {
+//                    PatientRelationshipCode = "";
+//                }
+//
+//                HLCounter++;
+//                //2000B SUBSCRIBER HL LOOP
+//                Loop loop_2000B = loop_2000.addChild("2000");
+//                loop_2000B.addSegment("HL*"+HLCounter+"*1*22*0");//HL SUBSCRIBER HIERARCHICAL LEVEL
+//                loop_2000B.addSegment("SBR*"+PayerResponsibilityCode+"*"+PatientRelationshipCode+"*"+GrpNumber+"******"+PriFillingIndicator);//SBR SUBSCRIBER INFORMATION
+//
+//                //2010BA SUBSCRIBER NAME LOOP
+//                Loop loop_2010BA = loop_2000.addChild("2000");
+//                loop_2010BA.addSegment("NM1*IL*1*"+PatientLastName+"*"+PatientFirstName+"*T***MI*"+MemId);//NM1 SUBSCRIBER NAME
+//                loop_2010BA.addSegment("N3*"+Address);//N3 SUBSCRIBER ADDRESS
+//                loop_2010BA.addSegment("N4*"+City+"*"+State+"*"+ZipCode);//N4 SUBSCRIBER LOCATION
+//                loop_2010BA.addSegment("DMG*D8*"+DOB+"*"+Gender); //DMG SUBSCRIBER DEMOGRAPHIC INFORMATION
+//
+//                //2010BB PAYER NAME LOOP
+//                Loop loop_2010BB = loop_2000.addChild("2000");
+//                loop_2010BB.addSegment("NM1*PR*2*"+PriInsuranceName+"*****PI*"+PriInsuranceNameId);//NM1 PAYER NAME
+//                loop_2010BB.addSegment("N3*" + Payer_Address);//N3 PAYER ADDRESS ** ADDED
+//                loop_2010BB.addSegment("N4*" + Payer_City + "*" + Payer_State + "*" + Payer_Zip);//N4 PAYER ADDRESS ** ADDED
+////                loop_2010BB.addSegment("REF*G2*330127");//REF BILLING PROVIDER SECONDARY IDENTIFICATION
+//
+//                //	2300 CLAIM INFORMATION
+//                PatientControlNumber = PatientMRN + "FAM" + ClientId + timesSubmitted + "E" + ClaimNumber.replace("-", "");
+//                String Related_Causes_Code = null;
+//
+//                if (AutoAccidentAddInfo.equals("1")) {
+//                    Related_Causes_Code = "AA";
+//                } else if (EmploymentStatusAddInfo.equals("1")) {
+//                    Related_Causes_Code = "EM";
+//                } else if (OtherAccidentAddInfo.equals("1")) {
+//                    Related_Causes_Code = "OA";
+//                }
+//
+//
+//                Loop loop_2300 = loop_st.addChild("2300");
+//                loop_2300.addSegment("CLM*" + PatientControlNumber + "*" + TotalChrgeAmt + "***" +  TypeBillText.substring(0,1)+TypeBillText.substring(1,2) + ":A:" + TypeBillText.substring(2,3) + "*Y*A*Y*Y***"); //CLM CLAIM LEVEL INFORMATION
+//
+////                loop_2300.addSegment("CLM*756048Q*89.93**14:A:1*A*Y*Y"); //CLM CLAIM LEVEL INFORMATION
+////                loop_2300.addSegment("DTP*434*RD8*19960911"); // DTP STATEMENT DATES
+////                loop_2300.addSegment("CL1*3**01"); // CL1 INSTITUTIONAL CLAIM CODE
+////                loop_2300.addSegment("HI*BK:3669"); //HI PRINCIPAL DIAGNOSIS CODES
+////                loop_2300.addSegment("HI*BF:4019*BF:79431"); //HI OTHER DIAGNOSIS INFORMATION
+////                loop_2300.addSegment("HI*BH:A1:D8:19261111*BH:A2:D8:19911101*BH:B1:D8:19261111*BH:B2:D8:19870101"); //HI OCCURRENCE INFORMATION
+////                loop_2300.addSegment("HI*BE:A2:::15.31"); //HI VALUE INFORMATION
+////                loop_2300.addSegment("HI*BG:09"); //HI CONDITION INFORMATION
+//
+//                //2310A ATTENDING PROVIDER NAME
+//
+//                Loop loop_2310A = loop_2300.addChild("2310");
+//                loop_2310A.addSegment("NM1*71*1*"+AttendingProviderLastName+"*"+AttendingProviderFirstName+"*J");//NM1 ATTENDING PROVIDER
+//                loop_2310A.addSegment("PRV*AT*PXC*"+AttendingProvider_Taxonomy);//NM1 ATTENDING PROVIDER
+////                loop_2310A.addSegment("REF*1G*B99937");//REF ATTENDING PROVIDER SECONDARY IDENTIFICATION
+//
+//
+//
+//
+//
+//                //2400 SERVICE LINE
+//                Loop loop_2400 = loop_st.addChild("2400");
+//                loop_2400.addSegment("LX*1");//LX SERVICE LINE COUNTER
+//                loop_2400.addSegment("SV2*0305*HC:85025*13.39*UN*1"); //SV2 INSTITUTIONAL SERVICE
+//                loop_2400.addSegment("DTP*472*D8*19960911");//DTP DATE - SERVICE DATES
+//
+//
+//
+//
+//
+//                Loop loop_se = loop_gs.addChild("SE");
+//                loop_se.addSegment("SE*XX*000987654");
+//
+//                Loop loop_ge = loop_isa.addChild("GE");
+//                loop_ge.addSegment("GE*1*000987654");
+//
+//                Loop loop_iea = x12.addChild("IEA");
+//                loop_iea.addSegment("IEA*1*000987654");
+//
+//                // Since the SE loop has the incorrect segment count let us fix that.
+//                Integer count = loop_st.size();
+//                count += 1; // In the loop hierarchy SE is not a child loop of ST. So
+//                // when we get the rows in ST loop it does not have the count of SE.
+//                // so add 1.
+//
+//                // We can set the count directly, like
+//                // loop_se.getSegment(0).setElement(1, count.toString());
+//                // this is just to show how to use the findLoop()
+//
+//                //TRAILER
+//                List<Loop> trailer = x12.findLoop("SE");
+//                trailer.get(0).getSegment(0).setElement(1, count.toString(),2);
+//
+//                //another way
+//                List<Segment> se = x12.findSegment("SE");
+//                se.get(0).setElement(1, count.toString(),2);
+//
+//                //another way
+//                loop_se.getSegment(0).setElement(1, count.toString(),2);
+//
+//
+//                ////system.out.println(loop_st.size());
+//                //system.out.println(x12.toString());
+//                ////system.out.println(x12.toXML());
+//
+//                //out.println("TagCount--ALL--"+TagCount);
+//
+//                File file = new File("/sftpdrive/opt/EDI_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt");
+//                if (file.exists()) {
+//                    file.delete();
+//                }
+//
+//                File myObj = new File("/sftpdrive/opt/EDI_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt");
+//                if (myObj.createNewFile()) {
+//
+//                    FileWriter myWriter = new FileWriter("/sftpdrive/opt/EDI_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt");
+//                    myWriter.write(ISA.toString());
+//                    myWriter.write(GS.toString());
+//                    myWriter.write(ST.toString());
+//                    myWriter.write(BHT.toString());
+//                    myWriter.write(NM1.toString());
+//                    myWriter.write(PER.toString());
+//                    myWriter.write(NM1_2.toString());
+//                    myWriter.write(HL_1.toString());
+//                    myWriter.write(PRV_BI.toString());
+//                    myWriter.write(NM1_3.toString());
+//                    myWriter.write(N3_1.toString());
+//                    myWriter.write(N4_1.toString());
+//                    myWriter.write(REF_1.toString());
+//                    myWriter.write(HL_2.toString());
+//                    myWriter.write(SBR.toString());
+//                    myWriter.write(NM1_4.toString());
+//                    myWriter.write(N3_2.toString());
+//                    myWriter.write(N4_2.toString());
+//                    myWriter.write(DMG.toString());
+//                    myWriter.write(NM1_5.toString());
+//                    myWriter.write(N3_3.toString());
+//                    myWriter.write(N4_3.toString());
+//                    myWriter.write(CLM.toString());
+//                    myWriter.write(DTP_1.toString());
+//                    myWriter.write(DTP_2.toString());
+//                    myWriter.write(DTP_3.toString());
+//                    myWriter.write(CL1.toString());
+//                    myWriter.write(REF_2.toString());
+//                    myWriter.write(HI_1_ABK.toString());
+//                    myWriter.write(HI_1_ABJ.toString());
+//                    myWriter.write(HI_1_ABN.toString());
+//                    myWriter.write(HI_1_APR.toString());
+//                    myWriter.write(HI_1_ABF.toString());
+//                    myWriter.write(HI_1_BBR.toString());
+//                    myWriter.write(HI_1_BBQ.toString());
+//                    //myWriter.write(HI_1_BI.toString());
+//                    myWriter.write(HI_1_BH.toString());
+//                    myWriter.write(HI_1_BE.toString());
+//                    myWriter.write(HI_1_BG.toString());
+//                    myWriter.write(NM1_6.toString());
+//                    myWriter.write(PRV_AT.toString());
+//                    myWriter.write(NM1_7.toString());
+//                    myWriter.write(N3_4.toString());
+//                    myWriter.write(N4_4.toString());
+//                    myWriter.write(SV2_1.toString());
+//                    myWriter.write(SE.toString());
+//                    myWriter.write(GE.toString());
+//                    myWriter.write(IEA.toString());
+//
+//
+//                    myWriter.close();
+//                }
+//
+//            }
+//            Instant end = Instant.now();
+//            Duration ExecutionTime = Duration.between(start, end);
+////            out.println(ErrorMsgs + "~" + ExecutionTime);
+//            Parsehtm Parser = new Parsehtm(request);
+//            Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Reports/Addinfo.html");
+//        } catch (Exception e) {
+//            out.println("An error occurred.");
+//            out.println(e.getMessage());
+//            out.println(e.getMessage() + Query);
+//            String str = "";
+//            for (i = 0; i < e.getStackTrace().length; ++i) {
+//                str = str + e.getStackTrace()[i] + "<br>";
+//            }
+//            out.println(str);
+//        }
+//    }
 
     public static HashMap<Integer, String> claim_status_list(String aa, Connection Conn) {
 
@@ -195,18 +1433,6 @@ public class InsClaimTesting extends HttpServlet {
         return null;
     }
 
-    public void init(final ServletConfig config) throws ServletException {
-        super.init(config);
-    }
-
-    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        handleRequest(request, response);
-    }
-
-    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-        handleRequest(request, response);
-    }
-
     public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         String UserId = "";
         int FacilityIndex = 0;
@@ -265,7 +1491,7 @@ public class InsClaimTesting extends HttpServlet {
             }
             rset.close();
             stmt.close();
-            System.out.println("ACTION ID " + ActionID);
+            //system.out.println("ACTION ID " + ActionID);
             if (ActionID.equals("Addinfo")) {
                 supp.Dologing(UserIndex, conn, request.getRemoteAddr(), ActionID, "Add Info Institutional Claim Screen", "Open Institutional Claim Screen", FacilityIndex);
                 Addinfo(request, out, conn, context, UserIndex, DatabaseName, FacilityIndex, helper);
@@ -307,7 +1533,7 @@ public class InsClaimTesting extends HttpServlet {
     }
 
     public void Addinfo(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper) {
-
+        String ClientIP = helper.getClientIp(request);
         String Head = "";
         int VisitId = Integer.parseInt(request.getParameter("VisitId").trim());
         int PatientRegId = Integer.parseInt(request.getParameter("PatientRegId").trim());
@@ -327,10 +1553,17 @@ public class InsClaimTesting extends HttpServlet {
         String Facilityname = "";
         String ClaimNo = "";
 
+        StringBuffer AlertList = new StringBuffer();
+        int Alertscount = 0;
+
+
+
+
         String ChargeMasterTableName = "";
         StringBuffer Insurancelist = new StringBuffer();
         StringBuffer Providerlist = new StringBuffer();
         StringBuffer OperatingProvider = new StringBuffer();
+        StringBuffer RenderingProvider = new StringBuffer();
         StringBuffer claimstatuslist = new StringBuffer();
         StringBuffer claimpptlist = new StringBuffer();
         StringBuffer PatientStatus = new StringBuffer();
@@ -382,7 +1615,9 @@ public class InsClaimTesting extends HttpServlet {
         String SecondryInsuranceId = "";
         String SecondryInsurance = "";
         String aa = "0";
+        String OrigClaim = "";
         int ClaimInfoMasterId = 0;
+        int ClaimChargeIdx = 0;
         int ChargesCount = 0;
         String _RefNum = "";
         String _TypeBillText = "131";
@@ -396,6 +1631,7 @@ public class InsClaimTesting extends HttpServlet {
         String _SecondaryInsuranceMemId = "";
         String _SecondaryInsuranceGrpNumber = "";
         String _OperatingProvider = "";
+        String _RenderingProvider = "";
         String _CreatedDate = "";
         String DescriptionFrom = "";
         String StatmentCoverFromDateAddInfo = "";
@@ -425,6 +1661,38 @@ public class InsClaimTesting extends HttpServlet {
         String EDI_GENERATOR = "";
         String PatientRelationtoPrimary = "";
         String PatientRelationtoSec = "";
+        String PriInsurerName = "";
+        String PrimaryDOB = "";
+
+        String CPTDesc = "";
+        String RevDesc = "";
+        String Mod1Desc = "";
+        String Mod2Desc = "";
+        String Mod3Desc = "";
+        String Mod4Desc = "";
+
+        String TotalCharges = "";
+        String Adjustments = "";
+        String Paid = "";
+        String Balance = "";
+
+        String TaxID = "";
+        String NPI = "";
+        String _BillingProviderNPI = "";
+
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        //system.out.println("HERE _>> ");
+        ObjectNode NDC = mapper.createObjectNode();
+        ObjectNode NDC2 = mapper.createObjectNode();
+        String JSSON=null;
+//        JsonNode NDC=null;
+//
+//        JsonNode NDC2=null;
+//        Map<String,Object> NDC = new LinkedHashMap<>();
+//        Map<String,Object> NDC2 = new LinkedHashMap<>();
+
         try {
 
             Query = "Select Id, IFNULL(UPPER(ChargeOption),'') " +
@@ -477,7 +1745,7 @@ public class InsClaimTesting extends HttpServlet {
             if (SelfPayChk == 1) {
                 Query = " Select IFNULL(b.PayerName,''), IFNULL(a.GrpNumber,''), IFNULL(a.MemId,''), IFNULL(a.PriInsuranceName,''), " +
                         " IFNULL(a.SecondryInsurance,''), IFNULL(c.PayerName,'')," +
-                        "IFNULL(PatientRelationtoPrimary,''),IFNULL(PatientRelationshiptoSecondry,'')  " +
+                        "IFNULL(PatientRelationtoPrimary,''),IFNULL(PatientRelationshiptoSecondry,''),IFNULL(a.PriInsurerName,''),IFNULL(DATE_FORMAT(a.PrimaryDOB,'%m/%d/%Y'),'')  " +
                         " from " + Database + ".InsuranceInfo a " +
                         " LEFT JOIN oe_2.ProfessionalPayers b on a.PriInsuranceName = b.Id " +
                         " LEFT JOIN oe_2.ProfessionalPayers c on a.SecondryInsurance = c.Id " +
@@ -493,6 +1761,8 @@ public class InsClaimTesting extends HttpServlet {
                     SecondryInsurance = rset.getString(6);
                     PatientRelationtoPrimary = rset.getString(7);
                     PatientRelationtoSec = rset.getString(8);
+                    PriInsurerName = rset.getString(9);
+                    PrimaryDOB = rset.getString(10);
                 }
                 rset.close();
                 stmt.close();
@@ -501,17 +1771,19 @@ public class InsClaimTesting extends HttpServlet {
                     PatientRelationtoSec = "";
             }
 
-            Query1 = "SELECT dbname,IFNULL(FullName,'') FROM oe.clients WHERE id=" + ClientId;
+            Query1 = "SELECT dbname,IFNULL(FullName,'') , IFNULL(TaxID,''),  IFNULL(NPI,'') FROM oe.clients WHERE id=" + ClientId;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query1);
             if (rset.next()) {
                 Facilityname = rset.getString(2);
+                TaxID = rset.getString(3);
+                NPI = rset.getString(4);
             }
             rset.close();
             stmt.close();
 
 
-            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster where Status = 0 and PatientRegId = " + PatientRegId + " " +
+            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster where PatientRegId = " + PatientRegId + " " +
                     " and VisitId = " + VisitId + " and ClaimType = " + ClaimType;
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
@@ -522,7 +1794,7 @@ public class InsClaimTesting extends HttpServlet {
             stmt.close();
 
             if (FoundClaim > 0) {
-                Query = "Select ClaimNumber from " + Database + ".ClaimInfoMaster where Status = 0 and PatientRegId = " + PatientRegId + " " +
+                Query = "Select ClaimNumber from " + Database + ".ClaimInfoMaster where  PatientRegId = " + PatientRegId + " " +
                         " and VisitId = " + VisitId + " and ClaimType = " + ClaimType + " order by Id desc ";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
@@ -544,9 +1816,10 @@ public class InsClaimTesting extends HttpServlet {
                 Query = " Select a.Id,IFNULL(a.RefNumber,''), IFNULL(a.TypeBillText,''),IFNULL(a.UploadDate,''), IFNULL(a.AttendingProvider,''), " +
                         " IFNULL(a.BillingProviders,''), IFNULL(a.PolicyType,''), " +
                         " IFNULL(a.SecondaryInsuranceMemId,''), IFNULL(a.SecondaryInsuranceGrpNumber,''), " +
-                        " IFNULL(a.OperatingProvider,''), DATE_FORMAT(a.CreatedDate,'%m%d%y'),IFNULL(a.PriInsuranceNameId,''), IFNULL(a.SecondaryInsuranceId,''), " +
+                        " IFNULL(a.OperatingProvider,''), DATE_FORMAT(a.CreatedDate,'%m/%d/%Y'),IFNULL(a.PriInsuranceNameId,''), IFNULL(a.SecondaryInsuranceId,''), " +
                         " IFNULL(b.PayerName,''), IFNULL(c.PayerName,''), IFNULL(a.GrpNumber,''),IFNULL(a.ReferringProvider,''),  " +
-                        " IFNULL(a.SupervisingProvider,''), IFNULL(a.OrderingProvider,'') " +
+                        " IFNULL(a.SupervisingProvider,''), IFNULL(a.OrderingProvider,''),IFNULL(OrigClaim,''),IFNULL(a.RenderingProvider,'') " +
+                        ",FORMAT(IFNULL(TotalCharges,'0.00'),2),IFNULL(FORMAT(Balance,2),FORMAT(IFNULL(TotalCharges,'0.00'),2)),FORMAT(IFNULL(Adjusted,'0.00'),2),FORMAT(IFNULL(Paid,'0.00'),2) " +
                         "from " + Database + ".ClaimInfoMaster a " +
 //                        " LEFT JOIN oe.AvailityClearHousePayerList b on a.PriInsuranceNameId = b.Id " +
 //                        " LEFT JOIN oe.AvailityClearHousePayerList c on a.SecondaryInsuranceId = c.Id  " +
@@ -570,17 +1843,25 @@ public class InsClaimTesting extends HttpServlet {
                     _SecondaryInsuranceGrpNumber = rset.getString(9);
                     _OperatingProvider = rset.getString(10);
                     _CreatedDate = rset.getString(11);
-                    PriInsuranceNameId = rset.getString(12);
-                    SecondryInsuranceId = rset.getString(13);
-                    PriInsuranceName = rset.getString(14);
-                    SecondryInsurance = rset.getString(15);
+//                    PriInsuranceNameId = rset.getString(12);
+//                    SecondryInsuranceId = rset.getString(13);
+//                    PriInsuranceName = rset.getString(14);
+//                    SecondryInsurance = rset.getString(15);
                     if (GrpNumber.equals("")) {
                         GrpNumber = rset.getString(16);
                     }
+                    OrigClaim = rset.getString(20);
+                    _RenderingProvider = rset.getString(21);
+
+                    TotalCharges = rset.getString(22);
+                    Balance = rset.getString(23);
+                    Adjustments = rset.getString(24);
+                    Paid = rset.getString(25);
 
                 }
                 rset.close();
                 stmt.close();
+
 
                 Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) " +
                         "FROM " + Database + ".DoctorsList";
@@ -595,13 +1876,14 @@ public class InsClaimTesting extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
+                Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName),NPI  FROM " + Database + ".DoctorsList";
                 stmt = conn.createStatement();
                 BillingProvider.append("<option class=Inner value=\"\"></option>");
                 for (rset = stmt.executeQuery(Query1); rset.next(); ) {
-                    if (_BillingProvider.equals(rset.getString(1)))
+                    if (_BillingProvider.equals(rset.getString(1))) {
                         BillingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(2) + "</option>");
-                    else
+                        _BillingProviderNPI = rset.getString(3);
+                    }else
                         BillingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
                 }
                 rset.close();
@@ -615,6 +1897,18 @@ public class InsClaimTesting extends HttpServlet {
                         OperatingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(2) + "</option>");
                     else
                         OperatingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+                }
+                rset.close();
+                stmt.close();
+
+                Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
+                stmt = conn.createStatement();
+                RenderingProvider.append("<option class=Inner value=\"\"></option>");
+                for (rset = stmt.executeQuery(Query1); rset.next(); ) {
+                    if (_RenderingProvider.equals(rset.getString(1)))
+                        RenderingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\" selected>" + rset.getString(2) + "</option>");
+                    else
+                        RenderingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
                 }
                 rset.close();
                 stmt.close();
@@ -658,43 +1952,66 @@ public class InsClaimTesting extends HttpServlet {
                 rset.close();
                 stmt.close();
 
-                Query = "Select IFNULL(a.DescriptionFrom,''), IFNULL(a.ServiceDate,''), IFNULL(a.HCPCS,''), " + //3
+                Query = "Select IFNULL(a.DescriptionFrom,''), IFNULL(a.ServiceDate,''), IFNULL(a.HCPCSProcedure,''), " + //3
                         "IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), IFNULL(a.Mod4,''), IFNULL(a.RevCode,''), " + //8
-                        "CASE WHEN a.DescriptionFrom = 1 THEN b.ShortDescription WHEN a.DescriptionFrom = 0 THEN c.Description ELSE c.Description END, " + //9
+                        "CASE WHEN a.DescriptionFrom = 1 THEN b.CPTDescription WHEN a.DescriptionFrom = 0 THEN c.RevDescription ELSE c.RevDescription END, " + //9
                         "IFNULL(a.UnitPrice,'0'), IFNULL(a.Units,'0'), IFNULL(a.Amount,'0.0'), IFNULL(d.descname,''), " + //13
                         "IFNULL(a.ChargesStatus,''), " +//14
-                        "IFNULL(e.ChargeOption,'') " +//15
+                        "IFNULL(e.ChargeOption,''), " +//15
+                        "IFNULL(a.Id,''),IFNULL(b.CPTDescription,'') , IFNULL(c.RevDescription,'') , IFNULL(f.Description,''), IFNULL(g.Description,''), IFNULL(h.Description,''), IFNULL(i.Description,'') " +//22
                         "from " + Database + ".ClaimChargesInfo a " +
-                        "LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCS = b.CPTCode " +
-                        "LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
+                        "LEFT JOIN ClaimMasterDB.CPTMaster b on a.HCPCSProcedure = b.CPTCode " +
+                        "LEFT JOIN ClaimMasterDB.RevenueCode c on a.RevCode = c.RevCode " +
                         "LEFT JOIN oe.claim_status_list d on a.ChargesStatus = d.Id " +
                         "LEFT JOIN oe.ChargeOption e on a.ChargesStatus = e.Id " +
-                        "where a.Status = 0 and a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNo + "'";
-                System.out.println("EXIS QUERY " + Query);
+                        "LEFT JOIN oe.ModifierCodes f on a.Mod1 = f.Code " +
+                        "LEFT JOIN oe.ModifierCodes g on a.Mod2 = g.Code " +
+                        "LEFT JOIN oe.ModifierCodes h on a.Mod3 = h.Code " +
+                        "LEFT JOIN oe.ModifierCodes i on a.Mod4 = i.Code " +
+                        "where  a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNo + "' AND b.EffectiveDate < NOW()";
+//                System.out.println("EXIS QUERY " + Query);
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
+                    CPTDesc = rset.getString(17);
+                    RevDesc = rset.getString(18);
+                    Mod1Desc = rset.getString(19);
+                    Mod2Desc = rset.getString(20);
+                    Mod3Desc = rset.getString(21);
+                    Mod4Desc = rset.getString(22);
+
+
                     DescriptionFrom = rset.getString(1);
                     ChargeList.append("<tr>");
                     ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='ServDate_" + ChargesCount + "'>" + rset.getString(2) + "</td>"); // ServiceDate
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='CPT_" + ChargesCount + "'>" + rset.getString(3) + "</td>"); //HCPCS
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='Mod1_" + ChargesCount + "'>" + rset.getString(4) + "</td>"); // Mod1
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='Mod2_" + ChargesCount + "'>" + rset.getString(5) + "</td>");// Mod2
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='Mod3_" + ChargesCount + "'>" + rset.getString(6) + "</td>");//Mod3
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='Mod4_" + ChargesCount + "'>" + rset.getString(7) + "</td>");//Mod4
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='RevCod_" + ChargesCount + "'>" + rset.getString(8) + "</td>");//RevCode
+                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='"+CPTDesc+"' id='CPT_" + ChargesCount + "'>" + rset.getString(3) + "</td>"); //HCPCS
+                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='"+Mod1Desc+"' id='Mod1_" + ChargesCount + "'>" + rset.getString(4) + "</td>"); // Mod1
+                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='"+Mod2Desc+"' id='Mod2_" + ChargesCount + "'>" + rset.getString(5) + "</td>");// Mod2
+                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='"+Mod3Desc+"' id='Mod3_" + ChargesCount + "'>" + rset.getString(6) + "</td>");//Mod3
+                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='"+Mod4Desc+"' id='Mod4_" + ChargesCount + "'>" + rset.getString(7) + "</td>");//Mod4
+                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='"+RevDesc+"' id='RevCod_" + ChargesCount + "'>" + rset.getString(8) + "</td>");//RevCode
                     ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='CPTDescrip_" + ChargesCount + "'>" + rset.getString(9) + "</td>");//Description
                     ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='UnitPrice_" + ChargesCount + "' >" + rset.getDouble(10) + "</td>");//UnitPrice
                     ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='Units_" + ChargesCount + "'>" + rset.getDouble(11) + "</td>");//Units
-                    ChargeList.append("<td contentEditable='true' data-toggle='tooltip' title='' data-original-title='' id='Amount_" + ChargesCount + "'>" + rset.getDouble(12) + "</td>");//Amount
-                    ChargeList.append("<td id='ChargeStatus_" + ChargesCount + "'>" + rset.getString(15) + "</td>");
+                    ChargeList.append("<td class=\"edit-disabled\"  data-toggle='tooltip' title='' data-original-title='' id='Amount_" + ChargesCount + "'>" + rset.getDouble(12) + "</td>");//Amount
+                    ChargeList.append("<td class=\"edit-disabled\" id='ChargeStatus_" + ChargesCount + "'>" + rset.getString(15) + "</td>");
                     ChargeList.append("<td style=\"display:none;\">" + rset.getString(14) + "</td>");
-                    ChargeList.append("<td><button type='button' class='btn btn-danger btn-xs' onclick='deleteCharge(this)'><span class='glyphicon glyphicon-trash'></span></button></td>");
+                    ChargeList.append("<td class=\"edit-disabled otherTD\" id='Other_" + ChargesCount + "'>Other</td>");
+                    ChargeList.append("<td class=\"edit-disabled\" ><button type='button' class='btn btn-danger btn-xs' onclick='deleteCharge(this)'><span class='glyphicon glyphicon-trash'></span></button></td>");
                     ChargeList.append("</tr>");
+
+                    ClaimChargeIdx=rset.getInt(16);
+
+                    ObjectNode ndc222 = getjson_ClaimChargesOtherInfo(conn,ClaimInfoMasterId,ClaimChargeIdx,Database);
+                    if(ndc222.toString().length()>3){
+                        NDC.set("Other_" + ChargesCount ,ndc222);
+                    }
+
                     ChargesCount++;
                 }
                 rset.close();
                 stmt.close();
+
 
                 Query = "Select IFNULL(StatmentCoverFromDateAddInfo,''), IFNULL(StatmentCoverToDateAddInfo,''), IFNULL(AdmissionDateAddInfo,''), " +
                         "IFNULL(AdmissionHourAddInfo,''), IFNULL(AdmissionTypeAddInfo,''), " +
@@ -939,6 +2256,15 @@ public class InsClaimTesting extends HttpServlet {
 
                 Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
                 stmt = conn.createStatement();
+                RenderingProvider.append("<option class=Inner value=\"\"></option>");
+                for (rset = stmt.executeQuery(Query1); rset.next(); ) {
+                    RenderingProvider.append("<option class=Inner value=\"" + rset.getString(1) + "\">" + rset.getString(2) + "</option>");
+                }
+                rset.close();
+                stmt.close();
+
+                Query1 = "SELECT id,CONCAT(DoctorsLastName,', ',DoctorsFirstName) FROM " + Database + ".DoctorsList";
+                stmt = conn.createStatement();
                 SupervisingProvider.append("<option class=Inner value=\"\"></option>");
                 for (rset = stmt.executeQuery(Query1); rset.next(); ) {
                     if (_SupervisingProvider.equals(rset.getString(1)))
@@ -974,6 +2300,14 @@ public class InsClaimTesting extends HttpServlet {
                 }
                 rset.close();
                 stmt.close();
+
+
+
+                TotalCharges = "0.00";
+                Adjustments = "0.00";
+                Paid = "0.00";
+                Balance = "0.00";
+                _CreatedDate = "Now";
             }
             if (DescriptionFrom.equals("1")) {
                 _DescriptionFrom.append("<option value=''>Select Any </option> <option value='1' selected> CPT/HCPCS </option><option value='0' >REVCODE </option> ");
@@ -1010,30 +2344,59 @@ public class InsClaimTesting extends HttpServlet {
             hrset.close();
             hstmt.close();
 
-            Query = "Select AdmissionTypeCode, AdmissionType from oe.AdmissionType where Status = 1";
-            hstmt = conn.createStatement();
-            AdmissionType.append("<option class=Inner value=\"\">Select Any</option>");
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                if (AdmissionTypeAddInfo.equals(hrset.getString(1)))
-                    AdmissionType.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
-                else
-                    AdmissionType.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+
+            if (AdmissionTypeAddInfo.equals("")) {
+                Query = "Select AdmissionTypeCode, AdmissionType from oe.AdmissionType where Status = 1";
+                hstmt = conn.createStatement();
+                AdmissionType.append("<option class=Inner value=\"\">Select Any</option>");
+                for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                    if (hrset.getString(1).equals("1"))//Default Value
+                        AdmissionType.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                    else
+                        AdmissionType.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                }
+                hrset.close();
+                hstmt.close();
+            }else{
+                Query = "Select AdmissionTypeCode, AdmissionType from oe.AdmissionType where Status = 1";
+                hstmt = conn.createStatement();
+                AdmissionType.append("<option class=Inner value=\"\">Select Any</option>");
+                for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                    if (AdmissionTypeAddInfo.equals(hrset.getString(1)))
+                        AdmissionType.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                    else
+                        AdmissionType.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                }
+                hrset.close();
+                hstmt.close();
             }
-            hrset.close();
-            hstmt.close();
 
 
-            Query = "Select AdmissionSourceCode, AdmissionSource from oe.AdmissionSource where Status = 1";
-            hstmt = conn.createStatement();
-            AdmissionSource.append("<option class=Inner value=\"\">Select Any</option>");
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                if (AdmissionSourceAddInfo.equals(hrset.getString(1)))
-                    AdmissionSource.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
-                else
-                    AdmissionSource.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+            if (AdmissionSourceAddInfo.equals("")) {
+                Query = "Select AdmissionSourceCode, AdmissionSource from oe.AdmissionSource where Status = 1";
+                hstmt = conn.createStatement();
+                AdmissionSource.append("<option class=Inner value=\"\">Select Any</option>");
+                for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                    if (hrset.getString(1).equals("9"))//Default Value
+                        AdmissionSource.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                    else
+                        AdmissionSource.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                }
+                hrset.close();
+                hstmt.close();
+            }else{
+                Query = "Select AdmissionSourceCode, AdmissionSource from oe.AdmissionSource where Status = 1";
+                hstmt = conn.createStatement();
+                AdmissionSource.append("<option class=Inner value=\"\">Select Any</option>");
+                for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                    if (AdmissionSourceAddInfo.equals(hrset.getString(1)))
+                        AdmissionSource.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                    else
+                        AdmissionSource.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                }
+                hrset.close();
+                hstmt.close();
             }
-            hrset.close();
-            hstmt.close();
 
             Query = "Select 24Hour, TimeLimit from oe.TimeHours where Status = 1";
             hstmt = conn.createStatement();
@@ -1047,18 +2410,31 @@ public class InsClaimTesting extends HttpServlet {
             hrset.close();
             hstmt.close();
 
-            Query = "Select Code, Description from oe.PatientDischargeStatus where Status = 1";
-            hstmt = conn.createStatement();
-            PatientStatus.append("<option class=Inner value=\"\">Select Any</option>");
-            for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
-                if (PatientStatusAddInfo.equals(hrset.getString(1)))
-                    PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
-                else
-                    PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
-
+            if (PatientStatusAddInfo.equals("")) {
+                Query = "Select Code, Description from oe.PatientDischargeStatus where Status = 1";
+                hstmt = conn.createStatement();
+                PatientStatus.append("<option class=Inner value=\"\">Select Any</option>");
+                for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                    if (hrset.getString(1).equals("01"))//Default Value
+                        PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                    else
+                        PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                }
+                hrset.close();
+                hstmt.close();
+            }else{
+                Query = "Select Code, Description from oe.PatientDischargeStatus where Status = 1";
+                hstmt = conn.createStatement();
+                PatientStatus.append("<option class=Inner value=\"\">Select Any</option>");
+                for (hrset = hstmt.executeQuery(Query); hrset.next(); ) {
+                    if (PatientStatusAddInfo.equals(hrset.getString(1)))
+                        PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\" selected>" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                    else
+                        PatientStatus.append("<option class=Inner value=\"" + hrset.getString(1) + "\">" + hrset.getString(1) + " - " + hrset.getString(2) + "</option>");
+                }
+                hrset.close();
+                hstmt.close();
             }
-            hrset.close();
-            hstmt.close();
 
             Query = "Select DelayReasonCode, DelayReason from oe.DelayReason where Status = 1";
             hstmt = conn.createStatement();
@@ -1178,8 +2554,51 @@ public class InsClaimTesting extends HttpServlet {
                 }
             }
 
+
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO "+Database+".Claim_AuditTrails ( `RuleText`, `ClaimNo`, `ClaimType`, `UserID`, `ClientID`, `CreatedAt`,`UserIP` ,`Action`) VALUES (?,?,?,?,?,NOW(),?,'OPENED')");
+            ps.setString(1,"CLAIM OPENED");
+            ps.setString(2,ClaimNo);
+            ps.setString(3,ClaimType);
+            ps.setString(4,UserId);
+            ps.setInt(5,ClientId);
+            ps.setString(6,ClientIP);
+            ps.executeUpdate();
+            ps.close();
+
+
+            Query = " Select IFNULL(ClaimNumber,''), IFNULL(Alerts,''), IFNULL(DATE_FORMAT(CreatedDate,'%m/%d/%Y %T'),''), IFNULL(CreatedBy,''), Id  " +
+                    " from " + Database + ".Claim_Alerts where ClaimNumber = '" + ClaimNo + "' and Status = 0 order by Id desc ";
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+
+            while (rset.next()) {
+                AlertList.append("<div class=\"box\" >\n" +
+                        "\t\t\t\t  <div class=\"box-header\" style='height: 50%;'>\n" +
+                        "\t\t\t\t\t<h5 class=\"box-title\" style='margin-right: 10%;'>" + rset.getString(2) + "" +
+                        "<br><sub>Added by <u>" + rset.getString(4) + "</u> at <u>" + rset.getString(3) + "</u></sub></h5>\n" +
+                        "\t\t\t\t\t<div class=\"box-controls pull-right\">\n" +
+                        "\t\t\t\t\t  <button class=\"btn btn-xs btn-info\" onclick=\"DeleteAlert(" + rset.getInt(5) + ")\"><i class=\"fa fa-trash\"></i></button>\n" +
+                        "\t\t\t\t\t</div>                \n" +
+                        "\t\t\t\t  </div>\t\t\t\t  \n" +
+                        "\t\t\t\t</div>");
+                Alertscount++;
+            }
+            rset.close();
+            stmt.close();
+
             Services.GetCalendar(Day, Month, Year);
             Parsehtm Parser = new Parsehtm(request);
+
+
+
+            if(ClaimType.equals("1"))
+                Parser.SetField("ActionName", "viewActivity_Ins");
+            else
+                Parser.SetField("ActionName", "viewActivity");
+
+
+            Parser.SetField("AlertList", String.valueOf(AlertList));
+            Parser.SetField("Alertscount", String.valueOf(Alertscount));
             Parser.SetField("PatientName", PatientName.toString());
             Parser.SetField("PhNumber", PhNumber.toString());
             Parser.SetField("Email", Email.toString());
@@ -1193,6 +2612,7 @@ public class InsClaimTesting extends HttpServlet {
             Parser.SetField("Facilityname", Facilityname.toString());
             Parser.SetField("Providerlist", Providerlist.toString());
             Parser.SetField("OperatingProvider", OperatingProvider.toString());
+            Parser.SetField("RenderingProvider", RenderingProvider.toString());
             Parser.SetField("PatientStatus", PatientStatus.toString());
             Parser.SetField("AdmissionType", AdmissionType.toString());
             Parser.SetField("TimeHours", TimeHours.toString());
@@ -1223,6 +2643,8 @@ public class InsClaimTesting extends HttpServlet {
             Parser.SetField("_OperatingProvider", String.valueOf(_OperatingProvider));
             Parser.SetField("_CreatedDate", String.valueOf(_CreatedDate));
             Parser.SetField("ChargeList", String.valueOf(ChargeList));
+            //system.out.println("NDC ->> "+NDC);
+            Parser.SetField("NDC", String.valueOf(NDC));
             Parser.SetField("_DescriptionFrom", String.valueOf(_DescriptionFrom));
             Parser.SetField("ChargesCount", String.valueOf(ChargesCount + " Charges"));
             Parser.SetField("_DischargeHourAddInfo", String.valueOf(_DischargeHourAddInfo));
@@ -1260,6 +2682,26 @@ public class InsClaimTesting extends HttpServlet {
             Parser.SetField("PatientRelationtoSec", PatientRelationtoSec);
 
             Parser.SetField("EDI_GEN", EDI_GENERATOR);
+            Parser.SetField("OrigClaim", OrigClaim);
+            Parser.SetField("TotalCharges", TotalCharges);
+            Parser.SetField("Adjustments", Adjustments);
+            Parser.SetField("Paid", Paid);
+            Parser.SetField("Balance", Balance);
+
+            Parser.SetField("DOS_CS", DOS.split(" ")[0]);
+            Parser.SetField("DateEntered", String.valueOf(_CreatedDate));
+            Parser.SetField("DOB", DOB);
+            if(PatientRelationtoPrimary.compareTo("Self")!=0) {
+                Parser.SetField("Insured", PriInsurerName);
+                Parser.SetField("InsuredDOB", PrimaryDOB);
+            }
+            else {
+                Parser.SetField("Insured", PatientName);
+                Parser.SetField("InsuredDOB", DOB);
+            }
+            Parser.SetField("TaxID", TaxID);
+            Parser.SetField("PracticeNPI", NPI);
+            Parser.SetField("ProviderNPI", _BillingProviderNPI);
 
             Parser.GenerateHtml(out, Services.GetHtmlPath(this.getServletContext()) + "Reports/Addinfo.html");
         } catch (Exception e) {
@@ -1280,9 +2722,16 @@ public class InsClaimTesting extends HttpServlet {
         int i = 0, j = 0, k = 0;
         boolean Found = false;
         int ClaimID = 0;
+        String timesSaved = "0";
+        String Status = "";
+        Boolean isClaimDenied = false;
+        Boolean isClaimOnHold = false;
+
         int PatientRegId = 0;
         int VisitId = 0;
         int ClaimInfoMasterId = 0;
+        int ClaimChargeInfoIdx = 0;
+
         int ClaimType = 0;
 //Claim Basic Info Variable
         String ClaimNumber = "";
@@ -1299,6 +2748,7 @@ public class InsClaimTesting extends HttpServlet {
         String AttendingProvider = "";
         String BillingProviders = "";
         String OperatingProvider = "";
+        String RenderingProvider = "";
         String ClientName = "";
         String PriInsuranceName = "";
         String PriInsuranceNameId = "";
@@ -1309,6 +2759,7 @@ public class InsClaimTesting extends HttpServlet {
         String SecondaryInsuranceId = "";
         String SecondaryInsuranceMemId = "";
         String SecondaryInsuranceGrpNumber = "";
+        String OrigClaim = "";
 
 //Charges Variables
         String DescriptionFrom = "";
@@ -1359,9 +2810,12 @@ public class InsClaimTesting extends HttpServlet {
         String ConditionCodeString = "";
         String ConditionCodeTableCount = "0";
 
+        String chargeIdx = "";
+
+
         try {
 
-//            System.out.println("PatientRegID -> "+request.getParameter("PatientRegId"));
+//            //system.out.println("PatientRegID -> "+request.getParameter("PatientRegId"));
             PatientRegId = Integer.parseInt(CheckIntegerVariable(request, "PatientRegId"));
             VisitId = Integer.parseInt(CheckIntegerVariable(request, "VisitId"));
             ClaimType = Integer.parseInt(CheckIntegerVariable(request, "ClaimType"));
@@ -1381,6 +2835,7 @@ public class InsClaimTesting extends HttpServlet {
             AttendingProvider = CheckStringVariable(request, "AttendingProvider");
             BillingProviders = CheckStringVariable(request, "BillingProviders");
             OperatingProvider = CheckStringVariable(request, "OperatingProvider");
+            RenderingProvider = CheckStringVariable(request, "RenderingProvider");
             ClientName = CheckStringVariable(request, "ClientName");
             PriInsuranceName = CheckStringVariable(request, "PriInsuranceName");
             PriInsuranceNameId = CheckStringVariable(request, "PriInsuranceNameId");
@@ -1391,6 +2846,7 @@ public class InsClaimTesting extends HttpServlet {
             SecondaryInsuranceId = CheckStringVariable(request, "SecondaryInsuranceId");
             SecondaryInsuranceMemId = CheckStringVariable(request, "SecondaryInsuranceMemId");
             SecondaryInsuranceGrpNumber = CheckStringVariable(request, "SecondaryInsuranceGrpNumber");
+            OrigClaim = CheckStringVariable(request, "OrigClaim");
 
             //Charges Info
             DescriptionFrom = CheckStringVariable(request, "DescriptionFrom");
@@ -1398,25 +2854,31 @@ public class InsClaimTesting extends HttpServlet {
             ChargesTableCount = CheckStringVariable(request, "ChargesTableCount");
             ChargesString = CheckStringVariable(request, "ChargesString");
 
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode obj = null;
             String[] myInfoCharges;
             myInfoCharges = new String[0];
             myInfoCharges = ChargesString.split("\\^");
-            String ChargesInput[][] = new String[Integer.parseInt(ChargesTableCount)][12];
+            String ChargesInput[][] = new String[Integer.parseInt(ChargesTableCount)][13];
             i = j = k = 0;
             for (i = 1; i < myInfoCharges.length; i++) {
                 if (myInfoCharges[i].length() <= 0)
                     continue;
 
 //                FlightInput[k][j] = myInfoFlight[i].substring(myInfoFlight[i].indexOf("=") + 1);
-                if (myInfoCharges[i].substring(myInfoCharges[i].indexOf("=") + 1).equals("^"))
+                if (myInfoCharges[i].substring(myInfoCharges[i].indexOf("=") + 1).equals("^")) {
                     ChargesInput[k][j] = "-";
-                else
+                } else {
                     ChargesInput[k][j] = myInfoCharges[i].substring(myInfoCharges[i].indexOf("=") + 1);
+//                    //system.out.println("ChargesInput[k][j] ->> "+ChargesInput[k][j]);
+                }
                 j++;
-                if (j > 11) {
+                if (j > 12) {
                     j = 0;
                     k++;
                 }
+
+
             }
 
 
@@ -1665,7 +3127,7 @@ public class InsClaimTesting extends HttpServlet {
             }
 
 
-            Query = "Select Id from " + Database + ".ClaimInfoMaster " +
+            Query = "Select Id, IFNULL(timesSaved,'0') from " + Database + ".ClaimInfoMaster " +
                     " where ClaimType = '" + ClaimType + "' and " +
                     " VisitId = '" + VisitId + "' and " +
                     " PatientRegId = '" + PatientRegId + "'";
@@ -1673,6 +3135,7 @@ public class InsClaimTesting extends HttpServlet {
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
                 ClaimID = rset.getInt(1);
+                timesSaved = rset.getString(2);
             }
             rset.close();
             stmt.close();
@@ -1687,11 +3150,16 @@ public class InsClaimTesting extends HttpServlet {
                     stmt.close();
                 }
 
+                SimpleDateFormat fromUser = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");//02/15/2022 15:36:31
+                SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                DOS = myFormat.format(fromUser.parse(DOS));
+
                 PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".ClaimInfoMaster (ClientId,PatientRegId,VisitId ,"
                         + " ClaimNumber,RefNumber,TypeBillText,PatientName,PatientMRN,AcctNo,PhNumber,Email,Address,DOS,UploadDate,AttendingProvider,BillingProviders," +
                         " ClientName,PriInsuranceNameId,MemId,PolicyType,GrpNumber,SecondaryInsuranceId,SecondaryInsuranceMemId,SecondaryInsuranceGrpNumber,CreatedDate," +
-                        " CreatedBy,CreatedIP,Status,ClaimType,OperatingProvider, ClaimProgress, ReadytoSubmit) \n"
-                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),?,?,0,?,?,1,1) ");
+                        " CreatedBy,CreatedIP,Status,ClaimType,OperatingProvider, ClaimProgress, ReadytoSubmit,OrigClaim,timesSaved,RenderingProvider,timesSubmitted) \n"
+                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),?,?,?,?,?,1,1,?,?,?,0) ");
                 MainReceipt.setInt(1, ClientId);
                 MainReceipt.setInt(2, PatientRegId);
                 MainReceipt.setInt(3, VisitId);
@@ -1718,8 +3186,19 @@ public class InsClaimTesting extends HttpServlet {
                 MainReceipt.setString(24, SecondaryInsuranceGrpNumber);
                 MainReceipt.setString(25, UserId);
                 MainReceipt.setString(26, ClientIP);
-                MainReceipt.setInt(27, ClaimType);
-                MainReceipt.setString(28, OperatingProvider);
+
+//                if (timesSaved.equals("0")) {
+                    Status = "1";
+//                } else {
+//                    Status = "0";
+//                }
+                MainReceipt.setString(27, Status);
+                MainReceipt.setInt(28, ClaimType);
+                MainReceipt.setString(29, OperatingProvider);
+                MainReceipt.setString(30, OrigClaim);
+                MainReceipt.setInt(31, Integer.parseInt(timesSaved) + 1);
+                MainReceipt.setString(32, RenderingProvider);
+
                 MainReceipt.executeUpdate();
                 MainReceipt.close();
 
@@ -1784,19 +3263,35 @@ public class InsClaimTesting extends HttpServlet {
                     stmt = conn.createStatement();
                     stmt.executeUpdate(Query);
                     stmt.close();
+
+                    Query = "Delete from " + Database + ".ClaimChargesOtherInfo where ClaimIdx = " + ClaimID;
+                    stmt = conn.createStatement();
+                    stmt.executeUpdate(Query);
+                    stmt.close();
+
+
+                    Query = "Delete from " + Database + ".Claim_Ledger_Charges_entries where ClaimIdx = " + ClaimID;
+                    stmt = conn.createStatement();
+                    stmt.executeUpdate(Query);
+                    stmt.close();
+
+                    Query = "Delete from " + Database + ".Claim_Ledger_entries where ClaimIdx = " + ClaimID;
+                    stmt = conn.createStatement();
+                    stmt.executeUpdate(Query);
+                    stmt.close();
                 }
 
                 Double totalAmount = 0.0;
                 for (i = 0; i < Integer.parseInt(ChargesTableCount); i++) {
                     PreparedStatement MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".ClaimChargesInfo (ClaimInfoMasterId,ClaimNumber,DescriptionFrom ,"
-                            + " ServiceDate,HCPCS,Mod1,Mod2,Mod3,Mod4,RevCode,UnitPrice,Units,Amount,ChargesStatus,Status,CreatedDate," +
+                            + " ServiceDate,HCPCSProcedure,Mod1,Mod2,Mod3,Mod4,RevCode,UnitPrice,Units,Amount,ChargesStatus,Status,CreatedDate," +
                             " CreatedBy,CreatedIP) \n"
                             + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,NOW(),?,?) ");
                     MainReceipt.setInt(1, ClaimInfoMasterId);
                     MainReceipt.setString(2, ClaimNumber);
                     MainReceipt.setString(3, DescriptionFrom);
                     MainReceipt.setString(4, ChargesInput[i][0]); //ServiceDate
-                    MainReceipt.setString(5, ChargesInput[i][1]); //HCPCS
+                    MainReceipt.setString(5, ChargesInput[i][1]); //HCPCSProcedure
                     MainReceipt.setString(6, ChargesInput[i][2]); //Mod1
                     MainReceipt.setString(7, ChargesInput[i][3]); //Mod2
                     MainReceipt.setString(8, ChargesInput[i][4]); //Mod3
@@ -1816,16 +3311,86 @@ public class InsClaimTesting extends HttpServlet {
                     MainReceipt.executeUpdate();
                     MainReceipt.close();
 
+                    //system.out.println("ChargesInput[i][12] ->> " + ChargesInput[i][12]);
+                    if (ChargesInput[i][12].compareTo("NULL") != 0) {
+                        //system.out.println("Hello -> Inside");
+
+
+                        obj = mapper.readValue(ChargesInput[i][12], JsonNode.class);
+                        //system.out.println("obj --> " + obj);
+                        //system.out.println("obj --> " + obj.get("Prescription").textValue());
+
+
+                        Query = "Select max(Id) from " + Database + ".ClaimChargesInfo ";
+                        stmt = conn.createStatement();
+                        rset = stmt.executeQuery(Query);
+                        if (rset.next())
+                            ClaimChargeInfoIdx = rset.getInt(1);
+                        rset.close();
+                        stmt.close();
+
+
+
+
+
+                        MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".ClaimChargesOtherInfo (ClaimIdx ,ChargeIdx ,ClaimType ,NonCoveredAmount ,DrugCode ,DrugUnit ," +
+                                "Unit ,DrugDays ,DrugCodeFormat ,DrugPrice ,PrescriptionNum ,PrescriptionDate ,PrescriptionMonths ,CreatedDate ,CreatedBy, CreatedIP) \n"
+                                + " VALUES (? ,? ,1 ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,NOW() ,?,?) ");
+                        MainReceipt.setInt(1, ClaimInfoMasterId);
+                        MainReceipt.setInt(2, ClaimChargeInfoIdx);
+                        MainReceipt.setString(3, obj.get("NCAmount").textValue());
+                        MainReceipt.setString(4, obj.get("DrugCode").textValue());
+                        MainReceipt.setString(5, obj.get("DrugUnit").textValue());
+                        MainReceipt.setString(6, obj.get("UN").textValue());
+                        MainReceipt.setString(7, obj.get("DrugDays").textValue());
+                        MainReceipt.setString(8, obj.get("Dformats").textValue());
+                        MainReceipt.setString(9, obj.get("DrugPrice").textValue());
+                        MainReceipt.setString(10, obj.get("Prescription").textValue());
+                        MainReceipt.setString(11, obj.get("PDate").textValue());
+                        MainReceipt.setString(12, obj.get("PMonth").textValue());
+                        MainReceipt.setString(13, UserId);
+                        MainReceipt.setString(14, ClientIP);
+                        MainReceipt.executeUpdate();
+                        MainReceipt.close();
+
+
+                        MainReceipt = conn.prepareStatement(" INSERT INTO " + Database + ".ClaimChargesOtherInfo_history (ClaimIdx ,ChargeIdx ,ClaimType ,NonCoveredAmount ,DrugCode ,DrugUnit ," +
+                                "Unit ,DrugDays ,DrugCodeFormat ,DrugPrice ,PrescriptionNum ,PrescriptionDate ,PrescriptionMonths ,CreatedDate ,CreatedBy, CreatedIP) \n"
+                                + " VALUES (? ,? ,1 ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,NOW() ,?,?) ");
+                        MainReceipt.setInt(1, ClaimInfoMasterId);
+                        MainReceipt.setInt(2, ClaimChargeInfoIdx);
+                        MainReceipt.setString(3, obj.get("NCAmount").textValue());
+                        MainReceipt.setString(4, obj.get("DrugCode").textValue());
+                        MainReceipt.setString(5, obj.get("DrugUnit").textValue());
+                        MainReceipt.setString(6, obj.get("UN").textValue());
+                        MainReceipt.setString(7, obj.get("DrugDays").textValue());
+                        MainReceipt.setString(8, obj.get("Dformats").textValue());
+                        MainReceipt.setString(9, obj.get("DrugPrice").textValue());
+                        MainReceipt.setString(10, obj.get("Prescription").textValue());
+                        MainReceipt.setString(11, obj.get("PDate").textValue());
+                        MainReceipt.setString(12, obj.get("PMonth").textValue());
+                        MainReceipt.setString(13, UserId);
+                        MainReceipt.setString(14, ClientIP);
+                        MainReceipt.executeUpdate();
+                        MainReceipt.close();
+
+                    }
+
+                    if (ChargesInput[i][11].equals("15") && !isClaimDenied) {
+                        isClaimDenied = true;
+                    } else if (ChargesInput[i][11].equals("5") && !isClaimOnHold) {
+                        isClaimOnHold = true;
+                    }
 
                     PreparedStatement MainReceipt2 = conn.prepareStatement(" INSERT INTO " + Database + ".ClaimChargesInfo_history (ClaimInfoMasterId,ClaimNumber,DescriptionFrom ,"
-                            + " ServiceDate,HCPCS,Mod1,Mod2,Mod3,Mod4,RevCode,UnitPrice,Units,Amount,ChargesStatus,Status,CreatedDate," +
+                            + " ServiceDate,HCPCSProcedure,Mod1,Mod2,Mod3,Mod4,RevCode,UnitPrice,Units,Amount,ChargesStatus,Status,CreatedDate," +
                             " CreatedBy,CreatedIP) \n"
                             + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,NOW(),?,?) ");
                     MainReceipt2.setInt(1, ClaimInfoMasterId);
                     MainReceipt2.setString(2, ClaimNumber);
                     MainReceipt2.setString(3, DescriptionFrom);
                     MainReceipt2.setString(4, ChargesInput[i][0]); //ServiceDate
-                    MainReceipt2.setString(5, ChargesInput[i][1]); //HCPCS
+                    MainReceipt2.setString(5, ChargesInput[i][1]); //HCPCSProcedure
                     MainReceipt2.setString(6, ChargesInput[i][2]); //Mod1
                     MainReceipt2.setString(7, ChargesInput[i][3]); //Mod2
                     MainReceipt2.setString(8, ChargesInput[i][4]); //Mod3
@@ -1839,6 +3404,45 @@ public class InsClaimTesting extends HttpServlet {
                     MainReceipt2.setString(16, ClientIP);//CreatedIP
                     MainReceipt2.executeUpdate();
                     MainReceipt2.close();
+
+
+
+
+                    PreparedStatement ps = conn.prepareStatement("SELECT Id FROM " + Database + ".ClaimChargesInfo where ClaimInfoMasterId=? AND HCPCSProcedure=? ");
+                    ps.setInt(1, ClaimInfoMasterId);
+                    ps.setString(2, ChargesInput[i][1]);
+                    rset = ps.executeQuery();
+                    if (rset.next()) {
+                        chargeIdx = rset.getString(1);
+                    }
+                    rset.close();
+                    ps.close();
+
+                    ps = conn.prepareStatement("INSERT " + Database + ".Claim_Ledger_Charges_entries (ClaimNumber, ClaimIdx, Charges, Amount, ChargeIdx, TransactionType, CreatedAt, CreatedBy, UserIP , Status) " +
+                            " VALUES (?, ?, ?, ?,?,'Cr', NOW() ,?,?,?)");
+                    ps.setString(1, ClaimNumber);
+                    ps.setInt(2, ClaimInfoMasterId);
+                    ps.setString(3, ChargesInput[i][1]);//Procedure
+                    ps.setString(4, ChargesInput[i][10]);//Amount
+                    ps.setString(5, chargeIdx);
+                    ps.setString(6, UserId);
+                    ps.setString(7, ClientIP);
+                    ps.setString(8, ChargesInput[i][11]);//ChargeStatus
+                    ps.executeUpdate();
+                    ps.close();
+
+                    ps = conn.prepareStatement("INSERT " + Database + ".Claim_Ledger_Charges_entries_HISTORY (ClaimNumber, ClaimIdx, Charges, Amount, ChargeIdx, TransactionType, CreatedAt, CreatedBy, UserIP, Status) " +
+                            " VALUES (?, ?, ?, ?,?,'Cr', NOW() ,?,?,?)");
+                    ps.setString(1, ClaimNumber);
+                    ps.setInt(2, ClaimInfoMasterId);
+                    ps.setString(3, ChargesInput[i][1]);//Procedure
+                    ps.setString(4, ChargesInput[i][10]);//Amount
+                    ps.setString(5, chargeIdx);
+                    ps.setString(6, UserId);
+                    ps.setString(7, ClientIP);
+                    ps.setString(8, ChargesInput[i][11]);//ChargeStatus
+                    ps.executeUpdate();
+                    ps.close();
                 }
 
 
@@ -1847,8 +3451,42 @@ public class InsClaimTesting extends HttpServlet {
                 ps.close();
 
 
+                if (isClaimDenied) {
+                    ps = conn.prepareStatement("UPDATE " + Database + ".ClaimInfoMaster SET Status='2' WHERE Id=" + ClaimInfoMasterId);
+                    ps.executeUpdate();
+                    ps.close();
+                } else if (isClaimOnHold) {
+                    ps = conn.prepareStatement("UPDATE " + Database + ".ClaimInfoMaster SET Status='1' WHERE Id=" + ClaimInfoMasterId);
+                    ps.executeUpdate();
+                    ps.close();
+                }
+
+
+                ps = conn.prepareStatement("INSERT " + Database + ".Claim_Ledger_entries (ClaimIdx, TransactionType, ClaimNumber, Amount, CreatedAt, CreatedBy, UserIP) " +
+                        " VALUES (?, 'Cr', ?, ? , NOW() ,?,?)");
+                ps.setInt(1, ClaimInfoMasterId);
+                ps.setString(2, ClaimNumber);
+                ps.setDouble(3, totalAmount);
+                ps.setString(4, UserId);
+                ps.setString(5, ClientIP);
+                //system.out.println("Claim_Ledger_entries QUERY ->> "+ps.toString());
+                ps.executeUpdate();
+                ps.close();
+
+                ps = conn.prepareStatement("INSERT " + Database + ".Claim_Ledger_entries_HISTORY (ClaimIdx, TransactionType, ClaimNumber, Amount, CreatedAt, CreatedBy, UserIP) " +
+                        " VALUES (?, 'Cr', ?, ? , NOW() ,?,?)");
+                ps.setInt(1, ClaimInfoMasterId);
+                ps.setString(2, ClaimNumber);
+                ps.setDouble(3, totalAmount);
+                ps.setString(4, UserId);
+                ps.setString(5, ClientIP);
+                //system.out.println("Claim_Ledger_entries_HISTORY QUERY ->> "+ps.toString());
+                ps.executeUpdate();
+                ps.close();
+
+
             } catch (Exception Ex) {
-                out.println("Insertion in ClaimChargesInfoTable --NO SP" + Ex.getMessage());
+                //system.out.println("Insertion in ClaimChargesInfoTable --NO SP" + Ex.getMessage());
                 Services.DumException("AddInfo", "Insertion in ClaimChargesInfoTable --NO SP", request, Ex, getServletContext());
             }
 
@@ -2262,23 +3900,34 @@ public class InsClaimTesting extends HttpServlet {
                 Services.DumException("AddInfo", "Insertion in ClaimInfoCodeConditionCode --NO SP", request, Ex, getServletContext());
             }
 
+            PreparedStatement ps = conn.prepareStatement("INSERT INTO "+Database+".Claim_AuditTrails ( `RuleText`, `ClaimNo`, `ClaimType`, `UserID`, `ClientID`, `CreatedAt`,`UserIP` ,`Action`) VALUES (?,?,?,?,?,NOW(),?,'CREATED')");
+            ps.setString(1,"CLAIM SAVED");
+            ps.setString(2,ClaimNumber);
+            ps.setInt(3,ClaimType);
+            ps.setString(4,UserId);
+            ps.setInt(5,ClientId);
+            ps.setString(6,ClientIP);
+            ps.executeUpdate();
+            ps.close();
+
             //out.println("Claim Saved Successfully");
             Parsehtm Parser = new Parsehtm(request);
             Parser.SetField("Message", "Claim Saved Successfully");
             Parser.SetField("MRN", "ClaimNumber: " + ClaimNumber);
-            Parser.SetField("FormName", "InsClaimTesting");
-            Parser.SetField("ActionID", "OpenUB04&PatientRegId=" + PatientRegId + "&ClaimNumber=" + ClaimNumber + "&VisitId=" + VisitId);
+            Parser.SetField("FormName", "PatientUpdateInfo");
+//            Parser.SetField("ActionID", "OpenUB04&PatientRegId=" + PatientRegId + "&ClaimNumber=" + ClaimNumber + "&VisitId=" + VisitId);
+            Parser.SetField("ActionID", "GetInput&ID="+PatientRegId);
             Parser.SetField("ClientIndex", String.valueOf(ClientId));
-            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/Message.html");
+            Parser.GenerateHtml(out, String.valueOf(Services.GetHtmlPath(getServletContext())) + "Exception/MessageClaim.html");
 
 
         } catch (Exception e) {
-            System.out.println("Error in : " + e.getMessage());
+            //system.out.println("Error in : " + e.getMessage());
             String str = "";
             for (i = 0; i < e.getStackTrace().length; ++i) {
                 str = str + e.getStackTrace()[i] + "<br>";
             }
-            System.out.println(str);
+            //system.out.println(str);
 //            String str = "";
 //            for (i = 0; i < e.getStackTrace().length; ++i) {
 //                str = str + e.getStackTrace()[i] + "<br>";
@@ -2343,6 +3992,8 @@ public class InsClaimTesting extends HttpServlet {
         String AttendingProvider = "";
         String BillingProviders = "";
         String SupervisingProvider = "";
+        String OperatingProvider = "";
+        String RenderingProvider = "";
         String OrderingProvider = "";
         String ReferringProvider = "";
         String ClientName = "";
@@ -2399,32 +4050,49 @@ public class InsClaimTesting extends HttpServlet {
         String InvDevExempAddInfo = "";
         String AmbPatGrpAddInfo = "";
 
-//AmbulanceCodes Codes variable
-        String AmbClaimInfoCodes = "";
-        String TranReasonInfoCodes = "";
-        String TranMilesInfoCodes = "";
-        String PatWeightInfoCodes = "";
-        String RoundTripReasInfoCodes = "";
-        String StretReasonInfoCodes = "";
-        String PickUpAddressInfoCode = "";
-        String PickUpCityInfoCode = "";
-        String PickUpStateInfoCode = "";
-        String PickUpZipCodeInfoCode = "";
-        String DropoffAddressInfoCode = "";
-        String DropoffCityInfoCode = "";
-        String DropoffStateInfoCode = "";
-        String DropoffZipCodeInfoCode = "";
-        String PatAdmitHosChk = "";
-        String PatMoveStretChk = "";
-        String PatUnconShockChk = "";
-        String PatTransEmerSituaChk = "";
-        String PatPhyRestrainChk = "";
-        String PatvisiblehemorrChk = "";
-        String AmbSerNeccChk = "";
-        String PatconfbedchairChk = "";
+//Additional Info Variable
+        String StatmentCoverFromDateAddInfo = "";
+        String StatmentCoverToDateAddInfo = "";
+        String AdmissionDateAddInfo = "";
+        String AdmissionHourAddInfo = "";
+        String AdmissionTypeAddInfo = "";
+        String AdmissionSourceAddInfo = "";
+        String DischargeHourAddInfo = "";
+        String PatientStatusAddInfo = "";
+        String PPSAddInfo = "";
+        String RemarksAddInfo = "";
+        String ReleaseInfoAddInfo = "";
+        String AssofBenifitAddInfo = "";
 
-        StringBuilder ErrorMsgs = new StringBuilder();
+//Information Codes variable
+        String PrincipalDiagInfoCodes = "";
+        String POAInfoCodes = "";
+        String AdmittingDiagInfoCodes = "";
+
+        String PrincipalProcedureInfoCodes = "";
+        String PrincipalProcedureDateInfoCodes = "";
+        String ExternalCauseInjuryTableCount = "0";
+        String ExternalCauseInjuryString = "";
+        String ReasonVisitTableCount = "0";
+        String ReasonVisitString = "";
+        String OtherDiagnosisString = "";
+        String OtherDiagnosisTableCount = "0";
+        String OtherProcedureString = "";
+        String OtherProcedureTableCount = "0";
+        String OccurrenceSpanString = "";
+        String OccurrenceSpanTableCount = "0";
+        String OccurrenceString = "";
+        String OccurrenceTableCount = "0";
+        String ValueCodeString = "";
+        String ValueCodeTableCount = "0";
+        String ConditionCodeString = "";
+        String ConditionCodeTableCount = "0";
+
+//        StringBuilder ErrorMsgs = new StringBuilder();
+        LinkedList <String> ErrorMsgs = new LinkedList <>();
         StringBuilder SuccessMsgs = new StringBuilder();
+
+        ArrayList<String> ICDs = new ArrayList<String>();
 
         try {
             PatientRegId = Integer.parseInt(CheckIntegerVariable(request, "PatientRegId"));
@@ -2437,7 +4105,7 @@ public class InsClaimTesting extends HttpServlet {
             TypeBillText = CheckStringVariable(request, "TypeBillText");
             _TOB = TypeBillText.toCharArray();
 //            FrequencyTypeBillDiv = CheckStringVariable(request, FrequencyTypeBillDiv);
-//            System.out.println("FrequencyTypeBillDiv" +FrequencyTypeBillDiv);
+//            //system.out.println("FrequencyTypeBillDiv" +FrequencyTypeBillDiv);
             PatientName = CheckStringVariable(request, "PatientName");
             PatientMRN = CheckStringVariable(request, "PatientMRN");
             AcctNo = CheckStringVariable(request, "AcctNo");
@@ -2448,9 +4116,12 @@ public class InsClaimTesting extends HttpServlet {
             UploadDate = CheckStringVariable(request, "UploadDate");
             AttendingProvider = CheckStringVariable(request, "AttendingProvider");
             BillingProviders = CheckStringVariable(request, "BillingProviders");
-            SupervisingProvider = CheckStringVariable(request, "SupervisingProvider");
+//            SupervisingProvider = CheckStringVariable(request, "SupervisingProvider");
             OrderingProvider = CheckStringVariable(request, "OrderingProvider");
+
             ReferringProvider = CheckStringVariable(request, "ReferringProvider");
+            RenderingProvider = CheckStringVariable(request, "RenderingProvider");
+            OperatingProvider = CheckStringVariable(request, "OperatingProvider");
             ClientName = CheckStringVariable(request, "ClientName");
             PriInsuranceName = CheckStringVariable(request, "PriInsuranceName");
             PriInsuranceNameId = CheckStringVariable(request, "PriInsuranceNameId");
@@ -2467,13 +4138,26 @@ public class InsClaimTesting extends HttpServlet {
             ChargesString = CheckStringVariable(request, "ChargesString");
             DescriptionFrom = CheckStringVariable(request, "DescriptionFrom");
 
+            PrincipalDiagInfoCodes = CheckStringVariable(request, "PrincipalDiagInfoCodes");
+
+            if(!isEmpty(PrincipalDiagInfoCodes)) ICDs.add(PrincipalDiagInfoCodes);
+            POAInfoCodes = CheckStringVariable(request, "POAInfoCodes");
+            AdmittingDiagInfoCodes = CheckStringVariable(request, "AdmittingDiagInfoCodes");
+            if(!isEmpty(AdmittingDiagInfoCodes)) ICDs.add(AdmittingDiagInfoCodes);
+
+            PrincipalProcedureInfoCodes = CheckStringVariable(request, "PrincipalProcedureInfoCodes");
+            PrincipalProcedureDateInfoCodes = CheckStringVariable(request, "PrincipalProcedureDateInfoCodes");
+
 
 //            out.println(ChargesTableCount);
 //            out.println(ChargesString);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode obj = null;
+
             String[] myInfoCharges;
             myInfoCharges = new String[0];
             myInfoCharges = ChargesString.split("\\^");
-            String ChargesInput[][] = new String[Integer.parseInt(ChargesTableCount)][14];
+            String ChargesInput[][] = new String[Integer.parseInt(ChargesTableCount)][13];
             i = j = k = 0;
             for (i = 1; i < myInfoCharges.length; i++) {
                 if (myInfoCharges[i].length() <= 0)
@@ -2484,7 +4168,7 @@ public class InsClaimTesting extends HttpServlet {
                 else
                     ChargesInput[k][j] = myInfoCharges[i].substring(myInfoCharges[i].indexOf("=") + 1);
                 j++;
-                if (j > 13) {
+                if (j > 12) {
                     j = 0;
                     k++;
                 }
@@ -2542,14 +4226,94 @@ public class InsClaimTesting extends HttpServlet {
 //            DropoffCityInfoCode = CheckStringVariable(request, "DropoffCityInfoCode");
 //            DropoffStateInfoCode = CheckStringVariable(request, "DropoffStateInfoCode");
 //            DropoffZipCodeInfoCode = CheckStringVariable(request, "DropoffZipCodeInfoCode");
-            PatAdmitHosChk = CheckCheckBoxValue(request, "PatAdmitHosChk");
-            PatMoveStretChk = CheckCheckBoxValue(request, "PatMoveStretChk");
-            PatUnconShockChk = CheckCheckBoxValue(request, "PatUnconShockChk");
-            PatTransEmerSituaChk = CheckCheckBoxValue(request, "PatTransEmerSituaChk");
-            PatPhyRestrainChk = CheckCheckBoxValue(request, "PatPhyRestrainChk");
-            PatvisiblehemorrChk = CheckCheckBoxValue(request, "PatvisiblehemorrChk");
-            AmbSerNeccChk = CheckCheckBoxValue(request, "AmbSerNeccChk");
-            PatconfbedchairChk = CheckCheckBoxValue(request, "PatconfbedchairChk");
+
+
+
+            String[] myInfoExternalCauseInjury;
+            myInfoExternalCauseInjury = new String[0];
+            String ExternalCauseInjuryInput[][] = null;
+
+            if (Integer.parseInt(ExternalCauseInjuryTableCount) > 0) {
+                myInfoExternalCauseInjury = ExternalCauseInjuryString.split("\\^");
+
+                ExternalCauseInjuryInput = new String[Integer.parseInt(ExternalCauseInjuryTableCount)][2];
+                i = j = k = 0;
+                for (i = 1; i < myInfoExternalCauseInjury.length; i++) {
+                    if (myInfoExternalCauseInjury[i].length() <= 0)
+                        continue;
+
+                    if (myInfoExternalCauseInjury[i].substring(myInfoExternalCauseInjury[i].indexOf("=") + 1).equals("^"))
+                        ExternalCauseInjuryInput[k][j] = "-";
+                    else {
+                        ExternalCauseInjuryInput[k][j] = myInfoExternalCauseInjury[i].substring(myInfoExternalCauseInjury[i].indexOf("=") + 1);
+                        if(!isEmpty(ExternalCauseInjuryInput[k][0]) && !ICDs.contains(ExternalCauseInjuryInput[k][0])) ICDs.add(ExternalCauseInjuryInput[k][0]);
+                    }
+                    j++;
+                    if (j > 1) {
+                        j = 0;
+                        k++;
+                    }
+                }
+            }
+
+            ReasonVisitTableCount = CheckStringVariable(request, "ReasonVisitTableCount");
+            ReasonVisitString = CheckStringVariable(request, "ReasonVisitString");
+
+            String[] myInfoReasonVisit;
+            String ReasonVisitInput[][] = null;
+            myInfoReasonVisit = new String[0];
+            if (Integer.parseInt(ReasonVisitTableCount) > 0) {
+                myInfoReasonVisit = ReasonVisitString.split("\\^");
+                ReasonVisitInput = new String[Integer.parseInt(ReasonVisitTableCount)][2];
+                i = j = k = 0;
+                for (i = 1; i < myInfoReasonVisit.length; i++) {
+                    if (myInfoReasonVisit[i].length() <= 0)
+                        continue;
+
+                    if (myInfoReasonVisit[i].substring(myInfoReasonVisit[i].indexOf("=") + 1).equals("^"))
+                        ReasonVisitInput[k][j] = "-";
+                    else{
+                        ReasonVisitInput[k][j] = myInfoReasonVisit[i].substring(myInfoReasonVisit[i].indexOf("=") + 1);
+                        if(!isEmpty(ReasonVisitInput[k][0]) && !ICDs.contains(ReasonVisitInput[k][0])) ICDs.add(ReasonVisitInput[k][0]);
+                    }
+                    j++;
+                    if (j > 1) {
+                        j = 0;
+                        k++;
+                    }
+                }
+            }
+
+
+            OtherDiagnosisTableCount = CheckStringVariable(request, "OtherDiagnosisTableCount");
+            OtherDiagnosisString = CheckStringVariable(request, "OtherDiagnosisString");
+
+            String[] myInfoOtherDiagnosis;
+            myInfoOtherDiagnosis = new String[0];
+            String OtherDiagnosisInput[][] = null;
+            if (Integer.parseInt(OtherDiagnosisTableCount) > 0) {
+                myInfoOtherDiagnosis = OtherDiagnosisString.split("\\^");
+                OtherDiagnosisInput = new String[Integer.parseInt(OtherDiagnosisTableCount)][3];
+                i = j = k = 0;
+                for (i = 1; i < myInfoOtherDiagnosis.length; i++) {
+                    if (myInfoOtherDiagnosis[i].length() <= 0)
+                        continue;
+
+                    if (myInfoOtherDiagnosis[i].substring(myInfoOtherDiagnosis[i].indexOf("=") + 1).equals("^"))
+                        OtherDiagnosisInput[k][j] = "-";
+                    else {
+                        OtherDiagnosisInput[k][j] = myInfoOtherDiagnosis[i].substring(myInfoOtherDiagnosis[i].indexOf("=") + 1);
+                        if(!isEmpty(OtherDiagnosisInput[k][0]) && !ICDs.contains(OtherDiagnosisInput[k][0])) ICDs.add(OtherDiagnosisInput[k][0]);
+                    }
+                    j++;
+                    if (j > 2) {
+                        j = 0;
+                        k++;
+                    }
+                }
+            }
+
+
 
             String BillingProviderLastName = "";
             String BillingProviderFirstName = "";
@@ -2605,6 +4369,10 @@ public class InsClaimTesting extends HttpServlet {
             String PatientRelationtoPrimary = "";
             String PatientRelationtoSec = "";
 
+            String PriInsuredName = "";
+            String PriInsuredLastName = "";
+            String PriInsuredFirstName = "";
+
 
             Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), " +
                     "IFNULL(ZipCode,''), IFNULL(Phone,''),IFNULL(NPI,''), " +
@@ -2631,9 +4399,9 @@ public class InsClaimTesting extends HttpServlet {
                 final String CLIA_REGEX = "^([0-9]{2}[A-Z]{1}[0-9]{7})*$";
                 if (!isEmpty(CLIA_number)) {
                     if (!CLIA_number.matches(CLIA_REGEX))
-                        ErrorMsgs.append("<p style=\"color:black;\"> <b>CLIA</b> is <b>InValid</b> Must be in <b>NNDNNNNNNN</b> format. where <b>N</b> is <b>numeric</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"> <b>CLIA</b> is <b>InValid</b> Must be in <b>NNDNNNNNNN</b> format. where <b>N</b> is <b>numeric</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\"> <b>CLIA</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\"> <b>CLIA</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 
                 }
             }
@@ -2647,8 +4415,8 @@ public class InsClaimTesting extends HttpServlet {
                                 "WHERE id=" + BillingProviders);
                 rset = ps.executeQuery();
                 if (rset.next()) {
-                    BillingProviderLastName = rset.getString(1).toUpperCase();
-                    BillingProviderFirstName = rset.getString(2).toUpperCase();
+                    BillingProviderLastName = rset.getString(1).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    BillingProviderFirstName = rset.getString(2).toUpperCase().replaceAll("[^a-zA-Z]", " ");
                     BillingProviderNPI = rset.getString(3);
                     BillingProvider_Taxonomy = rset.getString(4).toUpperCase();
                 }
@@ -2660,8 +4428,8 @@ public class InsClaimTesting extends HttpServlet {
                 ps = conn.prepareStatement("SELECT IFNULL(DoctorsLastName,''), IFNULL(DoctorsFirstName,''), IFNULL(NPI,'') , IFNULL(TaxonomySpecialty,'') From " + Database + ".DoctorsList WHERE id=" + ReferringProvider);
                 rset = ps.executeQuery();
                 if (rset.next()) {
-                    ReferringProviderLastName = rset.getString(1).toUpperCase();
-                    ReferringProviderFirstName = rset.getString(2).toUpperCase();
+                    ReferringProviderLastName = rset.getString(1).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    ReferringProviderFirstName = rset.getString(2).toUpperCase().replaceAll("[^a-zA-Z]", " ");
                     ReferringProviderNPI = rset.getString(3);
                     ReferringProvider_Taxonomy = rset.getString(4).toUpperCase();
                 }
@@ -2669,14 +4437,14 @@ public class InsClaimTesting extends HttpServlet {
                 ps.close();
             }
 
-            if (!isEmpty(OrderingProvider)) {
-                ps = conn.prepareStatement("SELECT IFNULL(DoctorsLastName,''), IFNULL(DoctorsFirstName,''), IFNULL(NPI,'') , IFNULL(TaxonomySpecialty,'') From " + Database + ".DoctorsList WHERE id=" + OrderingProvider);
+            if (!isEmpty(OperatingProvider)) {
+                ps = conn.prepareStatement("SELECT IFNULL(DoctorsLastName,''), IFNULL(DoctorsFirstName,''), IFNULL(NPI,'') , IFNULL(TaxonomySpecialty,'') From " + Database + ".DoctorsList WHERE id=" + OperatingProvider);
                 rset = ps.executeQuery();
                 if (rset.next()) {
-                    OrderingProvidersLastName = rset.getString(1).toUpperCase();
-                    OrderingProvidersFirstName = rset.getString(2).toUpperCase();
-                    OrderingProvidersNPI = rset.getString(3);
-                    OrderingProviders_Taxonomy = rset.getString(4).toUpperCase();
+                    OperatingProviderLastName = rset.getString(1).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    OperatingProviderFirstName = rset.getString(2).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    OperatingProviderNPI = rset.getString(3);
+                    OperatingProvider_Taxonomy = rset.getString(4).toUpperCase();
                 }
                 rset.close();
                 ps.close();
@@ -2688,11 +4456,26 @@ public class InsClaimTesting extends HttpServlet {
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
+                PriInsuredName = rset.getString(1);
                 PatientRelationtoPrimary = rset.getString(2);
-                PatientRelationtoSec = rset.getString(2);
+                PatientRelationtoSec = rset.getString(3);
             }
             rset.close();
             stmt.close();
+
+            if (PriInsuredName.equals("")) {
+                PriInsuredName = PatientLastName + ", " + PatientFirstName;
+            }
+            else if(PriInsuredName.contains(" ")){
+                PriInsuredFirstName = PriInsuredName.split(" ")[0];
+                PriInsuredLastName = PriInsuredName.split(" ")[1];
+            }
+
+            if(PatientRelationtoPrimary.compareTo("Self") != 0) {
+                if (isEmpty(PriInsuredFirstName) && isEmpty(PriInsuredLastName)) {
+                    ErrorMsgs.add("<p style=\"color:black;\"><b>Primary Insurer Name</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+            }
 
 
             Query = "Select IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), " +
@@ -2702,8 +4485,8 @@ public class InsClaimTesting extends HttpServlet {
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
-                PatientFirstName = rset.getString(1).toUpperCase();
-                PatientLastName = rset.getString(2).toUpperCase();
+                PatientFirstName = rset.getString(1).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                PatientLastName = rset.getString(2).toUpperCase().replaceAll("[^a-zA-Z]", " ");
                 Address = rset.getString(3);
                 City = rset.getString(4);
                 State = rset.getString(5);
@@ -2730,12 +4513,12 @@ public class InsClaimTesting extends HttpServlet {
 
             if (!isEmpty(BillingProvider_Taxonomy)) {
                 if (isInValidTaxonomy(conn, BillingProvider_Taxonomy)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Taxonomy Code</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Taxonomy Code</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Taxonomy Code</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Taxonomy Code</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
             final String NPI_REGEX = "[0-9]{10}";
 
@@ -2744,64 +4527,64 @@ public class InsClaimTesting extends HttpServlet {
                     if (isValid(BillingProviderNPI))
                         SuccessMsgs.append("<p style=\"color:black;\">Billing Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
                     else
-                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                        ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                 "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                             "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
-            final String Name_REGEX = "^([A-Z0-9]{2,100})$";
+            final String Name_REGEX = "^([A-Z0-9 ]{2,100})$";
             if (!isEmpty(BillingProviderLastName)) {
                 if (!BillingProviderLastName.matches(Name_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if (!isEmpty(BillingProviderFirstName)) {
                 if (!BillingProviderFirstName.matches(Name_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
 //            String BillingProvider_Address = "225 MAIN STREET BARKLEY BUILDING";
             if (!isEmpty(ClientAddress)) {
                 if (isInValidAddress(ClientAddress)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Address/b> Cannot be <b>PO BOX</b> Address. Only Physical Address Is <b>Allowed</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Address/b> Cannot be <b>PO BOX</b> Address. Only Physical Address Is <b>Allowed</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Address</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Address</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if (!isEmpty(ClientZipCode)) {
                 if (ClientZipCode.contains("-")) {
                     String[] ClientZipCodes = ClientZipCode.split("-");
                     if (isInValidZipCode(conn, ClientState, ClientZipCodes[0])) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
                     if (isInValidZipCode(conn, ClientState, ClientZipCode)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             final String CITY_REGEX = "^([0-9, A-Z, a-z]{2,30})$";
             if (!isEmpty(ClientCity)) {
                 if (!ClientCity.matches(CITY_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
 
@@ -2810,13 +4593,13 @@ public class InsClaimTesting extends HttpServlet {
             if (!isEmpty(ClientTaxID)) {
                 if (ClientTaxID.matches(BillingProvider_TaxID_LENGTH_REGEX)) {
                     if (ClientTaxID.matches(BillingProvider_TaxID_SEQUENCE_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             ps = conn.prepareStatement("SELECT IFNULL(ClaimIndicator_I,''),IFNULL(Address,''),IFNULL(City,''),IFNULL(State,''),IFNULL(Zip,'') " +
@@ -2832,7 +4615,7 @@ public class InsClaimTesting extends HttpServlet {
             rset.close();
             ps.close();
 
-            System.out.println("PriFillingIndicator " + PriFillingIndicator);
+            //system.out.println("PriFillingIndicator " + PriFillingIndicator);
             ps = conn.prepareStatement("SELECT IFNULL(ClaimIndicator_P,'') from ClaimMasterDB.ProfessionalPayersWithFC where Id=" + SecondaryInsuranceId);
             rset = ps.executeQuery();
             if (rset.next()) {
@@ -2842,13 +4625,13 @@ public class InsClaimTesting extends HttpServlet {
             ps.close();
 
             if (isEmpty(PriInsuranceNameId) && isEmpty(SecondaryInsuranceId)) {
-                ErrorMsgs.append("<p style=\"color:black;\"><b>Insurance </b> is <b>Missing</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\"><b>Insurance </b> is <b>Missing</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if (PriFillingIndicator == null && (PriFillingIndicator.equals("MB") || PriFillingIndicator.equals("MA"))) {
 
 //                if (PatientRelationshipCode.compareTo("18") != 0) {
-//                    ErrorMsgs.append("<p style=\"color:black;\"><b>Subscriber Relationship</b>  must be   <b>Self</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    ErrorMsgs.add("<p style=\"color:black;\"><b>Subscriber Relationship</b>  must be   <b>Self</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 //                }
 
                 if (!isEmpty(ReferringProviderNPI) && !isEmpty(BillingProviderNPI)) {
@@ -2859,7 +4642,7 @@ public class InsClaimTesting extends HttpServlet {
                     rset = ps.executeQuery();
                     if (rset.next()) {
                         if (rset.getInt(1) == 0) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Referring provider </b> is <b>Invalid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Referring provider </b> is <b>Invalid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     rset.close();
@@ -2875,7 +4658,7 @@ public class InsClaimTesting extends HttpServlet {
                     rset = ps.executeQuery();
                     if (rset.next()) {
                         if (rset.getInt(1) == 0) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Ordering provider </b> is <b>Invalid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Ordering provider </b> is <b>Invalid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     rset.close();
@@ -2886,82 +4669,84 @@ public class InsClaimTesting extends HttpServlet {
             if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("84146") || PriInsuranceNameId.equals("31114"))) {
 //                            Patient Entity should be IL NOT QC -> (LOOP 2010CA)  NOT DONE
                 if (PatientRelationtoPrimary.compareTo("Self") != 0 || PatientRelationtoSec.compareTo("Self") != 0) {
-                    ErrorMsgs.append("<p style=\"color:black;\"><b>Subscriber Relationship</b>  must be   <b>Self</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\"><b>Subscriber Relationship</b>  must be   <b>Self</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             }
 
             if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("MB") || PriFillingIndicator.equals("MA") || PriFillingIndicator.equals("MC"))) {
                 if (PriInsuranceNameId.equals("DNC00")) {
                     if (!isEmpty(GrpNumber)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>group number</b> not allowed for <b>Medicare</b> and <b>Medicaid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>group number</b> not allowed for <b>Medicare</b> and <b>Medicaid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
             }
 
             if (!isEmpty(PatientLastName)) {
                 if (!PatientLastName.matches(Name_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber  <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Subscriber  <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
                 if (PatientLastName.toUpperCase().equals("TEST") || PatientLastName.toUpperCase().equals("DEMO")) {
-                    ErrorMsgs.append("<p style=\"color:black;\">THE PATIENT SEEMS TO BE A TEST PATIENT . DO NOT SUBMIT CLAIM WITHOUT DUE VERIFICATION <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">THE PATIENT SEEMS TO BE A TEST PATIENT . DO NOT SUBMIT CLAIM WITHOUT DUE VERIFICATION <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
             if (!isEmpty(PatientFirstName)) {
                 if (!PatientFirstName.matches(Name_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             final String MemberID_REGEX = "^(123456789|^(TEST)|^[0]{2,}|^[1]{2,}|^[2]{2,}|^[3]{2,}|^[4]{2,}|^[5]{2,}|^[6]{2,}|^[7]{2,}|^[8]{2,}|^[9]{2,})$";
 //                    MemId
             if (!isEmpty(MemId)) {
                 if (MemId.matches(MemberID_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>Member-ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>Member-ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>Member-ID</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>Member-ID</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if (!isEmpty(ZipCode)) {
                 if (isInValidZipCode(conn, State, ZipCode)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if (!isEmpty(City)) {
                 if (!City.matches(CITY_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
+            //system.out.println("Scrubber ** ClaimCreateDate -> "+ClaimCreateDate);
+            //system.out.println("Scrubber ** Integer.parseInt(DOB) -> "+Integer.parseInt(DOB));
             if (Integer.parseInt(DOB) > Integer.parseInt(ClaimCreateDate)) {
-                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>DOB</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>DOB</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
 
 //            final String SSN_REGEX = "^([0-9]{9})$";
 ////            if (!isEmpty(MemId)) {
 ////                if (SSN.matches(SSN_REGEX)) {
-////                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>SSN</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+////                    ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>SSN</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 ////                }
 ////            } else {
-////                ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>SSN</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+////                ErrorMsgs.add("<p style=\"color:black;\">Subscriber <b>SSN</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 ////            }
 
 
             if (!isEmpty(PriInsuranceNameId) && PriInsuranceNameId.equals("66006") && !isEmpty(MemId) && Integer.parseInt(DOS) > 20170101) {
                 if (MemId.startsWith("YUB") || MemId.startsWith("YUX") || MemId.startsWith("XOJ") || MemId.startsWith("XOD") || MemId.startsWith("ZGJ") ||
                         MemId.startsWith("ZGD") || MemId.startsWith("YIJ") || MemId.startsWith("YID") || MemId.startsWith("YDJ") || MemId.startsWith("YDL")) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Medicare Advantage Claim need to be resubmitter with <b>PayerID : 66006</b> when <b>secondary</b> insurance is <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Medicare Advantage Claim need to be resubmitter with <b>PayerID : 66006</b> when <b>secondary</b> insurance is <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             }
 
@@ -2971,22 +4756,22 @@ public class InsClaimTesting extends HttpServlet {
 //            String Payer_City = "AKRON";
             if (!isEmpty(Payer_Zip)) {
                 if (isInValidZipCode(conn, Payer_State, Payer_Zip)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Payer <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Payer <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Payer <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Payer <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if (!isEmpty(Payer_City)) {
                 if (!Payer_City.matches(CITY_REGEX)) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Payer <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Payer <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Payer <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Payer <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
             if ((PriFillingIndicator.equals("MA") || PriFillingIndicator.equals("MB")) && !String.valueOf(_TOB[2]).equals("1")) {
-                ErrorMsgs.append("<p style=\"color:black;\">Medicare always accept the claim as <b>ORIGINAL/NEW CLAIM </b>. rejected due to claim <b>frequency code</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Medicare always accept the claim as <b>ORIGINAL/NEW CLAIM </b>. rejected due to claim <b>frequency code</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
             String Related_Causes_Code = null;
 
@@ -3001,7 +4786,7 @@ public class InsClaimTesting extends HttpServlet {
 //            String PatientControlNumber = PatientMRN + "FAM" + ClientId + timesSubmitted + "E" + ClaimNumber.replace("-", "");
 
             if (isEmpty(String.valueOf(_TOB[2]))) {
-                ErrorMsgs.append("<p style=\"color:black;\"> <b>Frequency Code</b> is  <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\"> <b>Frequency Code</b> is  <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
 
@@ -3009,15 +4794,15 @@ public class InsClaimTesting extends HttpServlet {
                 if (!isInValidDate(AccidentIllnesDateAddInfo, ClaimCreateDate)
                         && !isInValidDate(LastMenstrualPeriodDateAddInfo, ClaimCreateDate))
                     if (AccidentIllnesDateAddInfo.equals(LastMenstrualPeriodDateAddInfo))
-                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Illness Date</b> and <b>Last Menstrual Period Date</b>  cannot be <b>Same</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"> <b>Illness Date</b> and <b>Last Menstrual Period Date</b>  cannot be <b>Same</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
 
             if ((!isEmpty(Related_Causes_Code) && Related_Causes_Code.equals("AA")) || (!isEmpty(Related_Causes_Code) && Related_Causes_Code.equals("OA"))) {
                 if (isEmpty(AccidentIllnesDateAddInfo)) {
-                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Accident Date</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Accident Date</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 } else if (isInValidDate(AccidentIllnesDateAddInfo, ClaimCreateDate)) {
-                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Accident Date</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Accident Date</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
             }
 
@@ -3025,12 +4810,12 @@ public class InsClaimTesting extends HttpServlet {
             if (!isEmpty(BillingProvider_Taxonomy)) {
 
                 if (Taxonomy_for_InitialTreatment_List.contains(BillingProvider_Taxonomy)) {
-                    System.out.println("BillingProvider_Taxonomy ->> " + BillingProvider_Taxonomy);
+                    //system.out.println("BillingProvider_Taxonomy ->> " + BillingProvider_Taxonomy);
                     if (PriFillingIndicator.equals("MB") || PriFillingIndicator.equals("MA")) {
                         if (isEmpty(InitialTreatDateAddInfo)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Initial Treatment Date</b> is  <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Initial Treatment Date</b> is  <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         } else if (isInValidDate(InitialTreatDateAddInfo, ClaimCreateDate)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Initial Treatment Date</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Initial Treatment Date</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                 }
@@ -3039,9 +4824,9 @@ public class InsClaimTesting extends HttpServlet {
                 if (TaxonomyList.contains(BillingProvider_Taxonomy)) {
                     //Last Seen Date of Claim should Not be Equal to Date Time Min Value
                     if (isEmpty(LastSeenDateAddInfo)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>Last Seen Date</b> is  <b>Missing</b>, Last Seen Date is required for this speciality code <b>[" + BillingProvider_Taxonomy + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Last Seen Date</b> is  <b>Missing</b>, Last Seen Date is required for this speciality code <b>[" + BillingProvider_Taxonomy + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     } else if (isInValidDate(LastSeenDateAddInfo, ClaimCreateDate)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>Last Seen Date</b> is  <b>InValid</b>,  Last Seen Date is required for this speciality code <b>[" + BillingProvider_Taxonomy + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Last Seen Date</b> is  <b>InValid</b>,  Last Seen Date is required for this speciality code <b>[" + BillingProvider_Taxonomy + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
             }
@@ -3053,37 +4838,37 @@ public class InsClaimTesting extends HttpServlet {
                         if (isValid(ReferringProviderNPI))
                             SuccessMsgs.append("<p style=\"color:black;\">Referring Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
                         else
-                            ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                            ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                     "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                     } else {
-                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                        ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                 "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 
                 if (!isEmpty(ReferringProviderLastName)) {
                     if (!ReferringProviderLastName.matches(Name_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
                 if (!isEmpty(ReferringProviderFirstName)) {
                     if (!ReferringProviderFirstName.matches(Name_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Referring Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 
                 if (PriInsuranceNameId.equals("11315") || PriInsuranceNameId.equals("87726")) {
                     if (ReferringProviderNPI.equals(BillingProviderNPI) && ReferringProviderNPI.equals(BillingProviderNPI)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider  is <b>Missing/InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Referring Provider  is <b>Missing/InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
             }
@@ -3098,37 +4883,37 @@ public class InsClaimTesting extends HttpServlet {
                         if (isValid(RenderingProvidersNPI))
                             SuccessMsgs.append("<p style=\"color:black;\">Rendering Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
                         else
-                            ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                            ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                     "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
 
 
                         if (!isEmpty(ClientNPI)) {
                             if (ClientNPI.equals(RenderingProvidersNPI)) {
-                                ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider and Service Location <b> NPI</b> cannot be  <b>Same</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider and Service Location <b> NPI</b> cannot be  <b>Same</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         }
                     } else {
-                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                        ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                 "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
                 if (!isEmpty(RenderingProvidersLastName)) {
                     if (!RenderingProvidersLastName.matches(Name_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
                 if (!isEmpty(RenderingProvidersFirstName)) {
                     if (!RenderingProvidersFirstName.matches(Name_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 
@@ -3137,10 +4922,10 @@ public class InsClaimTesting extends HttpServlet {
 
                 if (!isEmpty(RenderingProviders_Taxonomy)) {
                     if (isInValidTaxonomy(conn, RenderingProviders_Taxonomy)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>Taxonomy Code</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>Taxonomy Code</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>Taxonomy Code</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Rendering Provider <b>Taxonomy Code</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 //                loop_2310B.addSegment("PRV*PE*PXC*" + RenderingProviders_Taxonomy); //PRV Rendering Provider SPECIALTY
 
@@ -3152,20 +4937,20 @@ public class InsClaimTesting extends HttpServlet {
                     if (isValid(ClientNPI))
                         SuccessMsgs.append("<p style=\"color:black;\">Client <b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
                     else
-                        ErrorMsgs.append("<p style=\"color:black;\">Client <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                        ErrorMsgs.add("<p style=\"color:black;\">Client <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                 "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Client <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                    ErrorMsgs.add("<p style=\"color:black;\">Client <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                             "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                 }
 
                 if (!isEmpty(BillingProviderNPI)) {
                     if (ClientNPI.equals(BillingProviderNPI)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>Billing Provider NPI </b> and <b>Client NPI</b> cannot be <b>same</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Billing Provider NPI </b> and <b>Client NPI</b> cannot be <b>same</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
             } else {
-                ErrorMsgs.append("<p style=\"color:black;\">Client  <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                ErrorMsgs.add("<p style=\"color:black;\">Client  <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
             }
 
 
@@ -3175,31 +4960,31 @@ public class InsClaimTesting extends HttpServlet {
                         if (isValid(SupervisingProviderNPI))
                             SuccessMsgs.append("<p style=\"color:black;\">Supervising Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
                         else
-                            ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                            ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                     "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                     } else {
-                        ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                        ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
                                 "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 
                 if (!isEmpty(SupervisingProviderLastName)) {
                     if (!SupervisingProviderLastName.matches(Name_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
                 if (!isEmpty(SupervisingProviderFirstName)) {
                     if (!SupervisingProviderFirstName.matches(Name_REGEX)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\">Supervising Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Supervising Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 //                Loop loop_2310D = loop_2300.addChild("2300");
@@ -3213,7 +4998,12 @@ public class InsClaimTesting extends HttpServlet {
             ArrayList<String> ProcedureCodes_List_A_S_DATES_r1 = new ArrayList<String>(Arrays.asList("99221", "99222", "99223"));
             ArrayList<String> ProcedureCodes_List_A_S_DATES_r2 = new ArrayList<String>(Arrays.asList("99231", "99232", "99233"));
             ArrayList<String> Charge_ProcedureCodes = new ArrayList<String>();
+
+            ArrayList<String> Charge_ProcedureCodes_WITHOUT_MODIFIER = new ArrayList<String>();
             ArrayList<String> Charge_VaccineCodes = new ArrayList<String>();
+            ArrayList<String> ProcedureCodeModifier = new ArrayList<String>(Arrays.asList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "GY", "GZ", "H9", "HA", "HB", "HC", "HD", "HE", "HF", "HG", "HH", "HI", "HJ", "HK", "HL", "HM", "HN", "HO", "HP", "HQ", "HR", "HS", "HT", "HU", "HV", "HW", "HX", "HY", "HZ", "SA",
+                    "SB", "SC", "SD", "SE", "SH", "SJ", "SK", "SL", "ST", "SU", "SV", "TD", "TE", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TP", "TQ", "TR", "TS", "TW", "U1", "U2", "U3", "U4", "U5", "U6", "U7", "U8", "U9", "UA", "UB", "UC", "UD"));
+
             ArrayList<String> COVID_CPTS = new ArrayList<String>(Arrays.asList("91300", "91301", "0001A", "0002A", "0011A", "0012A", "91302", "91303", "0021A", "0022A", "0031A", "0003A", "0013A", "M0201", "99401", "0041A", "0042A", "0051A", "0052A", "0053A", "0054A", "0071A",
                     "0072A", "91304", "91305", "91307", "91306", "0064A", "0004A", "0034A"));
 
@@ -3221,13 +5011,16 @@ public class InsClaimTesting extends HttpServlet {
                     "90653", "91300", "91301", "91302", "91303", "91304", "91305", "91306", "91307"));
 
             String modifier = "";
-            String MeasurementCode = null;
+            String r1 = "";
+
             String ProcedureCode = null;
+            String NDC_REGEX = "^[0-9A-Z]{11}$";
             String Units = null;
             String Amount = null;
             String ServiceFromDate = null;
             String ServiceToDate = null;
             String mod1 = null;
+            String MeasurementCode = null;
             String mod2 = null;
             String mod3 = null;
             String mod4 = null;
@@ -3253,10 +5046,10 @@ public class InsClaimTesting extends HttpServlet {
 //                POS = ChargesInput[i][3];
 //                if (POS_list_AMBULANCE_CLAIMS.contains(POS)) {
 //                    if (isEmpty(HospitalizedFromDateAddInfo)) {
-//                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Admission DATE</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        ErrorMsgs.add("<p style=\"color:black;\"> <b>Admission DATE</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 //
 //                    } else if (isInValidDate(HospitalizedFromDateAddInfo, ClaimCreateDate)) {
-//                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Admission DATE </b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        ErrorMsgs.add("<p style=\"color:black;\"> <b>Admission DATE </b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 //
 //                    }
 //                }
@@ -3268,18 +5061,18 @@ public class InsClaimTesting extends HttpServlet {
                             && !isEmpty(PickUpCityInfoCode) && !isEmpty(PickUpStateInfoCode)) {
                         if (!isEmpty(PickUpZipCodeInfoCode)) {
                             if (isInValidZipCode(conn, PickUpStateInfoCode, PickUpZipCodeInfoCode)) {
-                                ErrorMsgs.append("<p style=\"color:black;\">Pick Up <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\">Pick Up <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         } else {
-                            ErrorMsgs.append("<p style=\"color:black;\">Pick Up <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Pick Up <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
                         if (!isEmpty(PickUpCityInfoCode)) {
                             if (!PickUpCityInfoCode.matches(CITY_REGEX)) {
-                                ErrorMsgs.append("<p style=\"color:black;\">Pick Up <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\">Pick Up <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         } else {
-                            ErrorMsgs.append("<p style=\"color:black;\">Pick Up <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Pick Up <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
 //                    Loop loop_2310E = loop_2300.addChild("2300"); //AMBULANCE PICK-UP LOCATION
@@ -3292,18 +5085,18 @@ public class InsClaimTesting extends HttpServlet {
                             && !isEmpty(DropoffStateInfoCode) && !isEmpty(DropoffZipCodeInfoCode)) {
                         if (!isEmpty(DropoffZipCodeInfoCode)) {
                             if (isInValidZipCode(conn, DropoffStateInfoCode, DropoffZipCodeInfoCode)) {
-                                ErrorMsgs.append("<p style=\"color:black;\">Drop off <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\">Drop off <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         } else {
-                            ErrorMsgs.append("<p style=\"color:black;\">Drop off <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Drop off <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
                         if (!isEmpty(DropoffCityInfoCode)) {
                             if (!DropoffCityInfoCode.matches(CITY_REGEX)) {
-                                ErrorMsgs.append("<p style=\"color:black;\">Drop off <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\">Drop off <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         } else {
-                            ErrorMsgs.append("<p style=\"color:black;\">Drop off <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Drop off <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
 //                    Loop loop_2310F = loop_2300.addChild("2300"); //AMBULANCE DROP-OFF LOCATION
@@ -3313,58 +5106,58 @@ public class InsClaimTesting extends HttpServlet {
                     }
                 }*/
 
-
-                Units = ChargesInput[i][11].contains(".") ? ChargesInput[i][11].substring(0, ChargesInput[i][11].indexOf(".")) : ChargesInput[i][11];
-                Amount = ChargesInput[i][12];
-                ProcedureCode = ChargesInput[i][2];
-                mod1 = ChargesInput[i][5];
-                mod2 = ChargesInput[i][6];
-                mod3 = ChargesInput[i][7];
-                mod4 = ChargesInput[i][8];
-                //System.out.println("****ProcedureCode");
+                //system.out.println("INS Unit ->> " + ChargesInput[i][9]);
+                Units = ChargesInput[i][9].contains(".") ? ChargesInput[i][9].substring(0, ChargesInput[i][9].indexOf(".")) : ChargesInput[i][9];
+                Amount = ChargesInput[i][10];
+                ProcedureCode = ChargesInput[i][1];
+                mod1 = ChargesInput[i][2];
+                mod2 = ChargesInput[i][3];
+                mod3 = ChargesInput[i][4];
+                mod4 = ChargesInput[i][5];
+                ////system.out.println("****ProcedureCode");
                 if (isValidAnesthesiaCodes(conn, ProcedureCode)) {
                     MeasurementCode = "MJ";
                     if (!isEmpty(mod1)) {//mod1
                         modifier += ":" + mod1; //SV101-3
                         if (Units.equals("1") && mod1.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
                         if (!isValidAnesthesiaModifier(conn, mod1)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
                     }
                     if (!isEmpty(mod2)) {//mod2
                         modifier += ":" + mod2;
                         if (Units.equals("1") && mod2.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
                         if (!isValidAnesthesiaModifier(conn, mod2)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     if (!mod3.equals("")) {//mod3
                         modifier += ":" + mod3;
                         if (Units.equals("1") && mod3.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
 
                         if (!isValidAnesthesiaModifier(conn, mod3)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures " + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures " + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     if (!mod4.equals("")) {//mod4
                         modifier += ":" + mod4;
                         if (Units.equals("1") && mod4.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
 
                         if (!isValidAnesthesiaModifier(conn, mod4)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
 
@@ -3375,49 +5168,187 @@ public class InsClaimTesting extends HttpServlet {
                         modifier += ":" + mod1; //SV101-3
                         if (ClientId == 32) {
                             if (Units.equals("1") && mod1.equals("50")) {
-                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         }
                     }
                     if (!isEmpty(mod2)) {//mod2
                         modifier += ":" + 2;
                         if (Units.equals("1") && mod2.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     if (!isEmpty(mod3)) {//mod3
                         modifier += ":" + mod3;
                         if (Units.equals("1") && mod3.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     if (!isEmpty(mod4)) {//mod4
                         modifier += ":" + mod4;
                         if (Units.equals("1") && mod4.equals("50")) {
-                            ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                 }
 
-                if (!isValidCLIACodes(conn, ProcedureCode)) {
-                    if (modifier.contains("QW")) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>QW Modifier</b>  is not allowed with  <b>Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                if (isValidPQRSCodes(conn, ProcedureCode) && Integer.parseInt(Amount) != 0) {
+                    ErrorMsgs.add("<p style=\"color:black;\"><b>PQRS : [" + ProcedureCode + "]</b> Procedure found, <b>Amount</b> should be <b>equal</b> to 0 <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                } else if (Double.parseDouble(Amount) <= 0) {
+                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Amount</b> should be <b>greater</b> than 0 for Procedure [" + ProcedureCode + "]<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+
+
+
+
+                ArrayList<String> WELL_VISIT_ICDs = new ArrayList<String>(Arrays.asList("Z00.00", "Z00.01", "Z00.110", "Z00.111", "Z00.121", "Z00.129", "Z01.411",
+                        "Z01.419", "Z30.015", "Z30.016", "Z30.44", "Z30.45"));
+                ArrayList<String> WELL_VISIT_CPTs = new ArrayList<String>(Arrays.asList("G0402", "G0438", "G0439"));
+
+
+                if (isValid_OFFICE_E_N_M(conn, ProcedureCode) && WELL_VISIT_ICDs.contains(PrincipalDiagInfoCodes)) {
+                    ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is not <b>billable</b> with wellness ICDs <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if ((PriFillingIndicator.equals("CI") || SecFillingIndicator.equals("CI"))) {
+                    if (find_CPT_between_Ranges(conn, "99381", "99397", ProcedureCode) && !(find_ICD_between_Ranges(conn, "Z0000", "Z13.9", PrincipalDiagInfoCodes))) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Principal Diagnosis Code</b> must be <b>Well visit</b> diagnose i.e  <b>Z00 - Z13.9</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
+
+                if ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB"))) {
+                    if (WELL_VISIT_CPTs.contains(ProcedureCode) && !(find_ICD_between_Ranges(conn, "Z0000", "Z13.9", PrincipalDiagInfoCodes))) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Principal Diagnosis Code</b> must be <b>Well visit</b> diagnose i.e  <b>Z00 - Z13.9</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if (find_CPT_between_Ranges(conn, "99381", "99397", ProcedureCode) || find_CPT_between_Ranges(conn, "90460", "90461", ProcedureCode)) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Well visit CPT/Vaccine</b> is not allowed by  <b>MEDICARE</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+//                if (find_CPT_between_Ranges(conn, "90476", "90749", ProcedureCode) && !(!isEmpty(PrincipalDiagInfoCodes) && PrincipalDiagInfoCodes.equals("Z23"))) {
+//                    ErrorMsgs.add("<p style=\"color:black;\"><b>Well visit Vaccine</b> should be billed with <b> Z23</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                }
+
+
+                if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))) {
+                    if (isValid_I_Codes(conn, ProcedureCode)) {
+                        ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is  <b>I HCPCS Code</b> which is not payable by <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+//                r1 = isValidBodySidewaysICD(conn, PrincipalDiagInfoCodes);
+////                    result2 = r1 == null ? null : r1;
+//                if (r1 != null) {
+//                    if (r1.equals("Right")) {
+//                        if (!(modifier.contains("RT") || modifier.contains("F5") || modifier.contains("F6") || modifier.contains("F7") ||
+//                                modifier.contains("F8") || modifier.contains("F9") || modifier.contains("T5") || modifier.contains("T6") ||
+//                                modifier.contains("T7") || modifier.contains("T8") || modifier.contains("T9") || modifier.contains("E3") ||
+//                                modifier.contains("E4"))) {
+//                            ErrorMsgs.add("<p style=\"color:black;\"> <b> Modifier </b> used with <b>Procedure : [" + ProcedureCode + "]</b> does not follow the laterality of <b>Diagnosis Code : [" + PrincipalDiagInfoCodes + "]</b> Please append one of these <b>relative modifiers : [RT, F5, F6, F7, F8, F9, T5, T6, T7, T8, T9, E3, E4] </b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+//                    if (r1.equals("Left")) {
+//                        if (!(modifier.contains("LT") || modifier.contains("FA") || modifier.contains("F1") || modifier.contains("F2") ||
+//                                modifier.contains("F3") || modifier.contains("F4") || modifier.contains("TA") || modifier.contains("T1") ||
+//                                modifier.contains("T2") || modifier.contains("T3") || modifier.contains("T4") || modifier.contains("E1") ||
+//                                modifier.contains("E2"))) {
+//                            ErrorMsgs.add("<p style=\"color:black;\"> <b> Modifier </b> used with <b>Procedure : [" + ProcedureCode + "]</b> does not follow the laterality of <b>Diagnosis Code : [" + PrincipalDiagInfoCodes + "]</b> Please append one of these <b>relative modifiers : [LT, FA, F1, F2, F3, F4, TA, T1, T2, T3, T4, E1, E2] </b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+//                    if (r1.equals("Bilateral")) {
+//                        if (!modifier.contains("50")) {
+//                            ErrorMsgs.add("<p style=\"color:black;\"> <b> Modifier </b> used with <b>Procedure : [" + ProcedureCode + "]</b> does not follow the laterality of <b>Diagnosis Code : [" + PrincipalDiagInfoCodes + "]</b> Please append  <b>relative modifier : 50 </b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+//                }
+
+
+                ////system.out.println("ReasonVisit ->> " + ReasonVisit);
+                if (ReasonVisit.toUpperCase().contains("CORONA VIRUS") || ReasonVisit.toUpperCase().contains("COVID")) {
+//                    if (!COVID_CPTS.contains(ProcedureCode) && !addCovidMsg) {
+//                        ErrorMsgs.add("<p style=\"color:black;\">Please Bill COVID-19 codes <b>" + COVID_CPTS.toString() + "</b>  and  create separate charge for rest of the CPT Codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        addCovidMsg = true;
+//                    }
+
+                    if (ProcedureCode.equals("91303") && !is_91303) {
+                        is_91303 = true;
+                    }
+
+                    if (!Arrays.asList("91300", "91301", "91302", "0031A").contains(ProcedureCode) && is_91303 && !addAdminCodeMsg) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Admin Code " + Arrays.asList("91300", "91301", "91302", "0031A").toString() + " </b>  is  missing with  <b>Vaccine [91303]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        addAdminCodeMsg = true;
+                    }
+
+                    if (COVID_CPTS_TJ.contains(ProcedureCode) && !modifier.contains("TJ")) {
+                        ErrorMsgs.add("<p style=\"color:black;\">Per COVID Guidelines,  <b>Modifier : TJ </b>  is  required with CPT <b>[" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                if(!isEmpty(ProcedureCode)&&(ProcedureCode.equals("99238")||ProcedureCode.equals("99239"))){
+                    if(!Units.equals("1")){
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Unit</b> should be eq <b>required</b> when billed with Procedure  [<b>" + ProcedureCode + "</b>]  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+//                if (!isEmpty(PrincipalDiagInfoCodes) && PrincipalDiagInfoCodes.startsWith("F")) {
+//                    if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode)) {
+//                        ErrorMsgs.add("<p style=\"color:black;\"><b>Mental Disorder</b> diagnosis may not be billed with E&Ms <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    }
+//                }
+
+//                if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode)) {
+//                    if (!modifier.contains("24") && !modifier.contains("25") && !modifier.contains("57")) {
+//                        ErrorMsgs.add("<p style=\"color:black;\"><b>E&M Modifier</b> is required with E&Ms Procedures <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    }
+//                }
+
+                if (PriFillingIndicator.equals("MA") || PriFillingIndicator.equals("MB")) {
+                    if (ProcedureCodeModifier.contains(mod1) || ProcedureCodeModifier.contains(mod2) || ProcedureCodeModifier.contains(mod3) || ProcedureCodeModifier.contains(mod4)) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Procedure Code Modifier</b> for Services rendered is <b>InValid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+//                if(isValid_NDC_Code(conn, ProcedureCode)){
+//                    if (ChargesInput[i][12].compareTo("NULL") == 0) {
+//                        ErrorMsgs.add("<p style=\"color:black;\"><b>NDC information</b> is <b>missing</b> for Procedure <b>["+ProcedureCode+"]</b>. it must be used when reporting for <b>drug</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    }else{
+//                        obj = mapper.readValue(ChargesInput[i][12], JsonNode.class);
+//                        if(obj.get("DrugCode").textValue().equals("")){
+//                            ErrorMsgs.add("<p style=\"color:black;\"><b>National Drug Code</b> is <b>missing</b> for Procedure <b>["+ProcedureCode+"]</b> . it must be used when reporting for <b>drug</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                        else{
+//                            if(!obj.get("DrugCode").textValue().replace("-","").matches(NDC_REGEX) || !isValid_NDC_Code_Format(conn,ProcedureCode,obj.get("DrugCode").textValue())){
+//                                ErrorMsgs.add("<p style=\"color:black;\"><b>National Drug Code</b> is <b>inValid</b> for Procedure <b>["+ProcedureCode+"]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            }
+//                        }
+//                        if(obj.get("DrugUnit").textValue().equals("")){
+//                            ErrorMsgs.add("<p style=\"color:black;\"><b>National Drug Quantity</b> is <b>missing</b> for Procedure <b>["+ProcedureCode+"]</b> . it must be used when reporting for <b>drug</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+//                }
+
+
+//                if (!isValidCLIACodes(conn, ProcedureCode)) {
+//                    if (modifier.contains("QW")) {
+//                        ErrorMsgs.add("<p style=\"color:black;\"><b>QW Modifier</b>  is not allowed with  <b>Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    }
+//                }
 
 
                 if (isValidConsultantProceduresCodes(conn, ProcedureCode)) {
                     if (isEmpty(ReferringProviderFirstName) && isEmpty(ReferringProviderLastName)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>Referring provider</b>  is required with  <b>Consultation Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Referring provider</b>  is required with  <b>Consultation Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 
 
                 if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode) && !errorMsgAdded) {
-                    //System.out.println(" isValid_E_N_M_ProceduresCodes ProcedureCode -> " + ProcedureCode);
+                    ////system.out.println(" isValid_E_N_M_ProceduresCodes ProcedureCode -> " + ProcedureCode);
 
                     if (isENM_SurgeryProcedureCode) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b> E&M Procedure </b> and  <b> E&M Surgery Codes </b> cannot be billed together on same DOS<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b> E&M Procedure </b> and  <b> E&M Surgery Codes </b> cannot be billed together on same DOS<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         isENM_SurgeryProcedureCode = false;
                         isENMProcedureCode = false;
                         errorMsgAdded = true;
@@ -3427,9 +5358,9 @@ public class InsClaimTesting extends HttpServlet {
 
 
                 if (isValid_E_N_M_Surgery_ProceduresCodes(conn, ProcedureCode) && !errorMsgAdded) {
-                    //System.out.println("isValid_E_N_M_Surgery_ProceduresCodes ProcedureCode -> " + ProcedureCode);
+                    ////system.out.println("isValid_E_N_M_Surgery_ProceduresCodes ProcedureCode -> " + ProcedureCode);
                     if (isENMProcedureCode) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b> E&M Procedure </b> and  <b> E&M Surgery Codes </b> cannot be billed together on same DOS<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b> E&M Procedure </b> and  <b> E&M Surgery Codes </b> cannot be billed together on same DOS<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         isENM_SurgeryProcedureCode = false;
                         isENMProcedureCode = false;
                         errorMsgAdded = true;
@@ -3440,21 +5371,21 @@ public class InsClaimTesting extends HttpServlet {
 
                 if (isValid_EPSDT_ProceduresCodes(conn, ProcedureCode) && (PriFillingIndicator.equals("MC") || SecFillingIndicator.equals("MC"))
                         && (getAge(LocalDate.parse(_DOB)) < 21) && modifier.contains("EP")) {
-                    ErrorMsgs.append("<p style=\"color:black;\">eligible medicaid recipient for <b>EPSDT</b> services  are less than <b>21 year</b> of age. patient  age is not appropriate to bill this service please remove modifier <b>EP</b>.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">eligible medicaid recipient for <b>EPSDT</b> services  are less than <b>21 year</b> of age. patient  age is not appropriate to bill this service please remove modifier <b>EP</b>.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
 
                 if ((modifier.contains("GV") || modifier.contains("GW")) && (!PriFillingIndicator.equals("MB") || !SecFillingIndicator.equals("MB"))) {
-                    ErrorMsgs.append("<p style=\"color:black;\">modifier <b> GW/GV </b> indicates hospice services, please file claim to <b>medicare</b> or remove the modifier<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">modifier <b> GW/GV </b> indicates hospice services, please file claim to <b>medicare</b> or remove the modifier<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
                 if (ProcedureCodes_List.contains(ProcedureCode)) {
                     if (Integer.parseInt(Units) > 1) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Hospital Admission Service For Cpt <b> [" + ProcedureCode + "] </b> Should Always Billed As <b>One</b> Unit <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Hospital Admission Service For Cpt <b> [" + ProcedureCode + "] </b> Should Always Billed As <b>One</b> Unit <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
 
                     if (!ServiceFromDate.equals(ServiceToDate)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Hospital Admission Service For Cpt <b> [" + ProcedureCode + "] </b> Start/End Dos Should Be Same <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Hospital Admission Service For Cpt <b> [" + ProcedureCode + "] </b> Start/End Dos Should Be Same <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 
@@ -3465,7 +5396,7 @@ public class InsClaimTesting extends HttpServlet {
 
                 if (ProcedureCodes_List_A_S_DATES_r1.contains(ProcedureCode) || ProcedureCodes_List_A_S_DATES_r2.contains(ProcedureCode)) {
                     if (HospitalizedFromDateAddInfo.equals(HospitalizedToDateAddInfo)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b> is inconsistent  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b> is inconsistent  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 
@@ -3474,15 +5405,16 @@ public class InsClaimTesting extends HttpServlet {
                         ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))) {
 
                     if (isValidCLIACodes(conn, ProcedureCode) && !modifier.contains("QW")) {
-                        ErrorMsgs.append("<p style=\"color:black;\">CLIA required procedure <b>[" + ProcedureCode + "]</b> found, Procedure may require <b>QW</b> modifier  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
-                    } else if (modifier.contains("QW") && !isValidCLIACodes(conn, ProcedureCode)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>QW</b> modifier found, Modifier may require <b>CLIA</b>procedure code  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">CLIA required procedure <b>[" + ProcedureCode + "]</b> found, Procedure may require <b>QW</b> modifier  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
+//                    else if (modifier.contains("QW") && !isValidCLIACodes(conn, ProcedureCode)) {
+//                        ErrorMsgs.add("<p style=\"color:black;\"><b>QW</b> modifier found, Modifier may require <b>CLIA</b>procedure code  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    }
 
 
                     if (isValidDMEProceduresCodes(conn, ProcedureCode)) {
                         if (isEmpty(OrderingProvidersFirstName) && isEmpty(OrderingProvidersLastName)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Ordering provider</b>  is required with  <b>DME Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Ordering provider</b>  is required with  <b>DME Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
 //                            if ((ICDA.equals("Z23") || ICDB.equals("Z23") || ICDC.equals("Z23") ||
@@ -3491,7 +5423,7 @@ public class InsClaimTesting extends HttpServlet {
 //                                    || ICDJ.equals("Z23") || ICDK.equals("Z23") || ICDL.equals("Z23"))) {
 //                                if (ProcedureCode.equals("G0008") || ProcedureCode.equals("G0009") || ProcedureCode.equals("G0010")) {
 //                                    if(!containsValidRelativeAdminCode(conn,ProcedureCode,Charge_ProcedureCodes,"Z23")){
-//                                        ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : "+getRespectiveVaccineCode(conn,ProcedureCode,"Z23").toString()+"</b>  is required to bill  <b>Relative Admin Code : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                                        ErrorMsgs.add("<p style=\"color:black;\"><b>Bill Vaccine Code : "+getRespectiveVaccineCode(conn,ProcedureCode,"Z23").toString()+"</b>  is required to bill  <b>Relative Admin Code : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
 //                                    }
 //                                }
 //
@@ -3531,52 +5463,50 @@ public class InsClaimTesting extends HttpServlet {
                 }*/
 
 
-                if (isValidPQRSCodes(conn, ProcedureCode) && Integer.parseInt(Amount) != 0) {
-                    ErrorMsgs.append("<p style=\"color:black;\"><b>PQRS</b> Procedure found, <b>Amount</b> should be equal to 0 <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
-                }
-
 
  /*               if (isValid_OFFICE_E_N_M(conn, ProcedureCode) && (WELL_VISIT_ICDs.contains(ICDA) || WELL_VISIT_ICDs.contains(ICDB) || WELL_VISIT_ICDs.contains(ICDC) ||
                         WELL_VISIT_ICDs.contains(ICDD) || WELL_VISIT_ICDs.contains(ICDE) || WELL_VISIT_ICDs.contains(ICDF)
                         || WELL_VISIT_ICDs.contains(ICDG) || WELL_VISIT_ICDs.contains(ICDH) || WELL_VISIT_ICDs.contains(ICDI)
                         || WELL_VISIT_ICDs.contains(ICDJ) || WELL_VISIT_ICDs.contains(ICDK) || WELL_VISIT_ICDs.contains(ICDL))) {
-                    ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is not <b>billable</b> with wellness ICDs <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is not <b>billable</b> with wellness ICDs <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }*/
 
                 if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA"))
                         || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))) {
                     if (isValid_I_Codes(conn, ProcedureCode)) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is  <b>I HCPCS Code</b> which is not payable by <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is  <b>I HCPCS Code</b> which is not payable by <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 
 
                 if (ReasonVisit.toUpperCase().contains("CORONA VIRUS") || ReasonVisit.toUpperCase().contains("COVID")) {
-                    if (!COVID_CPTS.contains(ProcedureCode) && !addCovidMsg) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Please Bill COVID-19 codes <b>" + COVID_CPTS.toString() + "</b>  and  create separate charge for rest of the CPT Codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
-                        addCovidMsg = true;
-                    }
+//                    if (!COVID_CPTS.contains(ProcedureCode) && !addCovidMsg) {
+//                        ErrorMsgs.add("<p style=\"color:black;\">Please Bill COVID-19 codes <b>" + COVID_CPTS.toString() + "</b>  and  create separate charge for rest of the CPT Codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        addCovidMsg = true;
+//                    }
 
                     if (ProcedureCode.equals("91303") && !is_91303) {
                         is_91303 = true;
                     }
 
                     if (!Arrays.asList("91300", "91301", "91302", "0031A").contains(ProcedureCode) && is_91303 && !addAdminCodeMsg) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>Admin Code " + Arrays.asList("91300", "91301", "91302", "0031A").toString() + " </b>  is  missing with  <b>Vaccine [91303]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Admin Code " + Arrays.asList("91300", "91301", "91302", "0031A").toString() + " </b>  is  missing with  <b>Vaccine [91303]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         addAdminCodeMsg = true;
                     }
 
                     if (COVID_CPTS_TJ.contains(ProcedureCode) && !modifier.contains("TJ")) {
-                        ErrorMsgs.append("<p style=\"color:black;\">Per COVID Guidelines,  <b>Modifier : TJ </b>  is  required with CPT <b>[" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\">Per COVID Guidelines,  <b>Modifier : TJ </b>  is  required with CPT <b>[" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 
 
                 if (ValidMammographyCPT(conn, ProcedureCode) && (!modifier.contains("26") || isEmpty(modifier))) {
                     if (isEmpty(MemmoCertAddInfo)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>FDA Certification Number</b> is Missing with Mammography services [<b>" + ProcedureCode + "</b>] Please check the location settings and update FDA Certification Number <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>FDA Certification Number</b> is Missing with Mammography services [<b>" + ProcedureCode + "</b>] Please check the location settings and update FDA Certification Number <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
+
+
 
 /*
                 if (((!isEmpty(ICDA) && ICDA.startsWith("F"))
@@ -3593,129 +5523,98 @@ public class InsClaimTesting extends HttpServlet {
                         || (!isEmpty(ICDL) && ICDL.startsWith("F"))
                 )) {
                     if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>Mental Disorder</b> diagnosis may not be billed with E&Ms <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Mental Disorder</b> diagnosis may not be billed with E&Ms <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 */
                 if (!isEmpty(revCode)) {
                     if (!isValidRevCode(conn, revCode)) {
-                        ErrorMsgs.append("<p style=\"color:black;\"><b>REVENUE CODE</b> USE DOESNOT MATCH WITH NATIONAL UNIFORM BILLING COMMITTEE (NUBC). PLEASE USE THIS LINK FOR CORRECT REVENUE CODE: https://med.noridianmedicare.com/web/jfa/topics/claim-submission/revenue-codes <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>REVENUE CODE</b> USE DOESNOT MATCH WITH NATIONAL UNIFORM BILLING COMMITTEE (NUBC). PLEASE USE THIS LINK FOR CORRECT REVENUE CODE: https://med.noridianmedicare.com/web/jfa/topics/claim-submission/revenue-codes <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 } else {
-                    ErrorMsgs.append("<p style=\"color:black;\"><b>Revenue Code </b> is Missing. It cannot be null or empty <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\"><b>Revenue Code </b> is Missing. It cannot be null or empty <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (modifier.equals("")) {
+                    Charge_ProcedureCodes_WITHOUT_MODIFIER.add(ProcedureCode);
+//                    //system.out.println("Charge_ProcedureCodes_WITHOUT_MODIFIER");
                 }
 
                 Charge_ProcedureCodes.add(ProcedureCode);
             }
 
-/*            if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB"))) || ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))) {
-                if (((!isEmpty(ICDA) && ICDA.equals("Z23"))
-                        || (!isEmpty(ICDB) && ICDB.equals("Z23"))
-                        || (!isEmpty(ICDC) && ICDC.equals("Z23"))
-                        || (!isEmpty(ICDD) && ICDD.equals("Z23"))
-                        || (!isEmpty(ICDE) && ICDE.equals("Z23"))
-                        || (!isEmpty(ICDF) && ICDF.equals("Z23"))
-                        || (!isEmpty(ICDG) && ICDG.equals("Z23"))
-                        || (!isEmpty(ICDH) && ICDH.equals("Z23"))
-                        || (!isEmpty(ICDI) && ICDI.equals("Z23"))
-                        || (!isEmpty(ICDJ) && ICDJ.equals("Z23"))
-                        || (!isEmpty(ICDK) && ICDK.equals("Z23"))
-                        || (!isEmpty(ICDL) && ICDL.equals("Z23"))
-                )) {
+            if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB"))) || ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))) {
+                if (PrincipalDiagInfoCodes.equals("Z23")) {
                     if (Charge_ProcedureCodes.contains("G0009")) {
                         if (!containsValidRelativeAdminCode(conn, "G0009", Charge_ProcedureCodes, "Z23")) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0009", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0009]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0009", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0009]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     if (Charge_ProcedureCodes.contains("G0010")) {
                         if (!containsValidRelativeAdminCode(conn, "G0010", Charge_ProcedureCodes, "Z23")) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0010", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0010]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0010", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0010]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
                     if (Charge_ProcedureCodes.contains("G0008")) {
                         if (!containsValidRelativeAdminCode(conn, "G0008", Charge_ProcedureCodes, "Z23")) {
-                            ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0008", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0008]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0008", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0008]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     }
 
                 }
-            }
-            else {
-                if (((!isEmpty(ICDA) && ICDA.equals("Z23"))
-                        || (!isEmpty(ICDB) && ICDB.equals("Z23"))
-                        || (!isEmpty(ICDC) && ICDC.equals("Z23"))
-                        || (!isEmpty(ICDD) && ICDD.equals("Z23"))
-                        || (!isEmpty(ICDE) && ICDE.equals("Z23"))
-                        || (!isEmpty(ICDF) && ICDF.equals("Z23"))
-                        || (!isEmpty(ICDG) && ICDG.equals("Z23"))
-                        || (!isEmpty(ICDH) && ICDH.equals("Z23"))
-                        || (!isEmpty(ICDI) && ICDI.equals("Z23"))
-                        || (!isEmpty(ICDJ) && ICDJ.equals("Z23"))
-                        || (!isEmpty(ICDK) && ICDK.equals("Z23"))
-                        || (!isEmpty(ICDL) && ICDL.equals("Z23"))
-                )) {
+            } else {
+                if (PrincipalDiagInfoCodes.equals("Z23")) {
                     if (Charge_ProcedureCodes.contains("90471")) {
                         if (Charge_VaccineCodes.size() > 1) {
                             if (!Charge_ProcedureCodes.contains("90472")) {
                                 if ((Charge_VaccineCodes.size() - 1) == 1)
-                                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Additional Vaccine of " + (Charge_VaccineCodes.size() - 1) + "</b> Administration Code is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Additional Vaccine of " + (Charge_VaccineCodes.size() - 1) + "</b> Administration Code is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                                 else
-                                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Additional Vaccine of " + (Charge_VaccineCodes.size() - 1) + "</b> Administration Codes are <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Additional Vaccine of " + (Charge_VaccineCodes.size() - 1) + "</b> Administration Codes are <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             } else if (Charge_ProcedureCodes.contains("90472") && (units_Of_90472 != (Charge_VaccineCodes.size() - 1))) {
-                                ErrorMsgs.append("<p style=\"color:black;\"> <b>Units</b> of <b>90472</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\"> <b>Units</b> of <b>90472</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         }
                     } else {
-                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Primary Vaccine admin 90471</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"> <b>Primary Vaccine admin 90471</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
 
 
-                if (((!isEmpty(ICDA) && ICDA.equals("Z23"))
-                        || (!isEmpty(ICDB) && ICDB.equals("Z23"))
-                        || (!isEmpty(ICDC) && ICDC.equals("Z23"))
-                        || (!isEmpty(ICDD) && ICDD.equals("Z23"))
-                        || (!isEmpty(ICDE) && ICDE.equals("Z23"))
-                        || (!isEmpty(ICDF) && ICDF.equals("Z23"))
-                        || (!isEmpty(ICDG) && ICDG.equals("Z23"))
-                        || (!isEmpty(ICDH) && ICDH.equals("Z23"))
-                        || (!isEmpty(ICDI) && ICDI.equals("Z23"))
-                        || (!isEmpty(ICDJ) && ICDJ.equals("Z23"))
-                        || (!isEmpty(ICDK) && ICDK.equals("Z23"))
-                        || (!isEmpty(ICDL) && ICDL.equals("Z23"))
-                )) {
-
-
-                    System.out.println("No. of Vaccines -> " + Charge_VaccineCodes.size());
-                    System.out.println("Units units_Of_90460  -> " + units_Of_90460);
+                if (PrincipalDiagInfoCodes.equals("Z23")) {
+                    //system.out.println("No. of Vaccines -> " + Charge_VaccineCodes.size());
+                    //system.out.println("Units units_Of_90460  -> " + units_Of_90460);
                     if (Charge_ProcedureCodes.contains("90460")) {
                         if (Charge_VaccineCodes.size() > 1) {
                             if (!Charge_ProcedureCodes.contains("90461")) {
                                 if (Charge_VaccineCodes.size() == 1)
-                                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Vaccine Toxoid of " + Charge_VaccineCodes.size() + "</b> Administration Code is missing<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Vaccine Toxoid of " + Charge_VaccineCodes.size() + "</b> Administration Code is missing<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                                 else
-                                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Vaccine Toxoid of " + Charge_VaccineCodes.size() + "</b> Administration Codes are missing<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    ErrorMsgs.add("<p style=\"color:black;\"> <b>Vaccine Toxoid of " + Charge_VaccineCodes.size() + "</b> Administration Codes are missing<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             } else if (Charge_ProcedureCodes.contains("90461") && (units_Of_90461 != sum_Of_units_Of_allVaccines)) {
-                                ErrorMsgs.append("<p style=\"color:black;\"> <b>Units</b> of <b>90461</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                ErrorMsgs.add("<p style=\"color:black;\"> <b>Units</b> of <b>90461</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                             }
                         }
 
 
                         if (units_Of_90460 != Charge_VaccineCodes.size()) {
-                            ErrorMsgs.append("<p style=\"color:black;\"> <b>Units</b> of <b>90460</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"> <b>Units</b> of <b>90460</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
 
                         if ((getAge(LocalDate.parse(_DOB)) > 18)) {
-                            ErrorMsgs.append("<p style=\"color:black;\"> <b>Age</b> of patient must be less then or equal to <b> 18 Yrs </b> for <b>90460</b> & <b>90461</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            ErrorMsgs.add("<p style=\"color:black;\"> <b>Age</b> of patient must be less then or equal to <b> 18 Yrs </b> for <b>90460</b> & <b>90461</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                         }
                     } else {
-                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Primary Vaccine admin 90460</b> is <b> Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        ErrorMsgs.add("<p style=\"color:black;\"> <b>Primary Vaccine admin 90460</b> is <b> Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     }
                 }
-            }*/
+            }
 
 
-            String vaccGrp1 = null, vaccGrp2 = null;
+
+
+            String vaccGrp1 = null, vaccGrp2 = null, r = null;
+            String[] result = null;
 
 
             for (String CPT :
@@ -3729,15 +5628,189 @@ public class InsClaimTesting extends HttpServlet {
                 }
 
                 if (vaccGrp1 != null && vaccGrp2 != null) {
-                    ErrorMsgs.append("<p style=\"color:black;\">System identifies medicare and commercial vaccine admins <b>[" + vaccGrp1 + "]</b> & <b>[" + vaccGrp2 + "]</b> alongside which is incorrect by coding point of view. please review coding before filing the claim<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    ErrorMsgs.add("<p style=\"color:black;\">System identifies medicare and commercial vaccine admins <b>[" + vaccGrp1 + "]</b> & <b>[" + vaccGrp2 + "]</b> alongside which is incorrect by coding point of view. please review coding before filing the claim<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                     break;
+                }
+
+                if (!findAddOnCode(conn, CPT, Charge_ProcedureCodes)) {
+                    ErrorMsgs.add("<p style=\"color:black;\">Add On Code <b>[" + CPT + "]</b> cannot be billed without Primary Codes <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                r = isNotAllowed_NCCI(conn, CPT, Charge_ProcedureCodes);
+                result = r == null ? null : r.split("~");
+                if (result != null) {
+                    ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + result[0] + "]</b> is <b>not allowed</b> with <b>[" + result[1] + "]</b> in the Billing Guideline CCI. <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
                 }
 
             }
 
+
+
+            for (String CPT :
+                    Charge_ProcedureCodes_WITHOUT_MODIFIER) {
+
+                r = Mod_Is_MUST_NCCI(conn, CPT, Charge_ProcedureCodes_WITHOUT_MODIFIER);
+                result = r == null ? null : r.split("~");
+                if (result != null) {
+                    ErrorMsgs.add("<p style=\"color:black;\">Procedure Code <b>[" + result[0] + "]</b> is <b>inconsistent</b> with <b>[" + result[1] + "]</b> in the Billing Guideline CCI Modifier is allowed but not found <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+            }
+
+            if (Gender.equals("F")) {
+                for (String ICD :
+                        ICDs) {
+                    if (validGenderICDs(conn, ICD, "Male")) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Male ICD [" + ICD + "]</b> cannot be applied to <b>Female</b> Patient <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                for (String CPT :
+                        Charge_ProcedureCodes) {
+                    if (validGenderCPT(conn, CPT, "MALE")) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Male Procedure [" + CPT + "]</b> cannot be applied to <b>Female</b> Patient <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+            } else {
+
+                for (String ICD :
+                        ICDs) {
+                    if (validGenderICDs(conn, ICD, "Female")) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Female ICD [" + ICD + "]</b> cannot be applied to <b>Male</b> Patient  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                for (String CPT :
+                        Charge_ProcedureCodes) {
+                    if (validGenderCPT(conn, CPT, "FEMALE")) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Female Procedure [" + CPT + "]</b> cannot be applied to <b>Male</b> Patient <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+            }
+
+            for (String ICD :
+                    ICDs) {
+                if (!validAgeICDs(conn, ICD, getAge(LocalDate.parse(_DOB)))) {
+                    ErrorMsgs.add("<p style=\"color:black;\"><b> ICD [" + ICD + "]</b> cannot be applied to <b>Age : " + getAge(LocalDate.parse(_DOB)) + "</b>  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+            }
+
+            for (String CPT :
+                    Charge_ProcedureCodes) {
+                r = NCD_CPT_ICD_Denial(conn, CPT, PrincipalDiagInfoCodes);
+                result = r == null ? null : r.split("~");
+                if (result != null) {
+                    ErrorMsgs.add("<p style=\"color:black;\">ICD <b>[" + result[0] + "]</b> is <b>Denied</b> with Procedure <b>[" + result[1] + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+
+                r = NCD_CPT_ICD_Med(conn, CPT, PrincipalDiagInfoCodes);
+//                    //system.out.println("r ** "+r);
+                result = r == null ? null : r.split("~");
+                if (result != null) {
+                    ErrorMsgs.add("<p style=\"color:black;\"><b>Medical Neccesity </b> is <b>required</b> when ICD <b>[" + result[0] + "]</b> is billed with Procedure <b>[" + result[1] + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+            }
+
+
+            if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA"))
+                    || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))
+                    || ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))
+                    || getAge(LocalDate.parse(_DOB)) >= 65) {
+
+                    for (String CPT :
+                            Charge_ProcedureCodes) {
+
+                        r = LCD_CPT_ICD_Denial(conn, CPT, PrincipalDiagInfoCodes);
+                        //system.out.println("LCD_CPT_ICD_Denial ** " + r);
+                        result = r == null ? null : r.split("~");
+                        if (result != null) {
+                            ErrorMsgs.add("<p style=\"color:black;\">Per <b>LCD</b> Articles , ICD <b>[" + result[0] + "]</b> is <b>Denied</b> with Procedure <b>[" + result[1] + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+
+//                        if ((PriFillingIndicator.equals("CI") || SecFillingIndicator.equals("CI"))) {
+//                            if (find_CPT_between_Ranges(conn, "99201", "99215", CPT) && !(find_ICD_between_Ranges(conn, "Z0000", "Z139", PrincipalDiagInfoCodes))) {
+//                                ErrorMsgs.add("<p style=\"color:black;\"><b>Well visit ICD : [" + PrincipalDiagInfoCodes + "]</b> is not allowed with  <b>Procedure : [" + CPT + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            }
+//                        }
+
+//                        r = LCD_CPT_ICD_MUST(conn, CPT, PrincipalDiagInfoCodes);
+//                        //system.out.println("LCD_CPT_ICD_MUST ** " + r);
+//                        if (r != null) {
+//                            ErrorMsgs.add("<p style=\"color:black;\">Per <b>LCD</b> Articles , Supporting ICD for  Procedure <b>[" + r + "]</b> is <b>missing</b>  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+
+                    }
+
+            }
+
+            if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("87726") || PriInsuranceNameId.equals("39026") || PriInsuranceNameId.equals("13551") || PriInsuranceNameId.equals("61101"))) {
+                if (isSequelaCode(conn, PrincipalDiagInfoCodes)) {
+                    ErrorMsgs.add("<p style=\"color:black;\"><b> SEQUELA ICD : [" + PrincipalDiagInfoCodes + "] </b> Can’t Be Billed As The Primary, First Listed, Or Principal Diagnosis On A Claim, Nor Can It Be The Only Diagnosis On A Claim, Please Check Coding Before Billing Out The Claim <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+            }
+
+            if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("13551") || PriInsuranceNameId.equals("11315"))) {
+                for (String CPT :
+                        Charge_ProcedureCodes) {
+                    if (PrincipalDiagInfoCodes.equals("Z23")) {
+                        if (CPT.equals("82270") || CPT.equals("82271") || CPT.equals("82272") || CPT.equals("82273") || CPT.equals("82274") || CPT.equals("G0328")) {
+                            ErrorMsgs.add("<p style=\"color:black;\">Please use valid CPT from <b> (82270,82271,82272,82273,82274, G0328) </b> for ICD <b>{" + PrincipalDiagInfoCodes + "}</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            if (!(getAge(LocalDate.parse(_DOB)) >= 50 && getAge(LocalDate.parse(_DOB)) <= 75))
+                                ErrorMsgs.add("<p style=\"color:black;\">Patient <b>Age</b> range is <b> 50 to 75 </b> for CPT <b>{" + CPT + "}</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+
+                        }
+
+                    }
+                }
+            }
+
+            if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))) {
+                for (String CPT :
+                        Charge_ProcedureCodes) {
+                    if (CPT.startsWith("S")) {
+                        ErrorMsgs.add("<p style=\"color:black;\"><b>Procedure Code [" + CPT + "]</b> is <b>InValid</b> for <b>MEDICARE</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+            }
+
+
+            for (int l = 0; l < ErrorMsgs.size() ; l++) {
+                ErrorMsgs.set(l,ErrorMsgs.get(l).replace("\n", "").replace("\r", "").replaceAll(" +", " "));
+            }
+//                errorMsg = errorMsg.replace("<b>", "barrrr").replace("\r", "").replaceAll(" +", " ");
+
+            ps = conn.prepareStatement("SELECT IFNULL(REPLACE(RuleHTML,'&amp;','&'),'') FROM "+Database+".Claim_AuditTrails WHERE ClaimNo=? AND Action='REMOVED'");
+            ps.setString(1,ClaimNumber);
+            rset = ps.executeQuery();
+            while(rset.next())
+            {
+
+                for (String errorMsg :
+                        ErrorMsgs) {
+                    if(errorMsg.equals(rset.getString(1))){
+                        ErrorMsgs.remove(rset.getString(1));
+                        break;
+                    }
+                }
+//                if(ErrorMsgs.contains(rset.getString(1))){
+//
+//
+//                    System.out.println("MATCHED...");
+//                    ErrorMsgs.remove(rset.getString(1));
+//
+//                }
+            }
+            rset.close();
+            ps.close();
+
             Instant end = Instant.now();
             Duration ExecutionTime = Duration.between(start, end);
-            if (ErrorMsgs.length() != 0)
+            if (ErrorMsgs.size() != 0)
                 out.println(ErrorMsgs + "~" + ExecutionTime);
             else {
                 out.println("1");
@@ -3763,1274 +5836,71 @@ public class InsClaimTesting extends HttpServlet {
         }
     }
 
-    public void Institutional_EDIFile(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper, String DirectoryName, HttpServletResponse response) {
-        Instant start = Instant.now();
-        String ClientIP = helper.getClientIp(request);
-        int i = 0, j = 0, k = 0;
-        int Found = 0;
-        String ChargeMasterTableName = "";
-        String InterControlNo = "";
-        int PatientRegId = Integer.parseInt(request.getParameter("PatientRegId").trim());
-        String ClaimNumber = request.getParameter("ClaimNumber").trim();
-//int ClaimType = Integer.parseInt(request.getParameter("ClaimType").trim());
-        int VisitId = Integer.parseInt(request.getParameter("VisitId").trim());
-        String DateTime = "";
-        String DateNow = "";
-        String PatientFirstName = "";
-        String PatientLastName = "";
-        String DOB = "";
-        String Gender = "";
-        String PriInsuredName = "";
-        String TaxanomySpecialty = "";
-        int ClaimInfoMasterId = 0;
-        int SelfPayChk = 0;
-        String ClientAddress = "";
-        String ClientCity = "";
-        String ClientTaxID = "";
-        String ClientState = "";
-        String ClientZipCode = "";
-        String ClientPhone = "";
-        String ClientNPI = "";
-
-//Claim Basic Info Variable
-        String RefNumber = "";
-        String TypeBillText = "";
-        String PatientName = "";
-        String PatientMRN = "";
-        String AcctNo = "";
-        String PhNumber = "";
-        String Email = "";
-        String Address = "";
-        String City = "";
-        String State = "";
-        String StateCode = "";
-        String ZipCode = "";
-        String DOS = "";
-        String UploadDate = "";
-        String AttendingProviderLastName = "";
-        String AttendingProviderFirstName = "";
-        String AttendingProviderNPI = "";
-        String AttendingProvider_Taxonomy = "";
-        String BillingProvidersLastName = "";
-        String BillingProvidersFirstName = "";
-        String BillingProvidersNPI = "";
-        String BillingProvider_Taxonomy = "";
-        String OperatingProviderLastName = "";
-        String OperatingProviderFirstName = "";
-        String OperatingProviderNPI = "";
-        String ClientName = "";
-        String PriInsuranceName = "";
-        String PriInsuranceNameId = "";
-        String MemId = "";
-        String PolicyType = "";
-        String GrpNumber = "";
-        String SecondaryInsurance = "";
-        String SecondaryInsuranceId = "";
-        String SecondaryInsuranceMemId = "";
-        String SecondaryInsuranceGrpNumber = "";
-        String CreationDate = "";
-        String ClaimType = "";
-        String ClaimCreateDate = "";
-        String ClaimCreateTime = "";
-//
-//        //Charges Variables
-        double TotalChargeAmount = 0.00;
-//        String ChargesTableCount = "0";
-//        String ChargesString = "";
-//
-//Additional Info Variable
-        String StatmentCoverFromDateAddInfo = "";
-        String StatmentCoverToDateAddInfo = "";
-        String AdmissionDateAddInfo = "";
-        String AdmissionHourAddInfo = "";
-        String AdmissionTypeAddInfo = "";
-        String AdmissionSourceAddInfo = "";
-        String DischargeHourAddInfo = "";
-        String PatientStatusAddInfo = "";
-        String DelayReasonCodeAddInfo = "";
-        String EmploymentStatusAddInfo = "";
-        String AutoAccidentAddInfo = "";
-        String OtherAccidentAddInfo = "";
-        String PPSAddInfo = "";
-        String RemarksAddInfo = "";
-        String AutoAccident_StateAddInfo = "";
-        String ReleaseInfoAddInfo = "";
-        String AssofBenifitAddInfo = "";
-        String ProvAccAssigAddInfo = "";
-//
-//Information Codes variable
-        String PrincipalDiagInfoCodes = "";
-        String POAInfoCodes = "";
-        String AdmittingDiagInfoCodes = "";
-        String PrincipalProcedureInfoCodes = "";
-        String PrincipalProcedureDateInfoCodes = "";
-        String ExternalCauseInjuryTableCount = "0";
-        String ExternalCauseInjuryString = "";
-        String ReasonVisitTableCount = "0";
-        String ReasonVisitString = "";
-        String OtherDiagnosisString = "";
-        String OtherDiagnosisTableCount = "0";
-        StringBuffer ErrorMsgs = new StringBuffer();
-        final String NPI_REGEX = "[0-9]{10}";
-        String PatientRelationtoPrimary = "";
-        String PriFillingIndicator = "";
-
-        String Payer_Address = "";
-        String Payer_City = "";
-        String Payer_State = "";
-        String Payer_Zip = "";
-        String timesSubmitted = "";
-
-
-        String PatientControlNumber = "";
-
-
-        Statement stmt = null;
-        ResultSet rset = null;
-        String Query = "";
-
-        try {
-            DecimalFormat df = new DecimalFormat("#.##");
-            Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), IFNULL(Phone,''),IFNULL(NPI,''), IFNULL(TaxanomySpecialty,''), IFNULL(TaxID,'') from oe.clients" +
-                    " where Id = " + ClientId;
-            //System.out.println(Query);
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                ClientAddress = rset.getString(1);
-                ClientCity = rset.getString(2);
-                ClientState = rset.getString(3);
-                ClientZipCode = rset.getString(4);
-                ClientPhone = rset.getString(5);
-                ClientNPI = rset.getString(6);
-                TaxanomySpecialty = rset.getString(7);
-                ClientTaxID = rset.getString(8);
+    public String getJSONFromResultSet(ResultSet rs,String keyName) {
+        Map json = new HashMap();
+        List list = new ArrayList();
+        if(rs!=null)
+        {
+            try {
+                ResultSetMetaData metaData = rs.getMetaData();
+                while(rs.next())
+                {
+                    Map<String,Object> columnMap = new HashMap<String, Object>();
+                    for(int columnIndex=1;columnIndex<=metaData.getColumnCount();columnIndex++)
+                    {
+                        if(rs.getString(metaData.getColumnName(columnIndex))!=null)
+                            columnMap.put(metaData.getColumnLabel(columnIndex),     rs.getString(metaData.getColumnName(columnIndex)));
+                        else
+                            columnMap.put(metaData.getColumnLabel(columnIndex), "");
+                    }
+                    list.add(columnMap);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            rset.close();
-            stmt.close();
-
-            //Validating NPI
-//            if (ClientNPI.matches(NPI_REGEX)) {
-//                if(isValid(ClientNPI)) ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
-//                else ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
-//                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
-//            } else {
-//                ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
-//                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
-//            }
-
-
-            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster " +
-                    " where Status = 0 and PatientRegId = " + PatientRegId + " and VisitId = " + VisitId +
-                    " and ClaimNumber = '" + ClaimNumber + "'";
-            //System.out.println(Query);
-            stmt = conn.createStatement();
-            rset = stmt.executeQuery(Query);
-            if (rset.next()) {
-                Found = rset.getInt(1);
-            }
-            rset.close();
-            stmt.close();
-
-            if (Found == 0) {
-                out.println("Please Save Claim First and then Create EDI");
-                return;
-            } else {
-
-                Query = "Select IFNULL(MAX(InterControlNo),'') from " + Database + ".ClaimInfoMaster ";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    InterControlNo = rset.getString(1);
-                }
-                rset.close();
-                stmt.close();
-//out.println("InterControlNo;---1-----"+InterControlNo);
-                if (InterControlNo.equals("")) {
-                    //out.println("inside 1 icn");
-                    InterControlNo = "100000001";
-                } else if (InterControlNo.length() > 9) {
-                    //out.println("inside 2 icn");
-                    InterControlNo = "100000001";
-                } else {
-                    //out.println("inside 3 icn");
-                    InterControlNo = String.valueOf((Integer.parseInt(InterControlNo) + 1));
-                }
-//out.println("InterControlNo;---2----"+InterControlNo);
-                try {
-                    PreparedStatement MainReceipt = conn.prepareStatement(
-                            "Update " + Database + ".ClaimInfoMaster Set InterControlNo = ? " +
-                                    " where PatientRegId = ? and VisitId = ? and ClaimNumber = ? ");
-                    MainReceipt.setString(1, (InterControlNo));
-                    MainReceipt.setInt(2, PatientRegId);
-                    MainReceipt.setInt(3, VisitId);
-                    MainReceipt.setString(4, ClaimNumber);
-                    //out.println("MainReceipt:--"+MainReceipt.toString());
-                    MainReceipt.executeUpdate();
-                    MainReceipt.close();
-
-                } catch (Exception e) {
-                    out.println(e.getMessage());
-                    helper.SendEmailWithAttachment("Error in UpdatingtInstitionalEDI ** (AddInfo^^ MES#ICN)", context, e, "AddInfo", "InstitutuionalEDI", conn);
-                    Services.DumException("AddInfo", "InstitionalEDI", request, e);
-                }
-
-
-                Query = "Select ChargeMasterTableName from oe.clients where ID = " + ClientId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    ChargeMasterTableName = rset.getString(1).trim();
-                }
-                rset.close();
-                stmt.close();
-
-                Query = "Select IFNULL(FirstName,''), IFNULL(LastName,''), IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), " +
-                        "IFNULL(DATE_FORMAT(DOB,'%Y%m%d'),''), DATE_FORMAT(NOW(),'%d%m%y%k%i%s'), IFNULL(Gender,''), DATE_FORMAT(NOW(),'%m%d%y'), " +
-                        "IFNULL(SelfPayChk,'0')" +
-                        " from " + Database + ".PatientReg where ID = " + PatientRegId;
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    PatientFirstName = rset.getString(1);
-                    PatientLastName = rset.getString(2);
-                    Address = rset.getString(3);
-                    City = rset.getString(4);
-                    State = rset.getString(5);
-                    ZipCode = rset.getString(6);
-                    DOB = rset.getString(7);
-                    DateTime = rset.getString(8);
-                    Gender = rset.getString(9).trim();
-                    DateNow = rset.getString(10);
-                    SelfPayChk = rset.getInt(11);
-                }
-                rset.close();
-                stmt.close();
-                if (!Gender.equals("")) {
-                    Gender = Gender.substring(0, 1).toUpperCase();
-                } else {
-                    Gender = "";
-                }
-
-                if (SelfPayChk == 1) {
-                    Query = "Select IFNULL(PriInsurerName,''),IFNULL(PatientRelationtoPrimary,'') from " + Database + ".InsuranceInfo where PatientRegId = " + PatientRegId;
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    if (rset.next()) {
-                        PriInsuredName = rset.getString(1);
-                        PatientRelationtoPrimary = rset.getString(2);
-                    }
-                    rset.close();
-                    stmt.close();
-
-                    if (PriInsuredName.equals("")) {
-                        PriInsuredName = PatientLastName + ", " + PatientFirstName;
-                    }
-
-                } else {
-                    PriInsuredName = PatientLastName + ", " + PatientFirstName;
-                }
-
-
-                if (!State.equals("")) {
-                    if (State.length() > 2) {
-                        Query = "Select IFNULL(StateCode,'') from " + Database + ".StateList where ltrim(rtrim(Upper(StateName))) = ltrim(rtrim(UPPER('" + State + "')))";
-                        stmt = conn.createStatement();
-                        rset = stmt.executeQuery(Query);
-                        if (rset.next()) {
-                            StateCode = rset.getString(1);
-                        }
-                        rset.close();
-                        stmt.close();
-                    } else {
-                        StateCode = State.toUpperCase();
-                    }
-
-                } else {
-                    StateCode = "";
-                }
-
-                Query = "Select a.Id,IFNULL(RefNumber,''), IFNULL(a.TypeBillText,''), IFNULL(a.PatientName,''), IFNULL(a.PatientMRN,''), " +
-                        " IFNULL(a.AcctNo,''), IFNULL(a.PhNumber,''), " +
-                        " IFNULL(a.Email,''), IFNULL(a.Address,''), IFNULL(a.DOS,''), " +
-                        " IFNULL(b.DoctorsLastName,''), IFNULL(b.DoctorsFirstName,'') , IFNULL(b.NPI,'') as AttendingNPI, " +
-                        " IFNULL(c.DoctorsLastName,''), IFNULL(c.DoctorsFirstName,''), IFNULL(c.NPI,'') as BillingNPI, " +
-                        " IFNULL(LTRIM(rtrim(REPLACE(d.PayerName,'Servicing States','') )),'') as PriInsuranceName, IFNULL(a.MEMId,''), IFNULL(a.PolicyType,''), IFNULL(a.GrpNumber,''), " +
-                        " IFNULL(LTRIM(rtrim(REPLACE(e.PayerName,'Servicing States','') )),'') as SecondaryInsurance, " +
-                        " IFNULL(a.SecondaryInsuranceMemId,''), IFNULL(a.SecondaryInsuranceGrpNumber,''), IFNULL(ClientName,''), " +
-                        " IFNULL(f.DoctorsLastName,''), IFNULL(f.DoctorsFirstName,''), IFNULL(f.NPI,'') as OperatingProvider, " +
-                        " DATE_FORMAT(a.CreatedDate,'%Y%m%d'), CASE WHEN a.ClaimType = 1 THEN 'CI' WHEN a.ClaimType = 2 THEN 'CP' ELSE 'CL' END, " +
-                        " DATE_FORMAT(a.CreatedDate,'%y%m%d'), DATE_FORMAT(a.CreatedDate,'%H%i'), IFNULL(d.PayerID,''), IFNULL(e.PayerID,''),IFNULL(c.TaxonomySpecialty,''),IFNULL(e.ClaimIndicator_I,'')," +
-                        " IFNULL(d.Address,''),IFNULL(d.City,''),IFNULL(d.State,''),IFNULL(d.Zip,''),IFNULL(timesSubmitted,0), IFNULL(b.TaxonomySpecialty,'') " +
-                        " from " + Database + ".ClaimInfoMaster a " +
-                        " LEFT JOIN " + Database + ".DoctorsList b on a.AttendingProvider = b.Id " +
-                        " LEFT JOIN " + Database + ".DoctorsList c on a.BillingProviders = c.Id " +
-                        " LEFT JOIN ClaimMasterDB.ProfessionalPayersWithFC d on a.PriInsuranceNameId = d.Id " +
-                        " LEFT JOIN ClaimMasterDB.ProfessionalPayersWithFC e on a.SecondaryInsuranceId = e.Id " +
-//                        " LEFT JOIN oe_2.ProfessionalPayers d on a.PriInsuranceNameId = d.Id " +
-//                        " LEFT JOIN oe_2.ProfessionalPayers e on a.SecondaryInsuranceId = e.Id " +
-                        " LEFT JOIN " + Database + ".DoctorsList f on a.OperatingProvider = f.Id " +
-                        "  where a.PatientRegId = " + PatientRegId + " and a.VisitId = " + VisitId + " and a.ClaimNumber = '" + ClaimNumber + "'";
-                //System.out.println(Query);
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    ClaimInfoMasterId = rset.getInt(1);
-                    RefNumber = rset.getString(2);
-                    TypeBillText = rset.getString(3);
-                    PatientName = rset.getString(4).replaceAll(" ", "").replaceAll("'", "");
-                    PatientMRN = rset.getString(5);
-                    AcctNo = rset.getString(6);
-                    PhNumber = rset.getString(7);
-                    Email = rset.getString(8);
-                    //Address = rset.getString(9);
-                    DOS = rset.getString(10).replaceAll("/", "");
-                    AttendingProviderLastName = rset.getString(11);
-                    AttendingProviderFirstName = rset.getString(12);
-                    AttendingProviderNPI = rset.getString(13);
-                    BillingProvidersLastName = rset.getString(14);
-                    BillingProvidersFirstName = rset.getString(15);
-                    BillingProvidersNPI = rset.getString(16);
-                    PriInsuranceName = (rset.getString(17).replaceAll(":", " ")).trim().replaceAll("&", "");
-                    MemId = rset.getString(18);
-                    PolicyType = rset.getString(19);
-                    GrpNumber = rset.getString(20);
-                    SecondaryInsurance = rset.getString(21);
-                    SecondaryInsuranceMemId = rset.getString(22);
-                    SecondaryInsuranceGrpNumber = rset.getString(23);
-                    ClientName = rset.getString(24);
-                    OperatingProviderLastName = rset.getString(25);
-                    OperatingProviderFirstName = rset.getString(26);
-                    OperatingProviderNPI = rset.getString(27);
-                    CreationDate = rset.getString(28);
-                    ClaimType = rset.getString(29);
-                    ClaimCreateDate = rset.getString(30);
-                    ClaimCreateTime = rset.getString(31);
-                    PriInsuranceNameId = rset.getString(32);
-                    SecondaryInsuranceId = rset.getString(33);
-                    BillingProvider_Taxonomy = rset.getString(34);
-                    PriFillingIndicator = rset.getString(35);
-                    Payer_Address = rset.getString(36);
-                    Payer_City = rset.getString(37);
-                    Payer_State = rset.getString(38);
-                    Payer_Zip = rset.getString(39);
-                    timesSubmitted = rset.getString(40) + 1;
-                    AttendingProvider_Taxonomy = rset.getString(41);
-                }
-                rset.close();
-                stmt.close();
-
-                Query = "Select IFNULL(StatmentCoverFromDateAddInfo,''), IFNULL(StatmentCoverToDateAddInfo,''), " +
-                        " IFNULL(AdmissionDateAddInfo,''), IFNULL(AdmissionHourAddInfo,''), IFNULL(AdmissionTypeAddInfo,''), " +
-                        " IFNULL(AdmissionSourceAddInfo,''), IFNULL(DischargeHourAddInfo,''), IFNULL(PatientStatusAddInfo,''), IFNULL(DelayReasonCodeAddInfo,'')," +
-                        " IFNULL(EmploymentStatusAddInfo,''), IFNULL(AutoAccidentAddInfo,''), IFNULL(OtherAccidentAddInfo,''), IFNULL(PPSAddInfo,''), " +
-                        " IFNULL(RemarksAddInfo,''), IFNULL(AutoAccident_StateAddInfo,''), IFNULL(ReleaseInfoAddInfo,''), IFNULL(AssofBenifitAddInfo,''), " +
-                        " IFNULL(ProvAccAssigAddInfo,'') " +
-                        " from " + Database + ".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    StatmentCoverFromDateAddInfo = rset.getString(1);
-                    StatmentCoverToDateAddInfo = rset.getString(2);
-                    AdmissionDateAddInfo = rset.getString(3);
-                    AdmissionHourAddInfo = rset.getString(4);
-                    AdmissionTypeAddInfo = rset.getString(5);
-                    AdmissionSourceAddInfo = rset.getString(6);
-                    DischargeHourAddInfo = rset.getString(7);
-                    PatientStatusAddInfo = rset.getString(8);
-                    DelayReasonCodeAddInfo = rset.getString(9);
-                    EmploymentStatusAddInfo = rset.getString(10);
-                    AutoAccidentAddInfo = rset.getString(11);
-                    OtherAccidentAddInfo = rset.getString(12);
-                    PPSAddInfo = rset.getString(13);
-                    RemarksAddInfo = rset.getString(14);
-                    AutoAccident_StateAddInfo = rset.getString(15);
-                    ReleaseInfoAddInfo = rset.getString(16);
-                    AssofBenifitAddInfo = rset.getString(17);
-                    ProvAccAssigAddInfo = rset.getString(18);
-                }
-                rset.close();
-                stmt.close();
-
-                if (!StatmentCoverFromDateAddInfo.equals("")) {
-                    StatmentCoverFromDateAddInfo = StatmentCoverFromDateAddInfo.replaceAll("/", "");
-                    StatmentCoverFromDateAddInfo = StatmentCoverFromDateAddInfo.substring(4, 8) + StatmentCoverFromDateAddInfo.substring(0, 2) + StatmentCoverFromDateAddInfo.substring(2, 4);
-                }
-                if (!StatmentCoverToDateAddInfo.equals("")) {
-                    StatmentCoverToDateAddInfo = StatmentCoverToDateAddInfo.replaceAll("/", "");
-                    StatmentCoverToDateAddInfo = StatmentCoverToDateAddInfo.substring(4, 8) + StatmentCoverToDateAddInfo.substring(0, 2) + StatmentCoverToDateAddInfo.substring(2, 4);
-                }
-                if (!AdmissionDateAddInfo.equals("")) {
-                    AdmissionDateAddInfo = AdmissionDateAddInfo.replaceAll("/", "");
-                    AdmissionDateAddInfo = AdmissionDateAddInfo.substring(4, 8) + AdmissionDateAddInfo.substring(0, 2) + AdmissionDateAddInfo.substring(2, 4);
-                }
-
-                Query = "Select IFNULL(PrincipalDiagInfoCodes,''), IFNULL(POAInfoCodes,''), IFNULL(AdmittingDiagInfoCodes,''), " +
-                        " IFNULL(PrincipalProcedureInfoCodes,''), IFNULL(PrincipalProcedureDateInfoCodes,'') " +
-                        "from " + Database + ".ClaimInformationCode where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    PrincipalDiagInfoCodes = rset.getString(1);
-                    POAInfoCodes = rset.getString(2);
-                    AdmittingDiagInfoCodes = rset.getString(3);
-                    PrincipalProcedureInfoCodes = rset.getString(4);
-                    PrincipalProcedureDateInfoCodes = rset.getString(5);
-                }
-                rset.close();
-                stmt.close();
-
-                if (!PrincipalDiagInfoCodes.equals("")) {
-                    if (PrincipalDiagInfoCodes.contains(".")) {
-                        PrincipalDiagInfoCodes = PrincipalDiagInfoCodes.replace(".", "");
-                    }
-                }
-                if (!AdmittingDiagInfoCodes.equals("")) {
-                    if (AdmittingDiagInfoCodes.contains(".")) {
-                        AdmittingDiagInfoCodes = AdmittingDiagInfoCodes.replace(".", "");
-                    }
-                }
-                if (!PrincipalProcedureInfoCodes.equals("")) {
-                    if (PrincipalProcedureInfoCodes.contains(".")) {
-                        PrincipalProcedureInfoCodes = PrincipalProcedureInfoCodes.replace(".", "");
-                    }
-                }
-
-                String ST02 = "";
-
-                if (ClaimNumber.length() > 4) {
-                    ST02 = ClaimNumber.substring(ClaimNumber.length() - 4);
-                } else {
-                    ST02 = "0222";
-                }
-
-                StringBuilder ISA = new StringBuilder();
-                StringBuilder GS = new StringBuilder();
-                StringBuilder ST = new StringBuilder();
-                StringBuilder BHT = new StringBuilder();
-                StringBuilder NM1 = new StringBuilder();
-                StringBuilder PER = new StringBuilder();
-                StringBuilder NM1_2 = new StringBuilder();
-                StringBuilder HL_1 = new StringBuilder();
-                StringBuilder PRV_BI = new StringBuilder();
-                StringBuilder NM1_3 = new StringBuilder();
-                StringBuilder N3_1 = new StringBuilder();
-                StringBuilder N4_1 = new StringBuilder();
-                StringBuilder REF_1 = new StringBuilder();
-                StringBuilder HL_2 = new StringBuilder();
-                StringBuilder SBR = new StringBuilder();
-                StringBuilder NM1_4 = new StringBuilder();
-                StringBuilder N3_2 = new StringBuilder();
-                StringBuilder N4_2 = new StringBuilder();
-                StringBuilder DMG = new StringBuilder();
-                StringBuilder NM1_5 = new StringBuilder();
-                StringBuilder N3_3 = new StringBuilder();
-                StringBuilder N4_3 = new StringBuilder();
-                StringBuilder CLM = new StringBuilder();
-                StringBuilder DTP_1 = new StringBuilder();
-                StringBuilder DTP_2 = new StringBuilder();
-                StringBuilder DTP_3 = new StringBuilder();
-                StringBuilder CL1 = new StringBuilder();
-                StringBuilder REF_2 = new StringBuilder();
-                StringBuilder HI_1_ABK = new StringBuilder();
-                StringBuilder HI_1_ABJ = new StringBuilder();
-                StringBuilder HI_1_ABN = new StringBuilder();
-                StringBuilder HI_1_APR = new StringBuilder();
-                StringBuilder HI_1_ABF = new StringBuilder();
-                StringBuilder HI_1_BBR = new StringBuilder();
-                StringBuilder HI_1_BBQ = new StringBuilder();
-                StringBuilder HI_1_BI = new StringBuilder();
-                StringBuilder HI_1_BH = new StringBuilder();
-                StringBuilder HI_1_BE = new StringBuilder();
-                StringBuilder HI_1_BG = new StringBuilder();
-                StringBuilder NM1_6 = new StringBuilder();
-                StringBuilder PRV_AT = new StringBuilder();
-                StringBuilder NM1_7 = new StringBuilder();
-                StringBuilder N3_4 = new StringBuilder();
-                StringBuilder N4_4 = new StringBuilder();
-                StringBuilder LX1 = new StringBuilder();
-                StringBuilder SV2_1 = new StringBuilder();
-                StringBuilder SE = new StringBuilder();
-                StringBuilder GE = new StringBuilder();
-                StringBuilder IEA = new StringBuilder();
-
-
-                int TagCount = 0;
-/*
-                ISA.append("ISA*00*          *00*          *ZZ*AV09311993     *01*030240928      *" + ClaimCreateDate + "*" + ClaimCreateTime + "*^*00501*" + InterControlNo + "*1*T*:~\n");
-                //GS.append("GS*HC*p920700*ECGCLAIMS*20210625*155544*000000001*X*005010X223A2~\n");
-                GS.append("GS*HC*AV09311993*030240928*" + CreationDate + "*" + ClaimCreateTime + "*" + InterControlNo + "*X*005010X223A2~\n");
-                ST.append("ST*837*" + ST02 + "*005010X223A2~\n");
-                BHT.append("BHT*0019*00*1*" + CreationDate + "*" + ClaimCreateTime + "*CH~\n");
-                NM1.append("NM1*41*2*" + AttendingProviderLastName + " " + AttendingProviderFirstName + "*****46*009207651653~\n");
-                PER.append("PER*IC*" + BillingProvidersLastName + " " + BillingProvidersFirstName + "*TE*2812800911*FX*2812800041~\n");
-                NM1_2.append("NM1*40*2*MCKHBOC*****46*0001~\n");
-                HL_1.append("HL*1**20*1~\n");
-                PRV_BI.append("PRV*BI*PXC*" + TaxanomySpecialty + "~\n");
-                NM1_3.append("NM1*85*2*" + ClientName + ",*****XX*" + ClientNPI + "~\n");
-                N3_1.append("N3*" + ClientAddress + "~\n");
-                N4_1.append("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode + "~\n");
-                REF_1.append("REF*EI*" + ClientTaxID + "~\n");
-                HL_2.append("HL*2*1*22*0~\n");
-                SBR.append("SBR*P*18*" + GrpNumber + "******" + ClaimType + "~\n");
-                NM1_4.append("NM1*IL*1*" + PatientLastName + "*" + PatientFirstName + "*" + "" + "***MI*" + MemId + "~\n");
-                N3_2.append("N3*" + Address + "~\n");
-                N4_2.append("N4*" + City + "*" + State + "*" + ZipCode + "~\n");
-                DMG.append("DMG*D8*" + DOB + "*" + Gender + "~\n");
-                NM1_5.append("NM1*PR*2*" + (PriInsuranceName.contains("\n") ? PriInsuranceName.replaceAll("\n", "") : PriInsuranceName) + "*****PI*" + PriInsuranceNameId + "~\n");
-                N3_3.append("N3*" + "17154 butte creek road" + "~\n");//Insurance Street Address
-                N4_3.append("N4*" + "HOUSTON" + "*" + "TX" + "*" + "77090" + "~\n");//Insurance City, Insurance State, Insurance ZipCode
-
-*/
-
-                TagCount = 20;
-//out.println("TagCount--1--"+TagCount);
-                int foundExtCauseInj = 0;
-                int foundReasVisit = 0;
-                int foundOthDiag = 0;
-                int foundOthProc = 0;
-                int foundOccSpan = 0;
-                int foundOcc = 0;
-                int foundValCode = 0;
-                int foundConCode = 0;
-                Query = "Select Count(*) from " + Database + ".ClaimInfoCodeExtCauseInj where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    foundExtCauseInj = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-                if (foundExtCauseInj > 0) {
-                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeExtCauseInj where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        HI_1_ABN.append("HI*ABN:" + Code + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--2--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-                }
-
-                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeReasVisit where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                if (rset.next()) {
-                    foundReasVisit = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-
-                if (foundReasVisit > 0) {
-                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeReasVisit where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        HI_1_APR.append("HI*APR:" + Code + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--3--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-                }
-
-                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOthDiag where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    foundOthDiag = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-
-                if (foundOthDiag > 0) {
-                    Query = "Select IFNULL(Code,''), IFNULL(PQA,'') from " + Database + ".ClaimInfoCodeOthDiag where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        HI_1_ABF.append("HI*ABF:" + Code + ":::::::" + rset.getString(2) + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--4--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-                }
-
-                if (PrincipalProcedureDateInfoCodes.equals("")) {
-                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes;
-                } else if (PrincipalProcedureDateInfoCodes.contains("/")) {
-                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes.replaceAll("/", "");
-                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes.substring(4, 8) + PrincipalProcedureDateInfoCodes.substring(0, 2) + PrincipalProcedureDateInfoCodes.substring(2, 4);
-                } else {
-                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes;
-                }
-                if (!PrincipalProcedureInfoCodes.equals("")) {
-                    HI_1_BBR.append("HI*BBR:" + PrincipalProcedureInfoCodes + "*" + PrincipalProcedureDateInfoCodes + "~\n");
-                    TagCount++;
-                    //out.println("TagCount--5--" + TagCount);
-                }
-
-                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOthProcedure where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    foundOthProc = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-
-                if (foundOthProc > 0) {
-                    Query = "Select IFNULL(Code,''), IFNULL(Date,'') from " + Database + ".ClaimInfoCodeOthProcedure where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        String Date = "";
-                        if (rset.getString(2).equals("")) {
-                            Date = rset.getString(2);
-                        } else if (rset.getString(2).contains("/")) {
-                            Date = rset.getString(2).replaceAll("/", "");
-                            Date = Date.substring(4, 8) + Date.substring(0, 2) + Date.substring(2, 4);
-                        } else {
-                            Date = rset.getString(2);
-                        }
-                        HI_1_BBQ.append("HI*BBQ:" + Code + ":" + Date + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--6--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-                }
-
-//                Query = "Select COUNT(*) from "+Database+".ClaimInfoCodeOccSpan where ClaimInfoMasterId = "+ClaimInfoMasterId + " " +
-//                        " and ClaimNumber = '"+ClaimNumber+"'";
-//                stmt = conn.createStatement();
-//                rset = stmt.executeQuery(Query);
-//                while(rset.next()) {
-//                    foundOccSpan = rset.getInt(1);
-//                }
-//                rset.close();
-//                stmt.close();
-//
-//                if(foundOccSpan > 0 ){
-//                    Query = "Select IFNULL(Code,''), IFNULL(FromDate,''), IFNULL(ToDate,'') from " + Database + ".ClaimInfoCodeOccSpan where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-//                            " and ClaimNumber = '" + ClaimNumber + "'";
-//                    stmt = conn.createStatement();
-//                    rset = stmt.executeQuery(Query);
-//                    while (rset.next()) {
-//                        String Code = "";
-//                        if(rset.getString(1).contains(".")){
-//                            Code = rset.getString(1).replace(".","");
-//                        }else{
-//                            Code = rset.getString(1);
-//                        }
-//                        String FromDate = "";String ToDate = "";
-//                        if(rset.getString(2).equals("")){
-//                            FromDate = rset.getString(2);
-//                        }else if(rset.getString(2).contains("/")){
-//                            FromDate = rset.getString(2).replaceAll("/","");
-//                            FromDate = FromDate.substring(4,8)+FromDate.substring(0,2)+FromDate.substring(2,4);
-//                        }else {
-//                            FromDate = rset.getString(2);
-//                        }
-//                        if(rset.getString(3).equals("")){
-//                            ToDate = rset.getString(3);
-//                        }else if(rset.getString(3).contains("/")){
-//                            ToDate = rset.getString(3).replaceAll("/","");
-//                            ToDate = ToDate.substring(4,8)+ToDate.substring(0,2)+ToDate.substring(2,4);
-//                        }else {
-//                            ToDate = rset.getString(3);
-//                        }
-//                        HI_1_BI.append("HI*BI:" + Code+ "*" + FromDate + "-"+ ToDate+"~\n");
-//                    }
-//                    rset.close();
-//                    stmt.close();
-//                }
-
-                Query = "Select COUNT(*) from " + Database + ".ClaimInfoOccurance where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    foundOcc = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-
-                if (foundOcc > 0) {
-                    Query = "Select IFNULL(Code,''), IFNULL(Date,'') from " + Database + ".ClaimInfoOccurance where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        String Date = "";
-                        if (rset.getString(2).equals("")) {
-                            Date = rset.getString(2);
-                        } else if (rset.getString(2).contains("/")) {
-                            Date = rset.getString(2).replaceAll("/", "");
-                            Date = Date.substring(4, 8) + Date.substring(0, 2) + Date.substring(2, 4);
-                        } else {
-                            Date = rset.getString(2);
-                        }
-                        HI_1_BH.append("HI*BH:" + Code + "*" + Date + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--7--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-
-                }
-
-                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeValueCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    foundValCode = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-
-                if (foundValCode > 0) {
-                    Query = "Select IFNULL(Code,''), IFNULL(Amount,'') from " + Database + ".ClaimInfoCodeValueCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        String Amount = "";
-                        if (rset.getString(2).contains(".")) {
-                            Amount = rset.getString(2).replace(".", "");
-                        } else {
-                            Amount = rset.getString(2);
-                        }
-//                        HI_1_BE.append("HI*BE:" + rset.getString(1) + ":" + (rset.getString(2).equals("") ? rset.getString(2) : rset.getString(2).replaceAll(".","")) + "^\n");
-                        HI_1_BE.append("HI*BE:" + Code + "*" + Amount + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--8--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-
-                }
-
-                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeConditionCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                        " and ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    foundConCode = rset.getInt(1);
-                }
-                rset.close();
-                stmt.close();
-
-                if (foundConCode > 0) {
-                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeConditionCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
-                            " and ClaimNumber = '" + ClaimNumber + "'";
-                    stmt = conn.createStatement();
-                    rset = stmt.executeQuery(Query);
-                    while (rset.next()) {
-                        String Code = "";
-                        if (rset.getString(1).contains(".")) {
-                            Code = rset.getString(1).replace(".", "");
-                        } else {
-                            Code = rset.getString(1);
-                        }
-                        HI_1_BG.append("HI*BG:" + Code + "~\n");
-                        TagCount++;
-                        //out.println("TagCount--9--"+TagCount);
-                    }
-                    rset.close();
-                    stmt.close();
-
-                }
-
-
-                //out.println("TagCount---10--"+TagCount);
-
-                int iCount = 1;
-                String TotalChrgeAmt = "";
-                Query = "Select IFNULL(a.RevCode,''), IFNULL(a.HCPCS,''), IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), " +
-                        "IFNULL(a.Mod4,''), CASE WHEN a.DescriptionFrom = 0 THEN b.ShortDescription WHEN a.DescriptionFrom = 1 THEN c.Description ELSE c.Description END, " +
-                        "IFNULL(a.Amount,''), IFNULL(a.Units,'') from " + Database + ".ClaimChargesInfo a " +
-                        " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCS = b.CPTCode " +
-                        " LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
-                        "where a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNumber + "'";
-                stmt = conn.createStatement();
-                rset = stmt.executeQuery(Query);
-                while (rset.next()) {
-                    String HCPCS = "";
-                    String Units = "";
-                    if (rset.getString(2).contains(".")) {
-                        HCPCS = rset.getString(2).replace(".", "");
-                    } else {
-                        HCPCS = rset.getString(2);
-                    }
-                    String Amount = "";
-                    if (rset.getString(8).contains(".")) {
-                        //Amount = rset.getString(8).replace(".","");
-                        Amount = rset.getString(8).substring(0, rset.getString(8).indexOf("."));
-                    } else {
-                        Amount = rset.getString(8);
-                    }
-                    Units = rset.getString(9);
-                    if (Units.contains(".")) {
-                        //Units = Units.replace(".","");
-                        Units = Units.substring(0, Units.indexOf("."));
-                    }
-                    SV2_1.append("LX*" + iCount + "~\n" + "SV2*" + rset.getString(1) + "*HC:" + HCPCS + ":" + rset.getString(3) + ":" + rset.getString(4) + ":" + rset.getString(5) + ":" + rset.getString(6) + ":" + rset.getString(7) + "*" + Amount + "*UN*" + Units + "~\n");
-                    TotalChargeAmount += Double.parseDouble(Amount);
-                    TagCount = TagCount + 2;
-                    //out.println("TagCount---11--"+TagCount);
-                    iCount++;
-                }
-                rset.close();
-                stmt.close();
-                TotalChrgeAmt = String.valueOf(TotalChargeAmount);
-
-                if (TotalChrgeAmt.contains(".")) {
-                    TotalChrgeAmt = (TotalChrgeAmt.substring(0, TotalChrgeAmt.indexOf(".")));
-                }
-                System.out.println(TotalChrgeAmt);
-
-                CLM.append("CLM*915243155*" + TotalChrgeAmt + "***22:A:1*" + ProvAccAssigAddInfo + "*" + AssofBenifitAddInfo + "*" + ReleaseInfoAddInfo + "*" + ReleaseInfoAddInfo + "~\n");
-                //DTP_1.append("DTP*096*TM*" + DischargeHourAddInfo + "00~\n");
-                DTP_2.append("DTP*434*RD8*" + StatmentCoverFromDateAddInfo + "-" + StatmentCoverToDateAddInfo + "~\n");
-                //DTP_3.append("DTP*435*DT*" + AdmissionDateAddInfo + "" + AdmissionHourAddInfo + "00~\n");
-                CL1.append("CL1*1*9*" + AdmissionTypeAddInfo + "~\n");
-                REF_2.append("REF*EA*" + PatientMRN + "~\n");
-                HI_1_ABK.append("HI*ABK:" + PrincipalDiagInfoCodes + ":::::::" + POAInfoCodes + "~\n");
-                //HI_1_ABJ.append("HI*ABJ:" + AdmittingDiagInfoCodes + "~\n");
-                NM1_6.append("NM1*71*1*" + AttendingProviderLastName + "*" + AttendingProviderFirstName + "****XX*" + AttendingProviderNPI + "~\n");
-                PRV_AT.append("PRV*AT*PXC*TaxonomySpeciality_Provider~\n");
-                NM1_7.append("NM1*77*2*" + ClientName + "*****XX*" + ClientNPI + "~\n");
-                N3_4.append("N3*" + ClientAddress + "~\n");
-                N4_4.append("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode + "~\n");
-
-                TagCount = TagCount + 11;
-                //out.println("TagCount---12--"+TagCount);
-                SE.append("SE*" + TagCount + "*" + ST02 + "~\n");
-                GE.append("GE*1*" + InterControlNo + "~\n");
-                IEA.append("IEA*1*" + InterControlNo + "~\n");
-
-
-                String Organization = null;
-                String Organization_Tel = null;
-                String Organization_Email = null;
-
-                PreparedStatement ps = conn.prepareStatement("SELECT Organization , Tel , Email FROM oe.CompanyCredentials where Id = 1");
-                rset = ps.executeQuery();
-                if (rset.next()) {
-                    Organization = rset.getString(1);
-                    Organization_Tel = rset.getString(2);
-                    Organization_Email = rset.getString(3);
-                }
-                rset.close();
-                ps.close();
-
-                Context c = new Context('~', '*', ':');
-                HashMap<String, Integer> ISATAG = new HashMap<String, Integer>();
-                int ClaimTypes = 1; //1 prof , 2 inst
-                int HLCounter = 1;
-                String ClaimTypeIdentifier = "005010X223A2";// 005010X222A1 Prof , 005010X223A2 Inst
-
-                ISATAG.put("0000-ISA01-AuthorizationInfoQualifier-00", 2);
-                ISATAG.put("0000-ISA02-AuthorizationInformation-", 10);
-                ISATAG.put("0000-ISA03-SecurityInformationQualifier-00", 2);
-                ISATAG.put("0000-ISA04-SecurityInformation-          ", 10);
-                ISATAG.put("0000-ISA05-Interchange ID Qualifier-ZZ", 2);
-                ISATAG.put("0000-ISA06-Interchange Sender ID (*)-BS01834        ", 15);
-                ISATAG.put("0000-ISA07-Interchange ID Qualifier-ZZ", 2);
-                ISATAG.put("0000-ISA08-Interchange Receiver ID-33477          ", 15);
-                ISATAG.put("0000-ISA09-InterchangeDate-140205", 6);
-                ISATAG.put("0000-ISA10-InterchangeTime-1452", 4);
-                ISATAG.put("0000-ISA11-RepetitionSeparator-^", 1);
-                ISATAG.put("0000-ISA12-InterchangeControlVersionNumber-00501", 5);
-                ISATAG.put("0000-ISA13-InterchangeControlNumber-100000467", 9);
-                ISATAG.put("0000-ISA14-AcknowledgmentRequested-0", 1);
-                ISATAG.put("0000-ISA15-Usage Indicator-T", 1);
-                ISATAG.put("0000-ISA16-ComponentElementSeparator-:~", 1);
-
-
-                HashMap<Integer, String> ISAValue = new HashMap<Integer, String>();
-
-                ISAValue.put(0, "ISA");
-                ISAValue.put(1, "00");
-                ISAValue.put(2, " ");
-                ISAValue.put(3, "00");
-                ISAValue.put(4, " ");
-                ISAValue.put(5, "ZZ");
-                ISAValue.put(6, "BS01834");
-                ISAValue.put(7, "ZZ");
-                ISAValue.put(8, "33477");
-                ISAValue.put(9, "140205");
-                ISAValue.put(10, "1452");
-                ISAValue.put(11, "^");
-                ISAValue.put(12, "00501");
-                ISAValue.put(13, "000987654");
-                ISAValue.put(14, "0");
-                ISAValue.put(15, "T");
-                ISAValue.put(16, ":");
-
-                X12 x12 = new X12(c);
-                Loop loop_isa = x12.addChild("ISA");
-
-                // add segment
-                loop_isa.addSegment("ISA*00*          *00*          *ZZ*SENDERID       *ZZ*RECEIVERID    *" + CreationDate + "*" + ClaimCreateTime + "*U*00401*" + InterControlNo + "*0*T*:");
-
-                for (String key : ISATAG.keySet()) {
-                    //   System.out.println(key);
-                    String temp[] = key.split("-");
-                    int elementid = Integer.parseInt(getOnlyDigits(temp[1]));
-                    int len = ISATAG.get(key);
-                    // System.out.println(elementid);
-                    // System.out.println(len);
-                    loop_isa.getSegment(0).setElement(elementid, ISAValue.get(elementid), len);
-                }
-
-                //Transaction Set Header (ST)
-                // Add GS child loop to ISA loop
-                Loop loop_gs = loop_isa.addChild("GS");
-                // Add GS segment directly as a string
-                loop_gs.addSegment("GS*HC*AZ08260*0048*" + ClaimCreateDate + "*" + ClaimCreateTime + "*" + InterControlNo + "*X*" + ClaimTypeIdentifier);
-
-                Loop loop_st = loop_gs.addChild("ST");
-                loop_st.addSegment("ST*837*" + InterControlNo + "*" + ClaimTypeIdentifier);
-                loop_st.addSegment("BHT*0019*00*" + ClaimCreateDate + ClaimCreateTime + "*" + ClaimCreateDate + "*" + ClaimCreateTime + "*CH~");
-                //loop_st.addSegment("TRN*1*0000000000*1999999999");
-                //loop_st.addSegment("DTM*111*20090915");
-
-
-                //1000A SUBMITTER NAME
-
-                Loop loop_1000A = loop_st.addChild("1000A");
-                loop_1000A.addSegment("NM1*41*2*" + Organization + "*****46*12345");
-                loop_1000A.addSegment("PER*IC*" + Organization + "*TE*" + Organization_Tel + "*EM*" + Organization_Email);
-
-
-                String RecieverInsurance = "MEDICARE";
-                String RecieverInsurance_IdentificationCode = "00120";
-
-                //1000B RECEIVER NAME
-                Loop loop_1000B = loop_st.addChild("1000B");
-                loop_1000B.addSegment("NM1*40*2*" + RecieverInsurance + "*****46*" + RecieverInsurance_IdentificationCode);
-                loop_1000B.addSegment("N1*PE*FI*888888888*P.O.BOX 456*SHINE CITY*GREEN STATE*ZIP*EARTH");
-
-
-                //2000A BILLING PROVIDER
-                Loop loop_2000 = loop_st.addChild("2000");
-                loop_2000.addSegment("HL*" + HLCounter + "**20*1"); //HL BILLING PROVIDER HIERARCHICAL LEVEL
-                loop_2000.addSegment("PRV*BI*PXC*" + BillingProvider_Taxonomy); //PRV BILLING PROVIDER SPECIALTY
-
-                String BillingProvider_Address = "225 MAIN STREET BARKLEY BUILDING";
-                String BillingProvider_State = "PA";
-                String BillingProvider_ZipCode = "17111";
-                String BillingProvider_City = "CENTERVILLE";
-                String BillingProvider_TaxID = "567891234";
-                String BillingProvider_Tel = "5678912342";
-
-                //2010AA BILLING PROVIDER NAME
-                Loop loop_2010_1 = loop_2000.addChild("2010");
-                loop_2010_1.addSegment("NM1*85**" + BillingProvidersLastName + "*" + BillingProvidersFirstName + "****XX*9876540809");//NM1 BILLING PROVIDER NAME INCLUDING NATIONAL PROVIDER ID
-                loop_2010_1.addSegment("N3*" + BillingProvider_Address); //N3 BILLING PROVIDER ADDRESS
-                loop_2010_1.addSegment("N4*" + BillingProvider_City + "*" + BillingProvider_State + "*" + BillingProvider_ZipCode);//N4 BILLING PROVIDER LOCATION
-                loop_2010_1.addSegment("REF*EI*" + ClientTaxID); //REF BILLING PROVIDER TAX IDENTIFICATION NUMBER
-                loop_2010_1.addSegment("PER*IC*" + BillingProvidersLastName + "*TE*" + BillingProvider_Tel);//PER BILLING PROVIDER CONTACT INFORMATION
-
-
-                String PayerResponsibilityCode = "P";
-                String InsuranceTypeCode = "";//required when sbr02 is S and FC is MA or MB
-                String PatientRelationshipCode = null;
-
-
-                if (PatientRelationtoPrimary.equals("Self")) {
-                    PatientRelationshipCode = "18";
-                } else {
-                    PatientRelationshipCode = "";
-                }
-
-                HLCounter++;
-                //2000B SUBSCRIBER HL LOOP
-                Loop loop_2000B = loop_2000.addChild("2000");
-                loop_2000B.addSegment("HL*" + HLCounter + "*1*22*0");//HL SUBSCRIBER HIERARCHICAL LEVEL
-                loop_2000B.addSegment("SBR*" + PayerResponsibilityCode + "*" + PatientRelationshipCode + "*" + GrpNumber + "******" + PriFillingIndicator);//SBR SUBSCRIBER INFORMATION
-
-                //2010BA SUBSCRIBER NAME LOOP
-                Loop loop_2010BA = loop_2000.addChild("2000");
-                loop_2010BA.addSegment("NM1*IL*1*" + PatientLastName + "*" + PatientFirstName + "*T***MI*" + MemId);//NM1 SUBSCRIBER NAME
-                loop_2010BA.addSegment("N3*" + Address);//N3 SUBSCRIBER ADDRESS
-                loop_2010BA.addSegment("N4*" + City + "*" + State + "*" + ZipCode);//N4 SUBSCRIBER LOCATION
-                loop_2010BA.addSegment("DMG*D8*" + DOB + "*" + Gender); //DMG SUBSCRIBER DEMOGRAPHIC INFORMATION
-
-                //2010BB PAYER NAME LOOP
-                Loop loop_2010BB = loop_2000.addChild("2000");
-                loop_2010BB.addSegment("NM1*PR*2*" + PriInsuranceName + "*****PI*" + PriInsuranceNameId);//NM1 PAYER NAME
-                loop_2010BB.addSegment("N3*" + Payer_Address);//N3 PAYER ADDRESS ** ADDED
-                loop_2010BB.addSegment("N4*" + Payer_City + "*" + Payer_State + "*" + Payer_Zip);//N4 PAYER ADDRESS ** ADDED
-//                loop_2010BB.addSegment("REF*G2*330127");//REF BILLING PROVIDER SECONDARY IDENTIFICATION
-
-                //	2300 CLAIM INFORMATION
-                PatientControlNumber = PatientMRN + "FAM" + ClientId + timesSubmitted + "E" + ClaimNumber.replace("-", "");
-                String Related_Causes_Code = null;
-
-                if (AutoAccidentAddInfo.equals("1")) {
-                    Related_Causes_Code = "AA";
-                } else if (EmploymentStatusAddInfo.equals("1")) {
-                    Related_Causes_Code = "EM";
-                } else if (OtherAccidentAddInfo.equals("1")) {
-                    Related_Causes_Code = "OA";
-                }
-
-
-                Loop loop_2300 = loop_st.addChild("2300");
-                loop_2300.addSegment("CLM*" + PatientControlNumber + "*" + TotalChrgeAmt + "***" + TypeBillText.substring(0, 1) + TypeBillText.substring(1, 2) + ":A:" + TypeBillText.substring(2, 3) + "*Y*A*Y*Y***"); //CLM CLAIM LEVEL INFORMATION
-
-//                loop_2300.addSegment("CLM*756048Q*89.93**14:A:1*A*Y*Y"); //CLM CLAIM LEVEL INFORMATION
-//                loop_2300.addSegment("DTP*434*RD8*19960911"); // DTP STATEMENT DATES
-//                loop_2300.addSegment("CL1*3**01"); // CL1 INSTITUTIONAL CLAIM CODE
-//                loop_2300.addSegment("HI*BK:3669"); //HI PRINCIPAL DIAGNOSIS CODES
-//                loop_2300.addSegment("HI*BF:4019*BF:79431"); //HI OTHER DIAGNOSIS INFORMATION
-//                loop_2300.addSegment("HI*BH:A1:D8:19261111*BH:A2:D8:19911101*BH:B1:D8:19261111*BH:B2:D8:19870101"); //HI OCCURRENCE INFORMATION
-//                loop_2300.addSegment("HI*BE:A2:::15.31"); //HI VALUE INFORMATION
-//                loop_2300.addSegment("HI*BG:09"); //HI CONDITION INFORMATION
-
-                //2310A ATTENDING PROVIDER NAME
-
-                Loop loop_2310A = loop_2300.addChild("2310");
-                loop_2310A.addSegment("NM1*71*1*" + AttendingProviderLastName + "*" + AttendingProviderFirstName + "*J");//NM1 ATTENDING PROVIDER
-                loop_2310A.addSegment("PRV*AT*PXC*" + AttendingProvider_Taxonomy);//NM1 ATTENDING PROVIDER
-//                loop_2310A.addSegment("REF*1G*B99937");//REF ATTENDING PROVIDER SECONDARY IDENTIFICATION
-
-
-                //2400 SERVICE LINE
-                Loop loop_2400 = loop_st.addChild("2400");
-                loop_2400.addSegment("LX*1");//LX SERVICE LINE COUNTER
-                loop_2400.addSegment("SV2*0305*HC:85025*13.39*UN*1"); //SV2 INSTITUTIONAL SERVICE
-                loop_2400.addSegment("DTP*472*D8*19960911");//DTP DATE - SERVICE DATES
-
-
-                Loop loop_se = loop_gs.addChild("SE");
-                loop_se.addSegment("SE*XX*000987654");
-
-                Loop loop_ge = loop_isa.addChild("GE");
-                loop_ge.addSegment("GE*1*000987654");
-
-                Loop loop_iea = x12.addChild("IEA");
-                loop_iea.addSegment("IEA*1*000987654");
-
-                // Since the SE loop has the incorrect segment count let us fix that.
-                Integer count = loop_st.size();
-                count += 1; // In the loop hierarchy SE is not a child loop of ST. So
-                // when we get the rows in ST loop it does not have the count of SE.
-                // so add 1.
-
-                // We can set the count directly, like
-                // loop_se.getSegment(0).setElement(1, count.toString());
-                // this is just to show how to use the findLoop()
-
-                //TRAILER
-                List<Loop> trailer = x12.findLoop("SE");
-                trailer.get(0).getSegment(0).setElement(1, count.toString(), 2);
-
-                //another way
-                List<Segment> se = x12.findSegment("SE");
-                se.get(0).setElement(1, count.toString(), 2);
-
-                //another way
-                loop_se.getSegment(0).setElement(1, count.toString(), 2);
-
-
-                //System.out.println(loop_st.size());
-                System.out.println(x12.toString());
-                //System.out.println(x12.toXML());
-
-                //out.println("TagCount--ALL--"+TagCount);
-
-                File file = new File("/sftpdrive/opt/EDI_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt");
-                if (file.exists()) {
-                    file.delete();
-                }
-
-                File myObj = new File("/sftpdrive/opt/EDI_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt");
-                if (myObj.createNewFile()) {
-
-                    FileWriter myWriter = new FileWriter("/sftpdrive/opt/EDI_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt");
-                    myWriter.write(ISA.toString());
-                    myWriter.write(GS.toString());
-                    myWriter.write(ST.toString());
-                    myWriter.write(BHT.toString());
-                    myWriter.write(NM1.toString());
-                    myWriter.write(PER.toString());
-                    myWriter.write(NM1_2.toString());
-                    myWriter.write(HL_1.toString());
-                    myWriter.write(PRV_BI.toString());
-                    myWriter.write(NM1_3.toString());
-                    myWriter.write(N3_1.toString());
-                    myWriter.write(N4_1.toString());
-                    myWriter.write(REF_1.toString());
-                    myWriter.write(HL_2.toString());
-                    myWriter.write(SBR.toString());
-                    myWriter.write(NM1_4.toString());
-                    myWriter.write(N3_2.toString());
-                    myWriter.write(N4_2.toString());
-                    myWriter.write(DMG.toString());
-                    myWriter.write(NM1_5.toString());
-                    myWriter.write(N3_3.toString());
-                    myWriter.write(N4_3.toString());
-                    myWriter.write(CLM.toString());
-                    myWriter.write(DTP_1.toString());
-                    myWriter.write(DTP_2.toString());
-                    myWriter.write(DTP_3.toString());
-                    myWriter.write(CL1.toString());
-                    myWriter.write(REF_2.toString());
-                    myWriter.write(HI_1_ABK.toString());
-                    myWriter.write(HI_1_ABJ.toString());
-                    myWriter.write(HI_1_ABN.toString());
-                    myWriter.write(HI_1_APR.toString());
-                    myWriter.write(HI_1_ABF.toString());
-                    myWriter.write(HI_1_BBR.toString());
-                    myWriter.write(HI_1_BBQ.toString());
-                    //myWriter.write(HI_1_BI.toString());
-                    myWriter.write(HI_1_BH.toString());
-                    myWriter.write(HI_1_BE.toString());
-                    myWriter.write(HI_1_BG.toString());
-                    myWriter.write(NM1_6.toString());
-                    myWriter.write(PRV_AT.toString());
-                    myWriter.write(NM1_7.toString());
-                    myWriter.write(N3_4.toString());
-                    myWriter.write(N4_4.toString());
-                    myWriter.write(SV2_1.toString());
-                    myWriter.write(SE.toString());
-                    myWriter.write(GE.toString());
-                    myWriter.write(IEA.toString());
-
-
-                    myWriter.close();
-                }
-
-            }
-            Instant end = Instant.now();
-            Duration ExecutionTime = Duration.between(start, end);
-//            out.println(ErrorMsgs + "~" + ExecutionTime);
-            Parsehtm Parser = new Parsehtm(request);
-            Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Reports/Addinfo.html");
-        } catch (Exception e) {
-            out.println("An error occurred.");
-            out.println(e.getMessage());
-            out.println(e.getMessage() + Query);
-            String str = "";
-            for (i = 0; i < e.getStackTrace().length; ++i) {
-                str = str + e.getStackTrace()[i] + "<br>";
-            }
-            out.println(str);
+            json.put(keyName, list);
         }
+        return JSONValue.toJSONString(json);
     }
 
-    private String CheckStringVariable(HttpServletRequest request, String VariableName) {
-        try {
-            if (request.getParameter(VariableName).length() < 1) {
-                VariableName = null;
-            } else {
-                VariableName = request.getParameter(VariableName).trim();
+    public  ObjectNode getjson_ClaimChargesOtherInfo(Connection conn,int ClaimInfoMasterId,int ClaimChargeIdx,String Database){
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode NDC2 = mapper.createObjectNode();
+        ResultSet hrset=null;
+        try{
+
+
+            PreparedStatement ps = conn.prepareStatement("SELECT NonCoveredAmount ,DrugCode ,DrugUnit ,Unit ,DrugDays ," +
+                    "DrugCodeFormat ,DrugPrice ,PrescriptionNum ,PrescriptionDate ,PrescriptionMonths FROM "+Database+".ClaimChargesOtherInfo " +
+                    "WHERE ClaimIdx=? AND ChargeIdx=?");
+            ps.setInt(1,ClaimInfoMasterId);
+            ps.setInt(2,ClaimChargeIdx);
+            hrset = ps.executeQuery();
+
+            if(hrset.next()){
+
+                NDC2.put("NCAmount",hrset.getString(1));
+
+                NDC2.put("DrugCode",hrset.getString(2));
+                NDC2.put("DrugUnit",hrset.getString(3));
+                NDC2.put("UN",hrset.getString(4));
+                NDC2.put("DrugDays",hrset.getString(5));
+                NDC2.put("Dformats",hrset.getString(6));
+                NDC2.put("DrugPrice",hrset.getString(7));
+                NDC2.put("Prescription",hrset.getString(8));
+                NDC2.put("PDate",hrset.getString(9));
+                NDC2.put("PMonth",hrset.getString(10));
+
+                //system.out.println("NDC2 ->> "+NDC2.toString());
+
             }
+            hrset.close();
+            ps.close();
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "-- VariableName -- " + VariableName);
-        }
-        return VariableName;
-    }
 
-    private String CheckIntegerVariable(HttpServletRequest request, String VariableName) {
-        try {
-            if (request.getParameter(VariableName).length() < 1) {
-                VariableName = "0";
-            } else {
-                VariableName = request.getParameter(String.valueOf(VariableName)).trim();
-            }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
-        }
-        return VariableName;
-    }
-
-    private String CheckCheckBoxValue(HttpServletRequest request, String VariableName) {
-        try {
-            if (request.getParameter(VariableName) == null) {
-                VariableName = "0";
-            } else {
-                VariableName = request.getParameter(VariableName).trim();
-                if (VariableName.equals("on")) {
-                    VariableName = "1";
-                } else {
-                    VariableName = "0";
-                }
-            }
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
-        }
-        return VariableName;
-    }
-
-    private String CheckBox(String VariableName) {
-        String ChkBox = "";
-        try {
-            if (VariableName.equals("1")) {
-                ChkBox = "<input type=\"checkbox\" id=\"" + VariableName + "\" name=\"" + VariableName + "\" class=\"filled-in\" checked />";
-            } else {
-                ChkBox = "<input type=\"checkbox\" id=\"" + VariableName + "\" name=\"" + VariableName + "\" class=\"filled-in\" />";
-            }
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
-        }
-        return ChkBox;
+        }catch(Exception ee){}
+        return NDC2;
     }
 
     public void validateCPT(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper, String DirectoryName, HttpServletResponse response) throws SQLException {
@@ -5145,6 +6015,7 @@ public class InsClaimTesting extends HttpServlet {
         }
     }
 
+
     private boolean containsValidRelativeAdminCode(Connection conn, String Code, ArrayList<String> charge_procedureCodes, String ICD) throws SQLException {
         boolean isValid = false;
         ResultSet rset = null;
@@ -5188,39 +6059,2566 @@ public class InsClaimTesting extends HttpServlet {
         return VaccineCodes;
     }
 
-    private boolean isInValidZipCode(Connection conn, String state, String zipCode) throws SQLException {
-        boolean isInValid = true;
-        ResultSet rset = null;
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ZipCodeFacility WHERE Zip=? AND State=?");
-        ps.setString(1, zipCode);
-        ps.setString(2, state);
-//        System.out.println("ZipCodeFacility -> " + ps.toString());
-        rset = ps.executeQuery();
-        if (rset.next()) {
-//            System.out.println("ZipCodeFacility -> " + rset.getInt(1));
-            if (rset.getInt(1) > 0)
-                isInValid = false;
-        }
-        rset.close();
-        ps.close();
-//        System.out.println("ZipCodeFacility isInValid -> " + isInValid);
+    public void Institutional_EDIFile(HttpServletRequest request, PrintWriter out, Connection conn, ServletContext context, String UserId, String Database, int ClientId, UtilityHelper helper, String DirectoryName, HttpServletResponse response) {
+        Instant start = Instant.now();
+        String ClientIP = helper.getClientIp(request);
+        int i = 0, j = 0, k = 0;
+        int Found = 0;
+        String ChargeMasterTableName = "";
+        String InterControlNo = "";
+        int PatientRegId = Integer.parseInt(request.getParameter("PatientRegId").trim());
 
-        if (isInValid) {
-            ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ZipCodeLibrary WHERE ZIPCode=? AND State=?");
-            ps.setString(1, zipCode);
-            ps.setString(2, state);
-//            System.out.println("ZipCodeLibrary -> " + ps.toString());
-            rset = ps.executeQuery();
+        String ClaimNumber = request.getParameter("ClaimNumber").trim();
+//int ClaimType = Integer.parseInt(request.getParameter("ClaimType").trim());
+        int VisitId = Integer.parseInt(request.getParameter("VisitId").trim());
+        String DateTime = "";
+        String DateNow = "";
+        String PatientFirstName = "";
+        String PatientLastName = "";
+        String DOB = "";
+        String _DOB = "";
+        String Gender = "";
+        String PriInsuredName = "";
+        String PriInsuredLastName = "";
+        String PriInsuredFirstName = "";
+        String TaxanomySpecialty = "";
+        int ClaimInfoMasterId = 0;
+        int ClaimChargeIdx = 0;
+        int SelfPayChk = 0;
+        String ClientAddress = "";
+        String ClientCity = "";
+        String ClientTaxID = "";
+        String ClientState = "";
+        String ClientZipCode = "";
+        String ClientPhone = "";
+        String ClientNPI = "";
+        String Client_FullName = "";
+
+
+        ArrayList<String> ICDs = new ArrayList<String>();
+
+
+//Claim Basic Info Variable
+        String RefNumber = "";
+        String TypeBillText = "";
+        String PatientName = "";
+        String PatientMRN = "";
+        String AcctNo = "";
+        String PhNumber = "";
+        String Email = "";
+        String Address = "";
+        String City = "";
+        String State = "";
+        String StateCode = "";
+        String ZipCode = "";
+        String DOS = "";
+        String UploadDate = "";
+        String AttendingProviderLastName = "";
+        String AttendingProviderFirstName = "";
+        String AttendingProviderNPI = "";
+        String AttendingProvider_Taxonomy = "";
+        String BillingProvidersLastName = "";
+        String BillingProvidersFirstName = "";
+        String BillingProviderNPI = "";
+        String BillingProvider_ETIN = "";
+        String BillingProvider_Tel = "";
+        String BillingProvider_Taxonomy = "";
+        String OperatingProviderLastName = "";
+        String OperatingProviderFirstName = "";
+        String OperatingProviderNPI = "";
+        String OperatingProvider_Taxonomy = "";
+        String RenderingProvidersLastName = "";
+        String RenderingProvidersFirstName = "";
+        String RenderingProvidersNPI = "";
+        String RenderingProvider_Taxonomy = "";
+        String ReferringProviderLastName = "";
+        String ReferringProviderFirstName = "";
+        String ReferringProviderNPI = "";
+        String ReferringProvider_Taxonomy = "";
+
+
+        String ClientName = "";
+        String PriInsuranceName = "";
+        String PriInsuranceNameId = "";
+        String MemId = "";
+        String PolicyType = "";
+        String GrpNumber = "";
+        String SecondaryInsurance = "";
+        String SecondaryInsuranceId = "";
+        String SecondaryInsuranceMemId = "";
+        String SecondaryInsuranceGrpNumber = "";
+        String CreationDate = "";
+        String ClaimType = "";
+        String ClaimCreateDate = "";
+        String ClaimCreateTime = "";
+//
+//        //Charges Variables
+        double TotalChargeAmount = 0.00;
+//        String ChargesTableCount = "0";
+//        String ChargesString = "";
+//
+//Additional Info Variable
+        String StatmentCoverFromDateAddInfo = "";
+        String StatmentCoverToDateAddInfo = "";
+        String AdmissionDateAddInfo = "";
+        String AdmissionHourAddInfo = "";
+        String AdmissionTypeAddInfo = "";
+        String AdmissionSourceAddInfo = "";
+        String DischargeHourAddInfo = "";
+        String PatientStatusAddInfo = "";
+        String DelayReasonCodeAddInfo = "";
+        String EmploymentStatusAddInfo = "";
+        String AutoAccidentAddInfo = "";
+        String OtherAccidentAddInfo = "";
+        String PPSAddInfo = "";
+        String RemarksAddInfo = "";
+        String AutoAccident_StateAddInfo = "";
+        String ReleaseInfoAddInfo = "";
+        String AssofBenifitAddInfo = "";
+        String ProvAccAssigAddInfo = "";
+//
+//Information Codes variable
+        String PrincipalDiagInfoCodes = "";
+        String POAInfoCodes = "";
+        String AdmittingDiagInfoCodes = "";
+        String PrincipalProcedureInfoCodes = "";
+        String PrincipalProcedureDateInfoCodes = "";
+        String ExternalCauseInjuryTableCount = "0";
+        String ExternalCauseInjuryString = "";
+        String ReasonVisitTableCount = "0";
+        String ReasonVisitString = "";
+        String OtherDiagnosisString = "";
+        String OtherDiagnosisTableCount = "0";
+        StringBuffer ErrorMsgs = new StringBuffer();
+        StringBuffer SuccessMsgs = new StringBuffer();
+        final String NPI_REGEX = "[0-9]{10}";
+        String PatientRelationtoPrimary = "";
+        String IndividualRelationshipCode = "";
+        String PatientRelationtoSec = "";
+        String PriFillingIndicator = "";
+        String SecFillingIndicator = "";
+
+        String ReasonVisit = "";
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode obj = null;
+
+        String Payer_Address = "";
+        String Payer_City = "";
+        String Payer_State = "";
+        String Payer_Zip = "";
+        String timesSubmitted = "";
+
+
+        String PatientControlNumber = "";
+
+
+        Statement stmt = null;
+        ResultSet rset = null;
+        String Query = "";
+
+
+        final String Name_REGEX = "^([A-Z0-9 ]{2,100})$";
+        final String CITY_REGEX = "^([0-9, A-Z, a-z]{2,30})$";
+
+
+        try {
+            DecimalFormat df = new DecimalFormat("#.##");
+            Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), IFNULL(Phone,''),IFNULL(NPI,''), IFNULL(TaxanomySpecialty,''), IFNULL(TaxID,''), IFNULL(FullName,'') from oe.clients" +
+                    " where Id = " + ClientId;
+            ////system.out.println(Query);
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
             if (rset.next()) {
-//                System.out.println("ZipCodeLibrary -> " + rset.getInt(1));
-                if (rset.getInt(1) > 0)
-                    isInValid = false;
+                ClientAddress = rset.getString(1);
+                ClientCity = rset.getString(2);
+                ClientState = rset.getString(3);
+                ClientZipCode = rset.getString(4);
+                ClientPhone = rset.getString(5);
+                ClientNPI = rset.getString(6);
+                TaxanomySpecialty = rset.getString(7);
+                ClientTaxID = rset.getString(8);
+                Client_FullName = rset.getString(9);
             }
             rset.close();
-            ps.close();
-        }
+            stmt.close();
 
-        return isInValid;
+            //Validating NPI
+//            if (ClientNPI.matches(NPI_REGEX)) {
+//                if(isValid(ClientNPI)) ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
+//                else ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+//                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+//            } else {
+//                ErrorMsgs.append("<p style=\"color:black;\"><b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+//                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+//            }
+
+
+            Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster " +
+                    " where  PatientRegId = " + PatientRegId + " and VisitId = " + VisitId +
+                    " and ClaimNumber = '" + ClaimNumber + "'";
+            ////system.out.println(Query);
+            stmt = conn.createStatement();
+            rset = stmt.executeQuery(Query);
+            if (rset.next()) {
+                Found = rset.getInt(1);
+            }
+            rset.close();
+            stmt.close();
+
+            if (Found == 0) {
+                out.println("Please Save Claim First and then Create EDI");
+                return;
+            } else {
+
+                Query = "Select IFNULL(MAX(InterControlNo),'') from " + Database + ".ClaimInfoMaster ";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    InterControlNo = rset.getString(1);
+                }
+                rset.close();
+                stmt.close();
+//out.println("InterControlNo;---1-----"+InterControlNo);
+                if (InterControlNo.equals("")) {
+                    //out.println("inside 1 icn");
+                    InterControlNo = "100000001";
+                } else if (InterControlNo.length() > 9) {
+                    //out.println("inside 2 icn");
+                    InterControlNo = "100000001";
+                } else {
+                    //out.println("inside 3 icn");
+                    InterControlNo = String.valueOf((Integer.parseInt(InterControlNo) + 1));
+                }
+//out.println("InterControlNo;---2----"+InterControlNo);
+                try {
+                    PreparedStatement MainReceipt = conn.prepareStatement(
+                            "Update " + Database + ".ClaimInfoMaster Set InterControlNo = ? " +
+                                    " where PatientRegId = ? and VisitId = ? and ClaimNumber = ? ");
+                    MainReceipt.setString(1, (InterControlNo));
+                    MainReceipt.setInt(2, PatientRegId);
+                    MainReceipt.setInt(3, VisitId);
+                    MainReceipt.setString(4, ClaimNumber);
+                    //out.println("MainReceipt:--"+MainReceipt.toString());
+                    MainReceipt.executeUpdate();
+                    MainReceipt.close();
+
+                } catch (Exception e) {
+                    out.println(e.getMessage());
+                    helper.SendEmailWithAttachment("Error in UpdatingtInstitionalEDI ** (AddInfo^^ MES#ICN)", context, e, "AddInfo", "InstitutuionalEDI", conn);
+                    Services.DumException("AddInfo", "InstitionalEDI", request, e);
+                }
+
+
+                Query = "Select ChargeMasterTableName from oe.clients where ID = " + ClientId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    ChargeMasterTableName = rset.getString(1).trim();
+                }
+                rset.close();
+                stmt.close();
+
+                Query = "Select IFNULL(UPPER(FirstName),''), IFNULL(UPPER(LastName),''), IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), " +
+                        "IFNULL(DATE_FORMAT(DOB,'%Y%m%d'),''), DATE_FORMAT(NOW(),'%d%m%y%k%i%s'),  CASE WHEN Gender='male' then 'M' else 'F' END , DATE_FORMAT(NOW(),'%m%d%y'), " +
+                        "IFNULL(SelfPayChk,'0'),IFNULL(DATE_FORMAT(DOB,'%Y-%m-%d'),'') ,  IFNULL(ReasonVisit,'')" +
+                        " from " + Database + ".PatientReg where ID = " + PatientRegId;
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    PatientFirstName = rset.getString(1).replaceAll("[^a-zA-Z]", " ");
+                    PatientLastName = rset.getString(2).replaceAll("[^a-zA-Z]", " ");
+                    Address = rset.getString(3);
+                    City = rset.getString(4);
+                    State = rset.getString(5);
+                    ZipCode = rset.getString(6);
+                    DOB = rset.getString(7);
+                    DateTime = rset.getString(8);
+                    Gender = rset.getString(9).trim();
+                    DateNow = rset.getString(10);
+                    SelfPayChk = rset.getInt(11);
+                    _DOB = rset.getString(12);
+                    ReasonVisit = rset.getString(13);
+
+                }
+                rset.close();
+                stmt.close();
+                if (!Gender.equals("")) {
+                    Gender = Gender.substring(0, 1).toUpperCase();
+                } else {
+                    Gender = "";
+                }
+
+                if (SelfPayChk == 1) {
+                    Query = "Select IFNULL(PriInsurerName,''),IFNULL(PatientRelationtoPrimary,'') from " + Database + ".InsuranceInfo where PatientRegId = " + PatientRegId;
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    if (rset.next()) {
+                        PriInsuredName = rset.getString(1).trim();
+                        PatientRelationtoPrimary = rset.getString(2);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                    if (PriInsuredName.equals("")) {
+                        PriInsuredName = PatientLastName + ", " + PatientFirstName;
+                    }
+                    else if(PriInsuredName.contains(" ")){
+                        PriInsuredFirstName = PriInsuredName.split(" ")[0].replaceAll("[^a-zA-Z]", " ").trim();
+                        PriInsuredLastName = PriInsuredName.split(" ")[1].replaceAll("[^a-zA-Z]", " ").trim();
+                    }
+
+                    if(PatientRelationtoPrimary.compareTo("Self") != 0) {
+                        if (isEmpty(PriInsuredFirstName) && isEmpty(PriInsuredLastName)) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Primary Insurer Name</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+
+
+                    PreparedStatement ps = conn.prepareStatement("SELECT Claim_RelationshipCode from "+Database+".PatientRelation WHERE PatientRelation=?");
+                    ps.setString(1,PatientRelationtoPrimary);
+                    rset = ps.executeQuery();
+                    if(rset.next()){
+                        IndividualRelationshipCode = rset.getString(1);
+                    }
+                    rset.close();
+                    ps.close();
+
+                } else {
+                    PriInsuredName = PatientLastName + ", " + PatientFirstName;
+                }
+
+
+                if (!State.equals("")) {
+                    if (State.length() > 2) {
+                        Query = "Select IFNULL(StateCode,'') from " + Database + ".StateList where ltrim(rtrim(Upper(StateName))) = ltrim(rtrim(UPPER('" + State + "')))";
+                        stmt = conn.createStatement();
+                        rset = stmt.executeQuery(Query);
+                        if (rset.next()) {
+                            StateCode = rset.getString(1);
+                        }
+                        rset.close();
+                        stmt.close();
+                    } else {
+                        StateCode = State.toUpperCase();
+                    }
+
+                } else {
+                    StateCode = "";
+                }
+
+                Query = "Select a.Id,IFNULL(RefNumber,''), IFNULL(a.TypeBillText,''), IFNULL(a.PatientName,''), IFNULL(a.PatientMRN,''), " +
+                        " IFNULL(a.AcctNo,''), IFNULL(a.PhNumber,''), " +
+                        " IFNULL(a.Email,''), IFNULL(a.Address,''), IFNULL(a.DOS,''), " +
+                        " IFNULL(b.DoctorsLastName,''), IFNULL(b.DoctorsFirstName,'') , IFNULL(b.NPI,'') as AttendingNPI, " +
+                        " IFNULL(c.DoctorsLastName,''), IFNULL(c.DoctorsFirstName,''), IFNULL(c.NPI,'') as BillingNPI, " +
+                        " IFNULL(LTRIM(rtrim(REPLACE(REPLACE(d.PayerName,CHAR(10),''),'Servicing States','') )),'') as PriInsuranceName, IFNULL(a.MEMId,''), IFNULL(a.PolicyType,''), IFNULL(a.GrpNumber,''), " +
+                        " IFNULL(LTRIM(rtrim(REPLACE(REPLACE(e.PayerName,CHAR(10),''),'Servicing States','') )),'') as SecondaryInsurance, " +
+                        " IFNULL(a.SecondaryInsuranceMemId,''), IFNULL(a.SecondaryInsuranceGrpNumber,''), IFNULL(ClientName,''), " +
+                        " IFNULL(f.DoctorsLastName,''), IFNULL(f.DoctorsFirstName,''), IFNULL(f.NPI,'') as OperatingProvider, " +
+                        " DATE_FORMAT(a.CreatedDate,'%y%m%d'), CASE WHEN a.ClaimType = 1 THEN 'CI' WHEN a.ClaimType = 2 THEN 'CP' ELSE 'CL' END, " +
+                        " DATE_FORMAT(a.CreatedDate,'%Y%m%d'), DATE_FORMAT(a.CreatedDate,'%H%i'), IFNULL(d.PayerID,''), IFNULL(e.PayerID,''),IFNULL(c.TaxonomySpecialty,''),IFNULL(e.ClaimIndicator_I,'')," +
+                        " IFNULL(REPLACE(d.Address,CHAR(10),''),''),IFNULL(d.City,''),IFNULL(d.State,''),IFNULL(d.Zip,''),IFNULL(timesSubmitted,0), IFNULL(b.TaxonomySpecialty,''), IFNULL(f.TaxonomySpecialty,''), " +
+                        " IFNULL(z.DoctorsLastName,''), IFNULL(z.DoctorsFirstName,''), IFNULL(z.NPI,'') as ReferringProvider, " +
+                        " IFNULL(y.DoctorsLastName,''), IFNULL(y.DoctorsFirstName,''), IFNULL(y.NPI,'') as RenderingProvider," +
+                        " IFNULL(y.TaxonomySpecialty,''),IFNULL(d.ClaimIndicator_I,''),IFNULL(c.ETIN,''),IFNULL(c.PhNumber,'') " +
+                        " from " + Database + ".ClaimInfoMaster a " +
+                        " LEFT JOIN " + Database + ".DoctorsList b on a.AttendingProvider = b.Id " +
+                        " LEFT JOIN " + Database + ".DoctorsList c on a.BillingProviders = c.Id " +
+                        " LEFT JOIN " + Database + ".DoctorsList f on a.OperatingProvider = f.Id " +
+                        " LEFT JOIN ClaimMasterDB.ProfessionalPayersWithFC d on a.PriInsuranceNameId = d.Id " +
+                        " LEFT JOIN ClaimMasterDB.ProfessionalPayersWithFC e on a.SecondaryInsuranceId = e.Id " +
+//                        " LEFT JOIN oe_2.ProfessionalPayers d on a.PriInsuranceNameId = d.Id " +
+//                        " LEFT JOIN oe_2.ProfessionalPayers e on a.SecondaryInsuranceId = e.Id " +
+                        " LEFT JOIN " + Database + ".DoctorsList z on a.ReferringProvider = z.Id " +
+                        " LEFT JOIN " + Database + ".DoctorsList y on a.RenderingProvider = y.Id " +
+                        "  where a.PatientRegId = " + PatientRegId + " and a.VisitId = " + VisitId + " and a.ClaimNumber = '" + ClaimNumber + "'";
+                System.out.println(Query);
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    ClaimInfoMasterId = rset.getInt(1);
+                    RefNumber = rset.getString(2);
+                    TypeBillText = rset.getString(3);
+                    PatientName = rset.getString(4).replaceAll(" ", "").replaceAll("'", "");
+                    PatientMRN = rset.getString(5);
+                    AcctNo = rset.getString(6);
+                    PhNumber = rset.getString(7);
+                    Email = rset.getString(8);
+                    //Address = rset.getString(9);
+                    DOS = rset.getString(10).replaceAll("/", "");
+                    AttendingProviderLastName = rset.getString(11).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    AttendingProviderFirstName = rset.getString(12).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    AttendingProviderNPI = rset.getString(13);
+                    BillingProvidersLastName = rset.getString(14).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    BillingProvidersFirstName = rset.getString(15).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    BillingProviderNPI = rset.getString(16);
+                    PriInsuranceName = (rset.getString(17).replaceAll(":", " ")).trim().replaceAll("&", "");
+                    MemId = rset.getString(18);
+                    PolicyType = rset.getString(19);
+                    GrpNumber = rset.getString(20);
+                    SecondaryInsurance = rset.getString(21);
+                    SecondaryInsuranceMemId = rset.getString(22);
+                    SecondaryInsuranceGrpNumber = rset.getString(23);
+                    ClientName = rset.getString(24);
+                    OperatingProviderLastName = rset.getString(25).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    OperatingProviderFirstName = rset.getString(26).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    OperatingProviderNPI = rset.getString(27);
+                    CreationDate = rset.getString(28);
+                    ClaimType = rset.getString(29);
+                    ClaimCreateDate = rset.getString(30);
+                    ClaimCreateTime = rset.getString(31);
+                    PriInsuranceNameId = rset.getString(32);
+                    SecondaryInsuranceId = rset.getString(33);
+                    BillingProvider_Taxonomy = rset.getString(34);
+                    SecFillingIndicator = rset.getString(35);
+                    Payer_Address = rset.getString(36);
+                    Payer_City = rset.getString(37);
+                    Payer_State = rset.getString(38);
+                    Payer_Zip = rset.getString(39);
+                    timesSubmitted = rset.getString(40) + 1;
+                    AttendingProvider_Taxonomy = rset.getString(41);
+                    OperatingProvider_Taxonomy = rset.getString(42);
+                    RenderingProvidersLastName = rset.getString(43).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    RenderingProvidersFirstName = rset.getString(44).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    RenderingProvidersNPI = rset.getString(45);
+                    ReferringProviderLastName = rset.getString(46).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    ReferringProviderFirstName = rset.getString(47).toUpperCase().replaceAll("[^a-zA-Z]", " ");
+                    ReferringProviderNPI = rset.getString(48);
+                    RenderingProvider_Taxonomy = rset.getString(49);
+                    PriFillingIndicator = rset.getString(50);
+                    BillingProvider_ETIN = rset.getString(51);
+                    BillingProvider_Tel = rset.getString(52);
+                }
+                rset.close();
+                stmt.close();
+
+                Query = "Select IFNULL(StatmentCoverFromDateAddInfo,''), IFNULL(StatmentCoverToDateAddInfo,''), " +
+                        " IFNULL(AdmissionDateAddInfo,''), IFNULL(AdmissionHourAddInfo,''), IFNULL(AdmissionTypeAddInfo,''), " +
+                        " IFNULL(AdmissionSourceAddInfo,''), IFNULL(DischargeHourAddInfo,''), IFNULL(PatientStatusAddInfo,''), IFNULL(DelayReasonCodeAddInfo,'')," +
+                        " IFNULL(EmploymentStatusAddInfo,''), IFNULL(AutoAccidentAddInfo,''), IFNULL(OtherAccidentAddInfo,''), IFNULL(PPSAddInfo,''), " +
+                        " IFNULL(RemarksAddInfo,''), IFNULL(AutoAccident_StateAddInfo,''), IFNULL(ReleaseInfoAddInfo,''), IFNULL(AssofBenifitAddInfo,''), " +
+                        " IFNULL(ProvAccAssigAddInfo,'') " +
+                        " from " + Database + ".ClaimAdditionalInfo where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    StatmentCoverFromDateAddInfo = rset.getString(1);
+                    StatmentCoverToDateAddInfo = rset.getString(2);
+                    AdmissionDateAddInfo = rset.getString(3);
+                    AdmissionHourAddInfo = rset.getString(4);
+                    AdmissionTypeAddInfo = rset.getString(5);
+                    AdmissionSourceAddInfo = rset.getString(6);
+                    DischargeHourAddInfo = rset.getString(7);
+                    PatientStatusAddInfo = rset.getString(8);
+                    DelayReasonCodeAddInfo = rset.getString(9);
+                    EmploymentStatusAddInfo = rset.getString(10);
+                    AutoAccidentAddInfo = rset.getString(11);
+                    OtherAccidentAddInfo = rset.getString(12);
+                    PPSAddInfo = rset.getString(13);
+                    RemarksAddInfo = rset.getString(14);
+                    AutoAccident_StateAddInfo = rset.getString(15);
+                    ReleaseInfoAddInfo = rset.getString(16);
+                    AssofBenifitAddInfo = rset.getString(17);
+                    ProvAccAssigAddInfo = rset.getString(18);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!StatmentCoverFromDateAddInfo.equals("")) {
+                    StatmentCoverFromDateAddInfo = StatmentCoverFromDateAddInfo.replaceAll("/", "");
+                    StatmentCoverFromDateAddInfo = StatmentCoverFromDateAddInfo.substring(4, 8) + StatmentCoverFromDateAddInfo.substring(0, 2) + StatmentCoverFromDateAddInfo.substring(2, 4);
+                }
+                if (!StatmentCoverToDateAddInfo.equals("")) {
+                    StatmentCoverToDateAddInfo = StatmentCoverToDateAddInfo.replaceAll("/", "");
+                    StatmentCoverToDateAddInfo = StatmentCoverToDateAddInfo.substring(4, 8) + StatmentCoverToDateAddInfo.substring(0, 2) + StatmentCoverToDateAddInfo.substring(2, 4);
+                }
+                if (!AdmissionDateAddInfo.equals("")) {
+                    AdmissionDateAddInfo = AdmissionDateAddInfo.replaceAll("/", "");
+                    AdmissionDateAddInfo = AdmissionDateAddInfo.substring(4, 8) + AdmissionDateAddInfo.substring(0, 2) + AdmissionDateAddInfo.substring(2, 4);
+                }
+
+                Query = "Select IFNULL(PrincipalDiagInfoCodes,''), IFNULL(POAInfoCodes,''), IFNULL(AdmittingDiagInfoCodes,''), " +
+                        " IFNULL(PrincipalProcedureInfoCodes,''), IFNULL(PrincipalProcedureDateInfoCodes,'') " +
+                        "from " + Database + ".ClaimInformationCode where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    PrincipalDiagInfoCodes = rset.getString(1);
+                    if(!isEmpty(PrincipalDiagInfoCodes)) ICDs.add(PrincipalDiagInfoCodes);
+
+                    POAInfoCodes = rset.getString(2);
+                    AdmittingDiagInfoCodes = rset.getString(3);
+                    if(!isEmpty(AdmittingDiagInfoCodes)) ICDs.add(AdmittingDiagInfoCodes);
+
+                    PrincipalProcedureInfoCodes = rset.getString(4);
+                    PrincipalProcedureDateInfoCodes = rset.getString(5);
+                }
+                rset.close();
+                stmt.close();
+
+                if (!PrincipalDiagInfoCodes.equals("")) {
+                    if (PrincipalDiagInfoCodes.contains(".")) {
+                        PrincipalDiagInfoCodes = PrincipalDiagInfoCodes.replace(".", "");
+                    }
+                }
+                if (!AdmittingDiagInfoCodes.equals("")) {
+                    if (AdmittingDiagInfoCodes.contains(".")) {
+                        AdmittingDiagInfoCodes = AdmittingDiagInfoCodes.replace(".", "");
+                    }
+                }
+                if (!PrincipalProcedureInfoCodes.equals("")) {
+                    if (PrincipalProcedureInfoCodes.contains(".")) {
+                        PrincipalProcedureInfoCodes = PrincipalProcedureInfoCodes.replace(".", "");
+                    }
+                }
+
+                String ST02 = "";
+
+                if (ClaimNumber.length() > 4) {
+                    ST02 = ClaimNumber.substring(ClaimNumber.length() - 4);
+                } else {
+                    ST02 = "0222";
+                }
+
+                StringBuilder ISA = new StringBuilder();
+                StringBuilder GS = new StringBuilder();
+                StringBuilder ST = new StringBuilder();
+                StringBuilder BHT = new StringBuilder();
+                StringBuilder NM1 = new StringBuilder();
+                StringBuilder PER = new StringBuilder();
+                StringBuilder NM1_2 = new StringBuilder();
+                StringBuilder HL_1 = new StringBuilder();
+                StringBuilder PRV_BI = new StringBuilder();
+                StringBuilder NM1_3 = new StringBuilder();
+                StringBuilder N3_1 = new StringBuilder();
+                StringBuilder N4_1 = new StringBuilder();
+                StringBuilder REF_1 = new StringBuilder();
+                StringBuilder HL_2 = new StringBuilder();
+                StringBuilder SBR = new StringBuilder();
+                StringBuilder NM1_4 = new StringBuilder();
+                StringBuilder N3_2 = new StringBuilder();
+                StringBuilder N4_2 = new StringBuilder();
+                StringBuilder DMG = new StringBuilder();
+                StringBuilder NM1_5 = new StringBuilder();
+                StringBuilder N3_3 = new StringBuilder();
+                StringBuilder N4_3 = new StringBuilder();
+                StringBuilder CLM = new StringBuilder();
+                StringBuilder DTP_1 = new StringBuilder();
+                StringBuilder DTP_2 = new StringBuilder();
+                StringBuilder DTP_3 = new StringBuilder();
+                StringBuilder CL1 = new StringBuilder();
+                StringBuilder REF_2 = new StringBuilder();
+                StringBuilder HI_1_ABK = new StringBuilder();
+                StringBuilder HI_1_ABJ = new StringBuilder();
+                StringBuilder HI_1_ABN = new StringBuilder();
+                StringBuilder HI_1_APR = new StringBuilder();
+                StringBuilder HI_1_ABF = new StringBuilder();
+                StringBuilder HI_1_BBR = new StringBuilder();
+                StringBuilder HI_1_BBQ = new StringBuilder();
+                StringBuilder HI_1_BI = new StringBuilder();
+                StringBuilder HI_1_BH = new StringBuilder();
+                StringBuilder HI_1_BE = new StringBuilder();
+                StringBuilder HI_1_BG = new StringBuilder();
+                StringBuilder NM1_6 = new StringBuilder();
+                StringBuilder PRV_AT = new StringBuilder();
+                StringBuilder NM1_7 = new StringBuilder();
+                StringBuilder N3_4 = new StringBuilder();
+                StringBuilder N4_4 = new StringBuilder();
+                StringBuilder LX1 = new StringBuilder();
+                StringBuilder SV2_1 = new StringBuilder();
+                StringBuilder SE = new StringBuilder();
+                StringBuilder GE = new StringBuilder();
+                StringBuilder IEA = new StringBuilder();
+
+
+                int TagCount = 0;
+                ISA.append("ISA*00*          *00*          *ZZ*AV09311993     *01*030240928      *" + ClaimCreateDate + "*" + ClaimCreateTime + "*^*00501*" + InterControlNo + "*1*T*:~\n");
+                //GS.append("GS*HC*p920700*ECGCLAIMS*20210625*155544*000000001*X*005010X223A2~\n");
+                GS.append("GS*HC*AV09311993*030240928*" + CreationDate + "*" + ClaimCreateTime + "*" + InterControlNo + "*X*005010X223A2~\n");
+                ST.append("ST*837*" + ST02 + "*005010X223A2~\n");
+                BHT.append("BHT*0019*00*1*" + CreationDate + "*" + ClaimCreateTime + "*CH~\n");
+                NM1.append("NM1*41*2*" + AttendingProviderLastName + " " + AttendingProviderFirstName + "*****46*009207651653~\n");
+                PER.append("PER*IC*" + BillingProvidersLastName + " " + BillingProvidersFirstName + "*TE*2812800911*FX*2812800041~\n");
+                NM1_2.append("NM1*40*2*MCKHBOC*****46*0001~\n");
+                HL_1.append("HL*1**20*1~\n");
+                PRV_BI.append("PRV*BI*PXC*" + TaxanomySpecialty + "~\n");
+                NM1_3.append("NM1*85*2*" + ClientName + ",*****XX*" + ClientNPI + "~\n");
+                N3_1.append("N3*" + ClientAddress + "~\n");
+                N4_1.append("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode + "~\n");
+                REF_1.append("REF*EI*" + ClientTaxID + "~\n");
+                HL_2.append("HL*2*1*22*0~\n");
+                SBR.append("SBR*P*18*" + GrpNumber + "******" + ClaimType + "~\n");
+                NM1_4.append("NM1*IL*1*" + PatientLastName + "*" + PatientFirstName + "*" + "" + "***MI*" + MemId + "~\n");
+                N3_2.append("N3*" + Address + "~\n");
+                N4_2.append("N4*" + City + "*" + State + "*" + ZipCode + "~\n");
+                DMG.append("DMG*D8*" + DOB + "*" + Gender + "~\n");
+                NM1_5.append("NM1*PR*2*" + (PriInsuranceName.contains("\n") ? PriInsuranceName.replaceAll("\n", "") : PriInsuranceName) + "*****PI*" + PriInsuranceNameId + "~\n");
+                N3_3.append("N3*" + "17154 butte creek road" + "~\n");//Insurance Street Address
+                N4_3.append("N4*" + "HOUSTON" + "*" + "TX" + "*" + "77090" + "~\n");//Insurance City, Insurance State, Insurance ZipCode
+
+
+                TagCount = 20;
+//out.println("TagCount--1--"+TagCount);
+                int foundExtCauseInj = 0;
+                int foundReasVisit = 0;
+//                String CodeReasVisit = "";
+                StringBuilder CodeReasVisit = new StringBuilder();
+                StringBuilder CodeExtCauseInj = new StringBuilder();
+                StringBuilder CodeOthDiag = new StringBuilder();
+                StringBuilder CodeOthProcedure = new StringBuilder();
+                StringBuilder CodeOccSpan = new StringBuilder();
+                StringBuilder InfoOccurance = new StringBuilder();
+                StringBuilder CodeValueCode = new StringBuilder();
+                StringBuilder CodeConditionCode = new StringBuilder();
+                int foundOthDiag = 0;
+                int foundOthProc = 0;
+                int foundOccSpan = 0;
+                int foundOcc = 0;
+                int foundValCode = 0;
+                int foundConCode = 0;
+                Query = "Select Count(*) from " + Database + ".ClaimInfoCodeExtCauseInj where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    foundExtCauseInj = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+                if (foundExtCauseInj > 0) {
+                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeExtCauseInj where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        HI_1_ABN.append("HI*ABN:" + Code + "~\n");
+                        CodeExtCauseInj.append("*ABN:" + Code);
+                        TagCount++;
+
+                        if(!isEmpty(rset.getString(1))) ICDs.add(rset.getString(1));
+
+                        //out.println("TagCount--2--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeReasVisit where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                if (rset.next()) {
+                    foundReasVisit = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundReasVisit > 0) {
+                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeReasVisit where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        CodeReasVisit.append("*APR:" + Code);
+                        if(!isEmpty(rset.getString(1))) ICDs.add(rset.getString(1));
+
+                        HI_1_APR.append("HI*APR:" + Code + "~\n");
+                        TagCount++;
+                        //out.println("TagCount--3--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOthDiag where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    foundOthDiag = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundOthDiag > 0) {
+                    Query = "Select IFNULL(Code,''), IFNULL(PQA,'') from " + Database + ".ClaimInfoCodeOthDiag where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        HI_1_ABF.append("HI*ABF:" + Code + ":::::::" + rset.getString(2) + "~\n");
+                        CodeOthDiag.append("*ABF:" + Code);
+                        TagCount++;
+
+                        if(!isEmpty(rset.getString(1))) ICDs.add(rset.getString(1));
+
+                        //out.println("TagCount--4--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+                if (PrincipalProcedureDateInfoCodes.equals("")) {
+                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes;
+                } else if (PrincipalProcedureDateInfoCodes.contains("/")) {
+                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes.replaceAll("/", "");
+                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes.substring(4, 8) + PrincipalProcedureDateInfoCodes.substring(0, 2) + PrincipalProcedureDateInfoCodes.substring(2, 4);
+                } else {
+                    PrincipalProcedureDateInfoCodes = PrincipalProcedureDateInfoCodes;
+                }
+                if (!PrincipalProcedureInfoCodes.equals("")) {
+                    HI_1_BBR.append("HI*BBR:" + PrincipalProcedureInfoCodes + "*" + PrincipalProcedureDateInfoCodes + "~\n");
+                    TagCount++;
+                    //out.println("TagCount--5--" + TagCount);
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOthProcedure where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    foundOthProc = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundOthProc > 0) {
+                    Query = "Select IFNULL(Code,''), IFNULL(Date,'') from " + Database + ".ClaimInfoCodeOthProcedure where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        String Date = "";
+                        if (rset.getString(2).equals("")) {
+                            Date = rset.getString(2);
+                        } else if (rset.getString(2).contains("/")) {
+                            Date = rset.getString(2).replaceAll("/", "");
+                            Date = Date.substring(4, 8) + Date.substring(0, 2) + Date.substring(2, 4);
+                        } else {
+                            Date = rset.getString(2);
+                        }
+                        HI_1_BBQ.append("HI*BBQ:" + Code + ":" + Date + "~\n");
+                        CodeOthProcedure.append("*BBQ:" + Code + ":" + Date);
+
+                        TagCount++;
+                        //out.println("TagCount--6--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeOccSpan where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    foundOccSpan = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundOccSpan > 0) {
+                    Query = "Select IFNULL(Code,''), IFNULL(FromDate,''), IFNULL(ToDate,'') from " + Database + ".ClaimInfoCodeOccSpan where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        String FromDate = "";
+                        String ToDate = "";
+                        if (rset.getString(2).equals("")) {
+                            FromDate = rset.getString(2);
+                        } else if (rset.getString(2).contains("/")) {
+                            FromDate = rset.getString(2).replaceAll("/", "");
+                            FromDate = FromDate.substring(4, 8) + FromDate.substring(0, 2) + FromDate.substring(2, 4);
+                        } else {
+                            FromDate = rset.getString(2);
+                        }
+                        if (rset.getString(3).equals("")) {
+                            ToDate = rset.getString(3);
+                        } else if (rset.getString(3).contains("/")) {
+                            ToDate = rset.getString(3).replaceAll("/", "");
+                            ToDate = ToDate.substring(4, 8) + ToDate.substring(0, 2) + ToDate.substring(2, 4);
+                        } else {
+                            ToDate = rset.getString(3);
+                        }
+                        HI_1_BI.append("HI*BI:" + Code + "*" + FromDate + "-" + ToDate + "~\n");
+                        CodeOccSpan.append("*BBI:" + Code + "*" + FromDate + "-" + ToDate);
+
+                    }
+                    rset.close();
+                    stmt.close();
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoOccurance where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    foundOcc = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundOcc > 0) {
+                    Query = "Select IFNULL(Code,''), IFNULL(Date,'') from " + Database + ".ClaimInfoOccurance where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        String Date = "";
+                        if (rset.getString(2).equals("")) {
+                            Date = rset.getString(2);
+                        } else if (rset.getString(2).contains("/")) {
+                            Date = rset.getString(2).replaceAll("/", "");
+                            Date = Date.substring(4, 8) + Date.substring(0, 2) + Date.substring(2, 4);
+                        } else {
+                            Date = rset.getString(2);
+                        }
+                        HI_1_BH.append("HI*BH:" + Code + "*" + Date + "~\n");
+                        InfoOccurance.append("*BH:" + Code + "*" + Date);
+
+                        TagCount++;
+                        //out.println("TagCount--7--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeValueCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    foundValCode = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundValCode > 0) {
+                    Query = "Select IFNULL(Code,''), IFNULL(Amount,'') from " + Database + ".ClaimInfoCodeValueCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        String Amount = "";
+//                        if (rset.getString(2).contains(".")) {
+//                            Amount = rset.getString(2).replace(".", "");
+//                        } else {
+                            Amount = rset.getString(2);
+//                        }
+//                        HI_1_BE.append("HI*BE:" + rset.getString(1) + ":" + (rset.getString(2).equals("") ? rset.getString(2) : rset.getString(2).replaceAll(".","")) + "^\n");
+                        HI_1_BE.append("HI*BE:" + Code + "*" + Amount + "~\n");
+                        CodeValueCode.append("*BE:" + Code + "*" + Amount);
+
+                        TagCount++;
+                        //out.println("TagCount--8--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                }
+
+                Query = "Select COUNT(*) from " + Database + ".ClaimInfoCodeConditionCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                        " and ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    foundConCode = rset.getInt(1);
+                }
+                rset.close();
+                stmt.close();
+
+                if (foundConCode > 0) {
+                    Query = "Select IFNULL(Code,'') from " + Database + ".ClaimInfoCodeConditionCode where ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
+                            " and ClaimNumber = '" + ClaimNumber + "'";
+                    stmt = conn.createStatement();
+                    rset = stmt.executeQuery(Query);
+                    while (rset.next()) {
+                        String Code = "";
+                        if (rset.getString(1).contains(".")) {
+                            Code = rset.getString(1).replace(".", "");
+                        } else {
+                            Code = rset.getString(1);
+                        }
+                        HI_1_BG.append("HI*BG:" + Code + "~\n");
+                        CodeConditionCode.append("*BG:" + Code);
+                        TagCount++;
+                        //out.println("TagCount--9--"+TagCount);
+                    }
+                    rset.close();
+                    stmt.close();
+
+                }
+
+
+                //out.println("TagCount---10--"+TagCount);
+
+                int iCount = 1;
+                String TotalChrgeAmt = "";
+                Query = "Select IFNULL(a.RevCode,''), IFNULL(a.HCPCSProcedure,''), IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), " +
+                        "IFNULL(a.Mod4,''), CASE WHEN a.DescriptionFrom = 0 THEN b.ShortDescription WHEN a.DescriptionFrom = 1 THEN c.Description ELSE c.Description END, " +
+                        "IFNULL(a.Amount,''), IFNULL(a.Units,'') from " + Database + ".ClaimChargesInfo a " +
+                        " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCSProcedure = b.CPTCode " +
+                        " LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
+                        "where a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    String HCPCSProcedure = "";
+                    String Units = "";
+                    if (rset.getString(2).contains(".")) {
+                        HCPCSProcedure = rset.getString(2).replace(".", "");
+                    } else {
+                        HCPCSProcedure = rset.getString(2);
+                    }
+                    String Amount = "";
+//                    if (rset.getString(8).contains(".")) {
+//                        //Amount = rset.getString(8).replace(".","");
+//                        Amount = rset.getString(8).substring(0, rset.getString(8).indexOf("."));
+//                    } else {
+                        Amount = rset.getString(8);
+//                    }
+                    Units = rset.getString(9);
+                    if (Units.contains(".")) {
+                        //Units = Units.replace(".","");
+                        Units = Units.substring(0, Units.indexOf("."));
+                    }
+
+
+
+
+
+
+
+                    SV2_1.append("LX*" + iCount + "~\n" + "SV2*" + rset.getString(1) + "*HC:" + HCPCSProcedure + ":" + rset.getString(3) + ":" + rset.getString(4) + ":" + rset.getString(5) + ":" + rset.getString(6) + ":" + rset.getString(7) + "*" + Amount + "*UN*" + Units + "~\n");
+                    TotalChargeAmount += Double.parseDouble(Amount);
+                    TagCount = TagCount + 2;
+                    //out.println("TagCount---11--"+TagCount);
+                    iCount++;
+                }
+                rset.close();
+                stmt.close();
+                TotalChrgeAmt = String.valueOf(String.format("%.2f", TotalChargeAmount));
+
+
+//                if (TotalChrgeAmt.contains(".")) {
+//                    TotalChrgeAmt = (TotalChrgeAmt.substring(0, TotalChrgeAmt.indexOf(".")));
+//                }
+                //system.out.println(TotalChrgeAmt);
+
+
+
+
+
+
+
+
+
+                CLM.append("CLM*915243155*" + TotalChrgeAmt + "***22:A:1*" + ProvAccAssigAddInfo + "*" + AssofBenifitAddInfo + "*" + ReleaseInfoAddInfo + "*" + ReleaseInfoAddInfo + "~\n");
+                //DTP_1.append("DTP*096*TM*" + DischargeHourAddInfo + "00~\n");
+                DTP_2.append("DTP*434*RD8*" + StatmentCoverFromDateAddInfo + "-" + StatmentCoverToDateAddInfo + "~\n");
+                //DTP_3.append("DTP*435*DT*" + AdmissionDateAddInfo + "" + AdmissionHourAddInfo + "00~\n");
+                CL1.append("CL1*1*9*" + AdmissionTypeAddInfo + "~\n");
+                REF_2.append("REF*EA*" + PatientMRN + "~\n");
+                HI_1_ABK.append("HI*ABK:" + PrincipalDiagInfoCodes + ":::::::" + POAInfoCodes + "~\n");
+                HI_1_ABJ.append("HI*ABJ:" + AdmittingDiagInfoCodes + "~\n");
+                NM1_6.append("NM1*71*1*" + AttendingProviderLastName + "*" + AttendingProviderFirstName + "****XX*" + AttendingProviderNPI + "~\n");
+                PRV_AT.append("PRV*AT*PXC*TaxonomySpeciality_Provider~\n");
+                NM1_7.append("NM1*77*2*" + ClientName + "*****XX*" + ClientNPI + "~\n");
+                N3_4.append("N3*" + ClientAddress + "~\n");
+                N4_4.append("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode + "~\n");
+
+                TagCount = TagCount + 11;
+                //out.println("TagCount---12--"+TagCount);
+                SE.append("SE*" + TagCount + "*" + ST02 + "~\n");
+                GE.append("GE*1*" + InterControlNo + "~\n");
+                IEA.append("IEA*1*" + InterControlNo + "~\n");
+
+
+                String Organization = null;
+                String Organization_Tel = null;
+                String Organization_Email = null;
+                String Organization_Address = null;
+                String Organization_City = null;
+                String Organization_State = null;
+                String Organization_ZipCode = null;
+                ResultSet hrset=null;
+
+                String NonCoveredAmount=null;
+                String DrugCode=null;
+                String DrugUnit=null;
+                String Unit=null;
+                String DrugDays=null;
+                String DrugCodeFormat=null;
+                String DrugPrice=null;
+                String PrescriptionNum=null;
+                String PrescriptionDate=null;
+                String PrescriptionMonths=null;
+                String Qualifier=null;
+                boolean NDC_info_found=false;
+
+
+                PreparedStatement ps = conn.prepareStatement("SELECT Organization , Tel , Email , Address , City , State , ZipCode FROM oe.CompanyCredentials where Id = 1");
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    Organization = rset.getString(1);
+                    Organization_Tel = rset.getString(2);
+                    Organization_Email = rset.getString(3);
+                    Organization_Address = rset.getString(4);
+                    Organization_City = rset.getString(5);
+                    Organization_State = rset.getString(6);
+                    Organization_ZipCode = rset.getString(7);
+                }
+                rset.close();
+                ps.close();
+
+                Context c = new Context('~', '*', ':');
+                HashMap<String, Integer> ISATAG = new HashMap<String, Integer>();
+                int ClaimTypes = 1; //1 prof , 2 inst
+                int HLCounter = 1;
+                String ClaimTypeIdentifier = "005010X223A2";// 005010X222A1 Prof , 005010X223A2 Inst
+
+                ISATAG.put("0000-ISA01-AuthorizationInfoQualifier-00", 2);
+                ISATAG.put("0000-ISA02-AuthorizationInformation-", 10);
+                ISATAG.put("0000-ISA03-SecurityInformationQualifier-00", 2);
+                ISATAG.put("0000-ISA04-SecurityInformation-          ", 10);
+                ISATAG.put("0000-ISA05-Interchange ID Qualifier-ZZ", 2);
+                ISATAG.put("0000-ISA06-Interchange Sender ID (*)-BS01834        ", 15);
+                ISATAG.put("0000-ISA07-Interchange ID Qualifier-ZZ", 2);
+                ISATAG.put("0000-ISA08-Interchange Receiver ID-33477          ", 15);
+                ISATAG.put("0000-ISA09-InterchangeDate-140205", 6);
+                ISATAG.put("0000-ISA10-InterchangeTime-1452", 4);
+                ISATAG.put("0000-ISA11-RepetitionSeparator-^", 1);
+                ISATAG.put("0000-ISA12-InterchangeControlVersionNumber-00501", 5);
+                ISATAG.put("0000-ISA13-InterchangeControlNumber-100000467", 9);
+                ISATAG.put("0000-ISA14-AcknowledgmentRequested-0", 1);
+                ISATAG.put("0000-ISA15-Usage Indicator-T", 1);
+                ISATAG.put("0000-ISA16-ComponentElementSeparator-:~", 1);
+
+
+                HashMap<Integer, String> ISAValue = new HashMap<Integer, String>();
+
+                ISAValue.put(0, "ISA");
+                ISAValue.put(1, "00");
+                ISAValue.put(2, " ");
+                ISAValue.put(3, "00");
+                ISAValue.put(4, " ");
+                ISAValue.put(5, "ZZ");
+//                ISAValue.put(6, "BS01834");
+                ISAValue.put(6, "AV09311993");
+//                ISAValue.put(7, "ZZ");
+                ISAValue.put(7, "01");
+//                ISAValue.put(8, "33477");
+                ISAValue.put(8, "030240928");
+                ISAValue.put(9, "140205");
+                ISAValue.put(10, "1452");
+                ISAValue.put(11, "^");
+                ISAValue.put(12, "00501");
+//                ISAValue.put(13, "000987654");
+                ISAValue.put(13, InterControlNo);
+                ISAValue.put(14, "0");
+                ISAValue.put(15, "P");
+                ISAValue.put(16, ":");
+
+                X12 x12 = new X12(c);
+                Loop loop_isa = x12.addChild("ISA");
+
+                // add segment
+                loop_isa.addSegment("ISA*00*          *00*          *ZZ*SENDERID       *ZZ*RECEIVERID    *" + CreationDate + "*" + ClaimCreateTime + "*U*00401*" + InterControlNo + "*0*P*:");
+
+                for (String key : ISATAG.keySet()) {
+                    //   //system.out.println(key);
+                    String temp[] = key.split("-");
+                    int elementid = Integer.parseInt(getOnlyDigits(temp[1]));
+                    int len = ISATAG.get(key);
+                    // //system.out.println(elementid);
+                    // //system.out.println(len);
+                    loop_isa.getSegment(0).setElement(elementid, ISAValue.get(elementid), len);
+                }
+
+                //Transaction Set Header (ST)
+                // Add GS child loop to ISA loop
+                Loop loop_gs = loop_isa.addChild("GS");
+                // Add GS segment directly as a string
+                loop_gs.addSegment("GS*HC*AV09311993*030240928*" + ClaimCreateDate + "*" + ClaimCreateTime + "*" + InterControlNo + "*X*" + ClaimTypeIdentifier);
+
+                Loop loop_st = loop_gs.addChild("ST");
+                loop_st.addSegment("ST*837*" + InterControlNo + "*" + ClaimTypeIdentifier);
+                loop_st.addSegment("BHT*0019*00*" + ClaimCreateDate + ClaimCreateTime + "*" + ClaimCreateDate + "*" + ClaimCreateTime + "*CH");
+                //loop_st.addSegment("TRN*1*0000000000*1999999999");
+                //loop_st.addSegment("DTM*111*20090915");
+
+
+                //1000A SUBMITTER NAME
+
+                Loop loop_1000A = loop_st.addChild("1000A");
+//                loop_1000A.addSegment("NM1*41*2*" + Organization + "*****46*12345");
+//                loop_1000A.addSegment("PER*IC*" + Organization + "*TE*" + Organization_Tel + "*EM*" + Organization_Email);
+                loop_1000A.addSegment("NM1*41*2*" + BillingProvidersFirstName + " " + BillingProvidersLastName + "*****46*"+BillingProvider_ETIN);//Organization ID to be included later
+                loop_1000A.addSegment("PER*IC*" + BillingProvidersFirstName + " " + BillingProvidersLastName  + "*TE*" + BillingProvider_Tel);
+
+                String RecieverInsurance = "MEDICARE";
+                String RecieverInsurance_IdentificationCode = "00120";
+
+                PriInsuranceName = PriInsuranceName.length() < 50 ? PriInsuranceName : PriInsuranceName.substring(0, 50).trim();
+                //1000B RECEIVER NAME
+                Loop loop_1000B = loop_st.addChild("1000B");
+//                loop_1000B.addSegment("NM1*40*2*" + RecieverInsurance + "*****46*" + RecieverInsurance_IdentificationCode);
+                loop_1000B.addSegment("NM1*40*2*" + PriInsuranceName + "*****46*" + PriInsuranceNameId);
+//                loop_1000B.addSegment("N1*PE*FI*888888888*P.O.BOX 456*SHINE CITY*GREEN STATE*ZIP*EARTH");
+
+
+                //2000A BILLING PROVIDER
+                Loop loop_2000 = loop_st.addChild("2000");
+                loop_2000.addSegment("HL*" + HLCounter + "**20*1"); //HL BILLING PROVIDER HIERARCHICAL LEVEL
+                loop_2000.addSegment("PRV*BI*PXC*" + TaxanomySpecialty); //PRV BILLING PROVIDER SPECIALTY
+
+                String BillingProvider_Address = "225 MAIN STREET BARKLEY BUILDING";
+                String BillingProvider_State = "PA";
+                String BillingProvider_ZipCode = "17111";
+                String BillingProvider_City = "CENTERVILLE";
+                String BillingProvider_TaxID = "567891234";
+//                String BillingProvider_Tel = "5678912342";
+
+
+                String[] Taxonomy = {"213ES0131X", "213EG0000X", "213EP1101X", "213EP0504X", "213ER0200X", "213ES0000X"};
+                List<String> TaxonomyList = Arrays.asList(Taxonomy);
+                String[] Taxonomy_for_InitialTreatment = {"111N00000X", "111NI0013X", "111NI0900X", "111NN0400X", "111NN1001X",
+                        "111NP0017X", "111NR0200X", "111NR0400X", "111NS0005X", "111NT0100X", "111NX0100X", "111NX0800X"};
+                List<String> Taxonomy_for_InitialTreatment_List = Arrays.asList(Taxonomy_for_InitialTreatment);
+
+                if (!isEmpty(BillingProvider_Taxonomy)) {
+                    if (isInValidTaxonomy(conn, BillingProvider_Taxonomy)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Taxonomy Code</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Taxonomy Code</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(BillingProviderNPI)) {
+                    if (BillingProviderNPI.matches(NPI_REGEX)) {
+                        if (isValid(BillingProviderNPI))
+                            SuccessMsgs.append("<p style=\"color:black;\">Billing Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
+                        else
+                            ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                    "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+
+//                System.out.println("BillingProvidersLastName ->> "+BillingProvidersLastName);
+                if (!isEmpty(BillingProvidersLastName)) {
+                    if (!BillingProvidersLastName.matches(Name_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+//                System.out.println("BillingProvidersFirstName ->> "+BillingProvidersFirstName);
+
+                if (!isEmpty(BillingProvidersFirstName)) {
+                    if (!BillingProvidersFirstName.matches(Name_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(ClientAddress)) {
+                    if (isInValidAddress(ClientAddress)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Address/b> Cannot be <b>PO BOX</b> Address. Only Physical Address Is <b>Allowed</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Address</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(ClientZipCode)) {
+                    if (ClientZipCode.contains("-")) {
+                        String[] ClientZipCodes = ClientZipCode.split("-");
+                        if (isInValidZipCode(conn, ClientState, ClientZipCodes[0])) {
+//                            System.out.println("ClientZipCode -> "+ClientZipCode);
+                            ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        if (isInValidZipCode(conn, ClientState, ClientZipCode)) {
+
+//                            System.out.println("ClientZipCode -> "+ClientZipCode);
+                            ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+
+                if (!isEmpty(ClientCity)) {
+                    if (!ClientCity.matches(CITY_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+
+                final String BillingProvider_TaxID_LENGTH_REGEX = "([0-9]{9})";
+                final String BillingProvider_TaxID_SEQUENCE_REGEX = "(?=012345678|987654321|098765432|000000000|111111111|222222222|333333333|444444444|555555555|666666666|777777777|888888888|999999999|123456789).{9}";
+                if (!isEmpty(ClientTaxID)) {
+                    if (ClientTaxID.matches(BillingProvider_TaxID_LENGTH_REGEX)) {
+                        if (ClientTaxID.matches(BillingProvider_TaxID_SEQUENCE_REGEX)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Billing Provider <b>Tax ID</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                //2010AA BILLING PROVIDER NAME
+                Loop loop_2010AA = loop_2000.addChild("2010");
+//                loop_2010AA.addSegment("NM1*85**" + BillingProvidersLastName + "*" + BillingProvidersFirstName + "****XX*"+BillingProviderNPI);//NM1 BILLING PROVIDER NAME INCLUDING NATIONAL PROVIDER ID
+//
+//                loop_2010AA.addSegment("N3*" + BillingProvider_Address); //N3 BILLING PROVIDER ADDRESS
+//                loop_2010AA.addSegment("N4*" + BillingProvider_City + "*" + BillingProvider_State + "*" + BillingProvider_ZipCode);//N4 BILLING PROVIDER LOCATION
+//                loop_2010AA.addSegment("REF*EI*" + BillingProvider_ETIN); //REF BILLING PROVIDER TAX IDENTIFICATION NUMBER
+//                loop_2010AA.addSegment("PER*IC*" + BillingProvidersLastName + "*TE*" + BillingProvider_Tel);//PER BILLING PROVIDER CONTACT INFORMATION
+                loop_2010AA.addSegment("NM1*85*2*" + Client_FullName + "*****XX*" + ClientNPI);//NM1 BILLING PROVIDER NAME INCLUDING NATIONAL PROVIDER ID
+                loop_2010AA.addSegment("N3*" + ClientAddress); //N3 BILLING PROVIDER ADDRESS
+                loop_2010AA.addSegment("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode);//N4 BILLING PROVIDER LOCATION
+                loop_2010AA.addSegment("REF*EI*" + ClientTaxID); //REF BILLING PROVIDER TAX IDENTIFICATION NUMBER
+
+
+                Loop loop_2010AB = loop_2000.addChild("2010");//F&A Address
+                loop_2010AB.addSegment("NM1*87*2");//Pay To Name
+                loop_2010AB.addSegment("N3*"+Organization_Address);//Pay To Address
+                loop_2010AB.addSegment("N4*"+Organization_City+"*"+Organization_State+"*"+Organization_ZipCode);//Pay To Address
+
+
+                String PayerResponsibilityCode = "P";
+                String InsuranceTypeCode = "";//required when sbr02 is S and FC is MA or MB
+                String PatientRelationshipCode = null;
+
+
+                if (PatientRelationtoPrimary.equals("Self")) {
+                    PatientRelationshipCode = "18";
+                } else {
+                    PatientRelationshipCode = "";
+                }
+
+                HLCounter++;
+                //2000B SUBSCRIBER HL LOOP
+                Loop loop_2000B = loop_2000.addChild("2000");
+                if (PatientRelationshipCode.equals("18")) {
+                    loop_2000B.addSegment("HL*" + HLCounter + "*1*22*0");//HL SUBSCRIBER HIERARCHICAL LEVEL
+                }else{
+                    loop_2000B.addSegment("HL*" + HLCounter + "*1*22*1");//HL SUBSCRIBER HIERARCHICAL LEVEL
+                }
+                loop_2000B.addSegment("SBR*" + PayerResponsibilityCode + "*" + PatientRelationshipCode + "*" + GrpNumber + "******" + PriFillingIndicator);//SBR SUBSCRIBER INFORMATION
+
+                //2010BA SUBSCRIBER NAME LOOP
+                Loop loop_2010BA = loop_2000.addChild("2000");
+
+
+                final String MemberID_REGEX = "^(123456789|^(TEST)|^[0]{2,}|^[1]{2,}|^[2]{2,}|^[3]{2,}|^[4]{2,}|^[5]{2,}|^[6]{2,}|^[7]{2,}|^[8]{2,}|^[9]{2,})$";
+//                    MemId
+                if (!isEmpty(MemId)) {
+                    if (MemId.matches(MemberID_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>Member-ID</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>Member-ID</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(ZipCode)) {
+                    if (isInValidZipCode(conn, State, ZipCode)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(City)) {
+                    if (!City.matches(CITY_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                //system.out.println("EDI ** ClaimCreateDate -> "+ClaimCreateDate);
+                //system.out.println("EDI ** Integer.parseInt(DOB) -> "+Integer.parseInt(DOB));
+                if (Integer.parseInt(DOB) > Integer.parseInt(ClaimCreateDate)) {
+                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>DOB</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+
+                if (!isEmpty(PatientLastName)) {
+                    if (!PatientLastName.matches(Name_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Subscriber  <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if (PatientLastName.toUpperCase().equals("TEST") || PatientLastName.toUpperCase().equals("DEMO")) {
+                        ErrorMsgs.append("<p style=\"color:black;\">THE PATIENT SEEMS TO BE A TEST PATIENT . DO NOT SUBMIT CLAIM WITHOUT DUE VERIFICATION <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+                if (!isEmpty(PatientFirstName)) {
+                    if (!PatientFirstName.matches(Name_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if(PatientRelationshipCode.equals("18")){
+                    loop_2010BA.addSegment("NM1*IL*1*" + PatientLastName + "*" + PatientFirstName + "*T***MI*" + MemId);//NM1 SUBSCRIBER NAME
+                    loop_2010BA.addSegment("N3*" + Address);//N3 SUBSCRIBER ADDRESS
+                    loop_2010BA.addSegment("N4*" + City + "*" + State + "*" + ZipCode);//N4 SUBSCRIBER LOCATION
+                    loop_2010BA.addSegment("DMG*D8*" + DOB + "*" + Gender); //DMG SUBSCRIBER DEMOGRAPHIC INFORMATION
+                }else{
+                    loop_2010BA.addSegment("NM1*IL*1*" + PriInsuredLastName + "*" + PriInsuredFirstName + "*T***MI*" + MemId);//NM1 SUBSCRIBER NAME
+                }
+
+
+                //2010BB PAYER NAME LOOP
+                Loop loop_2010BB = loop_2000.addChild("2000");
+
+                if (!isEmpty(PriInsuranceNameId) && PriInsuranceNameId.equals("66006") && !isEmpty(MemId) && Integer.parseInt(DOS) > 20170101) {
+                    if (MemId.startsWith("YUB") || MemId.startsWith("YUX") || MemId.startsWith("XOJ") || MemId.startsWith("XOD") || MemId.startsWith("ZGJ") ||
+                            MemId.startsWith("ZGD") || MemId.startsWith("YIJ") || MemId.startsWith("YID") || MemId.startsWith("YDJ") || MemId.startsWith("YDL")) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Medicare Advantage Claim need to be resubmitter with <b>PayerID : 66006</b> when <b>secondary</b> insurance is <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("84146") || PriInsuranceNameId.equals("31114"))) {
+//                            Patient Entity should be IL NOT QC -> (LOOP 2010CA)  NOT DONE
+                    if (PatientRelationtoPrimary.compareTo("Self") != 0 || PatientRelationtoSec.compareTo("Self") != 0) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b>Subscriber Relationship</b>  must be   <b>Self</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("MB") || PriFillingIndicator.equals("MA") || PriFillingIndicator.equals("MC"))) {
+                    if (PriInsuranceNameId.equals("DNC00")) {
+                        if (!isEmpty(GrpNumber)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Subscriber <b>group number</b> not allowed for <b>Medicare</b> and <b>Medicaid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+                }
+
+                loop_2010BB.addSegment("NM1*PR*2*" + PriInsuranceName + "*****PI*" + PriInsuranceNameId);//NM1 PAYER NAME
+                loop_2010BB.addSegment("N3*" + Payer_Address);//N3 PAYER ADDRESS ** ADDED
+
+                if (!isEmpty(Payer_Zip)) {
+                    if (isInValidZipCode(conn, Payer_State, Payer_Zip)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Payer <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Payer <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(Payer_City)) {
+                    if (!Payer_City.matches(CITY_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Payer <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Payer <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                loop_2010BB.addSegment("N4*" + Payer_City + "*" + Payer_State + "*" + Payer_Zip);//N4 PAYER ADDRESS ** ADDED
+//                loop_2010BB.addSegment("REF*G2*330127");//REF BILLING PROVIDER SECONDARY IDENTIFICATION
+
+                //	2300 CLAIM INFORMATION
+                //system.out.println("timesSubmitted ->> " + timesSubmitted);
+                PatientControlNumber =   "FAM" + ClientId + timesSubmitted + "E" + ClaimNumber.replace("-", "");
+                String Related_Causes_Code = null;
+
+                if (AutoAccidentAddInfo.equals("1")) {
+                    Related_Causes_Code = "AA";
+                } else if (EmploymentStatusAddInfo.equals("1")) {
+                    Related_Causes_Code = "EM";
+                } else if (OtherAccidentAddInfo.equals("1")) {
+                    Related_Causes_Code = "OA";
+                }
+
+
+                if(PatientRelationshipCode.compareTo("18")!=0){
+                    HLCounter++;
+                    Loop loop_2000C = loop_st.addChild("2000");
+                    loop_2000C.addSegment("HL*"+HLCounter+"*2*23*0");
+                    loop_2000C.addSegment("PAT*"+IndividualRelationshipCode);
+                    loop_2000C.addSegment("NM1*QC*1*"+PatientLastName+"*"+PatientFirstName);
+                    loop_2000C.addSegment("N3*" + Address);
+                    loop_2000C.addSegment("N4*" + City + "*" + State + "*" + ZipCode);
+                    loop_2000C.addSegment("DMG*D8*" + DOB + "*" + Gender);
+                }
+
+
+
+
+
+                Loop loop_2300 = loop_st.addChild("2300");
+
+                if (isEmpty(String.valueOf(TypeBillText.substring(2, 3)))) {
+                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Frequency Code</b> is  <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+                if ((PriFillingIndicator.equals("MA") || PriFillingIndicator.equals("MB")) && !String.valueOf(TypeBillText.substring(2, 3)).equals("1")) {
+                    ErrorMsgs.append("<p style=\"color:black;\">Medicare always accept the claim as <b>ORIGINAL/NEW CLAIM </b>. rejected due to claim <b>frequency code</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                loop_2300.addSegment("CLM*" + PatientControlNumber + "*" + TotalChrgeAmt + "***" + TypeBillText.substring(0, 1) + TypeBillText.substring(1, 2) + ":A:" + TypeBillText.substring(2, 3) + "**A*Y*Y***"); //CLM CLAIM LEVEL INFORMATION
+                loop_2300.addSegment("DTP*434*RD8*" + StatmentCoverFromDateAddInfo + "-" + StatmentCoverToDateAddInfo);
+                loop_2300.addSegment("CL1*" + AdmissionTypeAddInfo + "*" + AdmissionSourceAddInfo + "*" + PatientStatusAddInfo);
+                loop_2300.addSegment("HI*ABK:" + PrincipalDiagInfoCodes + ":::::::" + POAInfoCodes);
+
+                if (AdmittingDiagInfoCodes.length() > 0) {
+//                    loop_2300.addSegment("HI*ABJ:" + AdmittingDiagInfoCodes);
+                }
+                if (CodeReasVisit.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeReasVisit);
+                }
+                if (CodeExtCauseInj.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeExtCauseInj);
+                }
+                if (CodeOthDiag.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeOthDiag);
+                }
+                if (CodeOthProcedure.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeOthProcedure);
+                }
+                if (CodeOccSpan.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeOccSpan);
+                }
+                if (InfoOccurance.length() > 0) {
+                    loop_2300.addSegment("HI" + InfoOccurance);
+                }
+                if (CodeValueCode.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeValueCode);
+                }
+                if (CodeConditionCode.length() > 0) {
+                    loop_2300.addSegment("HI" + CodeConditionCode);
+                }
+
+
+//                loop_2300.addSegment("CLM*756048Q*89.93**14:A:1*A*Y*Y"); //CLM CLAIM LEVEL INFORMATION
+//                loop_2300.addSegment("DTP*434*RD8*19960911"); // DTP STATEMENT DATES
+//                loop_2300.addSegment("CL1*3**01"); // CL1 INSTITUTIONAL CLAIM CODE
+//                loop_2300.addSegment("HI*BK:3669"); //HI PRINCIPAL DIAGNOSIS CODES
+//                loop_2300.addSegment("HI*BF:4019*BF:79431"); //HI OTHER DIAGNOSIS INFORMATION
+//                loop_2300.addSegment("HI*BH:A1:D8:19261111*BH:A2:D8:19911101*BH:B1:D8:19261111*BH:B2:D8:19870101"); //HI OCCURRENCE INFORMATION
+//                loop_2300.addSegment("HI*BE:A2:::15.31"); //HI VALUE INFORMATION
+//                loop_2300.addSegment("HI*BG:09"); //HI CONDITION INFORMATION
+
+                //2310A ATTENDING PROVIDER NAME
+                if (!isEmpty(AttendingProviderLastName) && !isEmpty(AttendingProviderFirstName)) {
+                    Loop loop_2310A = loop_2300.addChild("2300");
+                    loop_2310A.addSegment("NM1*71*1*" + AttendingProviderLastName + "*" + AttendingProviderFirstName + "****XX*" + AttendingProviderNPI);//NM1 ATTENDING PROVIDER
+                    loop_2310A.addSegment("PRV*AT*PXC*" + AttendingProvider_Taxonomy);//NM1 ATTENDING PROVIDER
+                }
+
+                if (!isEmpty(OperatingProviderLastName) && !isEmpty(OperatingProviderFirstName)) {
+                    Loop loop_2310B = loop_2300.addChild("2300");
+                    loop_2310B.addSegment("NM1*72*1*" + OperatingProviderLastName + "*" + OperatingProviderFirstName + "****XX*" + OperatingProviderNPI);//NM1 ATTENDING PROVIDER
+//                    loop_2310B.addSegment("PRV*AT*PXC*" + OperatingProvider_Taxonomy);//NM1 Operating PROVIDER
+                }
+
+                if (!isEmpty(RenderingProvidersFirstName)) {
+                    // 2310B RENDERING PROVIDER NAME
+                    Loop loop_2310D = loop_2300.addChild("2300");
+
+                    if (!isEmpty(RenderingProvidersNPI)) {
+                        if (RenderingProvidersNPI.matches(NPI_REGEX)) {
+                            if (isValid(RenderingProvidersNPI))
+                                SuccessMsgs.append("<p style=\"color:black;\">Rendering Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
+                            else
+                                ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+
+
+                            if (!isEmpty(ClientNPI)) {
+                                if (ClientNPI.equals(RenderingProvidersNPI)) {
+                                    ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider and Service Location <b> NPI</b> cannot be  <b>Same</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                }
+                            }
+                            if (!isEmpty(BillingProviderNPI)) {
+                                if (BillingProviderNPI.equals(RenderingProvidersNPI)) {
+                                    ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider and Billing Provider <b> NPI</b> cannot be  <b>Same</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                }
+                            }
+                        } else {
+                            ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                    "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if (!isEmpty(RenderingProvidersLastName)) {
+                        if (!RenderingProvidersLastName.matches(Name_REGEX)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if (!isEmpty(RenderingProvidersFirstName)) {
+                        if (!RenderingProvidersFirstName.matches(Name_REGEX)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                    loop_2310D.addSegment("NM1*82*1*" + RenderingProvidersLastName + "*" + RenderingProvidersFirstName + "****XX*" + RenderingProvidersNPI);//NM1 Rendering PROVIDER
+//                        String RenderingProviders_Taxonomy = "225100000X";
+
+                    if (!isEmpty(RenderingProvider_Taxonomy)) {
+                        if (isInValidTaxonomy(conn, RenderingProvider_Taxonomy)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>Taxonomy Code</b> is  <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Rendering Provider <b>Taxonomy Code</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                    loop_2310D.addSegment("PRV*PE*PXC*" + RenderingProvider_Taxonomy); //PRV Rendering Provider SPECIALTY
+
+
+                }
+
+//                Loop loop_2310E = loop_2300.addChild("2300");
+                if (!isEmpty(ClientNPI)) {
+                    if (ClientNPI.matches(NPI_REGEX)) {
+                        if (isValid(ClientNPI))
+                            SuccessMsgs.append("<p style=\"color:black;\">Client <b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
+                        else
+                            ErrorMsgs.append("<p style=\"color:black;\">Client <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                    "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Client <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                    }
+
+                    if (!isEmpty(BillingProviderNPI)) {
+                        if (ClientNPI.equals(BillingProviderNPI)) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Billing Provider NPI </b> and <b>Client NPI</b> cannot be <b>same</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Client  <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+//                loop_2310E.addSegment("NM1*77*2*" + ClientName + "*****XX*" + ClientNPI);//NM1 Client Name
+//                loop_2310E.addSegment("N3*" + ClientAddress);//N3 Client Address
+
+                if (!isEmpty(ClientZipCode)) {
+                    String[] ClientZipCodes = null;
+                    if (ClientZipCode.contains("-")) {
+                        ClientZipCodes = ClientZipCode.split("-");
+                        if (isInValidZipCode(conn, ClientState, ClientZipCodes[0])) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Client <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        if (isInValidZipCode(conn, ClientState, ClientZipCode)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Client <b>ZipCode</b> does not match with <b>State</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Client <b>ZipCode</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+                if (!isEmpty(ClientCity)) {
+                    if (!ClientCity.matches(CITY_REGEX)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Client <b>City</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                } else {
+                    ErrorMsgs.append("<p style=\"color:black;\">Client <b>City</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                }
+
+//                loop_2310E.addSegment("N4*" + ClientCity + "*" + ClientState + "*" + ClientZipCode.replace("-", ""));//N4 Client City, State, ZIP Code
+
+
+                if (!isEmpty(ReferringProviderFirstName)) {
+                    if (!isEmpty(ReferringProviderNPI)) {
+                        if (ReferringProviderNPI.matches(NPI_REGEX)) {
+                            if (isValid(ReferringProviderNPI))
+                                SuccessMsgs.append("<p style=\"color:black;\">Referring Provider<b> NPI</b> is <b>Valid</b><span> <i class=\"fa fa-check-circle\" style=\"color: green;font-size: 20px;\"></i></span></p>\n");
+                            else
+                                ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                        "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                        } else {
+                            ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>InValid</b><span data-toggle=\"tooltip\" title=\"Mentioned below might be the causes\n* NPI should contain Numeric Characters \n" +
+                                    "* Length of the NPI should be 10 digits\"> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>NPI</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                    if (!isEmpty(ReferringProviderLastName)) {
+                        if (!ReferringProviderLastName.matches(Name_REGEX)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>LastName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>LastName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if (!isEmpty(ReferringProviderFirstName)) {
+                        if (!ReferringProviderFirstName.matches(Name_REGEX)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>FirstName</b> is <b>InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    } else {
+                        ErrorMsgs.append("<p style=\"color:black;\">Referring Provider <b>FirstName</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    Loop loop_2310F = loop_2300.addChild("2300");
+                    loop_2310F.addSegment("NM1*DN*1*" + ReferringProviderLastName + "*" + ReferringProviderFirstName + "****XX*" + ReferringProviderNPI);//NM1 Referring PROVIDER
+                    loop_2310F.addSegment("REF*G2*B99937");//REF Referring PROVIDER SECONDARY IDENTIFICATION
+
+
+                    if (PriInsuranceNameId.equals("11315") || PriInsuranceNameId.equals("87726 ")) {
+                        if (ReferringProviderNPI.equals(BillingProviderNPI) && ReferringProviderNPI.equals(BillingProviderNPI)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Referring Provider  is <b>Missing/InValid</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+                }
+
+
+
+//                loop_2310A.addSegment("REF*1G*B99937");//REF ATTENDING PROVIDER SECONDARY IDENTIFICATION
+                ArrayList<String> Charge_ProcedureCodes = new ArrayList<String>();
+                ArrayList<String> Charge_ProcedureCodes_WITHOUT_MODIFIER = new ArrayList<String>();
+
+                String NDC_REGEX = "^[0-9A-Z]{11}$";
+                //2400 SERVICE LINE
+                Loop loop_2400 = loop_st.addChild("2400");
+//                loop_2400.addSegment("LX*1");//LX SERVICE LINE COUNTER
+//                loop_2400.addSegment("SV2*0305*HC:85025*13.39*UN*1"); //SV2 INSTITUTIONAL SERVICE
+//                loop_2400.addSegment("DTP*472*D8*19960911");//DTP DATE - SERVICE DATES
+                iCount = 1;
+                String mod1 = null;
+                String mod2 = null;
+                String mod3 = null;
+                String mod4 = null;
+                String r1 = "";
+
+                boolean errorMsgAdded = false;
+                boolean isENM_SurgeryProcedureCode = false;
+                boolean isENMProcedureCode = false;
+                boolean addCovidMsg = false;
+                boolean is_91303 = false;
+                boolean addAdminCodeMsg = false;
+
+                ArrayList<String> Charge_VaccineCodes = new ArrayList<String>();
+                ArrayList<String> ProcedureCodeModifier = new ArrayList<String>(Arrays.asList("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "GY", "GZ", "H9", "HA", "HB", "HC", "HD", "HE", "HF", "HG", "HH", "HI", "HJ", "HK", "HL", "HM", "HN", "HO", "HP", "HQ", "HR", "HS", "HT", "HU", "HV", "HW", "HX", "HY", "HZ", "SA",
+                        "SB", "SC", "SD", "SE", "SH", "SJ", "SK", "SL", "ST", "SU", "SV", "TD", "TE", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TP", "TQ", "TR", "TS", "TW", "U1", "U2", "U3", "U4", "U5", "U6", "U7", "U8", "U9", "UA", "UB", "UC", "UD"));
+
+
+
+                int units_Of_90472 = -1;
+                int units_Of_90460 = -1;
+                int units_Of_90461 = -1;
+                int sum_Of_units_Of_allVaccines = 0;
+                SimpleDateFormat fromUser = new SimpleDateFormat("MMddyyyy");
+                SimpleDateFormat myFormat = new SimpleDateFormat("yyyyMMdd");
+                String MeasurementCode = null;
+                Query = "Select IFNULL(a.RevCode,''), IFNULL(a.HCPCSProcedure,''), IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), " +
+                        "IFNULL(a.Mod4,''), CASE WHEN a.DescriptionFrom = 0 THEN IFNULL(b.ShortDescription,'') WHEN a.DescriptionFrom = 1 THEN IFNULL(c.Description,'') ELSE IFNULL(c.Description,'') END, " +
+                        "IFNULL(a.Amount,''), IFNULL(a.Units,'') , IFNULL(a.id,'') , IFNULL(REPLACE(a.ServiceDate,'/',''),'') from " + Database + ".ClaimChargesInfo a " +
+                        " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCSProcedure = b.CPTCode " +
+                        " LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
+                        "where a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNumber + "'";
+                stmt = conn.createStatement();
+                rset = stmt.executeQuery(Query);
+                while (rset.next()) {
+                    String ProcedureCode = "";
+                    String ServiceDate = rset.getString(11);
+                    String Units = "";
+                    String modifier = "";
+                    mod1 = rset.getString(3);
+                    mod2 = rset.getString(4);
+                    mod3 = rset.getString(5);
+                    mod4 = rset.getString(6);
+
+                    modifier+=rset.getString(3);
+                    modifier+=rset.getString(4);
+                    modifier+=rset.getString(5);
+                    modifier+=rset.getString(6);
+
+                    if (rset.getString(2).contains(".")) {
+                        ProcedureCode = rset.getString(2).replace(".", "");
+                    } else {
+                        ProcedureCode = rset.getString(2);
+                    }
+                    String Amount = "";
+//                    if (rset.getString(8).contains(".")) {
+//                        //Amount = rset.getString(8).replace(".","");
+//                        Amount = rset.getString(8).substring(0, rset.getString(8).indexOf("."));
+//                    } else {
+                        Amount = rset.getString(8);
+//                    }
+                    Units = rset.getString(9);
+                    if (Units.contains(".")) {
+                        //Units = Units.replace(".","");
+                        Units = Units.substring(0, Units.indexOf("."));
+                    }
+
+                    ClaimChargeIdx=rset.getInt(10);
+
+                    if (isValidAnesthesiaCodes(conn, ProcedureCode)) {
+                        MeasurementCode = "MJ";
+                        if (!rset.getString(3).equals("")) {//mod1
+                            modifier += ":" + rset.getString(3); //SV101-3
+                            if (Units.equals("1") && rset.getString(3).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+
+                            if (!isValidAnesthesiaModifier(conn, rset.getString(3))) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+
+                        }
+                        if (!rset.getString(4).equals("")) {//mod2
+                            modifier += ":" + rset.getString(4);
+                            if (Units.equals("1") && rset.getString(4).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+
+                            if (!isValidAnesthesiaModifier(conn, rset.getString(4))) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!rset.getString(5).equals("")) {//mod3
+                            modifier += ":" + rset.getString(5);
+                            if (Units.equals("1") && rset.getString(5).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+
+
+                            if (!isValidAnesthesiaModifier(conn, rset.getString(5))) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures " + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!rset.getString(6).equals("")) {//mod4
+                            modifier += ":" + rset.getString(6);
+                            if (Units.equals("1") && rset.getString(6).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+
+
+                            if (!isValidAnesthesiaModifier(conn, rset.getString(6))) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Anesthesia Modifier</b>  is only allowed with  <b>Anesthesia Procedures [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+
+
+                    } else {
+                        MeasurementCode = "UN";
+                        if (!rset.getString(3).equals("")) {//mod1
+                            modifier += ":" + rset.getString(3); //SV101-3
+                            if (Units.equals("1") && rset.getString(3).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!rset.getString(4).equals("")) {//mod2
+                            modifier += ":" + rset.getString(4);
+                            if (Units.equals("1") && rset.getString(4).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!rset.getString(5).equals("")) {//mod3
+                            modifier += ":" + rset.getString(5);
+                            if (Units.equals("1") && rset.getString(5).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!rset.getString(6).equals("")) {//mod4
+                            modifier += ":" + rset.getString(6);
+                            if (Units.equals("1") && rset.getString(6).equals("50")) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Units must be greater than <b>ONE</b> when a modifier of <b>50</b> is used.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                    }
+
+                    if (!isEmpty(modifier) && (modifier.contains("59") && (modifier.contains("XE") || modifier.contains("XP") || modifier.contains("XS") || modifier.contains("XU")))) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b>distinct procedural services modifiers</b> and <b>59</b> is incorrect to report of same line-item , please remove one of them<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+//                    r1 = isValidBodySidewaysICD(conn, PrincipalDiagInfoCodes);
+////                    result2 = r1 == null ? null : r1;
+//                    if (r1 != null) {
+//                        if (r1.equals("Right")) {
+//                            if (!(modifier.contains("RT") || modifier.contains("F5") || modifier.contains("F6") || modifier.contains("F7") ||
+//                                    modifier.contains("F8") || modifier.contains("F9") || modifier.contains("T5") || modifier.contains("T6") ||
+//                                    modifier.contains("T7") || modifier.contains("T8") || modifier.contains("T9") || modifier.contains("E3") ||
+//                                    modifier.contains("E4"))) {
+//                                ErrorMsgs.append("<p style=\"color:black;\"> <b> Modifier </b> used with <b>Procedure : [" + ProcedureCode + "]</b> does not follow the laterality of <b>Diagnosis Code : [" + PrincipalDiagInfoCodes + "]</b> Please append one of these <b>relative modifiers : [RT, F5, F6, F7, F8, F9, T5, T6, T7, T8, T9, E3, E4] </b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            }
+//                        }
+//                        if (r1.equals("Left")) {
+//                            if (!(modifier.contains("LT") || modifier.contains("FA") || modifier.contains("F1") || modifier.contains("F2") ||
+//                                    modifier.contains("F3") || modifier.contains("F4") || modifier.contains("TA") || modifier.contains("T1") ||
+//                                    modifier.contains("T2") || modifier.contains("T3") || modifier.contains("T4") || modifier.contains("E1") ||
+//                                    modifier.contains("E2"))) {
+//                                ErrorMsgs.append("<p style=\"color:black;\"> <b> Modifier </b> used with <b>Procedure : [" + ProcedureCode + "]</b> does not follow the laterality of <b>Diagnosis Code : [" + PrincipalDiagInfoCodes + "]</b> Please append one of these <b>relative modifiers : [LT, FA, F1, F2, F3, F4, TA, T1, T2, T3, T4, E1, E2] </b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            }
+//                        }
+//                        if (r1.equals("Bilateral")) {
+//                            if (!modifier.contains("50")) {
+//                                ErrorMsgs.append("<p style=\"color:black;\"> <b> Modifier </b> used with <b>Procedure : [" + ProcedureCode + "]</b> does not follow the laterality of <b>Diagnosis Code : [" + PrincipalDiagInfoCodes + "]</b> Please append  <b>relative modifier : 50 </b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            }
+//                        }
+//                    }
+
+
+                    if (ProcedureCode.equals("69209") || ProcedureCode.equals("69210") || ProcedureCode.equals("G0268")) {
+                        if (!find_ICD_between_Ranges(conn, "H612", "H6123", PrincipalDiagInfoCodes)) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Non Supportive ICD : ["+PrincipalDiagInfoCodes+"]</b> Found With <b>Procedure Code [" + ProcedureCode + "]</b>, Please Report Supportive Diagnosis Code i.e [<b>H61.2 - H61.23</b>] <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+//                    if (!isValidCLIACodes(conn, ProcedureCode)) {
+//                        if (modifier.contains("QW")) {
+//                            ErrorMsgs.append("<p style=\"color:black;\"><b>QW Modifier</b>  is not allowed with  <b>Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+
+
+                    if (isValidConsultantProceduresCodes(conn, ProcedureCode)) {
+                        if (isEmpty(ReferringProviderFirstName) && isEmpty(ReferringProviderLastName)) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Referring provider</b>  is required with  <b>Consultation Procedure : [" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                    if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode) && !errorMsgAdded) {
+                        ////system.out.println(" isValid_E_N_M_ProceduresCodes ProcedureCode -> " + ProcedureCode);
+
+                        if (isENM_SurgeryProcedureCode) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b> E&M Procedure </b> and  <b> E&M Surgery Codes </b> cannot be billed together on same DOS<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            isENM_SurgeryProcedureCode = false;
+                            isENMProcedureCode = false;
+                            errorMsgAdded = true;
+                        } else
+                            isENMProcedureCode = true;
+                    }
+
+
+                    if (isValid_E_N_M_Surgery_ProceduresCodes(conn, ProcedureCode) && !errorMsgAdded) {
+                        ////system.out.println("isValid_E_N_M_Surgery_ProceduresCodes ProcedureCode -> " + ProcedureCode);
+                        if (isENMProcedureCode) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b> E&M Procedure </b> and  <b> E&M Surgery Codes </b> cannot be billed together on same DOS<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            isENM_SurgeryProcedureCode = false;
+                            isENMProcedureCode = false;
+                            errorMsgAdded = true;
+                        } else
+                            isENM_SurgeryProcedureCode = true;
+                    }
+
+
+                    if (isValid_EPSDT_ProceduresCodes(conn, ProcedureCode) && (PriFillingIndicator.equals("MC") || SecFillingIndicator.equals("MC"))
+                            && (getAge(LocalDate.parse(_DOB)) < 21) && modifier.contains("EP")) {
+                        ErrorMsgs.append("<p style=\"color:black;\">eligible medicaid recipient for <b>EPSDT</b> services  are less than <b>21 year</b> of age. patient  age is not appropriate to bill this service please remove modifier <b>EP</b>.<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                    if ((modifier.contains("GV") || modifier.contains("GW")) && (!PriFillingIndicator.equals("MB") || !SecFillingIndicator.equals("MB"))) {
+                        //system.out.println("GV / GW ->>>>>> EDI " + modifier);
+                        ErrorMsgs.append("<p style=\"color:black;\">modifier <b> GW/GV </b> indicates hospice services, please file claim to <b>medicare</b> or remove the modifier<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    ArrayList<String> ProcedureCodes_List = new ArrayList<String>(Arrays.asList("99221", "99222", "99223"));
+                    ////system.out.println("ProcedureCode  ->  " + ProcedureCode);
+                    if (ProcedureCodes_List.contains(ProcedureCode)) {
+                        if (Integer.parseInt(Units) > 1) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Hospital Admission Service For Cpt <b> [" + ProcedureCode + "] </b> Should Always Billed As <b>One</b> Unit <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+
+
+                    if (isValidCLIACodes(conn, ProcedureCode) && (modifier.contains("24") || modifier.contains("25"))) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b>Modifier [ 24 , 25 ]</b> is <b>Not</b> allowed with  procedure <b>[" + ProcedureCode + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if (!isEmpty(modifier) && (modifier.contains("59") && (modifier.contains("XE") || modifier.contains("XP") || modifier.contains("XS") || modifier.contains("XU")))) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b>distinct procedural services modifiers</b> and <b>59</b> is incorrect to report of same line-item , please remove one of them<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB"))) || ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))) {
+                        if (isValidCLIACodes(conn, ProcedureCode) && !modifier.contains("QW")) {
+                            ErrorMsgs.append("<p style=\"color:black;\">CLIA required procedure <b>[" + ProcedureCode + "]</b> found, Procedure may require <b>QW</b> modifier  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+//                        else if (modifier.contains("QW") && !isValidCLIACodes(conn, ProcedureCode)) {
+//                            ErrorMsgs.append("<p style=\"color:black;\"><b>QW</b> modifier found, Modifier may require <b>CLIA</b>procedure code  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+
+                    }else{
+                        if (PrincipalDiagInfoCodes.equals("Z23")) {
+
+                            if (isValidVaccineCode(conn, ProcedureCode)) {
+                                Charge_VaccineCodes.add(ProcedureCode);
+                                sum_Of_units_Of_allVaccines += Integer.parseInt(Units);
+                            }
+
+                            if (ProcedureCode.equals("90472"))
+                                units_Of_90472 = Integer.parseInt(Units);
+
+                            if (ProcedureCode.equals("90460"))
+                                units_Of_90460 = Integer.parseInt(Units);
+
+                            if (ProcedureCode.equals("90461"))
+                                units_Of_90461 = Integer.parseInt(Units);
+                        }
+                    }
+
+
+                    if (isValidPQRSCodes(conn, ProcedureCode) && Double.parseDouble(Amount) != 0) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b>PQRS : [" + ProcedureCode + "]</b> Procedure found, <b>Amount</b> should be <b>equal</b> to 0 <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    } else if ( Double.parseDouble(Amount) <= 0) {
+                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Amount</b> should be <b>greater</b> than 0 for Procedure [" + ProcedureCode + "]<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                    ArrayList<String> WELL_VISIT_ICDs = new ArrayList<String>(Arrays.asList("Z00.00", "Z00.01", "Z00.110", "Z00.111", "Z00.121", "Z00.129", "Z01.411",
+                            "Z01.419", "Z30.015", "Z30.016", "Z30.44", "Z30.45"));
+                    ArrayList<String> WELL_VISIT_CPTs = new ArrayList<String>(Arrays.asList("G0402", "G0438", "G0439"));
+
+
+                    if (isValid_OFFICE_E_N_M(conn, ProcedureCode) && WELL_VISIT_ICDs.contains(PrincipalDiagInfoCodes)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is not <b>billable</b> with wellness ICDs <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    if ((PriFillingIndicator.equals("CI") || SecFillingIndicator.equals("CI"))) {
+                        if (find_CPT_between_Ranges(conn, "99381", "99397", ProcedureCode) && !(find_ICD_between_Ranges(conn, "Z0000", "Z13.9", PrincipalDiagInfoCodes))) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Principal Diagnosis Code</b> must be <b>Well visit</b> diagnose i.e  <b>Z00 - Z13.9</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                    if ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB"))) {
+                        if (WELL_VISIT_CPTs.contains(ProcedureCode) && !(find_ICD_between_Ranges(conn, "Z0000", "Z13.9", PrincipalDiagInfoCodes))) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Principal Diagnosis Code</b> must be <b>Well visit</b> diagnose i.e  <b>Z00 - Z13.9</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+
+                        if (find_CPT_between_Ranges(conn, "99381", "99397", ProcedureCode) || find_CPT_between_Ranges(conn, "90460", "90461", ProcedureCode)) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Well visit CPT/Vaccine</b> is not allowed by  <b>MEDICARE</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+//                    if (find_CPT_between_Ranges(conn, "90476", "90749", ProcedureCode) && !(!isEmpty(PrincipalDiagInfoCodes) && PrincipalDiagInfoCodes.equals("Z23"))) {
+//                        ErrorMsgs.append("<p style=\"color:black;\"><b>Well visit Vaccine</b> should be billed with <b> Z23</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                    }
+
+
+                    if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))) {
+                        if (isValid_I_Codes(conn, ProcedureCode)) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + ProcedureCode + "]</b>  is  <b>I HCPCS Code</b> which is not payable by <b>Medicare</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                    ArrayList<String> COVID_CPTS = new ArrayList<String>(Arrays.asList("91300", "91301", "0001A", "0002A", "0011A", "0012A", "91302", "91303", "0021A", "0022A", "0031A", "0003A", "0013A", "M0201", "99401", "0041A", "0042A", "0051A", "0052A", "0053A", "0054A", "0071A",
+                            "0072A", "91304", "91305", "91307", "91306", "0064A", "0004A", "0034A"));
+
+                    ArrayList<String> COVID_CPTS_TJ = new ArrayList<String>(Arrays.asList("90471", "0001A", "0002A", "0003A", "0004A", "0011A", "0012A", "0013A", "0021A", "0022A", "0031A", "0034A", "0041A", "0042A", "0051A", "0052A", "0053A", "0054A", "0064A", "0071A", "0072A", "90662", "90672", "90674", "90682", "90685", "90686", "90687", "90688", "90694", "90756",
+                            "90653", "91300", "91301", "91302", "91303", "91304", "91305", "91306", "91307"));
+
+
+                    ////system.out.println("ReasonVisit ->> " + ReasonVisit);
+                    if (ReasonVisit.toUpperCase().contains("CORONA VIRUS") || ReasonVisit.toUpperCase().contains("COVID")) {
+//                        if (!COVID_CPTS.contains(ProcedureCode) && !addCovidMsg) {
+//                            ErrorMsgs.append("<p style=\"color:black;\">Please Bill COVID-19 codes <b>" + COVID_CPTS.toString() + "</b>  and  create separate charge for rest of the CPT Codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            addCovidMsg = true;
+//                        }
+
+                        if (ProcedureCode.equals("91303") && !is_91303) {
+                            is_91303 = true;
+                        }
+
+                        if (!Arrays.asList("91300", "91301", "91302", "0031A").contains(ProcedureCode) && is_91303 && !addAdminCodeMsg) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Admin Code " + Arrays.asList("91300", "91301", "91302", "0031A").toString() + " </b>  is  missing with  <b>Vaccine [91303]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            addAdminCodeMsg = true;
+                        }
+
+                        if (COVID_CPTS_TJ.contains(ProcedureCode) && !modifier.contains("TJ")) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Per COVID Guidelines,  <b>Modifier : TJ </b>  is  required with CPT <b>[" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                    if(!isEmpty(ProcedureCode)&&(ProcedureCode.equals("99238")||ProcedureCode.equals("99239"))){
+                        if(!Units.equals("1")){
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Unit</b> should be eq <b>required</b> when billed with Procedure  [<b>" + ProcedureCode + "</b>]  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+//                    if (!isEmpty(PrincipalDiagInfoCodes) && PrincipalDiagInfoCodes.startsWith("F")) {
+//                        if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode)) {
+//                            ErrorMsgs.append("<p style=\"color:black;\"><b>Mental Disorder</b> diagnosis may not be billed with E&Ms <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+
+//                    if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode)) {
+//                        if (!modifier.contains("24") && !modifier.contains("25") && !modifier.contains("57")) {
+//                            ErrorMsgs.append("<p style=\"color:black;\"><b>E&M Modifier</b> is required with E&Ms Procedures <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+//                    }
+
+                    if (PriFillingIndicator.equals("MA") || PriFillingIndicator.equals("MB")) {
+                        if (ProcedureCodeModifier.contains(mod1) || ProcedureCodeModifier.contains(mod2) || ProcedureCodeModifier.contains(mod3) || ProcedureCodeModifier.contains(mod4)) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Procedure Code Modifier</b> for Services rendered is <b>InValid</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+
+
+
+
+                    loop_2400.addSegment("LX*" + iCount);//LX SERVICE LINE COUNTER
+                    loop_2400.addSegment("SV2*" + rset.getString(1) + "*HC:" + ProcedureCode + ":" + rset.getString(3) + ":" + rset.getString(4) + ":" + rset.getString(5) + ":" + rset.getString(6) + ":" + rset.getString(7) + "*" + Amount + "*"+MeasurementCode+"*" + Units);//SV2 INSTITUTIONAL SERVICE
+                    loop_2400.addSegment("DTP*472*D8*"+myFormat.format(fromUser.parse(ServiceDate)));
+
+
+
+                    if(isValid_NDC_Code(conn, ProcedureCode)){
+
+                        ps = conn.prepareStatement("SELECT NonCoveredAmount ,DrugCode ,DrugUnit ,a.Unit ,DrugDays , " +
+                                " DrugCodeFormat ,DrugPrice ,PrescriptionNum ,PrescriptionDate ,PrescriptionMonths,b.Qualifier FROM "+Database+".ClaimChargesOtherInfo a " +
+                                " INNER JOIN ClaimMasterDB.NDC_Units b ON a.Unit=b.Id" +
+                                " WHERE ClaimIdx=? AND ChargeIdx=?");
+                        ps.setInt(1,ClaimInfoMasterId);
+                        ps.setInt(2,ClaimChargeIdx);
+                        hrset = ps.executeQuery();
+                        if(hrset.next()){
+                            NonCoveredAmount=hrset.getString(1);
+                            DrugCode=hrset.getString(2);
+                            DrugUnit=hrset.getString(3);
+                            Unit=hrset.getString(4);
+                            DrugDays=hrset.getString(5);
+                            DrugCodeFormat=hrset.getString(6);
+                            DrugPrice=hrset.getString(7);
+                            PrescriptionNum=hrset.getString(8);
+                            PrescriptionDate=hrset.getString(9);
+                            PrescriptionMonths=hrset.getString(10);
+                            Qualifier=hrset.getString(11);
+                            NDC_info_found=true;
+                        }
+                        hrset.close();
+                        ps.close();
+
+
+//                        if (!NDC_info_found) {
+//                            ErrorMsgs.append("<p style=\"color:black;\"><b>NDC information</b> is <b>missing</b> for Procedure <b>["+ProcedureCode+"]</b>. it must be used when reporting for <b>drug</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }else {
+//                            if (isEmpty(DrugCode)) {
+//                                ErrorMsgs.append("<p style=\"color:black;\"><b>National Drug Code</b> is <b>missing</b> for Procedure <b>[" + ProcedureCode + "]</b> . it must be used when reporting for <b>drug</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                            } else {
+//                                if (!isValid_NDC_Code_Format(conn, ProcedureCode, DrugCode)
+//                                        || !DrugCode.replace("-", "").matches(NDC_REGEX)) {
+//                                    ErrorMsgs.append("<p style=\"color:black;\"><b>National Drug Code</b> is <b>inValid</b> for Procedure <b>[" + ProcedureCode + "]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                                }else if (isEmpty(DrugUnit)) {
+//                                    ErrorMsgs.append("<p style=\"color:black;\"><b>National Drug Quantity</b> is <b>missing</b> for Procedure <b>[" + ProcedureCode + "]</b> . it must be used when reporting for <b>drug</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                                }else{
+//                                    loop_2400.addSegment("LIN**N4*"+DrugCode );//NDC
+//                                    loop_2400.addSegment("CTP****"+DrugUnit+"*"+Qualifier);//NDC
+//                                }
+//                            }
+//                        }
+
+
+
+
+
+                    }
+
+                    if (isValid_E_N_M_ProceduresCodes(conn, ProcedureCode)) {
+                        if (!isEmpty(mod1)) {
+                            if (InValid_E_N_M_Modifiers(conn, mod1)) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Modifier <b>[ " + mod1 + " ]</b> is <b>not allowed </b> with E&M Procedure code <b>[ " + ProcedureCode + " ]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!isEmpty(mod2)) {
+                            if (InValid_E_N_M_Modifiers(conn, mod2)) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Modifier <b>[ " + mod2 + " ]</b> is <b>not allowed </b> with E&M Procedure code <b>[ " + ProcedureCode + " ]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!isEmpty(mod3)) {
+                            if (InValid_E_N_M_Modifiers(conn, mod3)) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Modifier <b>[ " + mod3 + " ]</b> is <b>not allowed </b> with E&M Procedure code <b>[ " + ProcedureCode + " ]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (!isEmpty(mod4)) {
+                            if (InValid_E_N_M_Modifiers(conn, mod4)) {
+                                ErrorMsgs.append("<p style=\"color:black;\">Modifier <b>[ " + mod4 + " ]</b> is <b>not allowed </b> with E&M Procedure code <b>[ " + ProcedureCode + " ]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                    }
+
+
+
+
+
+                    TotalChargeAmount += Double.parseDouble(Amount);
+                    TagCount = TagCount + 2;
+                    //out.println("TagCount---11--"+TagCount);
+                    iCount++;
+
+                    if (modifier.equals("")) Charge_ProcedureCodes_WITHOUT_MODIFIER.add(ProcedureCode);
+
+                    Charge_ProcedureCodes.add(ProcedureCode);
+                }
+                rset.close();
+                stmt.close();
+
+                Loop loop_se = loop_gs.addChild("SE");
+//                loop_se.addSegment("SE*XX*000987654");
+                loop_se.addSegment("SE*XX*"+InterControlNo);
+
+                Loop loop_ge = loop_isa.addChild("GE");
+//                loop_ge.addSegment("GE*1*000987654");
+                loop_ge.addSegment("GE*1*"+InterControlNo);
+
+                Loop loop_iea = x12.addChild("IEA");
+//                loop_iea.addSegment("IEA*1*000987654");
+                loop_iea.addSegment("IEA*1*"+InterControlNo);
+
+                // Since the SE loop has the incorrect segment count let us fix that.
+                Integer count = loop_st.size();
+                count += 1; // In the loop hierarchy SE is not a child loop of ST. So
+                // when we get the rows in ST loop it does not have the count of SE.
+                // so add 1.
+
+                // We can set the count directly, like
+                // loop_se.getSegment(0).setElement(1, count.toString());
+                // this is just to show how to use the findLoop()
+
+                //TRAILER
+                List<Loop> trailer = x12.findLoop("SE");
+                trailer.get(0).getSegment(0).setElement(1, count.toString(), 2);
+
+                //another way
+                List<Segment> se = x12.findSegment("SE");
+                se.get(0).setElement(1, count.toString(), 2);
+
+                //another way
+                loop_se.getSegment(0).setElement(1, count.toString(), 2);
+
+
+
+                if (Gender.equals("F")) {
+                    for (String ICD :
+                            ICDs) {
+                        if (validGenderICDs(conn, ICD, "Male")) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Male ICD [" + ICD + "]</b> cannot be applied to <b>Female</b> Patient <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                    for (String CPT :
+                            Charge_ProcedureCodes) {
+                        if (validGenderCPT(conn, CPT, "MALE")) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Male Procedure [" + CPT + "]</b> cannot be applied to <b>Female</b> Patient <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                } else {
+
+                    for (String ICD :
+                            ICDs) {
+                        if (validGenderICDs(conn, ICD, "Female")) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Female ICD [" + ICD + "]</b> cannot be applied to <b>Male</b> Patient  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                    for (String CPT :
+                            Charge_ProcedureCodes) {
+                        if (validGenderCPT(conn, CPT, "FEMALE")) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Female Procedure [" + CPT + "]</b> cannot be applied to <b>Male</b> Patient <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                }
+
+                for (String ICD :
+                        ICDs) {
+                    if (!validAgeICDs(conn, ICD, getAge(LocalDate.parse(_DOB)))) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b> ICD [" + ICD + "]</b> cannot be applied to <b>Age : " + getAge(LocalDate.parse(_DOB)) + "</b>  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB"))) || ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))) {
+                    if (PrincipalDiagInfoCodes.equals("Z23")) {
+                        if (Charge_ProcedureCodes.contains("G0009")) {
+                            if (!containsValidRelativeAdminCode(conn, "G0009", Charge_ProcedureCodes, "Z23")) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0009", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0009]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (Charge_ProcedureCodes.contains("G0010")) {
+                            if (!containsValidRelativeAdminCode(conn, "G0010", Charge_ProcedureCodes, "Z23")) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0010", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0010]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+                        if (Charge_ProcedureCodes.contains("G0008")) {
+                            if (!containsValidRelativeAdminCode(conn, "G0008", Charge_ProcedureCodes, "Z23")) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Bill Vaccine Code : " + getRespectiveVaccineCode(conn, "G0008", "Z23").toString() + "</b>  is required to bill  <b>Relative Admin Code : [G0008]</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+
+                    }
+                } else {
+                    if (PrincipalDiagInfoCodes.equals("Z23")) {
+                        if (Charge_ProcedureCodes.contains("90471")) {
+                            if (Charge_VaccineCodes.size() > 1) {
+                                if (!Charge_ProcedureCodes.contains("90472")) {
+                                    if ((Charge_VaccineCodes.size() - 1) == 1)
+                                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Additional Vaccine of " + (Charge_VaccineCodes.size() - 1) + "</b> Administration Code is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    else
+                                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Additional Vaccine of " + (Charge_VaccineCodes.size() - 1) + "</b> Administration Codes are <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                } else if (Charge_ProcedureCodes.contains("90472") && (units_Of_90472 != (Charge_VaccineCodes.size() - 1))) {
+                                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Units</b> of <b>90472</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                }
+                            }
+                        } else {
+                            ErrorMsgs.append("<p style=\"color:black;\"> <b>Primary Vaccine admin 90471</b> is <b>Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+
+                    if (PrincipalDiagInfoCodes.equals("Z23")) {
+                        //system.out.println("No. of Vaccines -> " + Charge_VaccineCodes.size());
+                        //system.out.println("Units units_Of_90460  -> " + units_Of_90460);
+                        if (Charge_ProcedureCodes.contains("90460")) {
+                            if (Charge_VaccineCodes.size() > 1) {
+                                if (!Charge_ProcedureCodes.contains("90461")) {
+                                    if (Charge_VaccineCodes.size() == 1)
+                                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Vaccine Toxoid of " + Charge_VaccineCodes.size() + "</b> Administration Code is missing<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    else
+                                        ErrorMsgs.append("<p style=\"color:black;\"> <b>Vaccine Toxoid of " + Charge_VaccineCodes.size() + "</b> Administration Codes are missing<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                } else if (Charge_ProcedureCodes.contains("90461") && (units_Of_90461 != sum_Of_units_Of_allVaccines)) {
+                                    ErrorMsgs.append("<p style=\"color:black;\"> <b>Units</b> of <b>90461</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                }
+                            }
+
+
+                            if (units_Of_90460 != Charge_VaccineCodes.size()) {
+                                ErrorMsgs.append("<p style=\"color:black;\"> <b>Units</b> of <b>90460</b> must be equal to number of additional vaccine codes<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+
+                            if ((getAge(LocalDate.parse(_DOB)) > 18)) {
+                                ErrorMsgs.append("<p style=\"color:black;\"> <b>Age</b> of patient must be less then or equal to <b> 18 Yrs </b> for <b>90460</b> & <b>90461</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        } else {
+                            ErrorMsgs.append("<p style=\"color:black;\"> <b>Primary Vaccine admin 90460</b> is <b> Missing</b><span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+                }
+
+                String vaccGrp1 = null, vaccGrp2 = null, r = null;
+                String[] result = null;
+
+
+                for (String CPT :
+                        Charge_ProcedureCodes) {
+                    if (CPT.equals("G0009") || CPT.equals("G0010") || CPT.equals("G0008")) {
+                        vaccGrp1 = CPT;
+                    }
+
+                    if (CPT.equals("90471") || CPT.equals("90472")) {
+                        vaccGrp2 = CPT;
+                    }
+
+                    if (vaccGrp1 != null && vaccGrp2 != null) {
+                        ErrorMsgs.append("<p style=\"color:black;\">System identifies medicare and commercial vaccine admins <b>[" + vaccGrp1 + "]</b> & <b>[" + vaccGrp2 + "]</b> alongside which is incorrect by coding point of view. please review coding before filing the claim<span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        break;
+                    }
+
+                    if (!findAddOnCode(conn, CPT, Charge_ProcedureCodes)) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Add On Code <b>[" + CPT + "]</b> cannot be billed without Primary Codes <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                    result = isNotAllowed_NCCI(conn, CPT, Charge_ProcedureCodes) == null ? null : isNotAllowed_NCCI(conn, CPT, Charge_ProcedureCodes).split("~");
+                    if (result != null) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + result[0] + "]</b> is <b>not allowed</b> with <b>[" + result[1] + "]</b> in the Billing Guideline CCI. <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                    r = NCD_CPT_ICD_Denial(conn, CPT, PrincipalDiagInfoCodes);
+                    result = r == null ? null : r.split("~");
+                    if (result != null) {
+                        ErrorMsgs.append("<p style=\"color:black;\">ICD <b>[" + result[0] + "]</b> is <b>Denied</b> with Procedure <b>[" + result[1] + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+
+                    r = NCD_CPT_ICD_Med(conn, CPT, PrincipalDiagInfoCodes);
+//                            //system.out.println("r ** "+r);
+                    result = r == null ? null : r.split("~");
+                    if (result != null) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b>Medical Neccesity </b> is <b>required</b> when ICD <b>[" + result[0] + "]</b> is billed with Procedure <b>[" + result[1] + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                }
+
+                for (String CPT :
+                        Charge_ProcedureCodes_WITHOUT_MODIFIER) {
+
+                    r = Mod_Is_MUST_NCCI(conn, CPT, Charge_ProcedureCodes_WITHOUT_MODIFIER);
+                    result = r == null ? null : r.split("~");
+                    if (result != null) {
+                        ErrorMsgs.append("<p style=\"color:black;\">Procedure Code <b>[" + result[0] + "]</b> is <b>inconsistent</b> with <b>[" + result[1] + "]</b> in the Billing Guideline CCI Modifier is allowed but not found <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+
+                }
+
+                if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA"))
+                        || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))
+                        || ((PriFillingIndicator.equals("16") || SecFillingIndicator.equals("16")))
+                        || getAge(LocalDate.parse(_DOB)) >= 65) {
+
+                    for (String CPT :
+                            Charge_ProcedureCodes) {
+
+                        r = LCD_CPT_ICD_Denial(conn, CPT, PrincipalDiagInfoCodes);
+                        //system.out.println("LCD_CPT_ICD_Denial ** " + r);
+                        result = r == null ? null : r.split("~");
+                        if (result != null) {
+                            ErrorMsgs.append("<p style=\"color:black;\">Per <b>LCD</b> Articles , ICD <b>[" + result[0] + "]</b> is <b>Denied</b> with Procedure <b>[" + result[1] + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+
+                        if ((PriFillingIndicator.equals("CI") || SecFillingIndicator.equals("CI"))) {
+                            if (find_CPT_between_Ranges(conn, "99201", "99215", CPT) && !(find_ICD_between_Ranges(conn, "Z0000", "Z139", PrincipalDiagInfoCodes))) {
+                                ErrorMsgs.append("<p style=\"color:black;\"><b>Well visit ICD : [" + PrincipalDiagInfoCodes + "]</b> is not allowed with  <b>Procedure : [" + CPT + "]</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                            }
+                        }
+
+//                        r = LCD_CPT_ICD_MUST(conn, CPT, PrincipalDiagInfoCodes);
+//                        //system.out.println("LCD_CPT_ICD_MUST ** " + r);
+//                        if (r != null) {
+//                            ErrorMsgs.append("<p style=\"color:black;\">Per <b>LCD</b> Articles , Supporting ICD for  Procedure <b>[" + r + "]</b> is <b>missing</b>  <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+//                        }
+
+                    }
+
+                }
+
+                if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("87726") || PriInsuranceNameId.equals("39026") || PriInsuranceNameId.equals("13551") || PriInsuranceNameId.equals("61101"))) {
+                    if (isSequelaCode(conn, PrincipalDiagInfoCodes)) {
+                        ErrorMsgs.append("<p style=\"color:black;\"><b> SEQUELA ICD : [" + PrincipalDiagInfoCodes + "] </b> Can’t Be Billed As The Primary, First Listed, Or Principal Diagnosis On A Claim, Nor Can It Be The Only Diagnosis On A Claim, Please Check Coding Before Billing Out The Claim <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                    }
+                }
+
+                if (!isEmpty(PriInsuranceNameId) && (PriInsuranceNameId.equals("13551") || PriInsuranceNameId.equals("11315"))) {
+                        for (String CPT :
+                                Charge_ProcedureCodes) {
+                            if (PrincipalDiagInfoCodes.equals("Z23")) {
+                                if (CPT.equals("82270") || CPT.equals("82271") || CPT.equals("82272") || CPT.equals("82273") || CPT.equals("82274") || CPT.equals("G0328")) {
+                                    ErrorMsgs.append("<p style=\"color:black;\">Please use valid CPT from <b> (82270,82271,82272,82273,82274, G0328) </b> for ICD <b>{" + PrincipalDiagInfoCodes + "}</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                                    if (!(getAge(LocalDate.parse(_DOB)) >= 50 && getAge(LocalDate.parse(_DOB)) <= 75))
+                                        ErrorMsgs.append("<p style=\"color:black;\">Patient <b>Age</b> range is <b> 50 to 75 </b> for CPT <b>{" + CPT + "}</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+
+                                }
+
+                            }
+                        }
+                }
+
+                if ((PriFillingIndicator.equals("MA") || SecFillingIndicator.equals("MA")) || ((PriFillingIndicator.equals("MB") || SecFillingIndicator.equals("MB")))) {
+                    for (String CPT :
+                            Charge_ProcedureCodes) {
+                        if (CPT.startsWith("S")) {
+                            ErrorMsgs.append("<p style=\"color:black;\"><b>Procedure Code [" + CPT + "]</b> is <b>InValid</b> for <b>MEDICARE</b> <span> <i class=\"fa fa-times-circle-o\" style=\"color: red;font-size: 20px;\"></i></span></p>\n");
+                        }
+                    }
+
+                }
+
+                ErrorMsgs.setLength(0);
+
+                ps = conn.prepareStatement("SELECT IFNULL(RuleHTML,'') FROM "+Database+".Claim_AuditTrails WHERE ClaimNo=? AND Action='FIRED'");
+                ps.setString(1,ClaimNumber);
+                rset = ps.executeQuery();
+                while(rset.next())
+                {
+                    ErrorMsgs.append(rset.getString(1));
+                }
+                rset.close();
+                ps.close();
+
+
+
+                ////system.out.println(loop_st.size());
+                //system.out.println(x12.toString());
+                ////system.out.println(x12.toXML());
+
+                //out.println("TagCount--ALL--"+TagCount);
+
+                if (ErrorMsgs.length() == 0) {
+
+                    String FILENAME = "EDI_Inst_" + PatientName + "_" + PatientRegId + VisitId + "_" + ClaimNumber + ".txt";
+
+                    File file = new File("/sftpdrive/opt/EDI/" + DirectoryName + "/Institutional/"+FILENAME);
+                    if (file.exists()) {
+                        file.delete();
+                    }
+
+                    File myObj = new File("/sftpdrive/opt/EDI/" + DirectoryName + "/Institutional/"+FILENAME);
+                    if (myObj.createNewFile()) {
+
+                        FileWriter myWriter = new FileWriter("/sftpdrive/opt/EDI/" + DirectoryName + "/Institutional/"+FILENAME);
+                        myWriter.write(x12.toString().toUpperCase());
+                        //                    myWriter.write(ISA.toString());
+                        //                    myWriter.write(GS.toString());
+                        //                    myWriter.write(ST.toString());
+                        //                    myWriter.write(BHT.toString());
+                        //                    myWriter.write(NM1.toString());
+                        //                    myWriter.write(PER.toString());
+                        //                    myWriter.write(NM1_2.toString());
+                        //                    myWriter.write(HL_1.toString());
+                        //                    myWriter.write(PRV_BI.toString());
+                        //                    myWriter.write(NM1_3.toString());
+                        //                    myWriter.write(N3_1.toString());
+                        //                    myWriter.write(N4_1.toString());
+                        //                    myWriter.write(REF_1.toString());
+                        //                    myWriter.write(PER_1.toString());
+                        //                    myWriter.write(NM1_4.toString());
+                        //                    myWriter.write(N3_2.toString());
+                        //                    myWriter.write(N4_2.toString());
+                        //                    myWriter.write(HL_2.toString());
+                        //                    myWriter.write(SBR.toString());
+                        //                    myWriter.write(NM1_5.toString());
+                        //                    myWriter.write(N3_3.toString());
+                        //                    myWriter.write(N4_3.toString());
+                        //                    myWriter.write(DMG.toString());
+                        //                    myWriter.write(REF_2.toString());
+                        //                    myWriter.write(NM1_6.toString());
+                        //                    myWriter.write(N3_4.toString());
+                        //                    myWriter.write(N4_4.toString());
+                        //                    myWriter.write(CLM.toString());
+                        //
+                        //                    if(!InitialTreatDateAddInfo.equals("")) {
+                        //                        myWriter.write(DTP_1.toString());
+                        //                    }
+                        //                    if(!LastSeenDateAddInfo.equals("")){
+                        //                        myWriter.write(DTP_2.toString());
+                        //                    }
+                        ////                    if(!AccidentIllnesDateAddInfo.equals("")){
+                        ////                        myWriter.write(DTP_3.toString());
+                        ////                    }
+                        //                    if(!LastMenstrualPeriodDateAddInfo.equals("")){
+                        //                        myWriter.write(DTP_4.toString());
+                        //                    }
+                        //                    if(!UnabletoWorkToDateAddInfo.equals("")){
+                        //                        //myWriter.write(DTP_5.toString());
+                        //                        myWriter.write(DTP_6.toString());
+                        //                    }
+                        //                    myWriter.write(REF_3.toString());
+                        //
+                        //                    if(!ClaimNoteAddinfo.equals("")){
+                        //                        myWriter.write(NTE.toString());
+                        //                    }
+                        //                    myWriter.write(HI.toString());
+                        //                    myWriter.write(NM1_7.toString());
+                        //                    myWriter.write(PRV_2.toString());
+                        //                    myWriter.write(NM1_8.toString());
+                        //                    myWriter.write(N3_5.toString());
+                        //                    myWriter.write(N4_5.toString());
+                        //                    myWriter.write(LX_SV1.toString());
+                        //                    myWriter.write(DTP_7.toString());
+                        //                    myWriter.write(REF_4.toString());
+                        //                    myWriter.write(SE.toString());
+                        //                    myWriter.write(GE.toString());
+                        //                    myWriter.write(IEA.toString());
+
+                        myWriter.close();
+                    }
+
+                    ps = conn.prepareStatement("UPDATE " + Database + ".ClaimInfoMaster SET Status='3', timesSubmitted=timesSubmitted+1 , PCN='" + PatientControlNumber + "' , EDI_FILE ='"+FILENAME+"' , EDI_DIR='Institutional' WHERE ClaimNumber='" + ClaimNumber + "'");
+                    ps.executeUpdate();
+                    ps.close();
+
+
+                    ps = conn.prepareStatement("INSERT INTO "+Database+".Claim_AuditTrails ( `RuleText`, `ClaimNo`, `ClaimType`, `UserID`, `ClientID`, `CreatedAt`,`UserIP` ,`Action`) VALUES (?,?,?,?,?,NOW(),?,'GENERATED')");
+                    ps.setString(1,"EDI GENERATED");
+                    ps.setString(2,ClaimNumber);
+                    ps.setString(3,ClaimType);
+                    ps.setString(4,UserId);
+                    ps.setInt(5,ClientId);
+                    ps.setString(6,ClientIP);
+                    ps.executeUpdate();
+                    ps.close();
+                }
+
+
+            }
+            Instant end = Instant.now();
+            Duration ExecutionTime = Duration.between(start, end);
+
+            System.out.println("ErrorMsgs.length() = "+ErrorMsgs.length());
+            if (ErrorMsgs.length() != 0)
+                out.println(ErrorMsgs + "~" + ExecutionTime);
+            else {
+                out.println("1");
+            }
+//            Parsehtm Parser = new Parsehtm(request);
+//            Parser.GenerateHtml(out, Services.GetHtmlPath(getServletContext()) + "Reports/Addinfo.html");
+        } catch (Exception e) {
+            //system.out.println("An error occurred.");
+            //system.out.println(e.getMessage());
+            System.out.println(e.getMessage() + Query);
+            String str = "";
+            for (i = 0; i < e.getStackTrace().length; ++i) {
+                str = str + e.getStackTrace()[i] + "<br>";
+            }
+            System.out.println(str);
+        }
     }
 
     private boolean isInValidAddress(String address) {
@@ -5233,38 +8631,34 @@ public class InsClaimTesting extends HttpServlet {
         return date.equals("00000000") || date.equals("19000101") || Integer.parseInt(date) > Integer.parseInt(ClaimCreateDate);
     }
 
-    private boolean isInValidTaxonomy(Connection conn, String taxonomy) throws SQLException {
-        boolean isInValid = false;
-        ResultSet rset = null;
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.WPCTaxonomy WHERE Codes=?");
-        ps.setString(1, taxonomy);
-        rset = ps.executeQuery();
-        if (rset.next()) {
-            if (rset.getInt(1) == 0) {
-                isInValid = true;
+    private String CheckStringVariable(HttpServletRequest request, String VariableName) {
+        try {
+            if (request.getParameter(VariableName).length() < 1) {
+                VariableName = null;
+            } else {
+                VariableName = request.getParameter(VariableName).trim();
             }
+
+        } catch (Exception e) {
+            //system.out.println(e.getMessage() + "-- VariableName -- " + VariableName);
         }
-        rset.close();
-        ps.close();
-        return isInValid;
+        return VariableName;
     }
 
-    private boolean isValidAnesthesiaCodes(Connection conn, String Code) throws SQLException {
-        boolean isValid = false;
-        ResultSet rset = null;
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.AnesthesiaCodes WHERE Code=?");
-        ps.setString(1, Code);
-        //System.out.println("Anesthesia Codes ->>>> QUERY    " + ps.toString());
-        rset = ps.executeQuery();
-        if (rset.next()) {
-            if (rset.getInt(1) == 1) {
-                isValid = true;
+    private String CheckIntegerVariable(HttpServletRequest request, String VariableName) {
+        try {
+            if (request.getParameter(VariableName).length() < 1) {
+                VariableName = "0";
+            } else {
+                VariableName = request.getParameter(String.valueOf(VariableName)).trim();
             }
+
+        } catch (Exception e) {
+            //system.out.println(e.getMessage() + "VariableName" + VariableName);
         }
-        rset.close();
-        ps.close();
-        return isValid;
+        return VariableName;
     }
+
 
     private boolean isValidCLIACodes(Connection conn, String Code) throws SQLException {
         boolean isValid = false;
@@ -5281,6 +8675,41 @@ public class InsClaimTesting extends HttpServlet {
         ps.close();
         return isValid;
     }
+
+    private String CheckCheckBoxValue(HttpServletRequest request, String VariableName) {
+        try {
+            if (request.getParameter(VariableName) == null) {
+                VariableName = "0";
+            } else {
+                VariableName = request.getParameter(VariableName).trim();
+                if (VariableName.equals("on")) {
+                    VariableName = "1";
+                } else {
+                    VariableName = "0";
+                }
+            }
+
+        } catch (Exception e) {
+            //system.out.println(e.getMessage() + "VariableName" + VariableName);
+        }
+        return VariableName;
+    }
+
+    private String CheckBox(String VariableName) {
+        String ChkBox = "";
+        try {
+            if (VariableName.equals("1")) {
+                ChkBox = "<input type=\"checkbox\" id=\"" + VariableName + "\" name=\"" + VariableName + "\" class=\"filled-in\" checked />";
+            } else {
+                ChkBox = "<input type=\"checkbox\" id=\"" + VariableName + "\" name=\"" + VariableName + "\" class=\"filled-in\" />";
+            }
+
+        } catch (Exception e) {
+            //system.out.println(e.getMessage() + "VariableName" + VariableName);
+        }
+        return ChkBox;
+    }
+
 
     private boolean isValidConsultantProceduresCodes(Connection conn, String Code) throws SQLException {
         boolean isValid = false;
@@ -5330,6 +8759,7 @@ public class InsClaimTesting extends HttpServlet {
         return isValid;
     }
 
+
     private boolean isValid_E_N_M_Surgery_ProceduresCodes(Connection conn, String Code) throws SQLException {
         boolean isValid = false;
         ResultSet rset = null;
@@ -5362,6 +8792,45 @@ public class InsClaimTesting extends HttpServlet {
         return isValid;
     }
 
+    private boolean isInValidZipCode(Connection conn, String state, String zipCode) throws SQLException {
+        boolean isInValid = true;
+        ResultSet rset = null;
+
+        if(zipCode.length()>=5){
+            zipCode = zipCode.substring(0,5);
+        }
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ZipCodeFacility WHERE Zip=? AND State=?");
+        ps.setString(1, zipCode);
+        ps.setString(2, state);
+//        System.out.println("ZipCodeFacility -> " + ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+//            //system.out.println("ZipCodeFacility -> " + rset.getInt(1));
+            if (rset.getInt(1) > 0)
+                isInValid = false;
+        }
+        rset.close();
+        ps.close();
+        //System.out.println("ZipCodeFacility isInValid -> " + isInValid);
+
+        if (isInValid) {
+            ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ZipCodeLibrary WHERE ZIPCode=? AND State=?");
+            ps.setString(1, zipCode);
+            ps.setString(2, state);
+//            System.out.println("ZipCodeLibrary -> " + ps.toString());
+            rset = ps.executeQuery();
+            if (rset.next()) {
+//                //system.out.println("ZipCodeLibrary -> " + rset.getInt(1));
+                if (rset.getInt(1) > 0)
+                    isInValid = false;
+            }
+            rset.close();
+            ps.close();
+        }
+
+        return isInValid;
+    }
+
     private boolean isValid_I_Codes(Connection conn, String Code) throws SQLException {
         boolean isValid = false;
         ResultSet rset = null;
@@ -5378,12 +8847,30 @@ public class InsClaimTesting extends HttpServlet {
         return isValid;
     }
 
-    private boolean isValidVaccineCode(Connection conn, String Code) throws SQLException {
+    private boolean isInValidTaxonomy(Connection conn, String taxonomy) throws SQLException {
+        boolean isInValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.WPCTaxonomy WHERE Codes=?");
+        ps.setString(1, taxonomy);
+
+//        System.out.println("isInValidTaxonomy ->> "+ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) == 0) {
+                isInValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isInValid;
+    }
+
+    private boolean isValidAnesthesiaCodes(Connection conn, String Code) throws SQLException {
         boolean isValid = false;
         ResultSet rset = null;
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.VaccineCodesComponents WHERE VaccineCode=?");
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.AnesthesiaCodes WHERE Code=?");
         ps.setString(1, Code);
-//        System.out.println("QUERY -> " + ps.toString());
+        ////system.out.println("Anesthesia Codes ->>>> QUERY    " + ps.toString());
         rset = ps.executeQuery();
         if (rset.next()) {
             if (rset.getInt(1) == 1) {
@@ -5395,31 +8882,11 @@ public class InsClaimTesting extends HttpServlet {
         return isValid;
     }
 
-    private boolean isValid_OFFICE_E_N_M(Connection conn, String Code) throws SQLException {
+    private boolean isValid_NDC_Code(Connection conn, String Code) throws SQLException {
         boolean isValid = false;
         ResultSet rset = null;
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.`CPTMaster` where (CPTCode BETWEEN '99201' AND '99357' OR  CPTCode BETWEEN '92002' AND '92014')  AND CPTCode=?");
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.NDC_CPT_Crosswalk WHERE HCPCS_Code=?");
         ps.setString(1, Code);
-
-//        "Query ->> " + ps.toString());
-        rset = ps.executeQuery();
-        if (rset.next()) {
-            if (rset.getInt(1) == 2) {
-                isValid = true;
-            }
-        }
-        rset.close();
-        ps.close();
-        return isValid;
-    }
-
-    private boolean ValidMammographyCPT(Connection conn, String Code) throws SQLException {
-        boolean isValid = false;
-        ResultSet rset = null;
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.`CPTMaster` where (CPTCode BETWEEN '77053' AND '77067')  AND CPTCode=?");
-        ps.setString(1, Code);
-
-//        "Query ->> " + ps.toString());
         rset = ps.executeQuery();
         if (rset.next()) {
             if (rset.getInt(1) > 0) {
@@ -5447,14 +8914,17 @@ public class InsClaimTesting extends HttpServlet {
         return isValid;
     }
 
-    private boolean isBMI_ICD(Connection conn, String Code) throws SQLException {
+    private boolean isValid_NDC_Code_Format(Connection conn, String Code,String NDC) throws SQLException {
         boolean isValid = false;
         ResultSet rset = null;
-//        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM oe.DiagnosisCodes WHERE Code LIKE 'Z68%' AND Code=?");
-        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ICDMaster WHERE ICD LIKE 'Z68%' AND ICD=?");
+        NDC=addChar(NDC, '-', 5);
+        NDC=addChar(NDC, '-', 10);
+        //system.out.println("NDC FORMAT ->> "+NDC);
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.NDC_CPT_Crosswalk WHERE HCPCS_Code=? AND NDC=?");
         ps.setString(1, Code);
-        //System.out.println("QUERY ->>  " + ps.toString());
+        ps.setString(2, NDC);
 
+        System.out.println("isValid_NDC_Code_Format ->> "+ps.toString());
         rset = ps.executeQuery();
         if (rset.next()) {
             if (rset.getInt(1) > 0) {
@@ -5465,6 +8935,7 @@ public class InsClaimTesting extends HttpServlet {
         ps.close();
         return isValid;
     }
+
 
     private boolean isValidAnesthesiaModifier(Connection conn, String Modifier) throws SQLException {
         boolean isValid = false;
@@ -5482,12 +8953,102 @@ public class InsClaimTesting extends HttpServlet {
         return isValid;
     }
 
+    private boolean InValid_E_N_M_Modifiers(Connection conn, String Code) throws SQLException {
+        boolean isInValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.EnM_NotAllowed_Modifiers WHERE 'Mod'=? ");
+        ps.setString(1, Code);
+
+//        System.out.println("InValid_E_N_M_Modifiers -> "+ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isInValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isInValid;
+    }
+
+    private boolean isValidVaccineCode(Connection conn, String Code) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.VaccineCodesComponents WHERE VaccineCode=?");
+        ps.setString(1, Code);
+//        //system.out.println("QUERY -> " + ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) == 1) {
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    private boolean isValid_OFFICE_E_N_M(Connection conn, String Code) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.CPTMaster where (CPTCode BETWEEN '99201' AND '99357' OR  CPTCode BETWEEN '92002' AND '92014')  AND CPTCode=?");
+        ps.setString(1, Code);
+
+//        "Query ->> " + ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) == 2) {
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    private boolean ValidMammographyCPT(Connection conn, String Code) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.CPTMaster where (CPTCode BETWEEN '77053' AND '77067')  AND CPTCode=?");
+        ps.setString(1, Code);
+
+//        "Query ->> " + ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    private boolean isBMI_ICD(Connection conn, String Code) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+//        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM oe.DiagnosisCodes WHERE Code LIKE 'Z68%' AND Code=?");
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ICDMaster WHERE ICD LIKE 'Z68%' AND ICD=?");
+        ps.setString(1, Code);
+        ////system.out.println("QUERY ->>  " + ps.toString());
+
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
     private String formatDate(HttpServletRequest request, String VariableName) {
         try {
             VariableName = request.getParameter(VariableName) == null ? null : request.getParameter(VariableName).replaceAll("-", "");
 
         } catch (Exception e) {
-            System.out.println(e.getMessage() + "VariableName" + VariableName);
+            //system.out.println(e.getMessage() + "VariableName" + VariableName);
         }
         return VariableName;
     }
@@ -5609,7 +9170,7 @@ public class InsClaimTesting extends HttpServlet {
             DecimalFormat df = new DecimalFormat("#.##");
             Query = " Select IFNULL(Address,''), IFNULL(City,''), IFNULL(State,''), IFNULL(ZipCode,''), IFNULL(Phone,''),IFNULL(NPI,''), IFNULL(TaxanomySpecialty,''), IFNULL(TaxID,'') from oe.clients" +
                     " where Id = " + ClientId;
-            //System.out.println(Query);
+            ////system.out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -5639,7 +9200,7 @@ public class InsClaimTesting extends HttpServlet {
             Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster " +
                     " where Status = 0 and PatientRegId = " + PatientRegId + " and VisitId = " + VisitId +
                     " and ClaimNumber = '" + ClaimNumber + "'";
-            //System.out.println(Query);
+            ////system.out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -5792,7 +9353,7 @@ public class InsClaimTesting extends HttpServlet {
                         " LEFT JOIN oe_2.ProfessionalPayers e on a.SecondaryInsuranceId = e.Id " +
                         " LEFT JOIN " + Database + ".DoctorsList f on a.OperatingProvider = f.Id " +
                         "  where a.PatientRegId = " + PatientRegId + " and a.VisitId = " + VisitId + " and a.ClaimNumber = '" + ClaimNumber + "'";
-                //System.out.println(Query);
+                ////system.out.println(Query);
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -6307,21 +9868,21 @@ public class InsClaimTesting extends HttpServlet {
 
                 int iCount = 1;
                 String TotalChrgeAmt = "";
-                Query = "Select IFNULL(a.RevCode,''), IFNULL(a.HCPCS,''), IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), " +
+                Query = "Select IFNULL(a.RevCode,''), IFNULL(a.HCPCSProcedure,''), IFNULL(a.Mod1,''), IFNULL(a.Mod2,''), IFNULL(a.Mod3,''), " +
                         "IFNULL(a.Mod4,''), CASE WHEN a.DescriptionFrom = 0 THEN b.ShortDescription WHEN a.DescriptionFrom = 1 THEN c.Description ELSE c.Description END, " +
                         "IFNULL(a.Amount,''), IFNULL(a.Units,'') from " + Database + ".ClaimChargesInfo a " +
-                        " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCS = b.CPTCode " +
+                        " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCSProcedure = b.CPTCode " +
                         " LEFT JOIN oe.RevenueCode c on a.RevCode = c.Codes " +
                         "where a.ClaimInfoMasterId = " + ClaimInfoMasterId + " and a.ClaimNumber = '" + ClaimNumber + "'";
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 while (rset.next()) {
-                    String HCPCS = "";
+                    String HCPCSProcedure = "";
                     String Units = "";
                     if (rset.getString(2).contains(".")) {
-                        HCPCS = rset.getString(2).replace(".", "");
+                        HCPCSProcedure = rset.getString(2).replace(".", "");
                     } else {
-                        HCPCS = rset.getString(2);
+                        HCPCSProcedure = rset.getString(2);
                     }
                     String Amount = "";
                     if (rset.getString(8).contains(".")) {
@@ -6335,7 +9896,7 @@ public class InsClaimTesting extends HttpServlet {
                         //Units = Units.replace(".","");
                         Units = Units.substring(0, Units.indexOf("."));
                     }
-                    SV2_1.append("LX*" + iCount + "~\n" + "SV2*" + rset.getString(1) + "*HC:" + HCPCS + ":" + rset.getString(3) + ":" + rset.getString(4) + ":" + rset.getString(5) + ":" + rset.getString(6) + ":" + rset.getString(7) + "*" + Amount + "*UN*" + Units + "~\n");
+                    SV2_1.append("LX*" + iCount + "~\n" + "SV2*" + rset.getString(1) + "*HC:" + HCPCSProcedure + ":" + rset.getString(3) + ":" + rset.getString(4) + ":" + rset.getString(5) + ":" + rset.getString(6) + ":" + rset.getString(7) + "*" + Amount + "*UN*" + Units + "~\n");
                     TotalChargeAmount += Double.parseDouble(Amount);
                     TagCount = TagCount + 2;
                     //out.println("TagCount---11--"+TagCount);
@@ -6348,7 +9909,7 @@ public class InsClaimTesting extends HttpServlet {
                 if (TotalChrgeAmt.contains(".")) {
                     TotalChrgeAmt = (TotalChrgeAmt.substring(0, TotalChrgeAmt.indexOf(".")));
                 }
-                System.out.println(TotalChrgeAmt);
+                //system.out.println(TotalChrgeAmt);
 
                 CLM.append("CLM*915243155*" + TotalChrgeAmt + "***22:A:1*" + ProvAccAssigAddInfo + "*" + AssofBenifitAddInfo + "*" + ReleaseInfoAddInfo + "*" + ReleaseInfoAddInfo + "~\n");
                 //DTP_1.append("DTP*096*TM*" + DischargeHourAddInfo + "00~\n");
@@ -6582,7 +10143,7 @@ public class InsClaimTesting extends HttpServlet {
             Query = " Select COUNT(*) from " + Database + ".ClaimInfoMaster " +
                     " where  PatientRegId = " + PatientRegId + " and VisitId = " + VisitId +
                     " and ClaimNumber = '" + ClaimNumber + "'";
-            //System.out.println(Query);
+            ////system.out.println(Query);
             stmt = conn.createStatement();
             rset = stmt.executeQuery(Query);
             if (rset.next()) {
@@ -6687,7 +10248,7 @@ public class InsClaimTesting extends HttpServlet {
                         " LEFT JOIN oe_2.ProfessionalPayers e on a.SecondaryInsuranceId = e.Id " +
                         " LEFT JOIN " + Database + ".DoctorsList f on a.OperatingProvider = f.Id " +
                         " where a.PatientRegId = " + PatientRegId + " and a.VisitId = " + VisitId + " and a.ClaimNumber = '" + ClaimNumber + "'";
-                System.out.println("AA " + Query);
+                //system.out.println("AA " + Query);
                 stmt = conn.createStatement();
                 rset = stmt.executeQuery(Query);
                 if (rset.next()) {
@@ -7187,8 +10748,6 @@ public class InsClaimTesting extends HttpServlet {
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(20, 625); // set x and y co-ordinates
                         pdfContentByte.showText("Insuracnce Address");//Insurance Name and Address COmplete here  // Responsible Party Name and Address
-                        pdfContentByte.endText();
-                        pdfContentByte.beginText();
                         pdfContentByte.setFontAndSize(BaseFont.createFont(BaseFont.COURIER, BaseFont.CP1257, BaseFont.EMBEDDED), 10); // set fonts zine and name
                         pdfContentByte.setColorFill(BaseColor.BLACK);
                         pdfContentByte.setTextMatrix(20, 615); // set x and y co-ordinates
@@ -7284,11 +10843,11 @@ public class InsClaimTesting extends HttpServlet {
 
                         int ChrgesCount = 22;
                         int y = 565;
-                        Query = "Select IFNULL(a.DescriptionFrom,'1'),IFNULL(DATE_FORMAT(a.ServiceDate,'%m%d%y'),''), IFNULL(a.HCPCS,''), " +
+                        Query = "Select IFNULL(a.DescriptionFrom,'1'),IFNULL(a.ServiceDate,''), IFNULL(a.HCPCSProcedure,''), " +
                                 " IFNULL(a.Units,''), IFNULL(a.Amount,''), IFNULL(a.RevCode,''), IFNULL(b.ShortDescription,'') " +
                                 //"CASE WHEN  a.DescrptionFrom = 1 THEN b.ShortDescription WHEN a.DescriptionFrom = 2 THEN c.Category" +
                                 " from " + Database + ".ClaimChargesInfo a " +
-                                " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCS = b.CPTCode " +
+                                " LEFT JOIN oe." + ChargeMasterTableName + " b on a.HCPCSProcedure = b.CPTCode " +
                                 " where Status = 0 and ClaimInfoMasterId = " + ClaimInfoMasterId + " " +
                                 " and ClaimNumber = '" + ClaimNumber + "'";
                         stmt = conn.createStatement();
@@ -7781,5 +11340,494 @@ public class InsClaimTesting extends HttpServlet {
         rset.close();
         ps.close();
         return isValid;
+    }
+
+    private String isNotAllowed_NCCI(Connection conn, String cpt, ArrayList<String> charge_procedureCodes) throws SQLException {
+        boolean isNotAllowed = false;
+        ResultSet rset = null;
+        PreparedStatement ps = null;
+        String cpt1 = null, cpt2 = null;
+
+        for (String Proc :
+                charge_procedureCodes) {
+
+            if (Proc.equals(cpt)) continue;
+
+            ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.CCI_NOT_ALLOWED WHERE CPT_1=? AND CPT_2=? ");
+            ps.setString(1, Proc);
+            ps.setString(2, cpt);
+
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) > 0) {
+                    isNotAllowed = true;
+                    cpt1 = Proc;
+                    cpt2 = cpt;
+                    break;
+                }
+            }
+            rset.close();
+            ps.close();
+        }
+        if (isNotAllowed) {
+            return cpt1 + "~" + cpt2;
+        }
+        return null;
+    }
+
+    private String Mod_Is_MUST_NCCI(Connection conn, String cpt, ArrayList<String> charge_procedureCodes) throws SQLException {
+        boolean isAllowed = false;
+        ResultSet rset = null;
+        PreparedStatement ps = null;
+        String cpt1 = null, cpt2 = null;
+
+        for (String Proc :
+                charge_procedureCodes) {
+
+            if (Proc.equals(cpt)) continue;
+
+            ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.CCI_MOD_MUST WHERE CPT_1=? AND CPT_2=?");
+            ps.setString(1, Proc);
+            ps.setString(2, cpt);
+
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) > 0) {
+                    isAllowed = true;
+                    cpt1 = Proc;
+                    cpt2 = cpt;
+                    break;
+                }
+            }
+            rset.close();
+            ps.close();
+        }
+        if (isAllowed) {
+            return cpt1 + "~" + cpt2;
+        }
+        return null;
+    }
+
+    private boolean findAddOnCode(Connection conn, String cpt, ArrayList<String> charge_procedureCodes) throws SQLException {
+        boolean AddOnCodefound = false;
+        boolean PrimaryCodefound = false;
+        ResultSet rset = null;
+
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.AddOnCodes WHERE AddOnCode=?");
+        ps.setString(1, cpt);
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                AddOnCodefound = true;
+            }
+        }
+        rset.close();
+        ps.close();
+
+        if (AddOnCodefound) {
+            for (String Proc :
+                    charge_procedureCodes) {
+
+                if (Proc.equals(cpt)) continue;
+
+                ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.AddOnCodes WHERE PrimaryCodes=? AND AddOnCode=?");
+                ps.setString(1, Proc);
+                ps.setString(2, cpt);
+
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    if (rset.getInt(1) > 0) {
+                        PrimaryCodefound = true;
+                        break;
+                    }
+                }
+                rset.close();
+                ps.close();
+            }
+        } else {
+            return true;
+        }
+
+        return PrimaryCodefound;
+    }
+
+    private boolean validAgeICDs(Connection conn, String ICD, int age) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.AgeWiseICD WHERE ICD=? ");
+        ps.setString(1, ICD.replace(".", ""));
+//        //system.out.println("validAgeICDs -> "+ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        if (isValid) {
+            isValid = false;
+            ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.AgeWiseICD WHERE ICD=? AND UpperLimit>=? AND LowerLimit<=? ");
+            ps.setString(1, ICD.replace(".", ""));
+            ps.setInt(2, age);
+            ps.setInt(3, age);
+//            //system.out.println("validAgeICDs -> " + ps.toString());
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) > 0) {
+                    isValid = true;
+                }
+            }
+            rset.close();
+            ps.close();
+        } else {
+            return true;
+        }
+
+
+        return isValid;
+    }
+
+    private boolean validGenderICDs(Connection conn, String ICD, String gender) throws SQLException {
+        boolean isExcludeOne = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.GenderSpecificDiagnosis WHERE ICD=? AND Sex=?");
+        ps.setString(1, ICD.replace(".", ""));
+        ps.setString(2, gender);
+//        //system.out.println("validGenderICDs -> " + ps.toString());
+
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isExcludeOne = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isExcludeOne;
+    }
+
+    private boolean validGenderCPT(Connection conn, String CPT, String gender) throws SQLException {
+        boolean isExcludeOne = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.GenderSpecificCPT_ICD WHERE CPTCode=? AND Gender=?");
+        ps.setString(1, CPT);
+        ps.setString(2, gender);
+//        //system.out.println("validGenderICDs -> " + ps.toString());
+
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isExcludeOne = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isExcludeOne;
+    }
+
+    private String NCD_CPT_ICD_Denial(Connection conn, String cpt, String ICD) throws SQLException {
+        boolean CPT_Found = false;
+        boolean PrimaryCodefound = false;
+        ResultSet rset = null;
+        ResultSet rset2 = null;
+        PreparedStatement ps2 = null;
+        String[] Range = null;
+
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.NCD_CPT_Groups WHERE CPT=?");
+        ps.setString(1, cpt);
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                CPT_Found = true;
+            }
+        }
+        rset.close();
+        ps.close();
+
+        if (CPT_Found) {
+
+            ps = conn.prepareStatement("SELECT " +
+                    " Count(*) " +
+                    " FROM" +
+                    "  ClaimMasterDB.NCD_CPT_Groups a " +
+                    " INNER JOIN ClaimMasterDB.NCDxCPTxICD b ON a.GrpN = b.GrpN " +
+                    " WHERE  " +
+                    " a.Cpt = ? " +
+                    " AND b.ICD = ? " +
+                    " AND b.ResCode = 2 " +
+                    " AND b.ICD NOT LIKE '%-%' ");
+            ps.setString(1, cpt);
+            ps.setString(2, ICD.replace(".", ""));
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) > 0) {
+                    return ICD + "~" + cpt;
+                }
+            }
+            rset.close();
+            ps.close();
+
+            ps = conn.prepareStatement("SELECT " +
+                    " b.ICD " +
+                    " FROM" +
+                    "  ClaimMasterDB.NCD_CPT_Groups a " +
+                    " INNER JOIN ClaimMasterDB.NCDxCPTxICD b ON a.GrpN = b.GrpN " +
+                    " WHERE  " +
+                    " a.Cpt = ? " +
+                    " AND b.ResCode = 2 " +
+                    " AND b.ICD  LIKE '%-%' ");
+            ps.setString(1, cpt);
+            rset = ps.executeQuery();
+            while (rset.next()) {
+                Range = rset.getString(1).split("-");
+                if (find_ICD_between_Ranges(conn, Range[0], Range[1], ICD)) {
+                    return ICD + "~" + cpt;
+                }
+            }
+            rset.close();
+            ps.close();
+
+
+        }
+
+        return null;
+    }
+
+    private String NCD_CPT_ICD_Med(Connection conn, String cpt, String ICD) throws SQLException {
+        boolean CPT_Found = false;
+        boolean PrimaryCodefound = false;
+        ResultSet rset = null;
+        String[] Range = null;
+
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.NCD_CPT_Groups WHERE CPT=?");
+        ps.setString(1, cpt);
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                CPT_Found = true;
+            }
+        }
+        rset.close();
+        ps.close();
+
+        if (CPT_Found) {
+
+            ps = conn.prepareStatement("SELECT " +
+                    " a.GrpN,b.ICD" +
+                    " FROM" +
+                    "  ClaimMasterDB.NCD_CPT_Groups a " +
+                    " INNER JOIN ClaimMasterDB.NCDxCPTxICD b ON a.GrpN = b.GrpN " +
+                    " WHERE  " +
+                    " a.Cpt = ? " +
+                    " AND b.ICD = ? " +
+                    " AND b.ResCode = 3 ");
+            ps.setString(1, cpt);
+            ps.setString(2, ICD.replace(".", ""));
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) > 0) {
+                    return ICD + "~" + cpt;
+                }
+            }
+            rset.close();
+            ps.close();
+
+            ps = conn.prepareStatement("SELECT " +
+                    " b.ICD " +
+                    " FROM" +
+                    "  ClaimMasterDB.NCD_CPT_Groups a " +
+                    " INNER JOIN ClaimMasterDB.NCDxCPTxICD b ON a.GrpN = b.GrpN " +
+                    " WHERE  " +
+                    " a.Cpt = ? " +
+                    " AND b.ResCode = 3 " +
+                    " AND b.ICD  LIKE '%-%' ");
+            ps.setString(1, cpt);
+            rset = ps.executeQuery();
+            while (rset.next()) {
+                Range = rset.getString(1).split("-");
+                if (find_ICD_between_Ranges(conn, Range[0], Range[1], ICD)) {
+                    return ICD + "~" + cpt;
+                }
+            }
+            rset.close();
+            ps.close();
+
+        }
+
+        return null;
+    }
+
+    private String LCD_CPT_ICD_Denial(Connection conn, String cpt, String ICD) throws SQLException {
+        boolean CPT_Found = false;
+        boolean PrimaryCodefound = false;
+        ResultSet rset = null;
+        String[] Range = null;
+
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.article_x_hcpc_code WHERE hcpc_code_id=?");
+        ps.setString(1, cpt);
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                CPT_Found = true;
+            }
+        }
+        rset.close();
+        ps.close();
+
+        if (CPT_Found) {
+
+            ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.article_x_contractor a " +
+                    "INNER JOIN ClaimMasterDB.article_x_hcpc_code b ON a.article_id = b.article_id " +
+                    "INNER JOIN ClaimMasterDB.article_x_icd10_noncovered c ON a.article_id = c.article_id " +
+                    "WHERE " +
+                    "(" +
+                    "a.contract_id = '334' " +
+                    "OR a.contract_id = '338' " +
+                    ") AND c.icd10_code_id = ? " +
+                    "AND b.hcpc_code_id = ? ");
+            ps.setString(1, ICD);
+            ps.setString(2, cpt);
+            rset = ps.executeQuery();
+            if (rset.next()) {
+                if (rset.getInt(1) > 0) {
+                    //system.out.println("LCD_CPT_ICD_Denial QUERY ->> " + ps.toString());
+                    return ICD + "~" + cpt;
+                }
+            }
+            rset.close();
+            ps.close();
+        }
+
+        return null;
+    }
+
+    private String LCD_CPT_ICD_MUST(Connection conn, String cpt, String ICD) throws SQLException {
+        boolean CPT_Found = false;
+        boolean PrimaryCodefound = false;
+        ResultSet rset = null;
+        String[] Range = null;
+
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.article_x_hcpc_code WHERE hcpc_code_id=?");
+        ps.setString(1, cpt);
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                CPT_Found = true;
+            }
+        }
+        rset.close();
+        ps.close();
+
+        if (CPT_Found) {
+
+                ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.article_x_contractor a " +
+                        " INNER JOIN ClaimMasterDB.article_x_hcpc_code b ON a.article_id = b.article_id " +
+                        " INNER JOIN ClaimMasterDB.article_x_icd10_covered c ON a.article_id = c.article_id " +
+                        " WHERE " +
+                        " ( a.contract_id = '334' OR a.contract_id = '338' )" +
+                        " AND ( c.icd10_code_id = ? OR c.icd10_code_id = 'XX000' )  " +
+                        " AND b.hcpc_code_id = ? ");
+                ps.setString(1, ICD);
+                ps.setString(2, cpt);
+                rset = ps.executeQuery();
+                if (rset.next()) {
+                    if (rset.getInt(1) > 0) {
+                        //system.out.println("LCD_CPT_ICD_MUST QUERY ->> " + ps.toString());
+                        return null;
+                    }
+                }
+                rset.close();
+                ps.close();
+
+
+            return cpt;
+        }
+
+        return null;
+    }
+
+    private boolean find_CPT_between_Ranges(Connection conn, String r1, String r2, String ICD) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.CPTMaster where CPTCode BETWEEN ? AND ?  AND CPTCode=?");
+        ps.setString(1, r1);
+        ps.setString(2, r2);
+        ps.setString(3, ICD);
+
+
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+//                //system.out.println("Query ->> " + ps.toString());
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    private boolean find_ICD_between_Ranges(Connection conn, String r1, String r2, String ICD) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ICDMaster where ICD BETWEEN ? AND ?  AND ICD=?");
+        ps.setString(1, addChar(r1, '.', 3));
+        ps.setString(2, addChar(r2, '.', 3));
+        ps.setString(3, ICD);
+//        //system.out.println("%%%%%%% find_ICD_between_RangesQuery ->> " + ps.toString());
+
+
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+//                //system.out.println("Query ->> " + ps.toString());
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    private String isValidBodySidewaysICD(Connection conn, String ICD) throws SQLException {
+        String isValid = null;
+        ResultSet rset = null;
+        PreparedStatement ps = conn.prepareStatement("SELECT IFNULL(Side,'') FROM ClaimMasterDB.ICDListBodySideways WHERE ICDCode=? ");
+        ps.setString(1, ICD.replace(".", ""));
+
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getString(1) != null) {
+//                //system.out.println("isValidBodySidewaysICD -> " + ps.toString());
+                isValid = rset.getString(1);
+                return isValid;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    private boolean isSequelaCode(Connection conn, String Code) throws SQLException {
+        boolean isValid = false;
+        ResultSet rset = null;
+
+        PreparedStatement ps = conn.prepareStatement("SELECT Count(*) FROM ClaimMasterDB.ICDMaster where SUBSTR(ICD,8)='S' AND ICD=?");
+        ps.setString(1, Code);
+//        //system.out.println(" isSequelaCode QUERY ->>  " + ps.toString());
+        rset = ps.executeQuery();
+        if (rset.next()) {
+            if (rset.getInt(1) > 0) {
+                isValid = true;
+            }
+        }
+        rset.close();
+        ps.close();
+        return isValid;
+    }
+
+    public String addChar(String str, char ch, int position) {
+        return str.substring(0, position) + ch + str.substring(position);
     }
 }
